@@ -1,5 +1,5 @@
-from vmath.core.matrices import Mat3
-from vmath.core.vectors import Vec2
+from Odometry.vmath.core.matrices import Mat3
+from Odometry.vmath.core.vectors import Vec2
 import math
 
 

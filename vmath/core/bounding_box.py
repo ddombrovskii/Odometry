@@ -1,5 +1,5 @@
-from vmath.core.transforms.transform import Transform
-from vmath.core.vectors import Vec3
+from Odometry.vmath.core.transforms.transform import Transform
+from Odometry.vmath.core.vectors import Vec3
 
 
 class BoundingBox:

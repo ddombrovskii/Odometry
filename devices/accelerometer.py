@@ -1,6 +1,6 @@
-from vmath.core.transforms.transform import Transform
-from vmath.core.matrices import Mat4
-from vmath.core.vectors import Vec3
+from Odometry.vmath.core.transforms.transform import Transform
+from Odometry.vmath.core.matrices import Mat4
+from Odometry.vmath.core.vectors import Vec3
 from i_device import IDevice
 import datetime as dt
 import numpy as np
@@ -70,9 +70,10 @@ class Accelerometer(IDevice):
 
     @transforms_history_cap.setter
     def transforms_history_cap(self, cap: int) -> None:
-        self.lock()
+        if not self.require_lock():
+            return
         self.__transforms_history_cap = max(10, min(10000, cap))
-        self.release()
+        self.release_lock()
 
     def __repr__(self):
         if len(self.__time_stamps) == 0:

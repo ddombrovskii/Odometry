@@ -1,6 +1,6 @@
-from vmath.core import geometry_utils
-from vmath.core.matrices import Mat4
-from vmath.core.vectors import Vec3
+from Odometry.vmath.core import geometry_utils
+from Odometry.vmath.core.matrices import Mat4
+from Odometry.vmath.core.vectors import Vec3
 import math
 
 

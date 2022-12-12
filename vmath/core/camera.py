@@ -1,7 +1,7 @@
-from vmath.core.transforms.transform import Transform
-from vmath.core.bounding_box import BoundingBox
-from vmath.core.matrices import Mat4
-from vmath.core.vectors import Vec3
+from Odometry.vmath.core.transforms.transform import Transform
+from Odometry.vmath.core.bounding_box import BoundingBox
+from Odometry.vmath.core.matrices import Mat4
+from Odometry.vmath.core.vectors import Vec3
 import math
 
 

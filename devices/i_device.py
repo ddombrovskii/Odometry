@@ -1,4 +1,4 @@
-from Odometry.bit_set import BitSet32
+from bit_set import BitSet32
 from threading import Thread, Lock
 import time
 
@@ -22,6 +22,11 @@ class IDevice(Thread):
         """
         self.__time_alive = 0.0
         """
+        Истиное значение времени на метод Update
+        """
+        self.__time_delta = 0.0
+
+        """
         Частота обновления
         """
         self.__update_rate = 0.010
@@ -35,6 +40,13 @@ class IDevice(Thread):
             raise RuntimeError(f"device: {self.name} init function call error")
         self.__state: BitSet32 = BitSet32()
         self.__state.set_bit(_DEVICE_INITIALIZED)
+
+    @property
+    def time_delta(self) -> float:
+        """
+        Истиное значение времени на метод Update
+        """
+        return self.__time_delta
 
     @property
     def life_time(self) -> float:
@@ -236,13 +248,13 @@ class IDevice(Thread):
                 except IOError as ex_:
                     print(f"IOError: {ex_.args}\nlog write error to file {self.log_file_origin}")
 
-            update_time = time.perf_counter() - update_time
+            self.__time_delta = time.perf_counter() - update_time
 
-            if update_time < self.__update_rate:
-                time.sleep(self.__update_rate - update_time)
+            if self.__time_delta < self.__update_rate:
+                time.sleep(self.__update_rate - self.__time_delta)
                 self.__time_alive += self.__update_rate
 
-            self.__time_alive += update_time
+            self.__time_alive += self.__time_delta
 
             if self.__life_time > 0:
                 if self.__time_alive > self.__life_time:

@@ -1,7 +1,7 @@
 from typing import Callable, Tuple, List
-from vmath.core.transforms.transform import Transform
-from vmath.core.matrices import Mat4
-from vmath.core.vectors import Vec3
+from Odometry.vmath.core.transforms.transform import Transform
+from Odometry.vmath.core.matrices import Mat4
+from Odometry.vmath.core.vectors import Vec3
 from i_device import IDevice
 import datetime as dt
 import numpy as np
@@ -123,13 +123,9 @@ class Accelerometer(IDevice):
     def __init__(self):
         self.__way_points: List[WayPoint] = []
 
-        self.__time_stamps: [str] = []
+        self.__measurements_samples: int =  8
 
-        self.__transforms_history_cap = 1000
-
-        self.__transforms_history: [Mat4] = []
-
-        self.__transform = Transform()
+        self.__way_points_buffer_cap: int = 1024
 
         self.__address = 0x68  # mpu 6050
 
@@ -138,22 +134,14 @@ class Accelerometer(IDevice):
         self._log_file_origin: str = f"accelerometer_log {dt.datetime.now().strftime('%H; %M; %S')}.txt"
 
     @property
-    def transforms_time_stamps(self) -> [str]:
-        return self.__time_stamps
+    def way_points_buffer_cap(self) -> int:
+        return self.__way_points_buffer_cap
 
-    @property
-    def transforms_history(self) -> [Mat4]:
-        return self.__transforms_history
-
-    @property
-    def transforms_history_cap(self) -> int:
-        return self.__transforms_history_cap
-
-    @transforms_history_cap.setter
-    def transforms_history_cap(self, cap: int) -> None:
+    @way_points_buffer_cap.setter
+    def way_points_buffer_cap(self, cap: int) -> None:
         if not self.require_lock():
             return
-        self.__transforms_history_cap = max(10, min(10000, cap))
+        self.__way_points_buffer_cap = max(10, min(10000, cap))
         self.release_lock()
 
     def __repr__(self):
@@ -174,33 +162,65 @@ class Accelerometer(IDevice):
                     float(read_raw_data(self.__address, ACCEL_Y_OUT_H)),
                     float(read_raw_data(self.__address, ACCEL_Z_OUT_H))).normalized()
 
+    def __build_way_point(self) -> WayPoint:
+
+        curr_t, delta_t = self.life_time, time.perf_counter() - self.life_time
+
+        gyro: Vec3 = self.__read_gyro_data()
+
+        acceleration: Vec3 = self.__read_acceleration_data()
+
+        if len(self.__way_points) == 0:
+            return WayPoint(Vec3(0), Vec3(0), acceleration, gyro, curr_t, delta_t)
+
+        last_wp = self.__way_points[-1]
+
+        velocity = last_wp.delta_time * last_wp.acceleration + last_wp.velocity
+
+        position = last_wp.delta_time * velocity + last_wp.position
+
+        return WayPoint(position, velocity, acceleration, gyro, curr_t, delta_t)
+
+    def __build_way_points(self) -> List[WayPoint]:
+        update_rate: float = self.update_rate * (self.__measurements_samples - 1)  /  self.__measurements_samples
+
+        current_t: float = 0.0
+
+        delta_t: float = update_rate / self.__measurements_samples
+
+        way_points = []
+
+        for _ in range(self.__measurements_samples):
+            if current_t >= update_rate:
+                break
+
+            t = time.perf_counter()
+            way_points.append(self.__build_way_point())
+            t = time.perf_counter() - t
+
+            if t > delta_t:
+                current_t += t
+                continue
+
+            time.sleep(delta_t - t)
+            current_t += delta_t
+
+        return way_points
+
     def __build_transform(self):
         curr_t, delta_t = self.life_time, self.time_delta
         gyro:         Vec3 = self.__read_gyro_data()
         acceleration: Vec3 = self.__read_acceleration_data()
 
-        if len(self.__way_points) in (0, 1):
-            pass
-
-        # Read Gyroscope raw value
-        try:
-            gyro_x: np.int16 = read_raw_data(self.__address, GYRO_X_OUT_H)
-            gyro_y: np.int16 = read_raw_data(self.__address, GYRO_X_OUT_H)
-            gyro_z: np.int16 = read_raw_data(self.__address, GYRO_X_OUT_H)
-            self.__transform.up = Vec3(gyro_x, gyro_y, gyro_z).normalized()
-        except RuntimeError as ex_:
-            print(f"Accelerometer measurements reading error {ex_.args}")
+        if len(self.__way_points) == 0:
+            self.__way_points.append(WayPoint(Vec3(0), Vec3(0), acceleration, gyro, curr_t, delta_t))
             return
 
-        curr_time: str = dt.datetime.now().strftime('%H; %M; %S')
-
-        self.__transforms_history.append(self.__transform.transform_matrix.copy())
-
-        self.__time_stamps.append(curr_time)
-
-        if len(self.__transforms_history) == self.__transforms_history_cap:
-            del (self.__transforms_history[0])
-            del (self.__time_stamps[0])
+        last_wp = self.__way_points[-1]
+        velocity = last_wp.delta_time * last_wp.acceleration + last_wp.velocity
+        position = last_wp.delta_time * velocity             + last_wp.position
+        self.__way_points.append(WayPoint(position, velocity, acceleration, gyro, curr_t, delta_t))
+        return
 
     def _init(self) -> bool:
         try:
@@ -248,5 +268,73 @@ def accelerometer_test():
     acc.join()
 
 
-if __name__ == "__main__":
-    accelerometer_test()
+#if __name__ == "__main__":
+    # if 1 in (1, 2, 3):
+    #    print('1...')
+ #   accelerometer_test()
+
+def median_filter_1d(array_data: np.ndarray, filter_size: int = 15, do_copy: bool = False,
+                     range_start: int = 0, range_end: int = -1) -> np.ndarray:
+    if filter_size % 2 != 1:
+        raise Exception("Median filter length must be odd.")
+
+    if array_data.ndim != 1:
+        raise Exception("Input must be one-dimensional.")
+
+    if do_copy:
+        result = np.zeros_like(array_data)
+    else:
+        result = array_data
+
+    if range_start == range_end:
+        return result
+
+    if range_end < 0:
+        range_end = array_data.size
+
+    if range_end < range_start:
+        range_end, range_start = range_start, range_end
+
+    range_end = min(range_end, array_data.size)
+
+    range_start = max(range_start, 0)
+
+    import bisect
+
+    values_window = []
+
+    half_filter_size = filter_size // 2
+
+    for i in range(range_start, range_end):
+        for j in range(i - half_filter_size, i + half_filter_size):
+            if j < 0:
+                bisect.insort(values_window, 0)
+                continue
+            if j >= array_data.size:
+                bisect.insort(values_window, 0)
+                continue
+            bisect.insort(values_window, array_data[j])
+
+        result[i] = values_window[len(values_window)//2]
+
+        values_window.clear()
+
+    return result
+
+
+def _test ():
+    import pylab as p
+    x = np.linspace (0, 1, 101)
+    x[3::10] = 1.5
+    #p.plot (x)
+   # y_  =  median_filter_1d (x, 5)
+    y__ =  median_filter_1d  (x,  5, range_start = -20, range_end=60)
+    #print(f"shape: {y_.shape},  size: {y_.size}")
+    print(f"shape: {y__.shape}, size: {y__.size}")
+   # p.plot (y_)
+    p.plot (y__)
+    p.show ()
+
+
+if __name__ == '__main__':
+    _test ()

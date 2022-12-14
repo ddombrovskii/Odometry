@@ -1,4 +1,4 @@
-from bit_set import BitSet32
+from Odometry.bit_set import BitSet32
 from threading import Thread, Lock
 import time
 

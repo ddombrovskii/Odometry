@@ -1,18 +1,23 @@
 from Odometry.bit_set import BitSet32
 from threading import Thread, Lock
+import datetime as dt
 import time
 
 
-_DEVICE_ALIVE           = 0
-_DEVICE_ACTIVE          = 1
-_DEVICE_LOCKED          = 2
-_DEVICE_INITIALIZED     = 3
+_DEVICE_ALIVE = 0
+_DEVICE_ACTIVE = 1
+_DEVICE_LOCKED = 2
+_DEVICE_INITIALIZED = 3
 _DEVICE_LOGGING_ENABLED = 4
 
 
 class IDevice(Thread):
+    """
+    """
     def __init__(self):
         super().__init__()
+
+        self.device_name: str = f"device_{id(self)}"
         """
         Время жизни устройства
         """
@@ -24,29 +29,28 @@ class IDevice(Thread):
         """
         Истиное значение времени на метод Update
         """
-        self.__time_delta = 0.0
+        self.__update_delta_time = 0.0
 
         """
         Частота обновления
         """
         self.__update_rate = 0.010
-
         self.__lock = Lock()
-        self.__enable_logging: bool = False
-        self._log_file_origin: str = f"device at address {id(self)}.txt"
         self.__log_file_descriptor = None
+        self._log_file_origin: str = f"device at address {id(self)}.json"
 
         if not self._init():
             raise RuntimeError(f"device: {self.name} init function call error")
+
         self.__state: BitSet32 = BitSet32()
         self.__state.set_bit(_DEVICE_INITIALIZED)
 
     @property
-    def time_delta(self) -> float:
+    def update_delta_time(self) -> float:
         """
         Истиное значение времени на метод Update
         """
-        return self.__time_delta
+        return self.__update_delta_time
 
     @property
     def life_time(self) -> float:
@@ -89,7 +93,6 @@ class IDevice(Thread):
         Активен ли в данный момент
         """
         return self.__state.is_bit_set(_DEVICE_ACTIVE)
-        # return self.__active
 
     @active.setter
     def active(self, val: bool) -> None:
@@ -126,6 +129,9 @@ class IDevice(Thread):
 
     @enable_logging.setter
     def enable_logging(self, value: bool) -> None:
+        if self.enable_logging == value:
+            return
+
         if not self.require_lock():
             return
 
@@ -144,11 +150,10 @@ class IDevice(Thread):
 
     @log_file_origin.setter
     def log_file_origin(self, value: str) -> None:
-        if not self.require_lock():
+        if value == self._log_file_origin:
             return
 
-        if value == self._log_file_origin:
-            self.release_lock()
+        if not self.require_lock():
             return
 
         if not self._try_close_log_file():
@@ -168,16 +173,16 @@ class IDevice(Thread):
 
     def _try_open_log_file(self, orig: str = None) -> bool:
         # TODO refactor
-        path = orig
-
         if self.__log_file_descriptor is not None:
             if self.__log_file_descriptor.name == orig:
                 return True
             if not self._try_close_log_file():
                 return False
-            self._log_file_origin = path
+            self._log_file_origin = orig
         try:
-            self.__log_file_descriptor = open(self._log_file_origin, "a")
+            self.__log_file_descriptor = open(self._log_file_origin, "wt")
+            self.__log_file_descriptor.write(f"{{\n\"device_name\"   : \"{self.device_name}\",\n")
+            self.__log_file_descriptor.write(f"\"log_time_start\": \"{dt.datetime.now().strftime('%H; %M; %S')}\"")
             return True
 
         except IOError as ex_:
@@ -190,6 +195,7 @@ class IDevice(Thread):
         if self.__log_file_descriptor is None:
             return True
         try:
+            self.__log_file_descriptor.write("\n}")
             self.__log_file_descriptor.close()
             self.__log_file_descriptor = None
             return True
@@ -210,7 +216,7 @@ class IDevice(Thread):
         self.__lock.release()
 
     def _logging(self) -> str:
-        return ""
+        return f"\n\"{dt.datetime.now().strftime('%H; %M; %S')}\","
 
     def _start(self) -> bool:
         return True
@@ -221,7 +227,8 @@ class IDevice(Thread):
     def _dispose(self) -> bool:
         return True
 
-    def _update(self) -> None: ...
+    def _update(self) -> None:
+        ...
 
     def run(self):
         if not self._start():
@@ -234,33 +241,65 @@ class IDevice(Thread):
         update_time: float
 
         while self.alive:
+            # начало
             update_time = time.perf_counter()
+            # проверка на факт активно устройство или нет
             if not self.active:
                 continue
-
+            # выполнение полезной нагрузки
             self._update()
-
-            if self.__enable_logging:
-
+            # логгирование результатов, если включено и реализовано...
+            if self.enable_logging:
                 try:
                     self._log_file_descriptor.write(self._logging())
 
                 except IOError as ex_:
                     print(f"IOError: {ex_.args}\nlog write error to file {self.log_file_origin}")
 
-            self.__time_delta = time.perf_counter() - update_time
+            self.__update_delta_time = time.perf_counter() - update_time
 
-            if self.__time_delta < self.__update_rate:
-                time.sleep(self.__update_rate - self.__time_delta)
-                self.__time_alive += self.__update_rate
+            if self.update_delta_time < self.update_rate:
+                time.sleep(self.update_rate - self.update_delta_time)
+                self.__time_alive += self.update_rate
 
-            self.__time_alive += self.__time_delta
+            self.__time_alive += self.update_delta_time
 
-            if self.__life_time > 0:
-                if self.__time_alive > self.__life_time:
+            if self.life_time > 0:
+                if self.__time_alive > self.life_time:
                     break
 
         self._try_close_log_file()
 
         if not self._dispose():
             raise RuntimeError(f"device: {self.name} dispose function call error")
+
+
+class DeviceTest(IDevice):
+    def __init__(self):
+        super().__init__()
+
+    def _try_open_log_file(self, orig: str = None) -> bool:
+        if super()._try_open_log_file(orig):
+            self._log_file_descriptor.write(f",\n\"time_stamps\":[")
+            return True
+        return False
+
+    def _try_close_log_file(self) -> bool:
+        if self._log_file_descriptor is None:
+            return True
+        try:
+            self._log_file_descriptor.seek(self._log_file_descriptor.tell() - 1)
+            self._log_file_descriptor.write(f"\n]")
+        except Exception as _ex:
+            print(f"log file closing failed:\n{_ex.args}")
+            return False or super()._try_close_log_file()
+        return super()._try_close_log_file()
+
+
+if __name__ == "__main__":
+    dev_test = DeviceTest()
+    dev_test.update_rate = 1.0
+    dev_test.enable_logging = True
+    dev_test.life_time = 10
+    dev_test.start()
+    dev_test.join()

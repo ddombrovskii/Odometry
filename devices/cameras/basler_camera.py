@@ -1,5 +1,5 @@
 import math
-import  Odometry.vmath.core.geometry_utils as mu
+import Odometry.vmath.core.geometry_utils as mu
 from threading import Thread
 import datetime as datetime
 import numpy as np

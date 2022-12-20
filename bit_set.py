@@ -32,13 +32,15 @@ class BitSet32:
         self.__state: ctypes.c_uint32 = ctypes.c_uint32(value)
 
     def __str__(self):
-        res: str = ""
-        for i in range(32):
-            if self.is_bit_set(i):
-                res += "1"
-                continue
-            res += "0"
-        return res
+        return "".join(str(bit) for bit in self.bits)
+
+    @property
+    def bits(self):
+        for bit in range(32):
+            if self.is_bit_set(bit):
+                yield 1
+            else:
+                yield 0
 
     @property
     def state(self) -> int:

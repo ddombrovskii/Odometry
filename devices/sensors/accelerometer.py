@@ -130,6 +130,7 @@ class Accelerometer(IDevice):
         self._re_alloc_buffers()
 
         self.__filters:       List[RealTimeFilter] = [RealTimeFilter()] * 6
+
         """
         self.__filters[0] = gyro x
         self.__filters[1] = gyro y

@@ -20,10 +20,15 @@ class CircBuffer:
     def sorted(self):
         return sorted(self._values)
 
-    def append(self, value: float):
+    def append(self, value):
         self._values[self._indent] = value
         self._indent += 1
         self._indent %= self._capacity
+
+    def clear(self):
+        self._indent = 0
+        for i in range(self.capacity):
+            self._values[i] = 0.0
 
 
 def buffer_test():
@@ -41,6 +46,12 @@ def buffer_test():
     buffer.append(10.0)
     print(buffer)
 
-
 if __name__ == "__main__":
-    buffer_test()
+    a=[1,2,3,4,5,6,7,8,9]
+    print(a)
+    print(a[-1])
+    print(a[-2])
+    # buffer_test()
+
+
+

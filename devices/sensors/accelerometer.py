@@ -1,150 +1,36 @@
 from Odometry.devices.sensors_utils.real_time_filter import RealTimeFilter
 from Odometry.devices.i_device import IDevice
 from Odometry.vmath.core.vectors import Vec3
-from typing import List, Tuple
+from typing import List, Tuple, Deque
 import datetime as dt
 import numpy as np
 import time
+from collections import deque
 
-
-GRAVITY_CONSTANT = 9.80665
-GRAVITY_VECTOR = Vec3(0.0, -GRAVITY_CONSTANT, 0.0)
-# MPU-6050 Registers
-
-PWR_MGMT_1 = 0x6B
-SAMPLE_RATE_DIV = 0x19
-MPU_CONFIG = 0x1A
-ACCEL_CONFIG = 0x1C
-GYRO_CONFIG = 0x1B
-INT_ENABLE = 0x38
-
-GYRO_X_OUT_H = 0x43
-GYRO_Y_OUT_H = 0x45
-GYRO_Z_OUT_H = 0x47
-
-ACCEL_X_OUT_H = 0x3B
-ACCEL_Y_OUT_H = 0x3D
-ACCEL_Z_OUT_H = 0x3F
-
-TEMP_OUT_H = 0x41
-
-# Scale Modifiers
-ACCEL_SCALE_MODIFIER_2G = 16384.0
-ACCEL_SCALE_MODIFIER_4G = 8192.0
-ACCEL_SCALE_MODIFIER_8G = 4096.0
-ACCEL_SCALE_MODIFIER_16G = 2048.0
-
-GYRO_SCALE_MODIFIER_250DEG = 131.0
-GYRO_SCALE_MODIFIER_500DEG = 65.5
-GYRO_SCALE_MODIFIER_1000DEG = 32.8
-GYRO_SCALE_MODIFIER_2000DEG = 16.4
-
-# Pre-defined ranges
-
-ACCEL_RANGE_2G = 0x00
-ACCEL_RANGE_4G = 0x08
-ACCEL_RANGE_8G = 0x10
-ACCEL_RANGE_16G = 0x18
-
-GYRO_RANGE_250DEG = 0x00
-GYRO_RANGE_500DEG = 0x08
-GYRO_RANGE_1000DEG = 0x10
-GYRO_RANGE_2000DEG = 0x18
-
-FILTER_BW_256 = 0x00
-FILTER_BW_188 = 0x01
-FILTER_BW_98 = 0x02
-FILTER_BW_42 = 0x03
-FILTER_BW_20 = 0x04
-FILTER_BW_10 = 0x05
-FILTER_BW_5 = 0x06
-
-run_with_errors = True
-
-i2c_bus = None
-
-try:
-    # TODO add board version check
-    import smbus
-except ImportError as ex:
-    print(f"SM Bus import error!!!\n{ex.args}")
-    if not run_with_errors:
-        exit(1)
-
-try:
-    # TODO add board version check
-    i2c_bus = smbus.SMBus(1)  # or bus = smbus.SMBus(0) for older version boards
-except NameError as ex:
-    print(f"SM Bus init error!!!\n{ex.args}")
-    if not run_with_errors:
-        exit(1)
-
-
-def read_raw_data(device_addr: int, addr: int) -> Tuple[bool, np.int16]:
-    # Accelerometer and Gyro value are 16-bit
-    try:
-        high = i2c_bus.read_byte_data(device_addr, addr)
-    except Exception as _ex:
-        print(f"i2c read high error\n{_ex.args}")
-        return False, np.int16(0)
-
-    try:
-        low = i2c_bus.read_byte_data(device_addr, addr + 1)
-    except Exception as _ex:
-        print(f"i2c read low error\n{_ex.args}")
-        return False, np.int16(0)
-
-    # concatenate higher and lower value
-    value = (high << 8) | low
-
-    # to get signed value from mpu6050
-    if value >= 0x8000:
-        value -= 65536
-    return True, value
+from devices.sensors.low_level_accelerometer import HardwareAccelerometer
 
 
 class Accelerometer(IDevice):
 
     def __init__(self):
 
-        self.__buffer_indent: int = 0
+        self.__accelerometer: HardwareAccelerometer = HardwareAccelerometer()
 
-        self.__buffer_capacity: int = 32
+        self.__buffer_capacity: int = 512
 
-        self.__address = 0x68  # mpu 6050
+        self.__orientations: Deque[Vec3]
 
-        self.__measurements_samples: int = 32
+        self.__accelerations: Deque[Vec3]
 
-        self.__orientations: List[Vec3]
+        self.__velocities: Deque[Vec3]
 
-        self.__accelerations: List[Vec3]
+        self.__positions: Deque[Vec3]
 
-        self.__velocities: List[Vec3]
+        self.__time_values: Deque[float]
 
-        self.__positions: List[Vec3]
-
-        self.__time_values: List[float]
-
-        self.__time_deltas: List[float]
+        self.__time_deltas: Deque[float]
 
         self._re_alloc_buffers()
-
-        self.__filters: List[RealTimeFilter] = []
-        """
-        self.__filters[0] = gyro x
-        self.__filters[1] = gyro y
-        self.__filters[2] = gyro z
-
-        self.__filters[3] = acc x
-        self.__filters[4] = acc y
-        self.__filters[5] = acc z
-        """
-        for _ in range(6):
-            _filter = RealTimeFilter()
-            _filter.k_arg = 0.09
-            _filter.kalman_error = 0.8
-            _filter.mode = 2
-            self.__filters.append(_filter)
 
         super().__init__()
 
@@ -166,200 +52,44 @@ class Accelerometer(IDevice):
 
     __repr__ = __str__
 
-    def _buffer_index(self, index: int) -> int:
-        return (index + self.__buffer_indent) % self.__buffer_capacity
-
     def _re_alloc_buffers(self) -> None:
-        self.__orientations = [Vec3(0.0) for _ in range(self.buffer_cap)]
+        self.__orientations = deque(maxlen=self.buffer_cap)  # [Vec3(0.0) for _ in range()]
+        self.__accelerations = deque(maxlen=self.buffer_cap)  # [Vec3(0.0) for _ in range(self.buffer_cap)]
+        self.__time_values = deque(maxlen=self.buffer_cap)  # [0.0 for _ in range(self.buffer_cap)]
+        self.__time_deltas = deque(maxlen=self.buffer_cap)  # [0.0 for _ in range(self.buffer_cap)]
+        self.__velocities = deque(maxlen=self.buffer_cap)  # [Vec3(0.0) for _ in range(self.buffer_cap)]
+        self.__positions = deque(maxlen=self.buffer_cap)  # [Vec3(0.0) for _ in range(self.buffer_cap)]
 
-        self.__accelerations = [Vec3(0.0) for _ in range(self.buffer_cap)]
+        self.__accelerations.append(Vec3(0.0))
+        self.__velocities.append(Vec3(0.0))
+        self.__positions.append(Vec3(0.0))
+        self.__time_values.append(0.0)
+        self.__time_deltas.append(0.0)
 
-        self.__time_values = [0.0 for _ in range(self.buffer_cap)]
-
-        self.__time_deltas = [0.0 for _ in range(self.buffer_cap)]
-
-        self.__velocities = [Vec3(0.0) for _ in range(self.buffer_cap)]
-
-        self.__positions = [Vec3(0.0) for _ in range(self.buffer_cap)]
-
-    @property
-    def acceleration_range_raw(self) -> int:
-        """
-        Диапазон измеряемых ускорений
-        ACCEL_SCALE_MODIFIER_2G = 16384.0
-        ACCEL_SCALE_MODIFIER_4G = 8192.0
-        ACCEL_SCALE_MODIFIER_8G = 4096.0
-        ACCEL_SCALE_MODIFIER_16G = 2048.0
-        """
-        return i2c_bus.read_byte_data(self.__address, ACCEL_CONFIG)
-
-    @acceleration_range_raw.setter
-    def acceleration_range_raw(self, accel_range: int) -> None:
-        """
-        Диапазон измеряемых ускорений
-        ACCEL_SCALE_MODIFIER_2G = 16384.0
-        ACCEL_SCALE_MODIFIER_4G = 8192.0
-        ACCEL_SCALE_MODIFIER_8G = 4096.0
-        ACCEL_SCALE_MODIFIER_16G = 2048.0
-        """
-        if not self.require_lock():
-            return
-        i2c_bus.write_byte_data(self.__address, ACCEL_CONFIG, 0x00)
-        i2c_bus.write_byte_data(self.__address, ACCEL_CONFIG, accel_range)
-        self.release_lock()
-
-    @property
-    def acceleration_range(self) -> float:
-        """
-        Диапазон измеряемых ускорений, выраженный в м/сек^2
-        """
-        raw_data = self.acceleration_range_raw
-        if raw_data == ACCEL_RANGE_2G:
-            return 2 * GRAVITY_CONSTANT
-        if raw_data == ACCEL_RANGE_4G:
-            return 4 * GRAVITY_CONSTANT
-        if raw_data == ACCEL_RANGE_8G:
-            return 8 * GRAVITY_CONSTANT
-        if raw_data == ACCEL_RANGE_16G:
-            return 16 * GRAVITY_CONSTANT
-        return -1
-
-    @property
-    def acceleration_scale(self) -> float:
-        raw_data = self.acceleration_range_raw
-
-        if raw_data == ACCEL_RANGE_2G:
-            return ACCEL_SCALE_MODIFIER_2G
-        if raw_data == ACCEL_RANGE_4G:
-            return ACCEL_SCALE_MODIFIER_4G
-        if raw_data == ACCEL_RANGE_8G:
-            return ACCEL_SCALE_MODIFIER_8G
-        if raw_data == ACCEL_RANGE_16G:
-            return ACCEL_SCALE_MODIFIER_16G
-        return ACCEL_RANGE_2G
-
-    @property
-    def gyroscope_range_raw(self) -> int:
-        """
-        Диапазон измеряемых значений гироскопа
-        GYRO_RANGE_250DEG = 0x00
-        GYRO_RANGE_500DEG = 0x08
-        GYRO_RANGE_1000DEG = 0x10
-        GYRO_RANGE_2000DEG = 0x18
-        """
-        return i2c_bus.read_byte_data(self.__address, GYRO_CONFIG)
-
-    @gyroscope_range_raw.setter
-    def gyroscope_range_raw(self, accel_range: int) -> None:
-        """
-        Диапазон измеряемых значений гироскопа
-        GYRO_RANGE_250DEG = 0x00
-        GYRO_RANGE_500DEG = 0x08
-        GYRO_RANGE_1000DEG = 0x10
-        GYRO_RANGE_2000DEG = 0x18
-        """
-        if not self.require_lock():
-            return
-        i2c_bus.write_byte_data(self.__address, GYRO_CONFIG, 0x00)
-        i2c_bus.write_byte_data(self.__address, GYRO_CONFIG, accel_range)
-        self.release_lock()
-
-    @property
-    def gyroscope_range(self) -> int:
-        """
-        Диапазон измеряемых значений гироскопа в градусах
-        """
-        raw_data = self.gyroscope_range_raw
-        if raw_data == GYRO_RANGE_250DEG:
-            return 250
-        if raw_data == GYRO_RANGE_500DEG:
-            return 500
-        if raw_data == GYRO_RANGE_1000DEG:
-            return 1000
-        if raw_data == GYRO_RANGE_2000DEG:
-            return 2000
-        return -1
-
-    @property
-    def gyroscope_scale(self) -> float:
-        # ACCEL_SCALE_MODIFIER_2G
-        raw_data = self.gyroscope_range_raw
-        if raw_data == GYRO_RANGE_250DEG:
-            return GYRO_SCALE_MODIFIER_250DEG
-        if raw_data == GYRO_RANGE_500DEG:
-            return GYRO_SCALE_MODIFIER_500DEG
-        if raw_data == GYRO_RANGE_1000DEG:
-            return GYRO_SCALE_MODIFIER_1000DEG
-        if raw_data == GYRO_RANGE_2000DEG:
-            return GYRO_SCALE_MODIFIER_2000DEG
-        return GYRO_RANGE_250DEG
-
-    @property
-    def hardware_filter_range_raw(self) -> int:
-        """
-        Документация???
-        """
-        ext_sync_set = i2c_bus.read_byte_data(self.__address, MPU_CONFIG) & 0b00111000
-        return i2c_bus.read_byte_data(self.__address, MPU_CONFIG, ext_sync_set)
-
-    @hardware_filter_range_raw.setter
-    def hardware_filter_range_raw(self, filter_range) -> None:
-        """
-        Документация???
-        """
-        if not self.require_lock():
-            return
-        ext_sync_set = i2c_bus.read_byte_data(self.__address, MPU_CONFIG) & 0b00111000
-        i2c_bus.write_byte_data(self.__address, MPU_CONFIG, ext_sync_set | filter_range)
-        self.release_lock()
-
-    @property
-    def hardware_filter_range(self) -> int:
-        """
-        Документация???
-        """
-        filter_range = self.hardware_filter_range_raw
-        if FILTER_BW_256 == filter_range:
-            return 250
-        if FILTER_BW_188 == filter_range:
-            return 500
-        if FILTER_BW_98 == filter_range:
-            return 1000
-        if FILTER_BW_10 == filter_range:
-            return 2000
-        if FILTER_BW_5 == filter_range:
-            return 2000
-        return -1
 
     @property
     def orientation(self) -> Vec3:
-        flag, val = self.__read_gyro_data()
-        if flag:
-            return val
-        return self.__orientations[self.__buffer_indent]
+        return self.__orientations[-1]
 
     @property
     def acceleration(self) -> Vec3:
-        flag, val = self.__read_acceleration_data()
-        if flag:
-            return val
-        return self.__accelerations[self.__buffer_indent]
+        return self.__accelerations[-1]
 
     @property
     def velocity(self) -> Vec3:
-        return self.__velocities[self.__buffer_indent]
+        return self.__velocities[-1]
 
     @property
     def position(self) -> Vec3:
-        return self.__positions[self.__buffer_indent]
+        return self.__positions[-1]
 
     @property
     def time_value(self):
-        return self.__time_values[self.__buffer_indent]
+        return self.__time_values[-1]
 
     @property
     def time_delta(self):
-        return self.__time_values[self.__buffer_indent] - self.__time_values[self.__buffer_indent - 1]
+        return self.__time_deltas[-1]  # - self.__time_values[self.__buffer_indent - 1]
 
     @property
     def orientations(self):
@@ -420,102 +150,38 @@ class Accelerometer(IDevice):
             return False or super()._try_close_log_file()
         return super()._try_close_log_file()
 
-    def __read_acceleration_data(self) -> Tuple[bool, Vec3]:
+    def _build_way_point(self) -> None:
 
-        acceleration = Vec3(0.0)
+        self.__time_values.append  (self.__accelerometer.last_accel_measurement_t)
+        self.__time_deltas.append  (self.__accelerometer.last_accel_measurement_dt)
+        self.__accelerations.append(self.__accelerometer.acceleration)
+        self.__orientations.append (self.__accelerometer.orientation)
 
-        scl = 1.0 / self.acceleration_scale * GRAVITY_CONSTANT
-
-        flag, value = read_raw_data(self.__address, ACCEL_X_OUT_H)
-
-        if not flag:
-            return flag, acceleration
-        acceleration.x = self.__filters[3].filter(float(value) * scl)
-
-        flag, value = read_raw_data(self.__address, ACCEL_Y_OUT_H)
-
-        if not flag:
-            return flag, acceleration
-        acceleration.y = self.__filters[4].filter(float(value) * scl)
-
-        flag, value = read_raw_data(self.__address, ACCEL_Z_OUT_H)
-
-        if not flag:
-            return flag, acceleration
-        acceleration.z = self.__filters[5].filter(float(value) * scl)
-
-        return flag, acceleration
-
-    def __read_gyro_data(self) -> Tuple[bool, Vec3]:
-
-        orientation = Vec3(0.0)
-
-        scl = 1.0 / self.gyroscope_scale
-
-        flag, value = read_raw_data(self.__address, GYRO_X_OUT_H)
-
-        if not flag:
-            return flag, orientation
-        orientation.x = float(value) * scl  # self.__filters[0].filter(float(value) * scl)
-
-        flag, value = read_raw_data(self.__address, GYRO_Y_OUT_H)
-
-        if not flag:
-            return flag, orientation
-        orientation.y = float(value) * scl  # self.__filters[1].filter(float(value) * scl)
-
-        flag, value = read_raw_data(self.__address, GYRO_Z_OUT_H)
-
-        if not flag:
-            return flag, orientation
-        orientation.z = float(value) * scl  # self.__filters[2].filter(float(value) * scl)
-
-        return flag, orientation
-
-    def __build_way_point(self) -> None:
-        curr = self.__buffer_indent
-        prev = 0 if self.__buffer_indent == 0 else self.__buffer_indent - 1
-        self.__time_values[curr] = time.perf_counter()
-        self.__time_deltas[curr] = self.time_delta
-        self.__accelerations[curr] = self.acceleration
-        self.__orientations[curr] = self.orientation
-
-        a = self.__accelerations[curr] - self.__accelerations[prev]
-
-        v = self.__velocities[prev]
-
-        self.__velocities[curr] = v + a * self.__time_deltas[curr]
-
-        self.__positions[curr] = \
-            self.__positions[prev] + \
-            self.__velocities[prev] * self.__time_deltas[curr]
-
-        self.__buffer_indent += 1
-        self.__buffer_indent %= self.__buffer_capacity
+        """
+                d_t = self.__time_deltas[-1]
+        
+                a_curr = self.__accelerations[-1]
+                a_prev = self.__accelerations[-2]
+        
+                v_prev = self.__velocities[-1]
+                v_curr = v_prev + (a_curr + a_prev) * d_t * 0.5
+        
+                s_prev = self.__positions[-1]
+                s_curr = s_prev + (v_prev + v_curr) * d_t * 0.5
+        
+        """
+        v_curr = self.__velocities[-1] + (self.__accelerations[-1] + self.__accelerations[-2]) * self.__time_deltas[-1] * 0.5
+        self.__velocities.append(v_curr)
+        self.__positions.append(self.__positions[-1] + (self.__velocities[-1] + v_curr) * self.__time_deltas[-1] * 0.5)
 
     def _init(self) -> bool:
-        try:
-            # Write to power management register
-            i2c_bus.write_byte_data(self.__address, PWR_MGMT_1, 1)
 
-            # write to sample rate register
-            i2c_bus.write_byte_data(self.__address, SAMPLE_RATE_DIV, 7)
+        if not self.__accelerometer.init():
+            print(f"Accelerometer init error...")
 
-            # Write to Configuration register
-            i2c_bus.write_byte_data(self.__address, MPU_CONFIG, 0)
-
-            # Write to Gyro configuration register
-            i2c_bus.write_byte_data(self.__address, GYRO_CONFIG, 24)
-
-            # Write to interrupt enable register
-            i2c_bus.write_byte_data(self.__address, INT_ENABLE, 1)
-
-        except AttributeError as ex_:
-            print(f"Accelerometer init error {ex_.args}")
             return False
-        for _ in range(100):
-            self.__read_gyro_data()
-            self.__read_acceleration_data()
+
+        self.__accelerometer.calibrate()
 
         return True
 
@@ -525,11 +191,11 @@ class Accelerometer(IDevice):
     def _logging(self) -> str:
         return f",\n{{\n" \
                f"\t\"acceleration\":{self.__accelerations[self.__buffer_indent]},\n" \
-               f"\t\"velocity\"    :{self.__velocities[self.__buffer_indent]},\n" \
-               f"\t\"position\"    :{self.__positions[self.__buffer_indent]},\n" \
-               f"\t\"orientation\" :{self.__orientations[self.__buffer_indent]},\n" \
-               f"\t\"curr_time\"   :{self.__time_values[self.__buffer_indent]},\n" \
-               f"\t\"delta_time\"  :{self.__time_deltas[self.__buffer_indent]}\n}}"
+               f"\t\"velocity\"    :{self.__velocities   [self.__buffer_indent]},\n" \
+               f"\t\"position\"    :{self.__positions    [self.__buffer_indent]},\n" \
+               f"\t\"orientation\" :{self.__orientations [self.__buffer_indent]},\n" \
+               f"\t\"curr_time\"   :{self.__time_values  [self.__buffer_indent]},\n" \
+               f"\t\"delta_time\"  :{self.__time_deltas  [self.__buffer_indent]}\n}}"
 
 
 def accelerometer_info():

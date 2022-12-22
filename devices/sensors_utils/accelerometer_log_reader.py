@@ -1,5 +1,5 @@
-from Odometry.devices.sensors_utils.real_time_filter import RealTimeFilter
-from Odometry.vmath.core.vectors import Vec3
+from devices.sensors_utils.real_time_filter import RealTimeFilter
+from vmath.core.vectors import Vec3
 import matplotlib.pyplot as plt
 from typing import List, Tuple
 import dataclasses
@@ -205,6 +205,7 @@ def draw_acceleration_2d(log_info: AccelerometerLog):
     axes.set_ylabel("$x, [m]$")
     axes.set_ylabel("$y, [m]$")
     plt.show()
+
 
 if __name__ == "__main__":
     log = read_accelerometer_log("accelerometer_log_coridor.json")

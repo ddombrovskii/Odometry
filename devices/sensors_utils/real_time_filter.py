@@ -1,5 +1,5 @@
-from Odometry.devices.sensors_utils.circ_buffer import CircBuffer
-from Odometry.vmath.core import geometry_utils
+from devices.sensors_utils.circ_buffer import CircBuffer
+from vmath.core import geometry_utils
 from matplotlib import pyplot as plt
 from typing import Callable
 import numpy as np
@@ -28,6 +28,13 @@ class RealTimeFilter:
         self._filter_function: Callable[[float], float]
 
         self.mode = 1
+
+    def clean_up(self):
+        self.__err_estimate = 0.333
+        self.__last_estimate = 0.0
+        self.__prev_value = 0.0
+        self.__curr_value = 0.0
+        self.__window_values.clear()
 
     @property
     def window_size(self) -> int:

@@ -2,7 +2,9 @@
 
 # Press Shift+F10 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
-from Odometry.bit_set import BitSet32
+from bit_set import BitSet32
+
+from vmath.core.vectors import Vec3
 
 
 def print_hi(name):

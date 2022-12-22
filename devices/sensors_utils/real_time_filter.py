@@ -3,8 +3,17 @@ from vmath.core import geometry_utils
 from matplotlib import pyplot as plt
 from typing import Callable
 import numpy as np
+import dataclasses
 import random
 import math
+
+
+@dataclasses.dataclass
+class RealTimeFilterSettings:
+    mode: int
+    window_size: int
+    k_arg: float
+    kalman_error: float
 
 
 class RealTimeFilter:
@@ -15,19 +24,22 @@ class RealTimeFilter:
         # 2 kalman
         self.__window_size: int = 13
         self.__window_values: CircBuffer = CircBuffer(self.window_size)
-
         self.__prev_value: float = 0.0
         self.__curr_value: float = 0.0
-
         self.__k_arg: float = 0.08
-
         self.__err_measure: float = 0.9
         self.__err_estimate: float = 0.333
         self.__last_estimate: float = 0.0
-
         self._filter_function: Callable[[float], float]
-
         self.mode = 1
+
+    def __str__(self):
+        return f"\t{{" \
+               f"\t\t\"mode\":        {self.mode},\n" \
+               f"\t\t\"window_size\": {self.window_size},\n" \
+               f"\t\t\"k_arg\":       {self.k_arg},\n" \
+               f"\t\t\"kalman_error\":{self.kalman_error},\n" \
+               f"\t}}"
 
     def clean_up(self):
         self.__err_estimate = 0.333
@@ -35,6 +47,18 @@ class RealTimeFilter:
         self.__prev_value = 0.0
         self.__curr_value = 0.0
         self.__window_values.clear()
+
+    @property
+    def settings(self) -> RealTimeFilterSettings:
+        return RealTimeFilterSettings(self.mode, self.window_size, self.k_arg, self.kalman_error)
+
+    @settings.setter
+    def settings(self, settings_set: RealTimeFilterSettings) -> None:
+        self.mode = settings_set.mode
+        self.window_size = settings_set.window_size
+        self.k_arg = settings_set.k_arg
+        self.kalman_error = settings_set.kalman_error
+        self.clean_up()
 
     @property
     def window_size(self) -> int:
@@ -98,8 +122,8 @@ class RealTimeFilter:
     def __kalman_filter(self, value: float) -> float:
         _kalman_gain: float      = self.__err_estimate  / (self.__err_estimate  + self.__err_measure)
         _current_estimate: float = self.__last_estimate  + _kalman_gain * (value - self.__last_estimate)
-        self.__err_estimate =  (1.0 - _kalman_gain) * self.__err_estimate + \
-                             math.fabs(self.__last_estimate - _current_estimate) * self.__k_arg
+        self.__err_estimate = (1.0 - _kalman_gain) * self.__err_estimate + \
+                              math.fabs(self.__last_estimate - _current_estimate) * self.__k_arg
         self.__prev_value = self.__last_estimate
         self.__last_estimate = _current_estimate
         return self.__last_estimate
@@ -151,9 +175,4 @@ def buffer_test():
 if __name__ == "__main__":
     buffer_test()
     filter_test()
-
-
-
-
-
 

@@ -1,6 +1,7 @@
-from Odometry.bit_set import BitSet32
 from threading import Thread, Lock
+from bit_set import BitSet32
 import datetime as dt
+import dataclasses
 import time
 
 
@@ -9,6 +10,15 @@ _DEVICE_ACTIVE = 1
 _DEVICE_LOCKED = 2
 _DEVICE_INITIALIZED = 3
 _DEVICE_LOGGING_ENABLED = 4
+
+
+@dataclasses.dataclass
+class IDeviceSettings:
+    update_rate: float
+    life_time: float
+    state: int
+    device_name: str
+    log_file_origin: str
 
 
 class IDevice(Thread):
@@ -44,6 +54,32 @@ class IDevice(Thread):
 
         self.__state: BitSet32 = BitSet32()
         self.__state.set_bit(_DEVICE_INITIALIZED)
+
+    def __str__(self):
+        return f"\t{{\n" \
+               f"\t\t\"update_rate\"     : {self.update_rate},\n" \
+               f"\t\t\"life_time\"       : {self.life_time},\n" \
+               f"\t\t\"state\"           : {self.__state.state},\n" \
+               f"\t\t\"device_name\"     : \"{self.device_name}\",\n" \
+               f"\t\t\"log_file_origin\" : \"{self.log_file_origin}\"\n" \
+               f"\t}}"
+
+    @property
+    def settings(self) -> IDeviceSettings:
+        return IDeviceSettings(self.update_rate, self.life_time,
+                               self.__state.state, self.device_name, self.log_file_origin)
+
+    @settings.setter
+    def settings(self, settings_set: IDeviceSettings) -> None:
+        active = self.active
+        if active:
+            self.active = False
+        self.__update_rate = settings_set.update_rate
+        self.__life_time = settings_set.life_time
+        self.__state = BitSet32(settings_set.state)
+        self.device_name = settings_set.device_name
+        self.log_file_origin = settings_set.log_file_origin
+        self.active = active
 
     @property
     def update_delta_time(self) -> float:

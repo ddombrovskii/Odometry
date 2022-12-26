@@ -1,4 +1,3 @@
-# from vmath.camera import Camera
 import datetime as datetime
 from os import mkdir
 import numpy as np

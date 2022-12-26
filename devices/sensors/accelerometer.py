@@ -1,4 +1,5 @@
 from devices.sensors_utils.real_time_filter import RealTimeFilter
+from matplotlib import pyplot as plt
 from vmath.core.vectors import Vec3
 from typing import List, Tuple
 import numpy as np
@@ -69,6 +70,96 @@ FILTER_GZ = 2
 FILTER_AX = 3
 FILTER_AY = 4
 FILTER_AZ = 5
+
+
+class Integrator3d:
+    SQUARES: int = 0
+    TRAPEZOID: int = 1
+    SIMPSON: int = 2
+
+    def __init__(self, start_val: Vec3 = Vec3(0.0)):
+        self._last_val: Vec3 = start_val
+        self._curr_val: Vec3 = start_val
+        self._time_val: float = -1.0
+        self._time_delta: float = 0.0
+        self.__mode: int = Integrator3d.TRAPEZOID
+        self.__integration_f = self.__trapezoid_int
+
+    def __call__(self, arg: Vec3, t: float) -> Vec3:
+        return self.integrate(arg, t)
+
+    def __str__(self):
+        return f"{{\n" \
+               f"\"prev_val\"  : {self.prev_val},\n" \
+               f"\"curr_val\"  : {self.curr_val},\n" \
+               f"\"time_val\"  : {self.time_val},\n" \
+               f"\"time_delta\": {self.time_delta}\n" \
+               f"}}"
+
+    @property
+    def time_delta(self) -> float:
+        return self._time_delta
+
+    @property
+    def time_val(self) -> float:
+        return self._time_val
+
+    @property
+    def curr_val(self) -> Vec3:
+        return self._curr_val
+
+    @property
+    def prev_val(self) -> Vec3:
+        return self._last_val
+
+    @property
+    def mode(self) -> int:
+        return self.__mode
+
+    @mode.setter
+    def mode(self, arg: int) -> None:
+        if arg == Integrator3d.SQUARES:
+            self.__mode = arg
+            self.__integration_f = self.__squares_int
+            return
+        if arg == Integrator3d.TRAPEZOID:
+            self.__mode = arg
+            self.__integration_f = self.__trapezoid_int
+            return
+        if arg == Integrator3d.SIMPSON:
+            self.__mode = arg
+            self.__integration_f = self.__simpson_int
+            return
+
+    def __squares_int(self, arg: Vec3, dt: float) -> Vec3:
+        return self.curr_val + arg * dt
+
+    def __trapezoid_int(self, arg: Vec3, dt: float) -> Vec3:
+        return self.curr_val + (self.curr_val + arg) * 0.5 * dt
+
+    def __simpson_int(self, arg: Vec3, dt: float) -> Vec3:
+        return (self.curr_val + arg) * 0.5 * dt
+
+    def integrate(self, arg: Vec3, t: float) -> Vec3:
+        if self._time_val < 0:
+            self._time_val = t
+            self._last_val = arg
+            self._curr_val = arg
+            self._time_delta = 0.0
+            return self.curr_val
+
+        self._time_delta = t - self._time_val
+        self._time_val = t
+        val = self.__integration_f(arg, self.time_delta)
+        self._last_val = self._curr_val
+        self._curr_val = val
+        return self.curr_val
+
+    def reset(self) -> None:
+        self._last_val = Vec3(0.0)
+        self._curr_val = Vec3(0.0)
+        self._time_val = 0.0
+        self._time_delta = 0.0
 
 
 @dataclasses.dataclass
@@ -146,13 +237,13 @@ class Accelerometer:
 
         self.__use_filtering: bool = True
 
-        self.__time_a_0: float = time.perf_counter()
-        self.__time_a: float = 0.0
-        self.__d_time_a: float = 0.0
+        self.__angles_integrator: Integrator3d = Integrator3d()
 
-        self.__time_g_0: float = time.perf_counter()
-        self.__time_g: float = 0.0
-        self.__d_time_g: float = 0.0
+        self.__velocity_integrator: Integrator3d = Integrator3d()
+
+        self.__position_integrator: Integrator3d = Integrator3d()
+
+        ######################################################
 
         self.__gyro_clib: Vec3 = Vec3(0.0)
         self.__accel_clib: Vec3 = Vec3(0.0)
@@ -201,11 +292,6 @@ class Accelerometer:
         acceleration = Vec3(0.0)
 
         scl = 1.0 / self.acceleration_scale * GRAVITY_CONSTANT
-
-        self.__d_time_a = time.perf_counter() - self.__time_a - self.__time_a_0
-
-        self.__time_a += self.__d_time_a
-
         try:
             if self.__use_filtering:
                 acceleration.x = self.__filter_ax(float(self.__read_unsafe(ACCEL_X_OUT_H)) * scl)
@@ -225,10 +311,6 @@ class Accelerometer:
         orientation = Vec3(0.0)
 
         scl = 1.0 / self.gyroscope_scale
-
-        self.__d_time_g = time.perf_counter() - self.__time_g - self.__time_g_0
-
-        self.__time_g += self.__d_time_g
 
         try:
             if self.__use_filtering:
@@ -457,56 +539,52 @@ class Accelerometer:
         self.bus.write_byte_data(self.__address, MPU_CONFIG, ext_sync_set | self.__hardware_filter_range_raw)
 
     @property
-    def orientation(self) -> Vec3:
-        flag, val = self.__read_gyro_data()
-        if flag:
-            self.__last_orientation = val - self.__gyro_clib
-            return self.__last_orientation
+    def angles_velocity(self) -> Vec3:
         return self.__last_orientation
+
+    @property
+    def angles(self) -> Vec3:
+        return self.__angles_integrator.curr_val
 
     @property
     def acceleration(self) -> Vec3:
-        flag, val = self.__read_acceleration_data()
-        if flag:
-            self.__last_acceleration = val - self.__accel_clib
-            return self.__last_acceleration
         return self.__last_acceleration
 
     @property
-    def last_orientation(self) -> Vec3:
-        return self.__last_orientation
+    def velocity(self) -> Vec3:
+        return self.__velocity_integrator.curr_val
 
     @property
-    def last_acceleration(self) -> Vec3:
-        return self.__last_acceleration
+    def position(self) -> Vec3:
+        return self.__position_integrator.curr_val
 
     @property
-    def last_accel_t(self) -> float:
+    def accel_t(self) -> float:
         """
         Последнее время, когда было измерено ускорение
         """
-        return self.__time_a
+        return self.__velocity_integrator.time_val
 
     @property
-    def last_accel_dt(self) -> float:
+    def accel_dt(self) -> float:
         """
         Прошедшее время между последним изменрением ускорения и предыдущим
         """
-        return self.__d_time_a
+        return self.__velocity_integrator.time_delta
 
     @property
-    def last_gyro_t(self) -> float:
+    def gyro_t(self) -> float:
         """
         Последнее время, когда были измерены угловые скорости
         """
-        return self.__time_g
+        return self.__angles_integrator.time_val
 
     @property
-    def last_gyro_dt(self) -> float:
+    def gyro_dt(self) -> float:
         """
         Прошедшее время между последним изменрением скорости измениния углов и предыдущим
         """
-        return self.__d_time_g
+        return self.__angles_integrator.time_delta
 
     def init(self) -> bool:
         try:
@@ -566,14 +644,6 @@ class Accelerometer:
 
         self.__accel_clib *= scl
 
-        self.__time_a_0 = time.perf_counter()
-        self.__time_a = 0.0
-        self.__d_time_a = 0.0
-
-        self.__time_g_0 = time.perf_counter()
-        self.__time_g = 0.0
-        self.__d_time_g = 0.0
-
         print(f"{{\n"
               f"\"calibration_info\":\n"
               f"\t{{\n"
@@ -583,8 +653,34 @@ class Accelerometer:
               f"\t}}\n"
               f"}}")
 
+    def read_accel_measurements(self) -> bool:
+        flag1, val = self.__read_acceleration_data()
+        if flag1:
+            self.__last_acceleration = val - self.__accel_clib
+            self.__velocity_integrator(self.acceleration, time.perf_counter())
+            self.__position_integrator(self.__velocity_integrator.curr_val, time.perf_counter())
+
+        flag2, val = self.__read_gyro_data()
+        if flag2:
+            self.__last_orientation = val - self.__gyro_clib
+            self.__angles_integrator(self.angles_velocity, time.perf_counter())
+        return flag2 or flag1
+
 
 if __name__ == "__main__":
+    n_points = 1000000
+    dx = 1.0 / (n_points - 1)
+    x = [dx * i for i in range(n_points)]
+    print(f"sum(x) = {sum(x) * dx}")
+    integrator = Integrator3d()
+    integrator.mode = 1
+    y = []
+    for xi in x:
+        y.append(integrator(Vec3(xi), xi).x)
+
+    plt.plot(x, x, 'r')
+    plt.plot(x, y, 'g')
+    plt.show()
 
     accelerometer = Accelerometer()
 
@@ -599,11 +695,12 @@ if __name__ == "__main__":
     accelerometer.calibrate()
 
     for _ in range(32):
-        print(f"t: {accelerometer.last_accel_t}, dt: {accelerometer.last_accel_dt}")
+        accelerometer.read_accel_measurements()
+        print(f"t: {accelerometer.accel_t}, dt: {accelerometer.accel_dt}")
         print(f"a: {accelerometer.acceleration}")
         time.sleep(0.1)
 
     for _ in range(32):
-        print(f"t: {accelerometer.last_gyro_t} dt: {accelerometer.last_gyro_dt}")
-        print(f"a: {accelerometer.orientation}")
+        print(f"t: {accelerometer.gyro_t} dt: {accelerometer.gyro_dt}")
+        print(f"a: {accelerometer.angles_velocity}")
         time.sleep(0.1)

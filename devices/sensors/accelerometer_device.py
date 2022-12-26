@@ -64,10 +64,10 @@ class AccelerometerDevice(IDevice):
 
     def __build_way_point(self) -> None:
 
-        self.__time_values.append(self.__accelerometer.last_accel_t)
-        self.__time_deltas.append(self.__accelerometer.last_accel_dt)
+        self.__time_values.append(self.__accelerometer.accel_t)
+        self.__time_deltas.append(self.__accelerometer.accel_dt)
 
-        angle_v_curr = self.accelerometer.orientation
+        angle_v_curr = self.accelerometer.angles_velocity
         angle_curr = self.angle + (angle_v_curr + self.angle_velocity) * 0.5 * self.time_delta
 
         a_curr = self.accelerometer.acceleration

@@ -240,6 +240,10 @@ def accelerometer_data_reading():
     acc.join()
 
 
+
+
+
+
 if __name__ == "__main__":
     #    accelerometer_data_reading()
     accelerometer_data_recording()

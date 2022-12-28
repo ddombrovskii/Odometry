@@ -1,19 +1,15 @@
+""" for raspberry
+import sys
+sys.path.append('/home/pi/Desktop/accelerometer/sensors_utils')
+from circ_buffer import CircBuffer
+"""
 from devices.sensors_utils.circ_buffer import CircBuffer
 from vmath.core import geometry_utils
 from matplotlib import pyplot as plt
 from typing import Callable
 import numpy as np
-import dataclasses
 import random
 import math
-
-
-@dataclasses.dataclass
-class RealTimeFilterSettings:
-    mode: int
-    window_size: int
-    k_arg: float
-    kalman_error: float
 
 
 class RealTimeFilter:
@@ -34,11 +30,11 @@ class RealTimeFilter:
         self.mode = 1
 
     def __str__(self):
-        return f"\t{{" \
+        return f"\t{{\n" \
                f"\t\t\"mode\":        {self.mode},\n" \
                f"\t\t\"window_size\": {self.window_size},\n" \
                f"\t\t\"k_arg\":       {self.k_arg},\n" \
-               f"\t\t\"kalman_error\":{self.kalman_error},\n" \
+               f"\t\t\"kalman_error\":{self.kalman_error}\n" \
                f"\t}}"
 
     def clean_up(self):
@@ -47,18 +43,6 @@ class RealTimeFilter:
         self.__prev_value = 0.0
         self.__curr_value = 0.0
         self.__window_values.clear()
-
-    @property
-    def settings(self) -> RealTimeFilterSettings:
-        return RealTimeFilterSettings(self.mode, self.window_size, self.k_arg, self.kalman_error)
-
-    @settings.setter
-    def settings(self, settings_set: RealTimeFilterSettings) -> None:
-        self.mode = settings_set.mode
-        self.window_size = settings_set.window_size
-        self.k_arg = settings_set.k_arg
-        self.kalman_error = settings_set.kalman_error
-        self.clean_up()
 
     @property
     def window_size(self) -> int:
@@ -131,6 +115,41 @@ class RealTimeFilter:
     def filter(self, value: float) -> float:
         return self._filter_function(value)
 
+    def load_settings(self, settings_file):
+        try:
+            if "mode" in settings_file:
+                self.mode = int(settings_file["mode"])
+        except Exception as _ex:
+            print(f"Real time filter settings read error :: incorrect mode {settings_file['mode']}")
+            self.mode = 0
+
+        try:
+            if "window_size" in settings_file:
+                self.window_size = int(settings_file["window_size"])
+        except Exception as _ex:
+            print(f"Real time filter settings read error :: incorrect window_size {settings_file['window_size']}")
+            self.window_size = 13
+
+        try:
+            if "k_arg" in settings_file:
+                self.k_arg = int(settings_file["k_arg"])
+        except Exception as _ex:
+            print(f"Real time filter settings read error :: incorrect k_arg {settings_file['k_arg']}")
+            self.k_arg = 0.09
+
+        try:
+            if "kalman_error" in settings_file:
+                self.kalman_error = int(settings_file["kalman_error"])
+        except Exception as _ex:
+            print(f"Real time filter settings read error :: incorrect kalman_error {settings_file['kalman_error']}")
+            self.kalman_error = 0.8
+
+        self.clean_up()
+
+    def save_settings(self, settings_file: str) -> None:
+        with open(settings_file, "wt") as output:
+            print(self, file=output)
+
 
 def noise_signal(t) -> float:
     return math.sin(t) + random.uniform(-0.1, 0.1) + random.uniform(-1, 1) * random.uniform(-1, 1)
@@ -142,10 +161,12 @@ def filter_test():
     y = [noise_signal(t) for t in x]
     _filter.mode = 1
     mid_filter = [_filter.filter(val) for val in y]
+    print(_filter)
     _filter.mode = 0
     ra_filter = [_filter.filter(val) for val in mid_filter]
     _filter.mode = 2
     kalman_filter = [_filter.filter(val) for val in y]
+    print(_filter)
     fig = plt.figure()
     plt.plot(x, y, 'r')
     plt.plot(x, ra_filter, 'g')

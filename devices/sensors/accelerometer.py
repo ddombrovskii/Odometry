@@ -1,9 +1,15 @@
+""" for raspberry
+import sys
+sys.path.append('/home/pi/Desktop/accelerometer/sensors_utils')
+from real_time_filter import RealTimeFilter
+"""
+
 from devices.sensors_utils.real_time_filter import RealTimeFilter
 from matplotlib import pyplot as plt
 from vmath.core.vectors import Vec3
 from typing import List, Tuple
 import numpy as np
-import dataclasses
+import json
 import time
 
 try:
@@ -162,21 +168,6 @@ class Integrator3d:
         self._time_delta = 0.0
 
 
-@dataclasses.dataclass
-class AccelerometerSettings:
-    address: int
-    acceleration_range_raw: int
-    gyroscope_range_raw: int
-    hardware_filter_range_raw: int
-    use_filtering: bool
-    ax_filters: List[RealTimeFilter]
-    ay_filters: List[RealTimeFilter]
-    az_filters: List[RealTimeFilter]
-    gx_filters: List[RealTimeFilter]
-    gy_filters: List[RealTimeFilter]
-    gz_filters: List[RealTimeFilter]
-
-
 # Based on mpu 6050
 class Accelerometer:
     """
@@ -184,37 +175,37 @@ class Accelerometer:
     """
     __filter_ranges = {256: FILTER_BW_256,
                        188: FILTER_BW_188,
-                       98:  FILTER_BW_98,
-                       42:  FILTER_BW_42,
-                       20:  FILTER_BW_20,
-                       10:  FILTER_BW_10,
-                       5:   FILTER_BW_5}
+                       98: FILTER_BW_98,
+                       42: FILTER_BW_42,
+                       20: FILTER_BW_20,
+                       10: FILTER_BW_10,
+                       5: FILTER_BW_5}
     """
     Диапазоны измеряемых ускорений
     """
-    __acc_ranges = {2:  ACCEL_RANGE_2G,
-                    4:  ACCEL_RANGE_4G,
-                    8:  ACCEL_RANGE_8G,
+    __acc_ranges = {2: ACCEL_RANGE_2G,
+                    4: ACCEL_RANGE_4G,
+                    8: ACCEL_RANGE_8G,
                     16: ACCEL_RANGE_16G}
     """
     Модификаторы масштаба для ускорений
     """
-    __acc_scales = {ACCEL_RANGE_2G:  ACCEL_SCALE_MODIFIER_2G,
-                    ACCEL_RANGE_4G:  ACCEL_SCALE_MODIFIER_4G,
-                    ACCEL_RANGE_8G:  ACCEL_SCALE_MODIFIER_8G,
+    __acc_scales = {ACCEL_RANGE_2G: ACCEL_SCALE_MODIFIER_2G,
+                    ACCEL_RANGE_4G: ACCEL_SCALE_MODIFIER_4G,
+                    ACCEL_RANGE_8G: ACCEL_SCALE_MODIFIER_8G,
                     ACCEL_RANGE_16G: ACCEL_SCALE_MODIFIER_16G}
     """
     Диапазоны измеряемых угловых скоростей
     """
-    __gyro_ranges = {250:  ACCEL_RANGE_2G,
-                     500:  ACCEL_RANGE_4G,
+    __gyro_ranges = {250: ACCEL_RANGE_2G,
+                     500: ACCEL_RANGE_4G,
                      1000: ACCEL_RANGE_8G,
                      2000: ACCEL_RANGE_16G}
     """
     Модификаторы масштаба для угловых скоростей
     """
-    __gyro_scales = {GYRO_RANGE_250DEG:  GYRO_SCALE_MODIFIER_250DEG,
-                     GYRO_RANGE_500DEG:  GYRO_SCALE_MODIFIER_500DEG,
+    __gyro_scales = {GYRO_RANGE_250DEG: GYRO_SCALE_MODIFIER_250DEG,
+                     GYRO_RANGE_500DEG: GYRO_SCALE_MODIFIER_500DEG,
                      GYRO_RANGE_1000DEG: GYRO_SCALE_MODIFIER_1000DEG,
                      GYRO_RANGE_2000DEG: GYRO_SCALE_MODIFIER_2000DEG}
 
@@ -227,11 +218,11 @@ class Accelerometer:
 
         self.__acceleration_range: int = -1  # 2
 
-        self.__acceleration_range_raw: int = -1  # HardwareAccelerometer.__acc_ranges[self.__acceleration_range]
+        self.__acceleration_range_raw: int = -1
 
         self.__gyroscope_range: int = -1  # 250
 
-        self.__gyroscope_range_raw: int = -1  # HardwareAccelerometer.__gyro_ranges[self.__gyroscope_range]
+        self.__gyroscope_range_raw: int = -1
 
         self.__hardware_filter_range_raw: int = -1
 
@@ -242,8 +233,6 @@ class Accelerometer:
         self.__velocity_integrator: Integrator3d = Integrator3d()
 
         self.__position_integrator: Integrator3d = Integrator3d()
-
-        ######################################################
 
         self.__gyro_clib: Vec3 = Vec3(0.0)
         self.__accel_clib: Vec3 = Vec3(0.0)
@@ -263,12 +252,12 @@ class Accelerometer:
                f"\t\"gyroscope_scale\":           {self.gyroscope_scale},\n" \
                f"\t\"hardware_filter_range_raw\": {self.hardware_filter_range_raw},\n" \
                f"\t\"use_filtering\":             {self.use_filtering},\n" \
-               f"\t\"ax_filters\":{{\n{separator.join(str(f) for f in self.__filters[FILTER_AX])}\t}},\n" \
-               f"\t\"ay_filters\":{{\n{separator.join(str(f) for f in self.__filters[FILTER_AY])}\t}},\n" \
-               f"\t\"az_filters\":{{\n{separator.join(str(f) for f in self.__filters[FILTER_AZ])}\t}},\n" \
-               f"\t\"gx_filters\":{{\n{separator.join(str(f) for f in self.__filters[FILTER_GX])}\t}},\n" \
-               f"\t\"gy_filters\":{{\n{separator.join(str(f) for f in self.__filters[FILTER_GY])}\t}},\n" \
-               f"\t\"gz_filters\":{{\n{separator.join(str(f) for f in self.__filters[FILTER_GZ])}\t}}\n" \
+               f"\t\"ax_filters\":[\n{separator.join(str(f) for f in self.__filters[FILTER_AX])}\n\t],\n" \
+               f"\t\"ay_filters\":[\n{separator.join(str(f) for f in self.__filters[FILTER_AY])}\n\t],\n" \
+               f"\t\"az_filters\":[\n{separator.join(str(f) for f in self.__filters[FILTER_AZ])}\n\t],\n" \
+               f"\t\"gx_filters\":[\n{separator.join(str(f) for f in self.__filters[FILTER_GX])}\n\t],\n" \
+               f"\t\"gy_filters\":[\n{separator.join(str(f) for f in self.__filters[FILTER_GY])}\n\t],\n" \
+               f"\t\"gz_filters\":[\n{separator.join(str(f) for f in self.__filters[FILTER_GZ])}\n\t]\n" \
                f"}}"
 
     def __enter__(self):
@@ -284,6 +273,17 @@ class Accelerometer:
             _filter.kalman_error = 0.9
             _filter.mode = 2
             self.__filters.append([_filter])
+        self.acceleration_range_raw = 2
+        self.gyroscope_range_raw = 250
+
+    def reset(self) -> None:
+        for filter_list in self.__filters:
+            for f in filter_list:
+                f.clean_up()
+        self.__gyro_clib = Vec3(0.0)
+        self.__accel_clib = Vec3(0.0)
+        self.__last_orientation = Vec3(0.0)
+        self.__last_acceleration = Vec3(0.0)
         self.acceleration_range_raw = 2
         self.gyroscope_range_raw = 250
 
@@ -362,6 +362,14 @@ class Accelerometer:
         return self.__filter_value(val, FILTER_GZ)
 
     @property
+    def bus(self):
+        return self.__i2c_bus
+
+    @property
+    def address(self) -> int:
+        return self.__address
+
+    @property
     def filters_ax(self) -> List[RealTimeFilter]:
         return self.__filters[FILTER_AX]
 
@@ -386,37 +394,6 @@ class Accelerometer:
         return self.__filters[FILTER_GZ]
 
     @property
-    def settings(self) -> AccelerometerSettings:
-        return AccelerometerSettings(self.address, self.acceleration_range_raw,
-                                     self.gyroscope_range_raw, self.hardware_filter_range_raw,
-                                     self.use_filtering,
-                                     self.__filters[FILTER_AX], self.__filters[FILTER_AY],
-                                     self.__filters[FILTER_AZ], self.__filters[FILTER_GX],
-                                     self.__filters[FILTER_GY], self.__filters[FILTER_GZ])
-
-    @settings.setter
-    def settings(self, settings_set: AccelerometerSettings) -> None:
-        prev_address = self.__address
-        self.__address = settings_set.address
-        if not self.init():
-            print("incorrect device address in HardwareAccelerometerSettings")
-            self.__address = prev_address
-            self.init()
-            return
-        self.acceleration_range_raw = settings_set.acceleration_range_raw
-        self.gyroscope_range_raw = settings_set.gyroscope_range_raw
-        self.hardware_filter_range_raw = settings_set.hardware_filter_range_raw
-        self.use_filtering = settings_set.use_filtering
-
-        self.__filters[FILTER_AX] = settings_set.ax_filters
-        self.__filters[FILTER_AY] = settings_set.ay_filters
-        self.__filters[FILTER_AZ] = settings_set.az_filters
-
-        self.__filters[FILTER_GX] = settings_set.gx_filters
-        self.__filters[FILTER_GY] = settings_set.gy_filters
-        self.__filters[FILTER_GZ] = settings_set.gz_filters
-
-    @property
     def use_filtering(self) -> bool:
         return self.__use_filtering
 
@@ -429,14 +406,6 @@ class Accelerometer:
             for channel_filters in self.__filters:
                 for f in channel_filters:
                     f.clean_up()
-
-    @property
-    def bus(self):
-        return self.__i2c_bus
-
-    @property
-    def address(self) -> int:
-        return self.__address
 
     @property
     def acceleration_range_raw(self) -> int:
@@ -586,6 +555,140 @@ class Accelerometer:
         """
         return self.__angles_integrator.time_delta
 
+    def load_settings(self, json_settings_file: str) -> bool:
+        json_file = None
+
+        with open(json_settings_file, "wt") as output_file:
+            json_file = json.load(output_file)
+            if json_file is None:
+                return False
+        flag = False
+
+        if "address" in json_file:
+            prev_address = self.__address
+            self.__address = int(json_file["address"])
+            if not self.init():
+                print("incorrect device address in HardwareAccelerometerSettings")
+                self.__address = prev_address
+                self.init()
+                return flag
+            flag |= True
+
+        try:
+            if "acceleration_range_raw" in json_file:
+                self.acceleration_range_raw = int(json_file["acceleration_range_raw"])
+                flag |= True
+        except Exception as _ex:
+            print("acceleration_range_raw read error")
+            self.acceleration_range_raw = ACCEL_RANGE_2G
+
+        try:
+            if "gyroscope_range_raw" in json_file:
+                self.gyroscope_range_raw = int(json_file["gyroscope_range_raw"])
+                flag |= True
+        except Exception as _ex:
+            print("gyroscope_range_raw read error")
+            self.acceleration_range_raw = GYRO_RANGE_250DEG
+
+        try:
+            if "hardware_filter_range_raw" in json_file:
+                self.hardware_filter_range_raw = int(json_file["hardware_filter_range_raw"])
+                flag |= True
+        except Exception as _ex:
+            print("hardware_filter_range_raw read error")
+
+        try:
+            if "use_filtering" in json_file:
+                self.use_filtering = bool(json_file["use_filtering"])
+                flag |= True
+        except Exception as _ex:
+            print("use_filtering read error")
+        if "ax_filters" in json_file:
+            for filter_id, filter_ in enumerate(json_file["ax_filters"]):
+                try:
+                    if filter_id == len(self.__filters[FILTER_AX]):
+                        self.__filters[FILTER_AX].append(RealTimeFilter())
+                        self.__filters[FILTER_AX][-1].load_settings(filter_)
+                        continue
+                    self.__filters[FILTER_AX][filter_id].load_settings(filter_)
+                except Exception as _ex:
+                    print(f"Accelerometer load settings error :: incorrect ax_filters\nfiter_id: {filter_id}\nfilter:\n{filter_}")
+                    continue
+            flag |= True
+
+        if "ay_filters" in json_file:
+            for filter_id, filter_ in enumerate(json_file["ay_filters"]):
+                try:
+                    if filter_id == len(self.__filters[FILTER_AY]):
+                        self.__filters[FILTER_AY].append(RealTimeFilter())
+                        self.__filters[FILTER_AY][-1].load_settings(filter_)
+                        continue
+                    self.__filters[FILTER_AY][filter_id].load_settings(filter_)
+                except Exception as _ex:
+                    print(f"Accelerometer load settings error :: incorrect ay_filters\nfiter_id: {filter_id}\nfilter:\n{filter_}")
+                    continue
+            flag |= True
+
+        if "az_filters" in json_file:
+            for filter_id, filter_ in enumerate(json_file["az_filters"]):
+                try:
+                    if filter_id == len(self.__filters[FILTER_AZ]):
+                        self.__filters[FILTER_AZ].append(RealTimeFilter())
+                        self.__filters[FILTER_AZ][-1].load_settings(filter_)
+                        continue
+                    self.__filters[FILTER_AZ][filter_id].load_settings(filter_)
+                except Exception as _ex:
+                    print(f"Accelerometer load settings error :: incorrect az_filters\nfiter_id: {filter_id}\nfilter:\n{filter_}")
+                    continue
+            flag |= True
+
+        if "gx_filters" in json_file:
+            for filter_id, filter_ in enumerate(json_file["gx_filters"]):
+                try:
+                    if filter_id == len(self.__filters[FILTER_GX]):
+                        self.__filters[FILTER_GX].append(RealTimeFilter())
+                        self.__filters[FILTER_GX][-1].load_settings(filter_)
+                        continue
+                    self.__filters[FILTER_GX][filter_id].load_settings(filter_)
+                except Exception as _ex:
+                    print(f"Accelerometer load settings error :: incorrect gx_filters\nfiter_id: {filter_id}\nfilter:\n{filter_}")
+                    continue
+            flag |= True
+
+        if "gy_filters" in json_file:
+            for filter_id, filter_ in enumerate(json_file["gy_filters"]):
+                try:
+                    if filter_id == len(self.__filters[FILTER_GY]):
+                        self.__filters[FILTER_GY].append(RealTimeFilter())
+                        self.__filters[FILTER_GY][-1].load_settings(filter_)
+                        continue
+                    self.__filters[FILTER_GY][filter_id].load_settings(filter_)
+                except Exception as _ex:
+                    print(f"Accelerometer load settings error :: incorrect gy_filters\nfiter_id: {filter_id}\nfilter:\n{filter_}")
+                    continue
+            flag |= True
+
+        if "gz_filters" in json_file:
+            for filter_id, filter_ in enumerate(json_file["gz_filters"]):
+                try:
+                    if filter_id == len(self.__filters[FILTER_GZ]):
+                        self.__filters[FILTER_GZ].append(RealTimeFilter())
+                        self.__filters[FILTER_GZ][-1].load_settings(filter_)
+                        continue
+                    self.__filters[FILTER_GZ][filter_id].load_settings(filter_)
+                except Exception as _ex:
+                    print(f"Accelerometer load settings error :: incorrect gz_filters\nfiter_id: {filter_id}\nfilter:\n{filter_}")
+                    continue
+            flag |= True
+
+        self.reset()
+
+        return flag
+
+    def save_settings(self, json_settings_file: str) -> None:
+        with open(json_settings_file, "wt") as output_file:
+            print(self, file=output_file)
+
     def init(self) -> bool:
         try:
             self.__i2c_bus = smbus.SMBus(1)
@@ -667,8 +770,7 @@ class Accelerometer:
         return flag2 or flag1
 
 
-if __name__ == "__main__":
-    n_points = 1000000
+def integrator_test(n_points: int = 1024):
     dx = 1.0 / (n_points - 1)
     x = [dx * i for i in range(n_points)]
     print(f"sum(x) = {sum(x) * dx}")
@@ -682,6 +784,8 @@ if __name__ == "__main__":
     plt.plot(x, y, 'g')
     plt.show()
 
+
+def accelerometer_test():
     accelerometer = Accelerometer()
 
     if not accelerometer.init():
@@ -694,13 +798,25 @@ if __name__ == "__main__":
 
     accelerometer.calibrate()
 
-    for _ in range(32):
-        accelerometer.read_accel_measurements()
-        print(f"t: {accelerometer.accel_t}, dt: {accelerometer.accel_dt}")
-        print(f"a: {accelerometer.acceleration}")
-        time.sleep(0.1)
+    with open("../sensors_utils/still.json", 'wt') as out_put:
+        print("{\n\"way_points\":[", file=out_put)
+        for _ in range(2048):
+            accelerometer.read_accel_measurements()
+            print("\t{\n", file=out_put)
+            print(f"\t\"angles_velocity\": {accelerometer.angles_velocity},", file=out_put)
+            print(f"\t\"angles\"         : {accelerometer.angles},", file=out_put)
+            print(f"\t\"acceleration\"   : {accelerometer.acceleration},", file=out_put)
+            print(f"\t\"velocity\"       : {accelerometer.velocity},", file=out_put)
+            print(f"\t\"position\"       : {accelerometer.position},", file=out_put)
+            print(f"\t\"time_delta\"     : {accelerometer.accel_dt},", file=out_put)
+            print(f"\t\"time\"           : {accelerometer.accel_t}", file=out_put)
+            print("\t},", file=out_put)
+        print("\t]\n}", file=out_put)
+    with open('accelerometer_settings.json', 'wt') as out_put:
+        print(accelerometer, file=out_put)
 
-    for _ in range(32):
-        print(f"t: {accelerometer.gyro_t} dt: {accelerometer.gyro_dt}")
-        print(f"a: {accelerometer.angles_velocity}")
-        time.sleep(0.1)
+
+if __name__ == "__main__":
+    integrator_test()
+    accelerometer_test()
+

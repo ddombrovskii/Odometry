@@ -4,12 +4,25 @@ sys.path.append('/home/pi/Desktop/accelerometer/sensors_utils')
 from circ_buffer import CircBuffer
 """
 from devices.sensors_utils.circ_buffer import CircBuffer
-from vmath.core import geometry_utils
 from matplotlib import pyplot as plt
 from typing import Callable
 import numpy as np
 import random
 import math
+
+
+def _clamp(min_: float, max_: float, val: float) -> float:
+    """
+    :param min_: минимальная граница
+    :param max_: максимальная граница
+    :param val: значение
+    :return: возвращает указанное значение val в границах от min до max
+    """
+    if val < min_:
+        return min_
+    if val > max_:
+        return max_
+    return val
 
 
 class RealTimeFilter:
@@ -82,7 +95,7 @@ class RealTimeFilter:
 
     @k_arg.setter
     def k_arg(self, val: float) -> None:
-        self.__k_arg = geometry_utils.clamp(0.0, 1.0, val)
+        self.__k_arg = _clamp(0.0, 1.0, val)
 
     @property
     def kalman_error(self) -> float:
@@ -90,7 +103,7 @@ class RealTimeFilter:
 
     @kalman_error.setter
     def kalman_error(self, val: float) -> None:
-        self.__err_measure = geometry_utils.clamp(0.0, 1.0, val)
+        self.__err_measure = _clamp(0.0, 1.0, val)
 
     def __run_avg_filter(self, value: float) -> float:
         self.__prev_value = self.__curr_value

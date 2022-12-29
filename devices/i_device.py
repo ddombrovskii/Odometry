@@ -1,8 +1,8 @@
 from threading import Thread, Lock
+from loop_timer import LoopTimer
 from bit_set import BitSet32
 import datetime as dt
 import dataclasses
-import time
 
 
 _DEVICE_ALIVE = 0
@@ -28,23 +28,11 @@ class IDevice(Thread):
         super().__init__()
 
         self.device_name: str = f"device_{id(self)}"
+        self.__rt_timer: LoopTimer = LoopTimer()
         """
         Время жизни устройства
         """
         self.__life_time = -1.0
-        """
-        Текущее время жизни
-        """
-        self.__time_alive = 0.0
-        """
-        Истиное значение времени на метод Update
-        """
-        self.__update_delta_time = 0.0
-
-        """
-        Частота обновления
-        """
-        self.__update_rate = 0.010
         self.__lock = Lock()
         self.__log_file_descriptor = None
         self._log_file_origin: str = f"device at address {id(self)}.json"
@@ -63,6 +51,18 @@ class IDevice(Thread):
                f"\t\t\"device_name\"     : \"{self.device_name}\",\n" \
                f"\t\t\"log_file_origin\" : \"{self.log_file_origin}\"\n" \
                f"\t}}"
+
+    def __enter__(self):
+        if not self.require_lock():
+            raise RuntimeError("unable to require lock")
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.release_lock()
+
+    @property
+    def timer(self) -> LoopTimer:
+        return self.__rt_timer
 
     @property
     def settings(self) -> IDeviceSettings:
@@ -86,7 +86,14 @@ class IDevice(Thread):
         """
         Истиное значение времени на метод Update
         """
-        return self.__update_delta_time
+        return self.timer.last_loop_time
+
+    @property
+    def time_alive(self) -> float:
+        """
+        Время жизни
+        """
+        return self.timer.time
 
     @property
     def life_time(self) -> float:
@@ -114,14 +121,12 @@ class IDevice(Thread):
         """
         Время обновления
         """
-        return self.__update_rate
+        return self.timer.timeout
 
     @update_rate.setter
     def update_rate(self, value: float) -> None:
-        if not self.require_lock():
-            return
-        self.__update_rate = min(max(value, 0.001), 3600)
-        self.release_lock()
+        with self:
+            self.timer.timeout = min(max(value, 0.001), 3600)
 
     @property
     def active(self) -> bool:
@@ -132,14 +137,11 @@ class IDevice(Thread):
 
     @active.setter
     def active(self, val: bool) -> None:
-        if not self.require_lock():
-            return
-        if val:
-            self.__state.set_bit(_DEVICE_ACTIVE)
-            self.release_lock()
-            return
-        self.__state.clear_bit(_DEVICE_ACTIVE)
-        self.release_lock()
+        with self:
+            if val:
+                self.__state.set_bit(_DEVICE_ACTIVE)
+            else:
+                self.__state.clear_bit(_DEVICE_ACTIVE)
 
     @property
     def alive(self) -> bool:
@@ -150,14 +152,11 @@ class IDevice(Thread):
 
     @alive.setter
     def alive(self, val: bool) -> None:
-        if not self.require_lock():
-            return
-        if val:
-            self.__state.set_bit(_DEVICE_ALIVE)
-            self.release_lock()
-            return
-        self.__state.clear_bit(_DEVICE_ALIVE)
-        self.release_lock()
+        with self:
+            if val:
+                self.__state.set_bit(_DEVICE_ALIVE)
+            else:
+                self.__state.clear_bit(_DEVICE_ALIVE)
 
     @property
     def enable_logging(self) -> bool:
@@ -167,18 +166,12 @@ class IDevice(Thread):
     def enable_logging(self, value: bool) -> None:
         if self.enable_logging == value:
             return
-
-        if not self.require_lock():
-            return
-
-        if value and self._try_open_log_file():
-            self.__state.set_bit(_DEVICE_LOGGING_ENABLED)
-            self.release_lock()
-            return
-
-        self._try_close_log_file()
-        self.release_lock()
-        return
+        with self:
+            if value and self._try_open_log_file():
+                self.__state.set_bit(_DEVICE_LOGGING_ENABLED)
+            else:
+                self.__state.clear_bit(_DEVICE_LOGGING_ENABLED)
+                self._try_close_log_file()
 
     @property
     def log_file_origin(self) -> str:
@@ -189,19 +182,9 @@ class IDevice(Thread):
         if value == self._log_file_origin:
             return
 
-        if not self.require_lock():
-            return
-
-        if not self._try_close_log_file():
-            self.release_lock()
-            return
-
-        if not self._try_open_log_file(value):
-            self.release_lock()
-            return
-
-        self._log_file_origin = value
-        self.release_lock()
+        with self:
+            if self._try_close_log_file():
+                self._try_open_log_file(value)
 
     @property
     def _log_file_descriptor(self):
@@ -277,32 +260,21 @@ class IDevice(Thread):
         update_time: float
 
         while self.alive:
-            # начало
-            update_time = time.perf_counter()
-            # проверка на факт активно устройство или нет
-            if not self.active:
-                continue
-            # выполнение полезной нагрузки
-            self._update()
-            # логгирование результатов, если включено и реализовано...
-            if self.enable_logging:
-                try:
-                    self._log_file_descriptor.write(self._logging())
+            with self.timer:
+                if not self.active:
+                    continue
 
-                except IOError as ex_:
-                    print(f"IOError: {ex_.args}\nlog write error to file {self.log_file_origin}")
+                self._update()
 
-            self.__update_delta_time = time.perf_counter() - update_time
+                if self.enable_logging:
+                    try:
+                        self._log_file_descriptor.write(self._logging())
+                    except IOError as ex_:
+                        print(f"IOError: {ex_.args}\nlog write error to file {self.log_file_origin}")
 
-            if self.update_delta_time < self.update_rate:
-                time.sleep(self.update_rate - self.update_delta_time)
-                self.__time_alive += self.update_rate
-
-            self.__time_alive += self.update_delta_time
-
-            if self.life_time > 0:
-                if self.__time_alive > self.life_time:
-                    break
+                if self.life_time > 0:
+                    if self.time_alive > self.life_time:
+                        break
 
         self._try_close_log_file()
 

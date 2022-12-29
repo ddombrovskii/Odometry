@@ -77,7 +77,7 @@ class PlotAnimator:
         self._z_data: List[float] = []
         self._src: Callable[..., Tuple[float, float, float]] = lambda: (-1.0, 0.0, 1.0)
         self._timer = LoopTimer()
-        self._timer.timeout = 10.0 / self._buffer_cap
+        self._timer.timeout = 25.0 / self._buffer_cap
 
     def __call__(self, src: Callable[..., Tuple[float, float, float]] = None):
 
@@ -112,7 +112,11 @@ class PlotAnimator:
         if self._src is None:
             return False
         self._t_data.append(_curr_time)
-        x, y, z = self._src()
+        try:
+            x, y, z = self._src()
+        except Exception as _ex:
+            print(f"src function call error:\n{_ex.args}")
+            x, y, z = -1.0, 0.0, 1.0
         self._x_data.append(x)
         self._y_data.append(y)
         self._z_data.append(z)
@@ -151,7 +155,7 @@ class PlotAnimator:
 if __name__ == "__main__":
     def cos_data() -> Tuple[float, float, float]:
         t = time.perf_counter()
-        return np.cos(t), np.cos(t + 0.5 * np.pi), np.cos(t + np.pi)
+        return np.cos(t), np.cos(t + 0.333 * np.pi), np.cos(t + 0.666 * np.pi)
 
     d = PlotAnimator()
     d(cos_data)

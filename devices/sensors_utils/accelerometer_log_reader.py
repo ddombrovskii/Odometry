@@ -195,7 +195,6 @@ def draw_acceleration_2d(log_info: AccelerometerLog):
     fig_1 = plt.figure()
 
     axes = plt.axes()  # (projection='3d')
-
     axes.plot(time_values, ax, 'r')
     axes.plot(time_values, ay, 'g')
     axes.plot(time_values, az, 'b')

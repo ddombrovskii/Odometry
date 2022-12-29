@@ -59,19 +59,24 @@ class BitSet32:
 
     def set_bit(self, bit_: int):
         set_bit(self.__state, bit_)
+        return self
 
     def inverse_bit(self, bit_: int):
         inverse_bit(self.__state, bit_)
+        return self
 
     def clear_bit(self, bit_: int):
         clear_bit(self.__state, bit_)
+        return self
 
     def clear(self):
         self.__state = BitSet32.__empty_state
+        return self
 
     def inverse(self):
         for i in range(32):
             inverse_bit(self.__state, i)
+        return self
 
 
 def bit_set_test():

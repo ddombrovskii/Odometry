@@ -1,354 +1,157 @@
-import time
-from threading import Thread
-
-from matplotlib.animation import FuncAnimation
+from typing import Tuple, List, Callable
 import matplotlib.pyplot as plt
 import numpy as np
-from typing import Tuple, Union, List, Callable, Dict
-"""
-
-fig, ax = plt.subplots()
-xdata, ydata = [], []
-ln, = plt.plot([], [], 'r')
-
-print(type(ln))
-
-steps = 128
-
-x_vals = np.linspace(0, 2 * np.pi, steps)
-
-x_cntr = 0
-
-dx = 0.0
+import time
 
 
-def init():
-    ax.set_xlim(0, 2 * np.pi)
-    ax.set_ylim(-1, 1)
-    return ln,
+class LoopTimer:
+    """
+    Интервальный таймер, который можно использоватьв вконтнксте with
+    """
+    __slots__ = "__timeout", "__loop_time", "__time"
 
+    def __init__(self, timeout: float = 1.0):
+        if timeout < 0:
+            self.__timeout = 1.0
+        else:
+            self.__timeout = timeout
+        self.__loop_time: float = 0.0
+        self.__time: float = 0.0
 
-def update(_):
-    global x_cntr
-    global dx
-    global ax
-    xdata.append(dx + x_vals[x_cntr])
-    ydata.append(np.sin(dx + x_vals[x_cntr]))
-    ax.set_xlim(xdata[0], xdata[-1])
-    if len(xdata) == steps + 1:
-        del xdata[0]
-        del ydata[0]
-    x_cntr += 1
-    if x_cntr == steps:
-        dx += x_vals[-1]
-        print(f"dx: {dx}")
-    x_cntr %= steps
-    ln.set_data(xdata, ydata)
-    return ln,
+    def __str__(self):
+        return f"{{\n" \
+               f"\t\"timeout\":        {self.timeout:-1.3f},\n" \
+               f"\t\"time\":           {self.time:-1.3f},\n" \
+               f"\t\"last_loop_time\": {self.last_loop_time:-1.3f}\n" \
+               f"}}"
 
+    def __enter__(self):
+        self.__loop_time = time.perf_counter()
 
-ani = FuncAnimation(fig, update, init_func=init, blit=True, interval=1000.0 * 2 * np.pi/steps)
-plt.show()
-"""
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.__loop_time = time.perf_counter() - self.__loop_time
+        if self.__loop_time < self.__timeout:
+            time.sleep(self.__timeout - self.__loop_time)
+            self.__time += self.__timeout
+        self.__time += self.__loop_time
 
+    @property
+    def time(self) -> float:
+        return self.__time
 
-class Monitor:
+    @property
+    def last_loop_time(self) -> float:
+        return self.__loop_time
 
-    __cmap = {'r': 'r',
-              'g': 'g',
-              'b': 'b',
-              'k': 'k'}
+    @property
+    def timeout(self) -> float:
+        return self.__timeout
 
-    def __init__(self, fig_title: str = "figure",
-                 fig_title_font_size: int = 16,
-                 sub_plots: Union[Tuple[int, int], int] = None,
-                 sub_plots_names: Union[List[str], str] = None,
-                 sub_plots_x_labels: Union[List[str], str] = None,
-                 sub_plots_y_labels: Union[List[str], str] = None):
-
-        self._figure = plt.figure()
-        self._figure.suptitle(fig_title, fontsize=fig_title_font_size)
-        self._axis = None
-        self._data_sources: Dict[int, Callable[[None], Tuple[float, ...]]] = {}
-        self._data_cashed: List[List[List[float]]] = []
-        self._plot_lines: Dict[int, list] = {}
-        self._data_cash_size = 128
-        self._animator = FuncAnimation(self._figure, self.update_data, blit=True,
-                                       interval=1000.0 * 2 * np.pi / (self._data_cash_size - 1))
-
-        if sub_plots is None:
-            self._axis = self.figure.subplots(1, 1)  # , constrained_layout=True)
-
-        if isinstance(sub_plots, int):
-            self._axis = self.figure.subplots(sub_plots, 1)  # , constrained_layout=True)
-
-        if isinstance(sub_plots, tuple):
-            self._axis = self.figure.subplots(sub_plots[0], sub_plots[1])  # , constrained_layout=True)
-
-        self.axis_titles = sub_plots_names
-        self.x_labels = sub_plots_x_labels
-        self.y_labels = sub_plots_y_labels
-
-    def _read_data_src(self, axis_id: int):
-        src = self._data_sources[axis_id]
-        data = self._data_cashed[axis_id]
-        lines = self._plot_lines[axis_id]
-        src_data = src(...)
-
-        if len(data) == 0:
-            for data_i in src_data:
-                data.append([])
-                data[-1].append(data_i)
+    @timeout.setter
+    def timeout(self, val: float) -> None:
+        if val < 0.0:
             return
+        self.__timeout = val
 
-        for src_i, data_i in zip(src_data, data):
-            data_i.append(src_i)
-            if len(data_i) > self._data_cash_size:
-                del data_i[0]
 
-        for line_id, line in enumerate(lines):
-            line.set_data(None, data[line_id])  # TODO xdata in line.set_data()...
+class PlotAnimator:
+    """
+    Анимированный граффик на три кривые
+    """
+    def __init__(self, fig_title: str = "figure"):
+        plt.ion()
+        self._buffer_cap = 128
+        self._figure, self._ax = plt.subplots()
+        self._figure.suptitle(fig_title, fontsize=16)
+        self._line_1, = self._ax.plot([], [], 'r')
+        self._line_2, = self._ax.plot([], [], 'g')
+        self._line_3, = self._ax.plot([], [], 'b')
+        self._ax.legend(['$a_{x}$', '$a_{y}$', '$a_{z}$'], loc='upper left')
+        self._ax.set_xlabel("$t,[sec]$")
+        self._ax.set_ylabel("$a(t),[{m} / {sec^{2}}]$")
+        self._ax.set_autoscaley_on(True)
+        self._ax.grid()
+        self._t_data: List[float] = []
+        self._x_data: List[float] = []
+        self._y_data: List[float] = []
+        self._z_data: List[float] = []
+        self._src: Callable[..., Tuple[float, float, float]] = lambda: (-1.0, 0.0, 1.0)
+        self._timer = LoopTimer()
+        self._timer.timeout = 10.0 / self._buffer_cap
 
-    def update_data(self) -> None:
-        for src_id in self._data_sources:
-            self._read_data_src(src_id)
+    def __call__(self, src: Callable[..., Tuple[float, float, float]] = None):
 
-    def set_data_source(self, axis_id: int, src: Callable[..., Tuple[float, ...]]) -> bool:
-        if axis_id >= self._axis.size:
+        if src is not None:
+            self._src = src
+
+        while plt.fignum_exists(self._figure.number):
+            with self._timer:
+                self._read_src(self._timer.time)
+                self._update_plot(self._t_data,
+                                  self._x_data,
+                                  self._y_data,
+                                  self._z_data)
+
+    def _update_plot(self, t_data: List[float], x_data: List[float], y_data: List[float], z_data: List[float]):
+        self._line_1.set_xdata(t_data)
+        self._line_1.set_ydata(x_data)
+
+        self._line_2.set_xdata(t_data)
+        self._line_2.set_ydata(y_data)
+
+        self._line_3.set_xdata(t_data)
+        self._line_3.set_ydata(z_data)
+
+        self._ax.relim()
+        self._ax.autoscale_view()
+
+        # self._figure.canvas.draw()
+        self._figure.canvas.flush_events()
+
+    def _read_src(self, _curr_time: float):
+        if self._src is None:
             return False
-        if axis_id < 0:
-            return False
-        # _ax = self._axis.flat[axis_id]
-        if axis_id in self._data_sources:
-            self._data_sources[axis_id] = src
-            return True
-        self._data_sources.update({axis_id: src})
-        self._plot_lines.update({axis_id: self._axis.flat[axis_id].plot([], [],)})
+        self._t_data.append(_curr_time)
+        x, y, z = self._src()
+        self._x_data.append(x)
+        self._y_data.append(y)
+        self._z_data.append(z)
+        if len(self._t_data) > self._buffer_cap:
+            del self._x_data[0]
+            del self._y_data[0]
+            del self._z_data[0]
+            del self._t_data[0]
         return True
 
     @property
-    def axis_titles(self) -> List[str]:
-        return [_ax.get_title() for _ax in self._axis.flat]
-
-    @axis_titles.setter
-    def axis_titles(self, titles: Union[List[str], str]) -> None:
-        if titles is None:
-            for _ax_id, _ax in enumerate(self._axis.flat):
-                _ax.set_title(f'')
-            return
-
-        if isinstance(titles, str):
-            for _ax_id, _ax in enumerate(self._axis.flat):
-                _ax.set_title(f' {_ax_id}'.join(titles))
-            return
-
-        if isinstance(titles, list):
-            for _ax, _ax_name in zip(self._axis.flat, titles):
-                _ax.set_title(_ax_name)
-
-    @property
-    def x_labels(self) -> List[str]:
-        return [_ax.get_xlabel() for _ax in self._axis.flat]
-
-    @property
-    def y_labels(self) -> List[str]:
-        return [_ax.get_ylabel() for _ax in self._axis.flat]
-
-    @x_labels.setter
-    def x_labels(self, labels: Union[List[str], str]) -> None:
-        if labels is None:
-            for _ax in self._axis.flat:
-                _ax.set_xlabel('x')
-            return
-
-        if isinstance(labels, str):
-            for _ax in self._axis.flat:
-                _ax.set_xlabel(labels)
-            return
-
-        if isinstance(labels, list):
-            for _ax, _ax_name in zip(self._axis.flat, labels):
-                _ax.set_xlabel(_ax_name)
-
-    @y_labels.setter
-    def y_labels(self, labels: Union[List[str], str]) -> None:
-        if labels is None:
-            for _ax in self._axis.flat:
-                _ax.set_ylabel('y')
-            return
-
-        if isinstance(labels, str):
-            for _ax in self._axis.flat:
-                _ax.set_ylabel(labels)
-            return
-
-        if isinstance(labels, list):
-            for _ax, _ax_name in zip(self._axis.flat, labels):
-                _ax.set_ylabel(_ax_name)
-
-    @property
     def axis(self):
-        for _ax in self._axis.flat:
-            yield _ax
+        return self._ax
 
     @property
     def figure(self):
         return self._figure
 
-    def start(self) -> None:
-        # self._figure.show()
-        plt.show()
+    @property
+    def x_label(self) -> str:
+        return self._ax.get_xlabel()
 
+    @x_label.setter
+    def x_label(self, label: str) -> None:
+        self._ax.set_xlabel(label)
 
-def cos_1(t: float) -> float:
-    return np.sin(t)
+    @property
+    def y_label(self) -> str:
+        return self._ax.get_ylabel()
 
-
-def cos_2(t: float) -> float:
-    return np.sin(t + np.pi * 0.5)
-
-
-def cos_3(t: float) -> float:
-    return np.sin(t + np.pi)
-
-
-def cos_data() -> Tuple[float, float, float]:
-    t = time.perf_counter()
-    return cos_1(t), cos_2(t), cos_3(t)
-
-
-class Animator(Thread):
-    def __init__(self):
-        super().__init__()
-        self.time_out = 0.1
-        self.animation_frame = None
-        self.life_time = 10
-        self._time_alive = 0.0
-
-    def run(self):
-        while True:
-            if self._time_alive >= self.life_time:
-                break
-
-            if self.animation_frame is None:
-                time.sleep(self.time_out)
-                self._time_alive += self.time_out
-                continue
-
-            t = time.perf_counter()
-            self.animation_frame()
-            t = time.perf_counter() - t
-
-            if t < self.time_out:
-                time.sleep(self.time_out - t)
-                self._time_alive += self.time_out
-                continue
-
-            self._time_alive += t
-
-plt.ion()
-class DynamicUpdate():
-    #Suppose we know the x range
-    min_x = 0
-    max_x = 10
-
-    def on_launch(self):
-        #Set up plot
-        self.figure, self.ax = plt.subplots()
-        self.lines, = self.ax.plot([],[], 'o')
-        #Autoscale on unknown axis and known lims on the other
-        self.ax.set_autoscaley_on(True)
-        self.ax.set_xlim(self.min_x, self.max_x)
-        #Other stuff
-        self.ax.grid()
-        ...
-
-    def on_running(self, xdata, ydata):
-        #Update data (with the new _and_ the old points)
-        self.lines.set_xdata(xdata)
-        self.lines.set_ydata(ydata)
-        #Need both of these in order to rescale
-        self.ax.relim()
-        self.ax.autoscale_view()
-        #We need to draw *and* flush
-        self.figure.canvas.draw()
-        self.figure.canvas.flush_events()
-
-    #Example
-    def __call__(self):
-        import numpy as np
-        import time
-        self.on_launch()
-        xdata = []
-        ydata = []
-        for x in np.arange(0, 10, 0.05):
-            xdata.append(x)
-            ydata.append(np.exp(-x**2)+10*np.exp(-(x-7)**2))
-            self.on_running(xdata, ydata)
-            time.sleep(0.1)
-        return xdata, ydata
+    @y_label.setter
+    def y_label(self, label: str) -> None:
+        self._ax.set_ylabel(label)
 
 
 if __name__ == "__main__":
-    d = DynamicUpdate()
-    d()
-    exit(0)
+    def cos_data() -> Tuple[float, float, float]:
+        t = time.perf_counter()
+        return np.cos(t), np.cos(t + 0.5 * np.pi), np.cos(t + np.pi)
 
-    fig, ax = plt.subplots()
-
-    t_start = time.perf_counter()
-    t_vals = []
-
-    x_vals = []
-    y_vals = []
-    z_vals = []
-
-    x_vals_line, = ax.plot([], [], 'r')
-    y_vals_line, = ax.plot([], [], 'g')
-    z_vals_line, = ax.plot([], [], 'b')
-
-    data_cap = 128
-
-    def plot_3graphs():
-        x, y, z = cos_data()
-        x_vals.append(x)
-        y_vals.append(y)
-        z_vals.append(z)
-        t_vals.append(time.perf_counter() - t_start)
-
-        ax.set_xlim(t_vals[0], t_vals[-1])
-        ax.set_ylim(-1, 1)
-
-        if len(x_vals) > data_cap:
-            del x_vals[0]
-            del y_vals[0]
-            del z_vals[0]
-            del t_vals[0]
-        x_vals_line.set_data(t_vals, x_vals)
-        y_vals_line.set_data(t_vals, y_vals)
-        z_vals_line.set_data(t_vals, z_vals)
-        #Need both of these in order to rescale
-        ax.relim()
-        ax.autoscale_view()
-        #We need to draw *and* flush
-        fig.canvas.draw()
-        fig.canvas.flush_events()
-
-    animator = Animator()
-    animator.animation_frame = plot_3graphs
-    print("kurva")
-    animator.start()
-    print("kurva")
-    plt.show()
-
-
-
-
-
-
-
-
-
-
-
-
+    d = PlotAnimator()
+    d(cos_data)

@@ -1,6 +1,6 @@
-from devices.loop_timer import LoopTimer
 from typing import Tuple, List, Callable
 from matplotlib import pyplot as plt
+from cgeo import LoopTimer
 import numpy as np
 import time
 

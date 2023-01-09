@@ -1,6 +1,6 @@
+from cgeo.loop_timer import LoopTimer
 from threading import Thread, Lock
-from loop_timer import LoopTimer
-from bit_set import BitSet32
+from cgeo.bitset import BitSet32
 import datetime as dt
 import dataclasses
 
@@ -26,7 +26,6 @@ class IDevice(Thread):
     """
     def __init__(self):
         super().__init__()
-
         self.device_name: str = f"device_{id(self)}"
         self.__rt_timer: LoopTimer = LoopTimer()
         """
@@ -74,7 +73,7 @@ class IDevice(Thread):
         active = self.active
         if active:
             self.active = False
-        self.__update_rate = settings_set.update_rate
+        self.update_rate = settings_set.update_rate
         self.__life_time = settings_set.life_time
         self.__state = BitSet32(settings_set.state)
         self.device_name = settings_set.device_name
@@ -226,9 +225,11 @@ class IDevice(Thread):
         if self.__state.is_bit_set(_DEVICE_LOCKED):
             return False
 
-        if self.__lock.acquire():
-            self.__state.set_bit(_DEVICE_LOCKED)
-            return True
+        if not self.__lock.acquire():
+            return False
+
+        self.__state.set_bit(_DEVICE_LOCKED)
+        return True
 
     def release_lock(self):
         self.__state.clear_bit(_DEVICE_LOCKED)

@@ -1,7 +1,7 @@
-from devices.sensors_utils.real_time_filter import RealTimeFilter
-from vmath.core.vectors import Vec3
+from typing import List, Tuple, Callable
+from cgeo.filtering import RealTimeFilter
 import matplotlib.pyplot as plt
-from typing import List, Tuple
+from cgeo.vectors import Vec3
 import dataclasses
 import numpy as np
 import json
@@ -76,35 +76,32 @@ def read_accelerometer_log(path_2_json: str) -> AccelerometerLog:
 
 
 def accelerations(way_points: List[WayPoint]) -> Tuple[List[float], List[float], List[float]]:
-    a_0_x = -0.09122
-    a_0_y = -0.1166
-    a_0_z = 0.511
-    return [v.acceleration.x + a_0_x for v in way_points],\
-           [v.acceleration.y + a_0_y for v in way_points],\
-           [v.acceleration.z + a_0_z for v in way_points]
+    return [v.acceleration.x for v in way_points], \
+           [v.acceleration.y for v in way_points], \
+           [v.acceleration.z for v in way_points]
 
 
 def velocities(way_points: List[WayPoint]) -> Tuple[List[float], List[float], List[float]]:
-    return [v.velocity.x for v in way_points],\
-           [v.velocity.y for v in way_points],\
+    return [v.velocity.x for v in way_points], \
+           [v.velocity.y for v in way_points], \
            [v.velocity.z for v in way_points]
 
 
 def positions(way_points: List[WayPoint]) -> Tuple[List[float], List[float], List[float]]:
-    return [v.position.x for v in way_points],\
-           [v.position.y for v in way_points],\
+    return [v.position.x for v in way_points], \
+           [v.position.y for v in way_points], \
            [v.position.z for v in way_points]
 
 
 def ang_velocities(way_points: List[WayPoint]) -> Tuple[List[float], List[float], List[float]]:
-    return [v.ang_velocity.x for v in way_points],\
-           [v.ang_velocity.y for v in way_points],\
+    return [v.ang_velocity.x for v in way_points], \
+           [v.ang_velocity.y for v in way_points], \
            [v.ang_velocity.z for v in way_points]
 
 
 def angles(way_points: List[WayPoint]) -> Tuple[List[float], List[float], List[float]]:
-    return [v.angle.x for v in way_points],\
-           [v.angle.y for v in way_points],\
+    return [v.angle.x for v in way_points], \
+           [v.angle.y for v in way_points], \
            [v.angle.z for v in way_points]
 
 
@@ -117,49 +114,44 @@ def time_vals(way_points: List[WayPoint]) -> List[float]:
     return time_values
 
 
-def integrate(ax: List[float], ay: List[float], az: List[float], dt: List[float]) ->\
+q_value = 1.0
+
+
+def _round(x: float, value: float = 0.01) -> float:
+    return int(x / value) * value
+
+
+def _integrate(dx_vals: List[float], x_vals: List[float], round_f: Callable[[float], float] = None) -> List[float]:
+    int_val = 0.0
+    integral = []
+    if round_f is None:
+        round_f = _round
+
+    for dx_i, x_i in zip(dx_vals, x_vals):
+        int_val += dx_i * round_f(x_i)
+        integral.append(int_val)
+    return integral
+
+
+def integrate(ax: List[float], ay: List[float], az: List[float],
+              v_ax: List[float], v_ay: List[float], v_az: List[float],
+              dt: List[float]) -> \
         Tuple[List[float], List[float], List[float],
+              List[float], List[float], List[float],
               List[float], List[float], List[float]]:
+    vx = _integrate(dt, ax)
+    vy = _integrate(dt, ay)
+    vz = _integrate(dt, az)
 
-    v_0 = 0.0
-    vx = []
-    for _dt, _ax in zip(dt, ax):
-        v_0 += _dt * _ax
-        vx.append(v_0)
+    sx = _integrate(dt, vx)
+    sy = _integrate(dt, vy)
+    sz = _integrate(dt, vz)
 
-    v_0 = 0.0
-    vy = []
-    for _dt, _ay in zip(dt, ay):
-        v_0 += _dt * _ay
-        vy.append(v_0)
+    ang_x = _integrate(dt, v_ax)
+    ang_y = _integrate(dt, v_ay)
+    ang_z = _integrate(dt, v_az)
 
-    v_0 = 0.0
-    vz = []
-    for _dt, _az in zip(dt, az):
-        v_0 += _dt * _az
-        vz.append(v_0)
-    ##################################
-    ##################################
-    ##################################
-    s_0 = 0.0
-    sx = []
-    for _dt, _vx in zip(dt, vx):
-        s_0 += _dt * _vx
-        sx.append(s_0)
-
-    s_0 = 0.0
-    sy = []
-    for _dt, _vy in zip(dt, vy):
-        s_0 += _dt * _vy
-        sy.append(s_0)
-
-    s_0 = 0.0
-    sz = []
-    for _dt, _vz in zip(dt, vz):
-        s_0 += _dt * _vz
-        sz.append(s_0)
-
-    return vx, vy, vz, sx, sy, sz
+    return vx, vy, vz, sx, sy, sz, ang_x, ang_y, ang_z
 
 
 def draw_acceleration(log_info: AccelerometerLog):
@@ -186,26 +178,31 @@ def draw_acceleration_2d(log_info: AccelerometerLog):
     print(f"way points number: {len(log_info.way_points)}")
 
     ax, ay, az = accelerations(log_info.way_points)
-    vx, vy, vz = velocities(log_info.way_points)
-    sx, sy, sz = positions(log_info.way_points)
     ang_vx, ang_vy, ang_vz = ang_velocities(log_info.way_points)
-    ang_x, ang_y, ang_z = angles(log_info.way_points)
     time_values = time_vals(log_info.way_points)
+    dtime_values = [p.time_delta for p in log_info.way_points]
+    dtime_values[0] = dtime_values[-1]
+    # vx, vy, vz = velocities(log_info.way_points)
+    # sx, sy, sz = positions(log_info.way_points)
+    # ang_x, ang_y, ang_z = angles(log_info.way_points)
+
+    vx, vy, vz, sx, sy, sz, ang_x, ang_y, ang_z = integrate(ax, ay, az, ang_vx, ang_vy, ang_vz, dtime_values)
 
     fig_1 = plt.figure()
 
     axes = plt.axes()  # (projection='3d')
-    axes.plot(time_values, ax, 'r')
-    axes.plot(time_values, ay, 'g')
-    axes.plot(time_values, az, 'b')
+    axes.plot(time_values, ax, '*r')
+    axes.plot(time_values, ay, '*g')
+    axes.plot(time_values, az, '*b')
     axes.legend(['$a_{x}$', '$a_{y}$', '$a_{z}$'])
     axes.set_xlabel("$x,[sec]$")
     axes.set_ylabel("$a(t),[m/sec^{2}]$")
+    plt.grid(True)
     plt.show()
 
     fig_1 = plt.figure()
 
-    axes = plt.axes() # (projection='3d')
+    axes = plt.axes()  # (projection='3d')
 
     # axes.plot3D(ax, ay, az, 'r')
     axes.plot(time_values, vx, 'r')
@@ -214,8 +211,9 @@ def draw_acceleration_2d(log_info: AccelerometerLog):
     axes.legend(['$v_{x}$', '$v_{y}$', '$v_{z}$'])
     axes.set_xlabel("$x,[sec]$")
     axes.set_ylabel("$v(t),[m/sec]$")
+    plt.grid(True)
     plt.show()
-
+    return
     fig_1 = plt.figure()
 
     axes = plt.axes()
@@ -225,8 +223,8 @@ def draw_acceleration_2d(log_info: AccelerometerLog):
     axes.legend(['$s_{x}$', '$s_{y}$', '$s_{z}$'])
     axes.set_xlabel("$x,[sec]$")
     axes.set_ylabel("$S(t),[m]$")
+    plt.grid(True)
     plt.show()
-
 
     fig_1 = plt.figure()
 
@@ -237,13 +235,24 @@ def draw_acceleration_2d(log_info: AccelerometerLog):
     axes.legend(['$angV_{x}$', '$angV_{y}$', '$angV_{z}$'])
     axes.set_xlabel("$x,[sec]$")
     axes.set_ylabel("$angV(t),[grad/sec]$")
+    plt.grid(True)
+    plt.show()
+
+    fig_1 = plt.figure()
+
+    axes = plt.axes()
+    axes.plot(time_values, ang_x, 'r')
+    axes.plot(time_values, ang_y, 'g')
+    axes.plot(time_values, ang_z, 'b')
+    axes.legend(['$ang_{x}$', '$ang_{y}$', '$ang_{z}$'])
+    axes.set_xlabel("$x,[sec]$")
+    axes.set_ylabel("$angV(t),[grad/sec]$")
+    plt.grid(True)
     plt.show()
 
 
 if __name__ == "__main__":
     # log = read_accelerometer_log("accelerometer_log_coridor.json")
-    log = read_accelerometer_log("still.json")
+    log = read_accelerometer_log("accelerometer_records\still_callib_and_filtered.json")
     draw_acceleration_2d(log)
     # draw_acceleration(log)
-
-

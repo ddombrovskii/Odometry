@@ -1,10 +1,11 @@
 import math
-import vmath.core.geometry_utils as mu
 from threading import Thread
 import datetime as datetime
 import numpy as np
 import cv2 as cv
 import time
+
+from cgeo import mutils
 
 run_in_debug_mode = True
 run_with_errors = True
@@ -331,7 +332,7 @@ class BaslerCamera: #  (Camera):
 
         new_val = (w + self.__camera.Width.Inc // 2) // self.__camera.Width.Inc * self.__camera.Width.Inc
 
-        self.__camera.Width.SetValue(mu.clamp(self.__camera.Width.Min, self.__camera.Width.Max, new_val))
+        self.__camera.Width.SetValue(mutils.clamp(new_val, self.__camera.Width.Min, self.__camera.Width.Max))
 
         self.__width = new_val
 
@@ -352,7 +353,7 @@ class BaslerCamera: #  (Camera):
 
         new_val = (h + self.__camera.Height.Inc // 2) // self.__camera.Height.Inc * self.__camera.Height.Inc
 
-        self.__camera.Height.SetValue(mu.clamp(self.__camera.Height.Min, self.__camera.Height.Max, new_val))
+        self.__camera.Height.SetValue(mutils.clamp(new_val, self.__camera.Height.Min, self.__camera.Height.Max))
 
         self.__height = new_val
 
@@ -373,7 +374,7 @@ class BaslerCamera: #  (Camera):
             return
 
         new_val = (value + self.__camera.OffsetX.Inc // 2) // self.__camera.OffsetX.Inc * self.__camera.OffsetX.Inc
-        self.__camera.OffsetX.SetValue(mu.clamp(self.__camera.OffsetX.Min, self.__camera.OffsetX.Max, new_val))
+        self.__camera.OffsetX.SetValue(mutils.clamp(new_val, self.__camera.OffsetX.Min, self.__camera.OffsetX.Max))
         self.__offset_x = new_val
         self.start()
 
@@ -390,7 +391,7 @@ class BaslerCamera: #  (Camera):
             return
 
         new_val = (value + self.__camera.OffsetY.Inc // 2) // self.__camera.OffsetY.Inc * self.__camera.OffsetY.Inc
-        self.__camera.OffsetY.SetValue(mu.clamp(self.__camera.OffsetY.Min, self.__camera.OffsetY.Max, new_val))
+        self.__camera.OffsetY.SetValue(mutils.clamp(new_val, self.__camera.OffsetY.Min, self.__camera.OffsetY.Max))
         self.__offset_y = new_val
         self.start()
 
@@ -505,7 +506,7 @@ class BaslerCamera: #  (Camera):
                 self.__exposure_time = self.__camera.ExposureTimeAbs.GetValue()
                 return
 
-            new_val = mu.clamp(self.exposure_time_min, self.exposure_time_max, value)
+            new_val = mutils.clamp(value, self.exposure_time_min, self.exposure_time_max)
             self.__camera.ExposureTimeAbs.SetValue(new_val)
             self.__exposure_time = new_val
             return
@@ -515,7 +516,7 @@ class BaslerCamera: #  (Camera):
                 self.__exposure_time = self.__camera.ExposureTime.GetValue()
                 return
 
-            new_val = mu.clamp(self.exposure_time_min, self.exposure_time_max, value)
+            new_val = mutils.clamp(value, self.exposure_time_min, self.exposure_time_max)
             self.__camera.ExposureTime.SetValue(new_val)
             self.__exposure_time = new_val
             return
@@ -627,7 +628,7 @@ class BaslerCamera: #  (Camera):
                 self.__gain = self.__camera.GainRaw.GetValue()
                 return
 
-            new_val = mu.clamp(self.gain_min, self.gain_max, value)
+            new_val = mutils.clamp(value, self.gain_min, self.gain_max)
             self.__camera.GainRaw.SetValue(new_val)
             self.__gain = new_val
             return
@@ -637,7 +638,7 @@ class BaslerCamera: #  (Camera):
                 self.__gain = self.__camera.Gain.GetValue()
                 return
 
-            new_val = mu.clamp(self.gain_min, self.gain_max, value)
+            new_val = mutils.clamp(value, self.gain_min, self.gain_max)
             self.__camera.Gain.SetValue(new_val)
             self.__gain = new_val
             return
@@ -657,7 +658,7 @@ class BaslerCamera: #  (Camera):
         if not genicam.IsWritable(self.__camera.GevSCPSPacketSize):
             return
 
-        new_val = int(mu.clamp(value, self.__camera.GevSCPSPacketSize.Min, self.__camera.GevSCPSPacketSize.Max))
+        new_val = int(mutils.clamp(value, self.__camera.GevSCPSPacketSize.Min, self.__camera.GevSCPSPacketSize.Max))
         self.__camera.GevSCPSPacketSize.SetValue(new_val)
         self.__packet_size = new_val
 
@@ -674,7 +675,7 @@ class BaslerCamera: #  (Camera):
         if not genicam.IsWritable(self.__camera.GevSCPD):
             return
 
-        new_val = int(mu.clamp(self.__camera.GevSCPD.Min, self.__camera.GevSCPD.Max, value))
+        new_val = int(mutils.clamp(value, self.__camera.GevSCPD.Min, self.__camera.GevSCPD.Max))
         self.__camera.GevSCPD.SetValue(new_val)
         self.__packet_delay = new_val
 

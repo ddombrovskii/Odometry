@@ -1,9 +1,8 @@
-from devices.sensors.accelerometer import Accelerometer
+from accelerometer import Accelerometer
 from devices.i_device import IDevice
-from vmath.core.vectors import Vec3
+from cgeo.vectors import Vec3
 from typing import List
 import datetime as dt
-import time
 
 
 class AccelerometerDevice(IDevice):
@@ -108,11 +107,6 @@ class AccelerometerDevice(IDevice):
 
     def _init(self) -> bool:
 
-        if not self.__accelerometer.init():
-            print(f"Accelerometer init error...")
-
-            return False
-
         self.__accelerometer.calibrate()
 
         return True
@@ -215,35 +209,3 @@ class AccelerometerDevice(IDevice):
             return
         self.__buffer_capacity = max(16, min(65536, cap))  # 65536 = 2**16
         self.release_lock()
-
-
-def accelerometer_data_recording():
-    acc = AccelerometerDevice()
-    acc.update_rate = 1.0 / 30.0
-    acc.life_time = 300  # 1 минута на запись
-    acc.enable_logging = True
-    acc.start()
-    acc.join()
-
-
-def accelerometer_data_reading():
-    acc = AccelerometerDevice()
-    acc.update_rate = 1.0 / 30.0
-    acc.life_time = 1  # 1 минута на запись
-    acc.start()
-    while acc.alive:
-        # print(f"{acc.velocity}")
-        time.sleep(0.1)
-        # print(f"{{\n\t\"t\" = {acc.time_value},\n\t\"o\" = {acc.orientation},\n\t\"a\" = {acc.acceleration},\n\t\"v\" ="
-        #      f" {acc.velocity},\n\t\"p\" = {acc.position}\n}}")
-
-    acc.join()
-
-
-
-
-
-
-if __name__ == "__main__":
-    #    accelerometer_data_reading()
-    accelerometer_data_recording()

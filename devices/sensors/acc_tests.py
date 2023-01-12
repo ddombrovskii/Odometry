@@ -1,7 +1,6 @@
+from devices.accelerometer_device import AccelerometerDevice
+from devices.sensors.mpu6050.accelerometer import Accelerometer
 import time
-
-from devices.sensors.accelerometer import Accelerometer
-from devices.sensors.accelerometer_device import AccelerometerDevice
 
 
 def accelerometer_test():
@@ -27,7 +26,7 @@ def accelerometer_test():
             print(f"\t\"time\"           : {accelerometer.accel_t}", file=out_put)
             print("\t},", file=out_put)
         print("\t]\n}", file=out_put)
-    with open('accelerometer_settings.json', 'wt') as out_put:
+    with open('mpu6050/accelerometer_settings.json', 'wt') as out_put:
         print(accelerometer, file=out_put)
 
 

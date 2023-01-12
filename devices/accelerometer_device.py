@@ -1,4 +1,4 @@
-from accelerometer import Accelerometer
+from devices.sensors.mpu6050.accelerometer import Accelerometer
 from devices.i_device import IDevice
 from cgeo.vectors import Vec3
 from typing import List
@@ -6,14 +6,14 @@ import datetime as dt
 
 
 class AccelerometerDevice(IDevice):
-
+    # TODO а нужен ли вообще этот код?
     def __init__(self):
 
         self.__accelerometer: Accelerometer = Accelerometer()
 
         super().__init__()
 
-        self.__buffer_capacity: int = 512
+        self.__buffer_capacity: int = 32
 
         self._log_file_origin: str = \
             f"accelerometer_records/accelerometer_log {dt.datetime.now().strftime('%H; %M; %S')}.json"

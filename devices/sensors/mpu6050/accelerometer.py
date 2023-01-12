@@ -1,14 +1,9 @@
-""" for raspberry
-import sys
-sys.path.append('/home/pi/Desktop/accelerometer/sensors_utils')
-from real_time_filter import RealTimeFilter
-"""
 from cgeo.numeric_methods import Integrator3d
 from cgeo.filtering import RealTimeFilter
-from cgeo.vectors import Vec3
 from typing import List, Tuple
+from cgeo.vectors import Vec3
+from constatnts import *
 import numpy as np
-import json
 import time
 
 try:
@@ -16,65 +11,6 @@ try:
     import smbus
 except ImportError as ex:
     print(f"SM Bus import error!!!\n{ex.args}")
-
-GRAVITY_CONSTANT = 9.80665  # [m / sec^2]
-
-# MPU-6050 Registers
-PWR_MGMT_1 = 0x6B
-SAMPLE_RATE_DIV = 0x19
-MPU_CONFIG = 0x1A
-ACCEL_CONFIG = 0x1C
-GYRO_CONFIG = 0x1B
-INT_ENABLE = 0x38
-
-GYRO_X_OUT_H = 0x43
-GYRO_Y_OUT_H = 0x45
-GYRO_Z_OUT_H = 0x47
-
-ACCEL_X_OUT_H = 0x3B
-ACCEL_Y_OUT_H = 0x3D
-ACCEL_Z_OUT_H = 0x3F
-
-TEMP_OUT_H = 0x41
-
-# Scale Modifiers
-ACCEL_SCALE_MODIFIER_2G = 16384.0
-ACCEL_SCALE_MODIFIER_4G = 8192.0
-ACCEL_SCALE_MODIFIER_8G = 4096.0
-ACCEL_SCALE_MODIFIER_16G = 2048.0
-
-GYRO_SCALE_MODIFIER_250DEG = 131.0
-GYRO_SCALE_MODIFIER_500DEG = 65.5
-GYRO_SCALE_MODIFIER_1000DEG = 32.8
-GYRO_SCALE_MODIFIER_2000DEG = 16.4
-
-# Pre-defined ranges
-ACCEL_RANGE_2G = 0x00
-ACCEL_RANGE_4G = 0x08
-ACCEL_RANGE_8G = 0x10
-ACCEL_RANGE_16G = 0x18
-
-GYRO_RANGE_250DEG = 0x00
-GYRO_RANGE_500DEG = 0x08
-GYRO_RANGE_1000DEG = 0x10
-GYRO_RANGE_2000DEG = 0x18
-
-# Filter settings
-FILTER_BW_256 = 0x00
-FILTER_BW_188 = 0x01
-FILTER_BW_98 = 0x02
-FILTER_BW_42 = 0x03
-FILTER_BW_20 = 0x04
-FILTER_BW_10 = 0x05
-FILTER_BW_5 = 0x06
-
-FILTER_GX = 0
-FILTER_GY = 1
-FILTER_GZ = 2
-
-FILTER_AX = 3
-FILTER_AY = 4
-FILTER_AZ = 5
 
 
 # Based on mpu 6050
@@ -220,7 +156,7 @@ class Accelerometer:
         self.acceleration_range_raw = 2
         self.gyroscope_range_raw = 250
 
-    def __read_unsafe(self, addr: int) -> np.int16:
+    def __read_bus(self, addr: int) -> np.int16:
         # Accelerometer and Gyro value are 16-bit
         high = self.bus.read_byte_data(self.address, addr)
         low = self.bus.read_byte_data(self.address, addr + 1)
@@ -241,15 +177,16 @@ class Accelerometer:
         acceleration = Vec3(0.0)
 
         scl = 1.0 / self.acceleration_scale * GRAVITY_CONSTANT
+
         try:
             if self.__use_filtering:
-                acceleration.x = self.__filter_value(float(self.__read_unsafe(ACCEL_X_OUT_H)) * scl, FILTER_AX)
-                acceleration.y = self.__filter_value(float(self.__read_unsafe(ACCEL_Y_OUT_H)) * scl, FILTER_AY)
-                acceleration.z = self.__filter_value(float(self.__read_unsafe(ACCEL_Z_OUT_H)) * scl, FILTER_AZ)
+                acceleration.x = self.__filter_value(float(self.__read_bus(ACCEL_X_OUT_H)) * scl, FILTER_AX)
+                acceleration.y = self.__filter_value(float(self.__read_bus(ACCEL_Y_OUT_H)) * scl, FILTER_AY)
+                acceleration.z = self.__filter_value(float(self.__read_bus(ACCEL_Z_OUT_H)) * scl, FILTER_AZ)
             else:
-                acceleration.x = float(self.__read_unsafe(ACCEL_X_OUT_H)) * scl
-                acceleration.y = float(self.__read_unsafe(ACCEL_Y_OUT_H)) * scl
-                acceleration.z = float(self.__read_unsafe(ACCEL_Z_OUT_H)) * scl
+                acceleration.x = float(self.__read_bus(ACCEL_X_OUT_H)) * scl
+                acceleration.y = float(self.__read_bus(ACCEL_Y_OUT_H)) * scl
+                acceleration.z = float(self.__read_bus(ACCEL_Z_OUT_H)) * scl
         except Exception as _ex:
             print(f"acceleration data read error\n{_ex.args}")
             return False, acceleration
@@ -263,13 +200,13 @@ class Accelerometer:
 
         try:
             if self.__use_filtering:
-                orientation.x = self.__filter_value(float(self.__read_unsafe(GYRO_X_OUT_H)) * scl, FILTER_GX)
-                orientation.y = self.__filter_value(float(self.__read_unsafe(GYRO_Y_OUT_H)) * scl, FILTER_GY)
-                orientation.z = self.__filter_value(float(self.__read_unsafe(GYRO_Z_OUT_H)) * scl, FILTER_GZ)
+                orientation.x = self.__filter_value(float(self.__read_bus(GYRO_X_OUT_H)) * scl, FILTER_GX)
+                orientation.y = self.__filter_value(float(self.__read_bus(GYRO_Y_OUT_H)) * scl, FILTER_GY)
+                orientation.z = self.__filter_value(float(self.__read_bus(GYRO_Z_OUT_H)) * scl, FILTER_GZ)
             else:
-                orientation.x = float(self.__read_unsafe(GYRO_X_OUT_H)) * scl
-                orientation.y = float(self.__read_unsafe(GYRO_Y_OUT_H)) * scl
-                orientation.z = float(self.__read_unsafe(GYRO_Z_OUT_H)) * scl
+                orientation.x = float(self.__read_bus(GYRO_X_OUT_H)) * scl
+                orientation.y = float(self.__read_bus(GYRO_Y_OUT_H)) * scl
+                orientation.z = float(self.__read_bus(GYRO_Z_OUT_H)) * scl
         except Exception as _ex:
             print(f"gyroscope data read error\n{_ex.args}")
             return False, orientation
@@ -283,6 +220,15 @@ class Accelerometer:
     @property
     def address(self) -> int:
         return self.__address
+
+    @address.setter
+    def address(self, address: int) -> None:
+        prev_address: int = self.address
+        self.__address = address
+        if not self.__init_bus():
+            print("incorrect device address in HardwareAccelerometerSettings")
+            self.__address = prev_address
+            self.__init_bus()
 
     @property
     def filters_ax(self) -> List[RealTimeFilter]:
@@ -490,146 +436,6 @@ class Accelerometer:
         if reset_calibration:
             self.__gyro_calib = Vec3(0.0)
             self.__accel_calib = Vec3(0.0)
-
-    def load_settings(self, json_settings_file: str) -> bool:
-
-        json_file = None
-
-        with open(json_settings_file, "wt") as output_file:
-            json_file = json.load(output_file)
-            if json_file is None:
-                return False
-        flag = False
-
-        if "address" in json_file:
-            prev_address = self.__address
-            self.__address = int(json_file["address"])
-            if not self.__init_bus():
-                print("incorrect device address in HardwareAccelerometerSettings")
-                self.__address = prev_address
-                return flag | self.__init_bus()
-            flag |= True
-
-        try:
-            if "acceleration_range_raw" in json_file:
-                self.acceleration_range_raw = int(json_file["acceleration_range_raw"])
-                flag |= True
-        except RuntimeWarning as _ex:
-            print("acceleration_range_raw read error")
-            self.acceleration_range_raw = ACCEL_RANGE_2G
-
-        try:
-            if "gyroscope_range_raw" in json_file:
-                self.gyroscope_range_raw = int(json_file["gyroscope_range_raw"])
-                flag |= True
-        except RuntimeWarning as _ex:
-            print("gyroscope_range_raw read error")
-            self.acceleration_range_raw = GYRO_RANGE_250DEG
-
-        try:
-            if "hardware_filter_range_raw" in json_file:
-                self.hardware_filter_range_raw = int(json_file["hardware_filter_range_raw"])
-                flag |= True
-        except RuntimeWarning as _ex:
-            print("hardware_filter_range_raw read error")
-
-        try:
-            if "use_filtering" in json_file:
-                self.use_filtering = bool(json_file["use_filtering"])
-                flag |= True
-        except RuntimeWarning as _ex:
-            print("use_filtering read error")
-        if "ax_filters" in json_file:
-            for filter_id, filter_ in enumerate(json_file["ax_filters"]):
-                try:
-                    if filter_id == len(self.__filters[FILTER_AX]):
-                        self.__filters[FILTER_AX].append(RealTimeFilter())
-                        self.__filters[FILTER_AX][-1].load_settings(filter_)
-                        continue
-                    self.__filters[FILTER_AX][filter_id].load_settings(filter_)
-                except RuntimeWarning as _ex:
-                    print(f"Accelerometer load settings error :: incorrect ax_filters\n"
-                          f"fiter_id: {filter_id}\nfilter:\n{filter_}")
-                    continue
-            flag |= True
-
-        if "ay_filters" in json_file:
-            for filter_id, filter_ in enumerate(json_file["ay_filters"]):
-                try:
-                    if filter_id == len(self.__filters[FILTER_AY]):
-                        self.__filters[FILTER_AY].append(RealTimeFilter())
-                        self.__filters[FILTER_AY][-1].load_settings(filter_)
-                        continue
-                    self.__filters[FILTER_AY][filter_id].load_settings(filter_)
-                except RuntimeWarning as _ex:
-                    print(f"Accelerometer load settings error :: incorrect ay_filters\n"
-                          f"fiter_id: {filter_id}\nfilter:\n{filter_}")
-                    continue
-            flag |= True
-
-        if "az_filters" in json_file:
-            for filter_id, filter_ in enumerate(json_file["az_filters"]):
-                try:
-                    if filter_id == len(self.__filters[FILTER_AZ]):
-                        self.__filters[FILTER_AZ].append(RealTimeFilter())
-                        self.__filters[FILTER_AZ][-1].load_settings(filter_)
-                        continue
-                    self.__filters[FILTER_AZ][filter_id].load_settings(filter_)
-                except RuntimeWarning as _ex:
-                    print(f"Accelerometer load settings error :: incorrect az_filters\n"
-                          f"fiter_id: {filter_id}\nfilter:\n{filter_}")
-                    continue
-            flag |= True
-
-        if "gx_filters" in json_file:
-            for filter_id, filter_ in enumerate(json_file["gx_filters"]):
-                try:
-                    if filter_id == len(self.__filters[FILTER_GX]):
-                        self.__filters[FILTER_GX].append(RealTimeFilter())
-                        self.__filters[FILTER_GX][-1].load_settings(filter_)
-                        continue
-                    self.__filters[FILTER_GX][filter_id].load_settings(filter_)
-                except RuntimeWarning as _ex:
-                    print(f"Accelerometer load settings error :: incorrect gx_filters\n"
-                          f"fiter_id: {filter_id}\nfilter:\n{filter_}")
-                    continue
-            flag |= True
-
-        if "gy_filters" in json_file:
-            for filter_id, filter_ in enumerate(json_file["gy_filters"]):
-                try:
-                    if filter_id == len(self.__filters[FILTER_GY]):
-                        self.__filters[FILTER_GY].append(RealTimeFilter())
-                        self.__filters[FILTER_GY][-1].load_settings(filter_)
-                        continue
-                    self.__filters[FILTER_GY][filter_id].load_settings(filter_)
-                except RuntimeWarning as _ex:
-                    print(f"Accelerometer load settings error :: incorrect gy_filters\n"
-                          f"fiter_id: {filter_id}\nfilter:\n{filter_}")
-                    continue
-            flag |= True
-
-        if "gz_filters" in json_file:
-            for filter_id, filter_ in enumerate(json_file["gz_filters"]):
-                try:
-                    if filter_id == len(self.__filters[FILTER_GZ]):
-                        self.__filters[FILTER_GZ].append(RealTimeFilter())
-                        self.__filters[FILTER_GZ][-1].load_settings(filter_)
-                        continue
-                    self.__filters[FILTER_GZ][filter_id].load_settings(filter_)
-                except RuntimeWarning as _ex:
-                    print(f"Accelerometer load settings error :: incorrect gz_filters\n"
-                          f"fiter_id: {filter_id}\nfilter:\n{filter_}")
-                    continue
-            flag |= True
-
-        self.reset()
-
-        return flag
-
-    def save_settings(self, json_settings_file: str) -> None:
-        with open(json_settings_file, "wt") as output_file:
-            print(self, file=output_file)
 
     def calibrate(self, calib_time: float = 2.0) -> None:
         n_measurement = 0.0

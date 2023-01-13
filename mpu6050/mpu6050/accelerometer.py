@@ -5,14 +5,25 @@ from cgeo.vectors import Vec3
 from constatnts import *
 import numpy as np
 import time
-import smbus
 
-"""
+
+class BusDummy:
+	def __init__():
+		pass
+	def SMBus(a:int):
+		return self
+	def write_byte_data(a: int, b: int, c: int):
+		pass
+	def read_byte_data(a: int, b: int):
+		return 0
+
+
 try:
+	import smbus
     # TODO add board version check
 except ImportError as ex:
     print(f"SM Bus import error!!!\n{ex.args}")
-"""
+	smbus = BusDummy()
 
 
 # Based on mpu 6050

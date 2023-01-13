@@ -148,6 +148,7 @@ def time_vals(way_points: List[WayPoint]) -> List[float]:
     return time_values
 
 
+
 q_value = 1.0
 
 

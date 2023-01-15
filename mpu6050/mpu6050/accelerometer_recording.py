@@ -19,76 +19,75 @@ LOG_TIME_START = "log_time_start"
 WAY_POINTS = "way_points"
 
 
-# TODO as simple class
-@dataclasses.dataclass
 class WayPoint:
-    time: float
-    dtime: float
-    acceleration: Vec3
-    velocity: Vec3
-    position: Vec3
-    angles_velocity: Vec3
-    angle: Vec3
+    def __init__(self, _t: float, d_t: float, accel: Vec3, vel: Vec3, pos: Vec3, ang_vel: Vec3, ang: Vec3):
+        self.time: float = _t
+        self.dtime: float = d_t
+        self.acceleration: Vec3 = accel
+        self.velocity: Vec3 = vel
+        self.position: Vec3 = pos
+        self.angles_velocity: Vec3 = ang_vel
+        self.angle: Vec3 = ang
 
 
-@dataclasses.dataclass
 class AccelerometerLog:
-    device_name: str
-    log_time_start: str
-    way_points: List[WayPoint]
+    def __init__(self, n: str, t: str, wp: List[WayPoint]):
+        self.device_name: str = n
+        self.log_time_start: str = t
+        self.way_points: List[WayPoint] = wp
 
 
 def read_current_data(accelerometer: Accelerometer, mode: int = 3) -> str:
     accelerometer.read_accel_measurements()
     if mode == 0:
         return f"{{\n" \
-               f"\t\"{DTIME: 16}\": {accelerometer.accel_dt},\n" \
-               f"\t\"{TIME: 16}\": {accelerometer.accel_t},\n" \
-               f"\t\"{ACCELERATION: 16}\": {accelerometer.acceleration}\n" \
+               f"\t\"{DTIME}\"           : {accelerometer.accel_dt},\n" \
+               f"\t\"{TIME}\"            : {accelerometer.accel_t},\n" \
+               f"\t\"{ACCELERATION}\"    : {accelerometer.acceleration}\n" \
                f"\n}}"
 
     if mode == 1:
         return f"{{\n" \
-               f"\t\"{DTIME: 16}\": {accelerometer.accel_dt},\n" \
-               f"\t\"{TIME: 16}\": {accelerometer.accel_t},\n" \
-               f"\t\"{ACCELERATION: 16}\": {accelerometer.acceleration},\n" \
-               f"\t\"{ANG_VELOCITY: 16}\": {accelerometer.angles_velocity}\n" \
+               f"\t\"{DTIME}\"           : {accelerometer.accel_dt},\n" \
+               f"\t\"{TIME}\"            : {accelerometer.accel_t},\n" \
+               f"\t\"{ACCELERATION}\"    : {accelerometer.acceleration},\n" \
+               f"\t\"{ANG_VELOCITY}\"    : {accelerometer.angles_velocity}\n" \
                f"\n}}"
 
     if mode == 2:
         return f"{{\n" \
-               f"\t\"{DTIME: 16}\": {accelerometer.accel_dt},\n" \
-               f"\t\"{TIME: 16}\": {accelerometer.accel_t},\n" \
-               f"\t\"{ACCELERATION: 16}\": {accelerometer.acceleration},\n" \
-               f"\t\"{VELOCITY: 16}\": {accelerometer.velocity},\n" \
-               f"\t\"{ANG_VELOCITY: 16}\": {accelerometer.angles_velocity}\n" \
+               f"\t\"{DTIME}\"           : {accelerometer.accel_dt},\n" \
+               f"\t\"{TIME}\"            : {accelerometer.accel_t},\n" \
+               f"\t\"{ACCELERATION}\"    : {accelerometer.acceleration},\n" \
+               f"\t\"{VELOCITY}\"        : {accelerometer.velocity},\n" \
+               f"\t\"{ANG_VELOCITY}\" : {accelerometer.angles_velocity}\n" \
                f"\n}}"
 
     if mode == 3:
         return f"{{\n" \
-               f"\t\"{DTIME: 16}\": {accelerometer.accel_dt},\n" \
-               f"\t\"{TIME: 16}\": {accelerometer.accel_t},\n" \
-               f"\t\"{ACCELERATION: 16}\": {accelerometer.acceleration},\n" \
-               f"\t\"{VELOCITY: 16}\": {accelerometer.velocity},\n" \
-               f"\t\"{POSITION: 16}\": {accelerometer.position},\n" \
-               f"\t\"{ANG_VELOCITY: 16}\": {accelerometer.angles_velocity}\n" \
+               f"\t\"{DTIME}\"           : {accelerometer.accel_dt},\n" \
+               f"\t\"{TIME}\"            : {accelerometer.accel_t},\n" \
+               f"\t\"{ACCELERATION}\"    : {accelerometer.acceleration},\n" \
+               f"\t\"{VELOCITY}\"        : {accelerometer.velocity},\n" \
+               f"\t\"{POSITION}\"        : {accelerometer.position},\n" \
+               f"\t\"{ANG_VELOCITY}\" : {accelerometer.angles_velocity}\n" \
                f"\n}}"
 
     if mode == 4:
         return f"{{\n" \
-               f"\t\"{DTIME}\"       : {accelerometer.accel_dt},\n" \
-               f"\t\"{TIME}\"        : {accelerometer.accel_t},\n" \
-               f"\t\"{ACCELERATION}\"   : {accelerometer.acceleration},\n" \
-               f"\t\"{VELOCITY}\"       : {accelerometer.velocity},\n" \
-               f"\t\"{POSITION}\"       : {accelerometer.position},\n" \
-               f"\t\"{ANG_VELOCITY}\": {accelerometer.angles_velocity},\n" \
-               f"\t\"{ANGLES}\": {accelerometer.angles_velocity}\n" \
+               f"\t\"{DTIME}\"           : {accelerometer.accel_dt},\n" \
+               f"\t\"{TIME}\"            : {accelerometer.accel_t},\n" \
+               f"\t\"{ACCELERATION}\"    : {accelerometer.acceleration},\n" \
+               f"\t\"{VELOCITY}\"        : {accelerometer.velocity},\n" \
+               f"\t\"{POSITION}\"        : {accelerometer.position},\n" \
+               f"\t\"{ANG_VELOCITY}\" : {accelerometer.angles_velocity},\n" \
+               f"\t\"{ANGLES}\"          : {accelerometer.angles_velocity}\n" \
                f"\n}}"
 
     return f"{{\n" \
-           f"\t\"{DTIME}\"       : {accelerometer.accel_dt},\n" \
-           f"\t\"{TIME}\"        : {accelerometer.accel_t},\n" \
-           f"\t\"{ACCELERATION}\"   : {accelerometer.acceleration}\n" \
+           f"\t\"{DTIME}\"           : {accelerometer.accel_dt},\n" \
+           f"\t\"{TIME}\"            : {accelerometer.accel_t},\n" \
+           f"\t\"{ACCELERATION}\"    : {accelerometer.acceleration}\n" \
            f"\n}}"
 
 
@@ -174,41 +173,43 @@ def read_record(record_path: str) -> AccelerometerLog:
 
 
 def accelerations(log: AccelerometerLog) -> Tuple[List[float], List[float], List[float]]:
-    return [v.acceleration.x for v in log.way_points], \
-           [v.acceleration.y for v in log.way_points], \
-           [v.acceleration.z for v in log.way_points]
+    t0 = log.way_points[0].time
+    return [v.acceleration.x for v in log.way_points if v.time -  t0 > 10.0 ], \
+           [v.acceleration.y for v in log.way_points if v.time -  t0 > 10.0], \
+           [v.acceleration.z for v in log.way_points if v.time -  t0 > 10.0]
 
 
 def velocities(log: AccelerometerLog) -> Tuple[List[float], List[float], List[float]]:
-    return [v.velocity.x for v in log.way_points], \
-           [v.velocity.y for v in log.way_points], \
-           [v.velocity.z for v in log.way_points]
+    t0 = log.way_points[0].time
+    return [v.velocity.x for v in log.way_points if v.time -  t0 > 10.0], \
+           [v.velocity.y for v in log.way_points if v.time -  t0 > 10.0], \
+           [v.velocity.z for v in log.way_points if v.time -  t0 > 10.0]
 
 
 def positions(log: AccelerometerLog) -> Tuple[List[float], List[float], List[float]]:
-    return [v.position.x for v in log.way_points], \
-           [v.position.y for v in log.way_points], \
-           [v.position.z for v in log.way_points]
+    t0 = log.way_points[0].time
+    return [v.position.x for v in log.way_points if v.time -  t0 > 10.0], \
+           [v.position.y for v in log.way_points if v.time -  t0 > 10.0], \
+           [v.position.z for v in log.way_points if v.time -  t0 > 10.0]
 
 
 def ang_velocities(log: AccelerometerLog) -> Tuple[List[float], List[float], List[float]]:
-    return [v.angles_velocity.x for v in log.way_points], \
-           [v.angles_velocity.y for v in log.way_points], \
-           [v.angles_velocity.z for v in log.way_points]
+    t0 = log.way_points[0].time
+    return [v.angles_velocity.x for v in log.way_points if v.time -  t0 > 10.0], \
+           [v.angles_velocity.y for v in log.way_points if v.time -  t0 > 10.0], \
+           [v.angles_velocity.z for v in log.way_points if v.time -  t0 > 10.0]
 
 
 def angles(log: AccelerometerLog) -> Tuple[List[float], List[float], List[float]]:
-    return [v.angle.x for v in log.way_points], \
-           [v.angle.y for v in log.way_points], \
-           [v.angle.z for v in log.way_points]
+    t0 = log.way_points[0].time
+    return [v.angle.x for v in log.way_points if v.time -  t0 > 10.0], \
+           [v.angle.y for v in log.way_points if v.time -  t0 > 10.0], \
+           [v.angle.z for v in log.way_points if v.time -  t0 > 10.0]
 
 
 def time_values(log: AccelerometerLog) -> List[float]:
-    t_0 = 0.0
-    time_values = []
-    for wp in log.way_points:
-        time_values.append(t_0)
-        t_0 += wp.dtime
-    return time_values
+    t0 =  log.way_points[0].time
+    return [v.time - t0 for v in log.way_points if v.time -  t0 > 10.0]
+
 
 

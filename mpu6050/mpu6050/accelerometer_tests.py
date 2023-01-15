@@ -24,7 +24,7 @@ def accelerometer_test():
             print(f"\t\"time\"           : {accelerometer.accel_t}", file=out_put)
             print("\t},", file=out_put)
         print("\t]\n}", file=out_put)
-    with open('accelerometer_settings.json', 'wt') as out_put:
+    with open('settings.json', 'wt') as out_put:
         print(accelerometer, file=out_put)
 
 

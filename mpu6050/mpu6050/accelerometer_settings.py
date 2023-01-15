@@ -1,3 +1,4 @@
+from cgeo import Vec3
 from cgeo.filtering import RealTimeFilter
 from accelerometer import Accelerometer
 from constatnts import *
@@ -6,7 +7,7 @@ import json
 
 def load_accelerometer_settings(acc: Accelerometer, settings_file: str) -> bool:
     json_file = None
-    with open(settings_file, "wt") as output_file:
+    with open(settings_file, "rt") as output_file:
         json_file = json.load(output_file)
         if json_file is None:
             return False
@@ -14,9 +15,11 @@ def load_accelerometer_settings(acc: Accelerometer, settings_file: str) -> bool:
 
     if "address" in json_file:
         prev_address = acc.address
-        acc.address = int(json_file["address"])
-        if acc.address == prev_address:
-            print("incorrect device address in HardwareAccelerometerSettings")
+        address = int(json_file["address"])
+        if address != acc.address:
+            acc.address = int(json_file["address"])
+            if acc.address == prev_address:
+                print("incorrect device address in HardwareAccelerometerSettings")
         flag |= True
     try:
         if "acceleration_range_raw" in json_file:
@@ -47,6 +50,25 @@ def load_accelerometer_settings(acc: Accelerometer, settings_file: str) -> bool:
             flag |= True
     except RuntimeWarning as _ex:
         print("use_filtering read error")
+
+    try:
+        if "angles_velocity_calibration" in json_file:
+            acc.angles_velocity_calibration = Vec3(float(json_file["angles_velocity_calibration"]["x"]),
+                                                   float(json_file["angles_velocity_calibration"]["y"]),
+                                                   float(json_file["angles_velocity_calibration"]["z"]))
+            flag |= True
+    except RuntimeWarning as _ex:
+        print("use_filtering read error")
+
+    try:
+        if "acceleration_calibration" in json_file:
+            acc.acceleration_calibration = Vec3(float(json_file["acceleration_calibration"]["x"]),
+                                                float(json_file["acceleration_calibration"]["y"]),
+                                                float(json_file["acceleration_calibration"]["z"]))
+            flag |= True
+    except RuntimeWarning as _ex:
+        print("use_filtering read error")
+
     if "ax_filters" in json_file:
         for filter_id, filter_ in enumerate(json_file["ax_filters"]):
             try:

@@ -5,23 +5,29 @@ import numpy as np
 import time
 
 
-def _color_code(r: int, g: int, b: int) -> str:
-    def _hex(col: int) -> str:
-        val = max(min(255, col), 0)
-        if val == 0:
-            return '00'
-        return hex(val)[2:4]
-    return f'#{_hex(r)}{_hex(g)}{_hex(b)}'
+def _color_code(red: int, green: int, blue: int) -> str:
+    return f"#{''.join('{:02X}'.format(max(min(a, 255), 0)) for a in (red, green, blue))}"
 
 
-def _color_map(map_amount: int = 3) -> List[str]:
+def _color_map_quad(map_amount: int = 3) -> List[str]:
     colors = []
     dx = 1.0 / (map_amount - 1)
     for i in range(map_amount):
-        x_ = i * dx
-        colors.append(_color_code(int(255 * (1.0 - x_ * x_)),
-                                  int(255 * (1.0 - (2 * x_ - 1.0)**2)),
-                                  int(255 * (1.0 - (x_ - 1.0)**2))))
+        xi = i * dx
+        colors.append(_color_code(int(255 * max(1.0 - (2.0 * xi - 1.0) ** 2, 0)),
+                                  int(255 * max(1.0 - (2.0 * xi - 2.0) ** 2, 0)),
+                                  int(255 * max(1.0 - (2.0 * xi - 0.0) ** 2, 0))))
+    return colors
+
+
+def _color_map_lin(map_amount: int = 3) -> List[str]:
+    colors = []
+    dx = 1.0 / (map_amount - 1)
+    for i in range(map_amount):
+        xi = i * dx
+        colors.append(_color_code(int(255 * max(1.0 - 2.0 * xi, 0.0)),
+                                  int(255 * (1.0 - abs(2.0 * xi - 1.0))),
+                                  int(255 * max(2.0 * xi - 1, 0.0))))
     return colors
 
 
@@ -34,7 +40,7 @@ class AnimatedPlot:
         self._buffer_cap = 128
         self._figure, self._ax = plt.subplots()
         self._figure.suptitle(fig_title, fontsize=16)
-        cmap = _color_map(n_lines)
+        cmap = _color_map_lin(n_lines)
         self._lines = [self._ax.plot([], [], color=f"{c}")[0] for c in cmap]
         self._ax.legend([f'$line_{i}$' for i in range(n_lines)], loc='upper left')
         self._ax.set_xlabel("$t,[sec]$")
@@ -121,6 +127,23 @@ class AnimatedPlot:
 
 
 if __name__ == "__main__":
+    n = 1000
+    dx = 1 / (n - 1)
+    x = [dx * i for i in range(1000)]
+    """
+    r = [max(1.0 - (2.0 * xi - 1.0) ** 2, 0) for xi in x]
+    g = [max(1.0 - (2.0 * xi - 2.0) ** 2, 0) for xi in x]
+    b = [max(1.0 - (2.0 * xi - 0.0) ** 2, 0) for xi in x]
+    """
+    r = [max(-2.0 * xi + 1, 0.0) for xi in x]
+    g = [1 - abs((2.0 * xi - 1.0)) for xi in x]
+    b = [max(2.0 * xi - 1, 0.0) for xi in x]
+
+    plt.plot(x, r, 'r')
+    plt.plot(x, g, 'g')
+    plt.plot(x, b, 'b')
+    plt.show()
+
     def cos_data() -> Tuple[float, float, float, float, float]:
 
         t = time.perf_counter()

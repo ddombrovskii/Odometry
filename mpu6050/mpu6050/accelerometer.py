@@ -8,22 +8,25 @@ import time
 
 
 class BusDummy:
-	def __init__():
-		pass
-	def SMBus(a:int):
-		return self
-	def write_byte_data(a: int, b: int, c: int):
-		pass
-	def read_byte_data(a: int, b: int):
-		return 0
+    def __init__(self):
+        pass
+
+    def SMBus(self, a: int):
+        return self
+
+    def write_byte_data(self, a: int, b: int, c: int):
+        pass
+
+    def read_byte_data(self, a: int, b: int):
+        return 0
 
 
 try:
-	import smbus
-    # TODO add board version check
+    import smbus
+# TODO add board version check
 except ImportError as ex:
+    smbus = BusDummy()
     print(f"SM Bus import error!!!\n{ex.args}")
-	smbus = BusDummy()
 
 
 # Based on mpu 6050
@@ -112,7 +115,7 @@ class Accelerometer:
                f"\t\"gyroscope_range\":            {self.gyroscope_range},\n" \
                f"\t\"gyroscope_scale\":            {self.gyroscope_scale},\n" \
                f"\t\"hardware_filter_range_raw\":  {self.hardware_filter_range_raw},\n" \
-               f"\t\"use_filtering\":              {self.use_filtering},\n" \
+               f"\t\"use_filtering\":              {'true' if self.use_filtering else 'false'},\n" \
                f"\t\"angles_velocity_calibration\":{self.angles_velocity_calibration},\n" \
                f"\t\"acceleration_calibration\":   {self.acceleration_calibration},\n" \
                f"\t\"ax_filters\":[\n{separator.join(str(f) for f in self.__filters[FILTER_AX])}\n\t],\n" \
@@ -169,12 +172,15 @@ class Accelerometer:
         self.acceleration_range_raw = 2
         self.gyroscope_range_raw = 250
 
-    def __read_bus(self, addr: int) -> np.int16:
+    def __read_bus(self, addr: int, skip_2_bits: bool = False) -> np.int16:
         # Accelerometer and Gyro value are 16-bit
         high = self.bus.read_byte_data(self.address, addr)
         low = self.bus.read_byte_data(self.address, addr + 1)
         # concatenate higher and lower value
-        value = (high << 8) | low
+        if skip_2_bits:
+            value = (high << 8) | (low & 252)
+        else:
+            value = (high << 8) | low
         # to get signed value from mpu6050
         if value >= 0x8000:
             value -= 65536
@@ -388,6 +394,14 @@ class Accelerometer:
     @property
     def acceleration_calibration(self) -> Vec3:
         return self.__accel_calib
+
+    @angles_velocity_calibration.setter
+    def angles_velocity_calibration(self, val: Vec3) -> None:
+        self.__gyro_calib = val
+
+    @acceleration_calibration.setter
+    def acceleration_calibration(self, val: Vec3) -> None:
+        self.__accel_calib = val
 
     @property
     def angles_velocity(self) -> Vec3:

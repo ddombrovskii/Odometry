@@ -1,7 +1,7 @@
 from cgeo import Vec3
 from cgeo.filtering import RealTimeFilter
 from accelerometer import Accelerometer
-from constatnts import *
+from constants import *
 import json
 
 

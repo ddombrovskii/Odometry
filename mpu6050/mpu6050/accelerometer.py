@@ -2,7 +2,7 @@ from cgeo.numeric_methods import Integrator3d
 from cgeo.filtering import RealTimeFilter
 from typing import List, Tuple
 from cgeo.vectors import Vec3
-from constatnts import *
+from constants import *
 import numpy as np
 import time
 

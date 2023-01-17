@@ -95,11 +95,11 @@ class Accelerometer:
 
         self.__position_integrator: Integrator3d = Integrator3d()
 
-        self.__gyro_calib: Vec3 = Vec3(0.0)
+        self.__gyro_calib:  Vec3 = Vec3(0.0)
         self.__accel_calib: Vec3 = Vec3(0.0)
 
         self.__angles_velocity: Vec3 = Vec3(0.0)
-        self.__accelerations: Vec3 = Vec3(0.0)
+        self.__accelerations:   Vec3 = Vec3(0.0)
 
         if not self.__init_bus():
             raise RuntimeError("Accelerometer init failed")
@@ -172,15 +172,12 @@ class Accelerometer:
         self.acceleration_range_raw = 2
         self.gyroscope_range_raw = 250
 
-    def __read_bus(self, addr: int, skip_2_bits: bool = False) -> np.int16:
+    def __read_bus(self, addr: int) -> np.int16:
         # Accelerometer and Gyro value are 16-bit
         high = self.bus.read_byte_data(self.address, addr)
-        low = self.bus.read_byte_data(self.address, addr + 1)
+        low  = self.bus.read_byte_data(self.address, addr + 1)
         # concatenate higher and lower value
-        if skip_2_bits:
-            value = (high << 8) | (low & 252)
-        else:
-            value = (high << 8) | low
+        value = (high << 8) | low
         # to get signed value from mpu6050
         if value >= 0x8000:
             value -= 65536

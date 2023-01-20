@@ -107,8 +107,8 @@ def read_data(accelerometer: Accelerometer, reading_time: float = 1.0, time_delt
 def read_and_save_data(file_path: str, accelerometer: Accelerometer,
                        reading_time: float = 1.0, time_delta: float = 0.075, mode: int = 3) -> None:
     with open(file_path, 'wt') as out_put:
-        print("{\n\"way_points\" :[", file=out_put)
-        print(f"\"record_date\": \"{dt.datetime.now().strftime('%H; %M; %S')}\",", file=out_put)
+        print(f"{{\n\"record_date\": \"{dt.datetime.now().strftime('%H; %M; %S')}\",\n", file=out_put)
+        print("\"way_points\" :[", file=out_put)
         lt = LoopTimer()
         lt.timeout = time_delta
         while True:

@@ -21,6 +21,7 @@ def read_with_time_interval_example(read_time: float = 5.0, delta_read_time: flo
 def read_and_save_with_time_interval_example(file_path: str, read_time: float = 5.0,
                                              delta_read_time: float = 0.075) -> None:
     acc = Accelerometer()
+    load_accelerometer_settings(acc, 'settings.json')
     read_and_save_data(file_path, acc, read_time, delta_read_time)
 
 
@@ -121,6 +122,6 @@ def mask(shift: int) -> int:
 
 if __name__ == "__main__":
     # read_with_time_interval_example()
-    read_and_show_ang_vel_log('still.json')
-    read_and_show_accel_log('still.json')
-    # # read_and_save_with_time_interval_example('still.json', read_time=300)
+    # read_and_show_ang_vel_log('still.json')
+    # read_and_show_accel_log('still.json')
+    read_and_save_with_time_interval_example('still.json', read_time=300)

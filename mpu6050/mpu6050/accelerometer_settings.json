@@ -1,0 +1,61 @@
+{
+	"address":                    104,
+	"acceleration_range_raw":     0,
+	"acceleration_range":         19.6133,
+	"acceleration_scale":         16384.0,
+	"gyroscope_range_raw":        0,
+	"gyroscope_range":            250.0,
+	"gyroscope_scale":            131.0,
+	"hardware_filter_range_raw":  -1,
+	"use_filtering":              true,
+	"angles_velocity_calibration":{"x":                  0.0, "y":                  0.0, "z":                  0.0},
+	"acceleration_calibration":   {"x":                  0.0, "y":                  0.0, "z":                  0.0},
+	"ax_filters":[
+	{
+		"mode":        2,
+		"window_size": 13,
+		"k_arg":       0.1,
+		"kalman_error":0.9
+	}
+	],
+	"ay_filters":[
+	{
+		"mode":        2,
+		"window_size": 13,
+		"k_arg":       0.1,
+		"kalman_error":0.9
+	}
+	],
+	"az_filters":[
+	{
+		"mode":        2,
+		"window_size": 13,
+		"k_arg":       0.1,
+		"kalman_error":0.9
+	}
+	],
+	"gx_filters":[
+	{
+		"mode":        2,
+		"window_size": 13,
+		"k_arg":       0.1,
+		"kalman_error":0.9
+	}
+	],
+	"gy_filters":[
+	{
+		"mode":        2,
+		"window_size": 13,
+		"k_arg":       0.1,
+		"kalman_error":0.9
+	}
+	],
+	"gz_filters":[
+	{
+		"mode":        2,
+		"window_size": 13,
+		"k_arg":       0.1,
+		"kalman_error":0.9
+	}
+	]
+}

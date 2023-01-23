@@ -172,44 +172,44 @@ def read_record(record_path: str) -> AccelerometerLog:
         return AccelerometerLog(device_name, log_time_start, way_points)
 
 
-def accelerations(log: AccelerometerLog) -> Tuple[List[float], List[float], List[float]]:
+def accelerations(log: AccelerometerLog, start_time: float = 0.0) -> Tuple[List[float], List[float], List[float]]:
     t0 = log.way_points[0].time
-    return [v.acceleration.x for v in log.way_points if v.time -  t0 > 10.0 ], \
-           [v.acceleration.y for v in log.way_points if v.time -  t0 > 10.0], \
-           [v.acceleration.z for v in log.way_points if v.time -  t0 > 10.0]
+    return [v.acceleration.x for v in log.way_points if v.time -  t0 >= start_time], \
+           [v.acceleration.y for v in log.way_points if v.time -  t0 >= start_time], \
+           [v.acceleration.z for v in log.way_points if v.time -  t0 >= start_time]
 
 
-def velocities(log: AccelerometerLog) -> Tuple[List[float], List[float], List[float]]:
+def velocities(log: AccelerometerLog, start_time: float = 0.0) -> Tuple[List[float], List[float], List[float]]:
     t0 = log.way_points[0].time
-    return [v.velocity.x for v in log.way_points if v.time -  t0 > 10.0], \
-           [v.velocity.y for v in log.way_points if v.time -  t0 > 10.0], \
-           [v.velocity.z for v in log.way_points if v.time -  t0 > 10.0]
+    return [v.velocity.x for v in log.way_points if v.time -  t0 >= start_time], \
+           [v.velocity.y for v in log.way_points if v.time -  t0 >= start_time], \
+           [v.velocity.z for v in log.way_points if v.time -  t0 >= start_time]
 
 
-def positions(log: AccelerometerLog) -> Tuple[List[float], List[float], List[float]]:
+def positions(log: AccelerometerLog, start_time: float = 0.0) -> Tuple[List[float], List[float], List[float]]:
     t0 = log.way_points[0].time
-    return [v.position.x for v in log.way_points if v.time -  t0 > 10.0], \
-           [v.position.y for v in log.way_points if v.time -  t0 > 10.0], \
-           [v.position.z for v in log.way_points if v.time -  t0 > 10.0]
+    return [v.position.x for v in log.way_points if v.time -  t0 >= start_time], \
+           [v.position.y for v in log.way_points if v.time -  t0 >= start_time], \
+           [v.position.z for v in log.way_points if v.time -  t0 >= start_time]
 
 
-def ang_velocities(log: AccelerometerLog) -> Tuple[List[float], List[float], List[float]]:
+def ang_velocities(log: AccelerometerLog, start_time: float = 0.0) -> Tuple[List[float], List[float], List[float]]:
     t0 = log.way_points[0].time
-    return [v.angles_velocity.x for v in log.way_points if v.time -  t0 > 10.0], \
-           [v.angles_velocity.y for v in log.way_points if v.time -  t0 > 10.0], \
-           [v.angles_velocity.z for v in log.way_points if v.time -  t0 > 10.0]
+    return [v.angles_velocity.x for v in log.way_points if v.time -  t0 >= start_time], \
+           [v.angles_velocity.y for v in log.way_points if v.time -  t0 >= start_time], \
+           [v.angles_velocity.z for v in log.way_points if v.time -  t0 >= start_time]
 
 
-def angles(log: AccelerometerLog) -> Tuple[List[float], List[float], List[float]]:
+def angles(log: AccelerometerLog, start_time: float = 0.0) -> Tuple[List[float], List[float], List[float]]:
     t0 = log.way_points[0].time
-    return [v.angle.x for v in log.way_points if v.time -  t0 > 10.0], \
-           [v.angle.y for v in log.way_points if v.time -  t0 > 10.0], \
-           [v.angle.z for v in log.way_points if v.time -  t0 > 10.0]
+    return [v.angle.x for v in log.way_points if v.time -  t0 >= start_time], \
+           [v.angle.y for v in log.way_points if v.time -  t0 >= start_time], \
+           [v.angle.z for v in log.way_points if v.time -  t0 >= start_time]
 
 
-def time_values(log: AccelerometerLog) -> List[float]:
+def time_values(log: AccelerometerLog, start_time: float = 0.0) -> List[float]:
     t0 =  log.way_points[0].time
-    return [v.time - t0 for v in log.way_points if v.time -  t0 > 10.0]
+    return [v.time - t0 for v in log.way_points if v.time -  t0 >= start_time]
 
 
 

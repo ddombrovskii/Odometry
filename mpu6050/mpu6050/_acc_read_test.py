@@ -7,7 +7,7 @@ from cgeo.loop_timer import LoopTimer
 import matplotlib.pyplot as plt
 
 
-def read_with_time_interval_example(read_time: float = 5.0, delta_read_time: float = 0.1) -> None:
+def read_with_time_interval_example(read_time: float = 5.0, delta_read_time: float = 0.033) -> None:
     acc = Accelerometer()
     # save_accelerometer_settings(acc, 'accelerometer_settings.json')
     load_accelerometer_settings(acc, 'settings.json')
@@ -25,90 +25,90 @@ def read_and_save_with_time_interval_example(file_path: str, read_time: float = 
     read_and_save_data(file_path, acc, read_time, delta_read_time)
 
 
-def read_and_show_accel_log(log_file: str):
-    filter_x = RealTimeFilter()
-    filter_x.mode = 0
-    filter_x.window_size = 33
-
-    filter_y = RealTimeFilter()
-    filter_y.mode = 0
-    filter_y.window_size = 33
-
-    filter_z = RealTimeFilter()
-    filter_z.mode = 0
-    filter_z.window_size = 33
-
+def read_and_show_accel_log(log_file: str, show_filtered: bool = True):
     log = read_record(log_file)
     x, y, z = accelerations(log)
     t = time_values(log)
-    x_avg = sum(x)/len(x)
-    y_avg = sum(y)/len(y)
-    z_avg = sum(z)/len(z)
 
-    x = [xi - x_avg for xi in x]
-    y = [yi - y_avg for yi in y]
-    z = [zi - z_avg for zi in z]
+    if show_filtered:
+        _figure, _ax = plt.subplots(2)
+        _ax[0].plot(t, x, 'r')
+        _ax[0].plot(t, y, 'g')
+        _ax[0].plot(t, z, 'b')
+        _ax[0].legend([r'$a_{x}$', r'$a_{y}$', r'$a_{z}$'], loc='upper left')
+        _ax[0].set_xlabel("$t,[sec]$")
+        _ax[0].set_ylabel("$a(t),[{m} / {sec}^2]$")
+        _ax[0].set_title("raw accelerations")
+        ##########################
+        filter_ = RealTimeFilter()
+        filter_.mode = 2
+        filter_.kalman_error = 0.5
+        filter_.k_arg = 0.1
+        print(filter_)
+        _ax[1].plot(t, [filter_.filter(xi) for xi in x], 'r')
+        filter_.clean_up()
+        _ax[1].plot(t, [filter_.filter(xi) for xi in y], 'g')
+        filter_.clean_up()
+        _ax[1].plot(t, [filter_.filter(xi) for xi in z], 'b')
+        _ax[1].legend([r'$a_{x}$', r'$a_{y}$', r'$a_{z}$'], loc='upper left')
+        _ax[1].set_xlabel("$t,[sec]$")
+        _ax[1].set_ylabel("$v(t),[{grad} / {sec}]$")
+        _ax[1].set_title("filtered accelerations")
+        plt.show()
+        return
 
-    xf = [filter_x.filter(xi) for xi in x]
-    yf = [filter_y.filter(yi) for yi in y]
-    zf = [filter_z.filter(zi) for zi in z]
-
-    # quant_a = +/-0.01
-    print(f"a-calibrated az: {x_avg:10}, ay: {y_avg:10}, az: {z_avg:10}")
-
-    plt.plot(t, x, ':r')
-    plt.plot(t, y, ':g')
-    plt.plot(t, z, ':b')
-
-    plt.plot(t, xf, 'r')
-    plt.plot(t, yf, 'g')
-    plt.plot(t, zf, 'b')
-
+    _figure, _ax = plt.subplots(1)
+    _ax[0].plot(t, x, 'r')
+    _ax[0].plot(t, y, 'g')
+    _ax[0].plot(t, z, 'b')
+    _ax[0].legend([r'$a_{x}$', r'$a_{y}$', r'$a_{z}$'], loc='upper left')
+    _ax[0].set_xlabel("$t,[sec]$")
+    _ax[0].set_ylabel("$v(t),[{grad} / {sec}]$")
+    _ax[0].set_title("raw accelerations")
     plt.show()
 
 
-def read_and_show_ang_vel_log(log_file: str):
-    filter_x = RealTimeFilter()
-    filter_x.mode = 0
-    filter_x.window_size = 33
-
-    filter_y = RealTimeFilter()
-    filter_y.mode = 0
-    filter_y.window_size = 33
-
-    filter_z = RealTimeFilter()
-    filter_z.mode = 0
-    filter_z.window_size = 33
-
+def read_and_show_ang_vel_log(log_file: str, show_filtered: bool  = True):
     log = read_record(log_file)
-
     x, y, z = ang_velocities(log)
-
     t = time_values(log)
 
-    x_avg = sum(x)/len(x)
-    y_avg = sum(y)/len(y)
-    z_avg = sum(z)/len(z)
+    if show_filtered:
+        _figure, _ax = plt.subplots(2)
+        _ax[0].plot(t, x, 'r')
+        _ax[0].plot(t, y, 'g')
+        _ax[0].plot(t, z, 'b')
+        _ax[0].legend([r'$v_{\alpha}$', r'$v_{\beta}$', r'$v_{\gamma}$'], loc='upper left')
+        _ax[0].set_xlabel("$t,[sec]$")
+        _ax[0].set_ylabel("$v(t),[{grad} / {sec}]$")
+        _ax[0].set_title("raw angles velocities")
+        ##########################
+        filter_ = RealTimeFilter()
+        filter_.mode = 2
+        filter_.window_size = 3
+        filter_.mode = 2
+        filter_.kalman_error = 0.5
+        filter_.k_arg = 0.01
+        _ax[1].plot(t, [filter_.filter(xi) for xi in x], 'r')
+        filter_.clean_up()
+        _ax[1].plot(t, [filter_.filter(xi) for xi in y], 'g')
+        filter_.clean_up()
+        _ax[1].plot(t, [filter_.filter(xi) for xi in z], 'b')
+        _ax[1].legend([r'$v_{\alpha}$', r'$v_{\beta}$', r'$v_{\gamma}$'], loc='upper left')
+        _ax[1].set_xlabel("$t,[sec]$")
+        _ax[1].set_ylabel("$v(t),[{grad} / {sec}]$")
+        _ax[1].set_title("filtered angles velocities")
+        plt.show()
+        return
 
-    x = [xi - x_avg for xi in x]
-    y = [yi - y_avg for yi in y]
-    z = [zi - z_avg for zi in z]
-
-    xf = [filter_x.filter(xi) for xi in x]
-    yf = [filter_y.filter(yi) for yi in y]
-    zf = [filter_z.filter(zi) for zi in z]
-
-    # quant_a = +/-0.01
-    print(f"a-calibrated az: {x_avg:10}, ay: {y_avg:10}, az: {z_avg:10}")
-
-    plt.plot(t, x, ':r')
-    plt.plot(t, y, ':g')
-    plt.plot(t, z, ':b')
-
-    plt.plot(t, xf, 'r')
-    plt.plot(t, yf, 'g')
-    plt.plot(t, zf, 'b')
-
+    _figure, _ax = plt.subplots(1)
+    _ax[0].plot(t, x, 'r')
+    _ax[0].plot(t, y, 'g')
+    _ax[0].plot(t, z, 'b')
+    _ax[0].legend([r'$v_{\alpha}$', r'$v_{\beta}$', r'$v_{\gamma}$'], loc='upper left')
+    _ax[0].set_xlabel("$t,[sec]$")
+    _ax[0].set_ylabel("$v(t),[{grad} / {sec}]$")
+    _ax[0].set_title("raw angles velocities")
     plt.show()
 
 
@@ -121,7 +121,9 @@ def mask(shift: int) -> int:
 
 
 if __name__ == "__main__":
+
     # read_with_time_interval_example()
-    # read_and_show_ang_vel_log('still.json')
-    # read_and_show_accel_log('still.json')
-    read_and_save_with_time_interval_example('still.json', read_time=300)
+    read_and_show_ang_vel_log('test_still_100hz.json')
+    read_and_show_accel_log('test_still_100hz.json')
+    # read_and_show_accel_log('test_movement.json')
+    # read_and_save_with_time_interval_example('still.json', read_time=300)

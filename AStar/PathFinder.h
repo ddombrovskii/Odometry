@@ -29,7 +29,7 @@ extern "C"
 	void              a_start_del(AStar* a_star);
 	DLL_EXPORT Path*     path_new(const int n_points);
 	DLL_EXPORT void      path_del(Path* path);
-	DLL_EXPORT Path*    find_path(Map* map, const Pt* start, const  Pt* end);
+	DLL_EXPORT Path*    find_path(const Map* map, const Pt* start, const  Pt* end);
 #ifdef __cplusplus
 }
 #endif

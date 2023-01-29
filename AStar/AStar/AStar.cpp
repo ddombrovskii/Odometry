@@ -13,7 +13,6 @@ bool AStar::is_valid(Point& p)const
 bool AStar::point_exists(const Point& p, const int cost, std::list<Node>& _open, std::list<Node>& _closed)const
 {
     std::list<Node>::iterator i;
-    
     i = std::find(_closed.begin(), _closed.end(), p);
     if (i != _closed.end())
     {

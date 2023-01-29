@@ -6,13 +6,25 @@
 class _Pt(Structure):
 	_fields_ = ("row", c_int32), ("col", c_int32)
 
-class Path(Structure):
+class _Path(Structure):
 	_fields_ = ("cost", c_float), ("n_points", c_int32), ("path_points", POINTER(_Pt2)) 
 
 NP_ARRAY_2_D_POINTER = np.ctypeslib.ndpointer(dtype=np.float32, ndim=2, flags="aligned, contiguous")
 
 class _Map(Structure):
 	_fields_ = ("rows", c_int32), ("cols", c_int32), ("weights", NP_ARRAY_2_D_POINTER)
+
+path_new           = interpolators_lib.path_new
+path_new.argtypes  = [c_int32,]
+path_new.restype   =  POINTER(_Path)
+				   
+path_del           = interpolators_lib.path_del
+path_del.argtypes  = [POINTER(_Path),]
+path_del.restype   =  None
+				   
+find_path          = interpolators_lib.find_path
+find_path.argtypes = [POINTER(_Map), POINTER(_Pt), POINTER(_Pt)]
+find_path.restype  =  POINTER(_Path)
 */
 
 AStar*            a_start_new(const int rows, const int cols, const float* weights)
@@ -40,23 +52,31 @@ DLL_EXPORT void      path_del(Path* path)
 	if (path->path_points != NULL)free(path->path_points);
 	free(path);
 }
-DLL_EXPORT Path*    find_path(Map* map, const Pt* start, const  Pt* end)
+DLL_EXPORT Path*    find_path(const Map* map, const Pt* start, const  Pt* end)
 {
 	AStar* path_finder = a_start_new(map->rows, map->cols, map->weights);
+	
 	assert(path_finder);
+	
 	if (!path_finder->search(Point(start->row, start->col), Point(end->row, end->col)))
 	{
+		a_start_del(path_finder);
 		return path_new(0);
 	}
 	int index = 0;
+	
 	Path* path = path_new(path_finder->path().size());
+	
 	path->cost = path_finder->path_cost();
+
 	for (const auto& pt : path_finder->path())
 	{
 		path->path_points[index] = { pt.row, pt.col };
 		index++;
 	}
+
 	a_start_del(path_finder);
+
 	return path;
 }
 int main(int argc, char* argv[])

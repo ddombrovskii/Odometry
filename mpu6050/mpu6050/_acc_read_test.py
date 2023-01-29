@@ -123,7 +123,7 @@ def mask(shift: int) -> int:
 if __name__ == "__main__":
 
     # read_with_time_interval_example()
-    read_and_show_ang_vel_log('test_still_100hz.json')
-    read_and_show_accel_log('test_still_100hz.json')
-    # read_and_show_accel_log('test_movement.json')
+    # read_and_show_ang_vel_log('test_still_100hz.json')
+    #read_and_show_accel_log('test_still_100hz.json')
+    read_and_show_accel_log('test_movement.json')
     # read_and_save_with_time_interval_example('still.json', read_time=300)

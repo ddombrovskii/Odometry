@@ -1,3 +1,5 @@
+import random
+
 from cgeo.surface.interpolator import Interpolator
 from PIL import Image, ImageFilter, ImageOps
 import matplotlib.pyplot as plt
@@ -263,13 +265,61 @@ def area_map_gradient(_x0: float, _y0: float, _map: Interpolator, attractors: Li
 """
 
 
-if __name__ == "__main__":
+def curve_seg_interpolate_(p0: Tuple[float, float], dp0: Tuple[float, float],
+                           dp1: Tuple[float, float], n_points: int = 9):
+    def _quad_f(_t, a, b, c) ->  float:
+        return _t * _t * a + _t * b + c
+    dt = 1.0 / (n_points - 1)
 
+    t = [dt  * i for i in range(n_points)]
+    ax = 0.5 * (dp1[0] - dp0[0])
+    ay = 0.5 * (dp1[1] - dp0[1])
+    return [_quad_f(ti, ax, dp0[0], p0[0]) for ti in t], \
+           [_quad_f(ti, ay, dp0[1], p0[1]) for ti in t]
+
+
+def curve_seg_interpolate(dp1: Tuple[float, float],
+                          p1: Tuple[float, float],
+                          p2: Tuple[float, float], n_points: int = 9) ->\
+        Tuple[List[float], List[float], Tuple[float, float]]:
+
+    def _quad_f(_t, a, b, c) ->  float:
+        return _t * _t * a + _t * b + c
+
+    dt = 1.0 / (n_points - 1)
+    cx_1, cy_1, cz_1 = (p2[0] - p1[0] - dp1[0]), dp1[0], p1[0]
+    cx_2, cy_2, cz_2 = (p2[1] - p1[1] - dp1[1]), dp1[1], p1[1]
+    x = [_quad_f(dt  * i, cx_1, cy_1, cz_1) for i in range(n_points)]
+    y = [_quad_f(dt  * i, cx_2, cy_2, cz_2) for i in range(n_points)]
+    return x, y, ((x[-1] - x[-2]) / dt, (y[-1] - y[-2]) / dt)
+
+
+def interpolate_curve(points: List[Tuple[float, float]], segment_steps: int = 32) -> Tuple[List[float], List[float]]:
+    n_points = len(points)
+    xs = []
+    ys = []
+    dp = (1.0, 2.0)
+    for i in range(0, n_points-1):
+        p1 = points[i]
+        p2 = points[min(i + 1, n_points - 1)]
+        x, y, dp = curve_seg_interpolate(dp, p1, p2, segment_steps)
+        xs.extend(x)
+        ys.extend(y)
+    return xs, ys
+
+
+if __name__ == "__main__":
+    pnts = [(1.0, 1.0), (2.0, 2.0), (3.0, 1.0), (4.0, -2.0), (5.0, 1.0),  (3.0, 2.0), (10, -1)]
+    x, y = interpolate_curve(pnts)
+    plt.plot(x, y, 'r')
+    # plt.plot(x, y, 'r*')
+    [plt.plot(px, py, "go") for (px, py) in pnts]
+    plt.show()
     start_pt   = Vec2(0, 3)
     start_pt1  = Vec2(1.6, 9.8)
     start_pt2  = Vec2(0, 7.7)
     finish_pt = Vec2(9.8, 6.6)
-
+    exit(111)
     area_map = AreaPenaltyMap('map1.png')
     area_map.width  = 10.0
     area_map.height = 10.0

@@ -7,7 +7,7 @@
 extern "C"
 {
 #endif
-	struct Pt2
+	struct Pt
 	{
 		int row, col;
 	};
@@ -16,13 +16,20 @@ extern "C"
 	{
 		float       cost;
 		int     n_points;
-		Pt2* path_points;
+		Pt* path_points;
 	};
-	DLL_EXPORT AStar* a_start_new(const int rows, const int cols, const float* weights);
-	DLL_EXPORT void   a_start_del(AStar* a_star);
+
+	struct Map
+	{
+		int cols, rows;
+		float* weights;
+	};
+	
+	AStar*            a_start_new(const int rows, const int cols, const float* weights);
+	void              a_start_del(AStar* a_star);
 	DLL_EXPORT Path*     path_new(const int n_points);
 	DLL_EXPORT void      path_del(Path* path);
-	DLL_EXPORT Path*    find_path(AStar* path_finder, const Pt2* start, const  Pt2* end);
+	DLL_EXPORT Path*    find_path(Map* map, const Pt* start, const  Pt* end);
 #ifdef __cplusplus
 }
 #endif

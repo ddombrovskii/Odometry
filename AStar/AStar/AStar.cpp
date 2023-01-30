@@ -52,7 +52,7 @@ bool AStar::point_exists(const Point& p, const float cost, std::list<Node>& _ope
 
 bool AStar::fill_open(Node& n, std::list<Node>& _open, std::list<Node>& _closed)
 {
-    float stepCost, stepWeight, nc, dist;
+    float stepWeight, newCost, dist;
     Point neighbour;
     for (int x = 0; x < 8; x++) 
     {
@@ -62,18 +62,18 @@ bool AStar::fill_open(Node& n, std::list<Node>& _open, std::list<Node>& _closed)
 
         if (!is_valid(neighbour))continue;
          
-        if(stepWeight = weights()(neighbour.row, neighbour.col) >= MAX_WEIGHT)continue;
+        if(stepWeight = weights()(neighbour.row, neighbour.col) >= 1.0f)continue;
 
-        stepCost = 1e-3f + stepWeight; /// 1e-3f - bias ???
+        /// stepCost = 1e-3f + stepWeight; /// 1e-3f - bias ???
        
-        nc = stepCost + n.cost;
+        newCost = 1e-3f + stepWeight +  n.cost;
         
         dist = _end.distance_sqrf(neighbour);
         
-        if (!point_exists(neighbour, nc + dist, _open, _closed))
+        if (!point_exists(neighbour, (newCost + dist), _open, _closed))
         {
             Node m;
-            m.cost   = nc; 
+            m.cost   = newCost;
             m.dist   = dist;
             m.pos    = neighbour;
             m.parent = n.pos;

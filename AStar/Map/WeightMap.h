@@ -2,8 +2,8 @@
 #include <iostream>
 #include <iomanip>
 #include <cassert>
-#define MAX_WEIGHT 1.0
-#define MIN_WEIGHT 0.0
+#define MAX_WEIGHT 1.0f
+#define MIN_WEIGHT 0.0f
 
 struct WeightMap
 {

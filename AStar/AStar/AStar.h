@@ -15,22 +15,23 @@ public:
     bool operator == (const Point& o)const { return pos == o; }
     bool operator  < (const Node&  o)const { return dist + cost < o.dist + o.cost; }
     Point pos, parent;
-    int dist, cost;
+    float dist, cost;
 };
 
 class AStar 
 {
+
 private:
-    Point*           _neighbours;
+    static Point neighboursPoints[8];
+    // Point*           _neighbours;
     WeightMap*       _map;
     std::list<Point> _path;
     float            _path_cost;
     Point _end, _start;
 
-
     bool is_valid(Point& p)const;
 
-    bool point_exists(const Point& p, const int cost, std::list<Node>& _open, std::list<Node>& _closed)const;
+    bool point_exists(const Point& p, const float cost, std::list<Node>& _open, std::list<Node>& _closed)const;
 
     bool fill_open(Node& n, std::list<Node>& _open, std::list<Node>& _closed);
 

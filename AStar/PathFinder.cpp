@@ -79,25 +79,38 @@ DLL_EXPORT Path*    find_path(const Map* map, const Pt* start, const  Pt* end)
 
 	return path;
 }
+
+void summa(const float a, const float b, float& res) 
+{
+	res = a + b;
+}
+
 int main(int argc, char* argv[])
 {
     const float* raw_map = new float[64]
     {
         0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
-        0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f,
-        1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f,
-        1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f,
+        0.1f, 0.1f, 0.1f, 0.1f, 0.0f, 1.0f, 0.0f, 1.0f,
+        1.1f, 0.2f, 0.2f, 0.2f, 0.1f, 1.0f, 0.0f, 1.0f,
+        1.0f, 0.0f, 0.3f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f,
         1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f,
         1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,
         1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
         1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f
     };
 
+
     WeightMap map(8, 8, raw_map);
     std::cout << map;
     std::cout << "\n";
     AStar a_star(8, 8, raw_map);
     a_star.search();
+
+	for (const auto& p : a_star.path())
+	{
+		std::cout << p;
+		std::cout << "\n";
+	}
     std::cout << a_star;
 
     return 0;

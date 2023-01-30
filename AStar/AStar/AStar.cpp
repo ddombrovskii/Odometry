@@ -1,6 +1,19 @@
 #include "AStar.h"
 #include <cassert>
 
+Point AStar::neighboursPoints[8] =
+{
+    Point(-1, -1),
+    Point( 1, -1),
+    Point(-1,  1),
+    Point( 1,  1),
+    Point( 0, -1),
+    Point(-1,  0),
+    Point( 0,  1),
+    Point( 1,  0) 
+};
+
+
 bool AStar::is_valid(Point& p)const
 {
     if (p.row < 0) return false;
@@ -10,7 +23,7 @@ bool AStar::is_valid(Point& p)const
     return true;
 }
 
-bool AStar::point_exists(const Point& p, const int cost, std::list<Node>& _open, std::list<Node>& _closed)const
+bool AStar::point_exists(const Point& p, const float cost, std::list<Node>& _open, std::list<Node>& _closed)const
 {
     std::list<Node>::iterator i;
     i = std::find(_closed.begin(), _closed.end(), p);
@@ -39,18 +52,24 @@ bool AStar::point_exists(const Point& p, const int cost, std::list<Node>& _open,
 
 bool AStar::fill_open(Node& n, std::list<Node>& _open, std::list<Node>& _closed)
 {
-    int stepCost, nc, dist;
+    float stepCost, stepWeight, nc, dist;
     Point neighbour;
     for (int x = 0; x < 8; x++) 
     {
-        // one can make diagonals have different cost
-        stepCost = x < 4 ? 1 : 1;
-        neighbour = n.pos + _neighbours[x];
-        if (neighbour == _end)  return true;
+        neighbour = n.pos + neighboursPoints[x];
+
+        if (neighbour == _end)return true;
+
         if (!is_valid(neighbour))continue;
-        if (weights()(neighbour.row, neighbour.col) == MAX_WEIGHT)continue;
+         
+        if(stepWeight = weights()(neighbour.row, neighbour.col) >= MAX_WEIGHT)continue;
+
+        stepCost = 1e-3f + stepWeight; /// 1e-3f - bias ???
+       
         nc = stepCost + n.cost;
-        dist = _end.distance_sqr(neighbour);
+        
+        dist = _end.distance_sqrf(neighbour);
+        
         if (!point_exists(neighbour, nc + dist, _open, _closed))
         {
             Node m;
@@ -67,7 +86,7 @@ bool AStar::fill_open(Node& n, std::list<Node>& _open, std::list<Node>& _closed)
 void AStar::build_path(std::list<Node>& closed)
 {
     _path.push_front(_end);
-    _path_cost = 1 + closed.back().cost;
+    _path_cost = 1.0f + closed.back().cost;
     _path.push_front(closed.back().pos);
     Point parent = closed.back().parent;
 
@@ -80,21 +99,10 @@ void AStar::build_path(std::list<Node>& closed)
         parent = (*i).parent;
     }
     _path.push_front(_start);
-    // return _path_cost;
 }
 
 AStar::AStar(const int rows, const int cols, const float* map)
 {
-    _neighbours = (Point*)malloc(8 * sizeof(Point));
-    assert(_neighbours);
-    _neighbours[0] = Point(-1, -1);
-    _neighbours[1] = Point( 1, -1);
-    _neighbours[2] = Point(-1,  1); 
-    _neighbours[3] = Point( 1,  1);
-    _neighbours[4] = Point( 0, -1); 
-    _neighbours[5] = Point(-1,  0);
-    _neighbours[6] = Point( 0,  1);
-    _neighbours[7] = Point( 1,  0);
     _map           = new WeightMap(rows, cols, map);
     _path_cost     = 1e12f;
 }
@@ -112,20 +120,19 @@ const Point& AStar::start()const
 void AStar::set_end(const Point& pt)
 {
     _end = pt;
-    _end.row = MIN(MAX(0, _end.row), weights().cols() - 1);
+    _end.row = MIN(MAX(0, _end.row), weights().rows() - 1);
     _end.col = MIN(MAX(0, _end.col), weights().cols() - 1);
 }
 
 void AStar::set_start(const Point& pt) 
 {
     _start = pt;
-    _start.row = MIN(MAX(0, _start.row), weights().cols() - 1);
+    _start.row = MIN(MAX(0, _start.row), weights().rows() - 1);
     _start.col = MIN(MAX(0, _start.col), weights().cols() - 1);
 }
 
 AStar::~AStar()
 {
-   if (_neighbours!= nullptr) free(_neighbours);
    if (_map != nullptr) delete _map;
 }
 
@@ -138,14 +145,13 @@ bool AStar::search(const Point& s, const Point& e)
 {
     _path_cost = 1e32f;
     _path.clear();
-    Node n;
     set_end(e);
     set_start(s);
-
+    Node n;
     n.cost = 0;
     n.pos = start();
     n.parent = 0;
-    n.dist = end().distance_sqr(start());
+    n.dist = end().distance_sqrf(start());
     std::list<Node> _open;
     std::list<Node> _closed;
     _open.push_back(n);

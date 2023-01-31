@@ -1,4 +1,8 @@
-from ctypes import CDLL, Structure, c_int, c_float, POINTER
+from ctypes import CDLL, Structure, c_int, c_float, POINTER, Array
+from typing import Any
+
+import cv2
+import numpy as np
 
 a_star_lib = CDLL('./AStar/x64/Release/AStar.dll')
 
@@ -19,25 +23,124 @@ find_path_func = a_star_lib.find_path
 find_path_func.argtypes = [POINTER(Map), POINTER(Pt), POINTER(Pt)]
 find_path_func.restype = POINTER(Path)
 
-py_weights = [0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0,
-              0.1, 0.9, 0.9, 0.1, 0.0, 1.0, 0.0, 1.0,
-              1.1, 0.2, 0.9, 0.2, 0.1, 1.0, 0.0, 1.0,
-              1.0, 0.0, 0.3, 0.0, 1.0, 1.0, 0.0, 0.0,
-              1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0,
-              1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0,
-              1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-              1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+path_del_func = a_star_lib.path_del
+path_del_func.argtypes = [POINTER(Path)]
 
-c_weights = (c_float * len(py_weights))(*py_weights)
-rows, cols = c_int(8), c_int(8)
 
-new_map = Map(rows, cols, c_weights)
-start_pt = Pt(0, 0)
-end_pt = Pt(7, 7)
+def print_path_data(path_p: Path):
+    print(f"cost: {path_p.contents.cost}")
+    print(f"n_points: {path_p.contents.n_points}")
+    for i in range(path_p.contents.n_points):
+        print(f"({path_p.contents.path_points[i].row}, {path_p.contents.path_points[i].col})")
 
-path_p = a_star_lib.find_path(new_map, start_pt, end_pt)
 
-print(f"cost: {path_p.contents.cost}")
-print(f"n_points: {path_p.contents.n_points}")
-for i in range(path_p.contents.n_points):
-    print(f"({path_p.contents.path_points[i].row}, {path_p.contents.path_points[i].col})")
+def test_path_finder():
+    py_weights = [0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0,
+                  0.1, 0.9, 0.9, 0.1, 0.0, 1.0, 0.0, 1.0,
+                  1.1, 0.2, 0.9, 0.2, 0.1, 1.0, 0.0, 1.0,
+                  1.0, 0.0, 0.3, 0.0, 1.0, 1.0, 0.0, 0.0,
+                  1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0,
+                  1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0,
+                  1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                  1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+
+    c_weights = (c_float * len(py_weights))(*py_weights)
+    rows, cols = c_int(8), c_int(8)
+
+    new_map = Map(rows, cols, c_weights)
+    start_pt = Pt(0, 0)
+    end_pt = Pt(7, 7)
+
+    path_p = a_star_lib.find_path(new_map, start_pt, end_pt)
+
+    print_path_data(path_p)
+
+    path_del_func(path_p)
+    print("Path pointer was deleted")
+
+
+def get_weights_from_image(img_path: str, scale: float = 0.25) -> [Array[Any], int, int, list]:
+    image = cv2.imread(img_path, 0)
+    image = cv2.bitwise_not(image)
+    resized_image = image
+    print(f"{scale=}")
+    print(f"original image shape: {resized_image.shape}")
+    if scale != 1.0:
+        down_points = (int(image.shape[1] * scale), int(image.shape[0] * scale))
+        resized_image = cv2.resize(image, down_points, interpolation=cv2.INTER_LINEAR)
+    print(f"resized image shape: {resized_image.shape}")
+    # cv2.imshow("resized inverted image", resized_image)
+    # cv2.waitKey(0)
+    py_weights = []
+    for row in resized_image:
+        py_weights += list(row)
+    py_weights = np.array(py_weights)
+    py_weights %= 2
+    c_weights = (c_float * len(py_weights))(*py_weights)
+    return c_weights, resized_image.shape[0], resized_image.shape[1], resized_image
+
+
+def print_weights(c_weights: Array[Any], rows: int, cols: int):
+    for i in range(rows):
+        for j in range(cols):
+            print(c_weights[i * rows + j], end=" ")
+        print()
+
+
+def find_first_zero(c_weights: POINTER(c_float), rows: int, cols: int) -> Pt:
+    for i in range(rows):
+        for j in range(cols):
+            if c_weights[rows * i + j] == 0.0:
+                return Pt(i, j)
+
+
+def find_last_zero(c_weights: POINTER(c_float), rows: int, cols: int) -> Pt:
+    for i in range(rows-1, -1, -1):
+        for j in range(cols - 1, -1, -1):
+            if c_weights[rows*i + j] == 0.0:
+                return Pt(i, j)
+
+
+def select_point(event, x, y, flags, param):
+    if event == cv2.EVENT_LBUTTONDBLCLK:
+        print(f'({y}, {x})')
+
+
+def test_path_finder_on_map_from_img():
+    c_weights, rows, cols, resized_image = get_weights_from_image("./mapping/map1.png")
+
+    # создаю окно для получения координат начальной и конечной точек (дабл клик ЛКМ)
+    # cv2.namedWindow("select point")
+    # cv2.setMouseCallback("select point", select_point)
+    # cv2.imshow("select point", resized_image)
+    # cv2.waitKey(0)
+
+    # start_point = find_first_zero(c_weights, rows, cols)
+    # end_point = find_last_zero(c_weights, rows, cols)
+
+    start_point = Pt(5, 97)
+    end_point = Pt(143, 32)
+    print(f"start point: ({start_point.row}, {start_point.col})")
+    print(f"end point: ({end_point.row}, {end_point.col})")
+
+    # отмечаю выбранные точки на картинке
+    # drawed_image = cv2.cvtColor(resized_image, cv2.COLOR_GRAY2BGR)
+    # drawed_image = cv2.circle(drawed_image, (start_point.col, start_point.row),
+    #                           radius=1, color=(255, 0, 0), thickness=-1)
+    # drawed_image = cv2.circle(drawed_image, (end_point.col, end_point.row),
+    #                           radius=1, color=(255, 0, 0), thickness=-1)
+    # cv2.imshow("selected points", drawed_image)
+    # cv2.waitKey(0)
+
+    map_from_img = Map(c_int(cols), c_int(rows), c_weights)
+    # a_star_lib.print_map(map_from_img)
+
+    path_p = find_path_func(map_from_img, start_point, end_point)
+    print_path_data(path_p)
+    path_del_func(path_p)
+
+
+if __name__ == "__main__":
+    # test_path_finder()
+
+    test_path_finder_on_map_from_img()

@@ -118,19 +118,36 @@ def test_path_finder_on_map_from_img():
     # start_point = find_first_zero(c_weights, rows, cols)
     # end_point = find_last_zero(c_weights, rows, cols)
 
-    start_point = Pt(5, 97)
-    end_point = Pt(143, 32)
+    # path №1
+    # start_point = Pt(5, 97)
+    # end_point = Pt(143, 32)
+
+    # path №2
+    # start_point = Pt(5, 97)
+    # end_point = Pt(98, 192)
+
+    # path №3
+    # start_point = Pt(5, 97)
+    # end_point = Pt(104, 72)
+
+    #  path №4
+    # start_point = Pt(5, 97)
+    # end_point = Pt(4, 178)
+
+    #  path №5
+    # start_point = Pt(98, 193)
+    # end_point = Pt(4, 179)
+
+    # path №6
+    # start_point = Pt(98, 193)
+    # end_point = Pt(42, 3)
+
+    # path №7
+    start_point = Pt(61, 137)
+    end_point = Pt(57, 52)
+
     print(f"start point: ({start_point.row}, {start_point.col})")
     print(f"end point: ({end_point.row}, {end_point.col})")
-
-    # отмечаю выбранные точки на картинке
-    # drawed_image = cv2.cvtColor(resized_image, cv2.COLOR_GRAY2BGR)
-    # drawed_image = cv2.circle(drawed_image, (start_point.col, start_point.row),
-    #                           radius=1, color=(255, 0, 0), thickness=-1)
-    # drawed_image = cv2.circle(drawed_image, (end_point.col, end_point.row),
-    #                           radius=1, color=(255, 0, 0), thickness=-1)
-    # cv2.imshow("selected points", drawed_image)
-    # cv2.waitKey(0)
 
     map_from_img = Map(c_int(cols), c_int(rows), c_weights)
     # a_star_lib.print_map(map_from_img)

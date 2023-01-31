@@ -16,6 +16,8 @@ public:
 
     Point operator-(const Point& o)const;
 	
+    int manhattan_distance(const Point& o)const;
+
     int magnitude_sqr()const;
 
     int distance_sqr(const Point& o)const;

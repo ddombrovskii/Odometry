@@ -30,6 +30,12 @@ Point Point::operator-(const Point& o)const
     return Point(o.row - row, o.col - col);
 }
 
+int Point::manhattan_distance(const Point& o)const 
+{
+    return abs(o.row - row) + abs(o.col - col);
+}
+
+
 int Point::magnitude_sqr()const
 {
     return row * row + col * col;

@@ -7,6 +7,8 @@
 #include "../Map/WeightMap.h"
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
+#define MAX_WEIGHT 1000.0f
+#define MIN_WEIGHT 1.0f
 
 struct Node 
 {
@@ -14,8 +16,10 @@ public:
     bool operator == (const Node&  o)const { return pos == o.pos; }
     bool operator == (const Point& o)const { return pos == o; }
     bool operator  < (const Node&  o)const { return dist + cost < o.dist + o.cost; }
-    Point pos, parent;
-    float dist, cost;
+    Point pos;
+    Point parent;
+    float dist;
+    float cost;
 };
 
 class AStar 

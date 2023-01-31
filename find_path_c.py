@@ -137,7 +137,22 @@ def test_path_finder_on_map_from_img():
 
     path_p = find_path_func(map_from_img, start_point, end_point)
     print_path_data(path_p)
+    show_path(resized_image, path_p)
+
     path_del_func(path_p)
+
+
+def show_path(image, path_p: POINTER(Path)):
+    image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
+    for i in range(path_p.contents.n_points):
+        x = path_p.contents.path_points[i].col
+        y = path_p.contents.path_points[i].row
+
+        # отмечаю выбранные точки на картинке
+        image = cv2.circle(image, (x, y), radius=1, color=(255, 0, 0), thickness=-1)
+
+    cv2.imshow("path", image)
+    cv2.waitKey(0)
 
 
 if __name__ == "__main__":

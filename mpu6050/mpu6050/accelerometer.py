@@ -461,33 +461,82 @@ class Accelerometer:
             self.__gyro_calib = Vec3(0.0)
             self.__accel_calib = Vec3(0.0)
 
-    def calibrate(self, calib_time: float = 2.0) -> None:
-        n_measurement = 0.0
+    def calibrate(self, calib_time: float = 2.0, forward: Vec3 = None) -> None:
+        _use_filtering = self.use_filtering
+        self.use_filtering = not _use_filtering
         self.__gyro_calib = Vec3(0.0)
         self.__accel_calib = Vec3(0.0)
         t = time.perf_counter()
+        gyro_values = []
+        accel_values = []
         while time.perf_counter() - t < calib_time:
-            n_measurement += 1.0
             flag, val = self.__read_gyro_data()
             if not flag:
-                self.__gyro_calib = Vec3(0.0)
-                self.__accel_calib = Vec3(0.0)
                 print("calibration failed")
                 break
-            self.__gyro_calib += val
             flag, val = self.__read_acceleration_data()
+            gyro_values.append(val)
             if not flag:
-                self.__gyro_calib = Vec3(0.0)
-                self.__accel_calib = Vec3(0.0)
                 print("calibration failed")
                 break
-            self.__accel_calib += val
+            accel_values.append(val)
 
-        scl = 1.0 / n_measurement
+        if len(accel_values) != len(gyro_values):
+            self.__gyro_calib = Vec3(0, 0, 0)
+            self.__accel_calib = Vec3(0, 0, 0)
+            return
 
-        self.__gyro_calib *= scl
+        avg_accel = Vec3(0, 0, 0)
+        avg_gyro  = Vec3(0, 0, 0)
 
-        self.__accel_calib *= scl
+        rms_accel = Vec3(0, 0, 0)
+        rms_gyro  = Vec3(0, 0, 0)
+
+        divider = 1.0 / len(accel_values)
+
+        for a, g in zip(accel_values, gyro_values):
+            avg_accel.x += a.x
+            avg_accel.y += a.y
+            avg_accel.z += a.z
+            avg_gyro.x  += g.x
+            avg_gyro.y  += g.y
+            avg_gyro.z  += g.z
+
+        avg_accel.x *= divider
+        avg_accel.y *= divider
+        avg_accel.z *= divider
+        avg_gyro.x  *= divider
+        avg_gyro.y  *= divider
+        avg_gyro.z  *= divider
+
+        for a, g in zip(accel_values, gyro_values):
+            rms_accel.x += (avg_accel.x - a.x)**2
+            rms_accel.y += (avg_accel.y - a.y)**2
+            rms_accel.z += (avg_accel.z - a.z)**2
+            rms_gyro.x  += (avg_gyro.x - g.x) **2
+            rms_gyro.y  += (avg_gyro.y - g.y) **2
+            rms_gyro.z  += (avg_gyro.z - g.z) **2
+
+        rms_accel.x = math.sqrt(divider * rms_accel.x)
+        rms_accel.y = math.sqrt(divider * rms_accel.y)
+        rms_accel.z = math.sqrt(divider * rms_accel.z)
+        rms_gyro.x  = math.sqrt(divider * rms_gyro.x )
+        rms_gyro.y  = math.sqrt(divider * rms_gyro.y )
+        rms_gyro.z  = math.sqrt(divider * rms_gyro.z )
+
+        ey = -avg_accel.normalized
+        if forward is None:
+            ex = Vec3.cross(ey, Vec3(0, 0, 1))
+        else:
+            ex = Vec3.cross(ey, forward)
+        ez = Vec3.cross(ex, ey)
+
+        angles = rot_m_to_euler_angles(Mat4(ex.x, ey.x, ez.x, 0.0,
+                                            ex.y, ey.y, ez.y, 0.0,
+                                            ex.z, ey.z, ez.z, 0.0,
+                                            0.0,  0.0,  0.0,  1.0))
+        # self.__velocity_integrator.c0 =
+        self.__angles_integrator.c0 = angles
 
         print(f"{{\n"
               f"\"calibration_info\":\n"

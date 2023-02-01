@@ -51,6 +51,8 @@ def test_path_finder():
     start_pt = Pt(0, 0)
     end_pt = Pt(7, 7)
 
+    # a_star_lib.print_map(new_map)
+
     path_p = a_star_lib.find_path(new_map, start_pt, end_pt)
 
     print_path_data(path_p)
@@ -173,6 +175,6 @@ def show_path(image, path_p: POINTER(Path)):
 
 
 if __name__ == "__main__":
-    # test_path_finder()
+    test_path_finder()
 
-    test_path_finder_on_map_from_img()
+    # test_path_finder_on_map_from_img()

@@ -3,7 +3,11 @@
 
 struct Point 
 {
+
 public:
+    static const Point Zero;
+    static const Point MinusOne;
+
     int row, col;
 
     Point(int _row = 0, int _col = 0);

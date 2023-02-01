@@ -2,6 +2,8 @@
 #include <iostream>
 #include <iomanip>
 #include <cassert>
+#include "../Point/Point.h"
+
 #define MAX_WEIGHT 1.0f
 #define MIN_WEIGHT 0.0f
 
@@ -18,6 +20,7 @@ public:
     const int        cols()const;
     const int      ncells()const;
     float        operator[](const int index)const;
+    float        operator[](const Point& index)const;
 
     WeightMap(int rows, int cols, const float* map);
     

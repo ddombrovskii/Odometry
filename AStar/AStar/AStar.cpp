@@ -13,7 +13,6 @@ Point AStar::neighboursPoints[8] =
     Point( 1,  0) 
 };
 
-
 bool AStar::is_valid(Point& p)const
 {
     if (p.row < 0) return false;
@@ -25,7 +24,22 @@ bool AStar::is_valid(Point& p)const
 
 bool AStar::point_exists(const Point& point, const float cost, std::list<Node>& _open, std::list<Node>& _closed)const
 {
+    /// <summary>
+    /// почему проверяются оба списка?
+    /// </summary>
     std::list<Node>::iterator i;
+    
+    i = std::find(_closed.begin(), _closed.end(), point);
+    if (i != _closed.end())
+    {
+        if ((*i).cost + (*i).dist < cost)
+        {
+            return true;
+        }
+        _closed.erase(i);
+        return false;
+    }
+
     i = std::find(_open.begin(), _open.end(), point);
     if (i != _open.end())
     {
@@ -44,7 +58,7 @@ bool AStar::fill_open(Node& _node, std::list<Node>& _open, std::list<Node>& _clo
     if (_node.pos == _end)return true;
 
     float newCost, stepWeight, dist;
-    
+
     Point neighbour;
 
     for (int index = 0; index < 8; index++)
@@ -52,16 +66,18 @@ bool AStar::fill_open(Node& _node, std::list<Node>& _open, std::list<Node>& _clo
         neighbour = _node.pos + neighboursPoints[index];
 
         if (!is_valid(neighbour))continue;
-       
-        stepWeight = weights()(neighbour.row, neighbour.col);
 
-        if (stepWeight == MAX_WEIGHT)continue;
+        if (neighbour == _end)return true;
 
-        newCost = (index < 4 ? 1.414f : 1.0f) * stepWeight + _node.cost;
-        
-        dist =  _end.manhattan_distance(neighbour);
-        
-        if (point_exists(neighbour, (newCost + dist), _open, _closed))continue;
+        stepWeight = weights()[neighbour];
+
+        if (stepWeight >= MAX_WEIGHT)continue;
+
+        newCost = 1.0f + (index < 4 ? 1.414f : 1.0f) * stepWeight + _node.cost; /// <- с весами какая-то ерунда...
+
+        dist = _end.manhattan_distance(neighbour);
+
+        if (point_exists(neighbour, newCost + dist, _open, _closed))continue;
 
         _open.push_back({ neighbour, _node.pos, dist, newCost });
     }
@@ -70,15 +86,20 @@ bool AStar::fill_open(Node& _node, std::list<Node>& _open, std::list<Node>& _clo
 
 void AStar::build_path(std::list<Node>& closed)
 {
+   /* for (const auto& pt : closed) 
+    {
+        _path.push_back(pt.pos);
+    }*/
+    
     _path.push_front(_end);
-    _path_cost = 1.0f + closed.back().cost;
+    _path_cost = closed.back().cost;
     _path.push_front(closed.back().pos);
     Point parent = closed.back().parent;
 
     for (std::list<Node>::reverse_iterator i = closed.rbegin(); i != closed.rend(); i++)
     {
         if (!((*i).pos == parent)) continue;
-        if ((*i).pos == _start) continue;
+        if (  (*i).pos == _start)  continue;
         _path.push_front((*i).pos);
         parent = (*i).parent;
     }
@@ -87,8 +108,10 @@ void AStar::build_path(std::list<Node>& closed)
 
 AStar::AStar(const int rows, const int cols, const float* map)
 {
-    _map           = new WeightMap(rows, cols, map);
-    _path_cost     = 1e12f;
+    _map       = new WeightMap(rows, cols, map);
+    _path_cost = 1e12f;
+    _start     = Point::MinusOne;
+    _end       = Point::MinusOne;
 }
 
 const Point& AStar::end()const
@@ -133,24 +156,33 @@ const WeightMap& AStar::weights()const
 
 bool AStar::searh_path()
 {
+    if (weights()[start()] >= MAX_WEIGHT) return false;
+    if (weights()[end()]   >= MAX_WEIGHT) return false;
+
     std::list<Node> _open;
     std::list<Node> _closed;
 
-    _open.push_back({ start(), Point(-1, -1), (float)end().manhattan_distance(start()), 0.0f });
+    _open.push_back({ start(), Point::MinusOne, (float)end().manhattan_distance(start()), 0.0f });
 
     bool success = false;
-
-    while (!_open.empty())
+    int cntr = 0;
+    while (true)
     {
-        Node n = _open.front();
-        _open.pop_front();
-        _closed.push_back(n);
-        if (fill_open(n, _open, _closed))
+        _closed.push_back(_open.front()); //тудым...
+        _open.pop_front();//сюдым...
+        if (fill_open(_closed.back(), _open, _closed))
         {
             success = true;
             break;
         };
+        if (cntr == weights().ncells()) break; // <- а так можно вообще? какая верхняя оценка количества итераций
+        if (_open.empty()) break;
+        cntr++;
     }
+#ifdef _DEBUG
+    std::cout << "iters elapsed: " << cntr << ", while cells count is " << weights().ncells()<<'\n';
+#endif // DEBUG
+
     if (success)
     {
         build_path(_closed);
@@ -168,8 +200,8 @@ bool AStar::search(const Point& s, const Point& e)
 
 bool AStar::search() 
 {   
-    if (start() == Point(-1, -1)) set_start({ 0,0 });
-    if (end() == Point(-1, -1)) set_end({ weights().rows() - 1, weights().cols() - 1 });
+    if (start() == Point::MinusOne) set_start({ 0,0 });
+    if (end()   == Point::MinusOne) set_end({ weights().rows() - 1, weights().cols() - 1 });
     return searh_path();
 }
 

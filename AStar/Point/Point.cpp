@@ -1,5 +1,8 @@
 #include "Point.h"
 
+const Point Point::Zero     = Point(0, 0);
+const Point Point::MinusOne = Point(-1,-1);
+
 Point::Point(int _row, int _col)
 {
     row = _row;

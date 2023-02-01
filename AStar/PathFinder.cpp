@@ -123,17 +123,20 @@ int main(int argc, char* argv[])
 	  _F, _F, _F, _F, _F, _F, _F, _X, _X, _F, _F, _F, _X, _F, _F, _F, _F, _F, _F, _F, _F, _F, _F, _X, _X, _F, _F, _F, _X, _F, _F, _F
 	};
 
-	WeightMap map(32, 32, raw_map);
-    std::cout << map;
+	// WeightMap map(32, 32, raw_map);
+    // std::cout << map;
     std::cout << "\n";
     AStar a_star(32, 32, raw_map);
-	a_star.search({ 0,0 }, {12,27 });
+	a_star.search(); // ({ 0, 0 }, { 14, 26 });
 
+	/*
+	
 	for (const auto& p : a_star.path())
 	{
 		std::cout << p;
 		std::cout << "\n";
 	}
+	*/
     std::cout << a_star;
 
     return 0;

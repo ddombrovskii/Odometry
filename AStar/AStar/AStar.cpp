@@ -23,21 +23,10 @@ bool AStar::is_valid(Point& p)const
     return true;
 }
 
-bool AStar::point_exists(const Point& p, const float cost, std::list<Node>& _open, std::list<Node>& _closed)const
+bool AStar::point_exists(const Point& point, const float cost, std::list<Node>& _open, std::list<Node>& _closed)const
 {
     std::list<Node>::iterator i;
-    i = std::find(_closed.begin(), _closed.end(), p);
-    if (i != _closed.end())
-    {
-        if ((*i).cost + (*i).dist < cost)
-        {
-            return true;
-        }
-        _closed.erase(i);
-        return false;
-    }
-    
-    i = std::find(_open.begin(), _open.end(), p);
+    i = std::find(_open.begin(), _open.end(), point);
     if (i != _open.end())
     {
         if ((*i).cost + (*i).dist < cost)
@@ -50,35 +39,31 @@ bool AStar::point_exists(const Point& p, const float cost, std::list<Node>& _ope
     return false;
 }
 
-bool AStar::fill_open(Node& n, std::list<Node>& _open, std::list<Node>& _closed)
+bool AStar::fill_open(Node& _node, std::list<Node>& _open, std::list<Node>& _closed)
 {
-    float stepWeight, newCost, dist;
-    Point neighbour;
-    for (int x = 0; x < 8; x++) 
-    {
-        neighbour = n.pos + neighboursPoints[x];
+    if (_node.pos == _end)return true;
 
-        if (neighbour == _end)return true;
+    float newCost, stepWeight, dist;
+    
+    Point neighbour;
+
+    for (int index = 0; index < 8; index++)
+    {
+        neighbour = _node.pos + neighboursPoints[index];
 
         if (!is_valid(neighbour))continue;
-         
-        if(stepWeight = weights()(neighbour.row, neighbour.col) >= 1.0f)continue;
-
-        /// stepCost = 1e-3f + stepWeight; /// 1e-3f - bias ???
        
-        newCost = 1e-3f + stepWeight +  n.cost;
+        stepWeight = weights()(neighbour.row, neighbour.col);
+
+        if (stepWeight == MAX_WEIGHT)continue;
+
+        newCost = (index < 4 ? 1.414f : 1.0f) * stepWeight + _node.cost;
         
-        dist = _end.distance_sqrf(neighbour);
+        dist =  _end.manhattan_distance(neighbour);
         
-        if (!point_exists(neighbour, (newCost + dist), _open, _closed))
-        {
-            Node m;
-            m.cost   = newCost;
-            m.dist   = dist;
-            m.pos    = neighbour;
-            m.parent = n.pos;
-            _open.push_back(m);
-        }
+        if (point_exists(neighbour, (newCost + dist), _open, _closed))continue;
+
+        _open.push_back({ neighbour, _node.pos, dist, newCost });
     }
     return false;
 }
@@ -94,7 +79,6 @@ void AStar::build_path(std::list<Node>& closed)
     {
         if (!((*i).pos == parent)) continue;
         if ((*i).pos == _start) continue;
-
         _path.push_front((*i).pos);
         parent = (*i).parent;
     }
@@ -118,17 +102,23 @@ const Point& AStar::start()const
 }
 
 void AStar::set_end(const Point& pt)
-{
+{   
+    if (_end == pt)return;
     _end = pt;
     _end.row = MIN(MAX(0, _end.row), weights().rows() - 1);
     _end.col = MIN(MAX(0, _end.col), weights().cols() - 1);
+    _path_cost = 1e32f;
+    _path.clear();
 }
 
 void AStar::set_start(const Point& pt) 
 {
+    if (_start == pt)return;
     _start = pt;
     _start.row = MIN(MAX(0, _start.row), weights().rows() - 1);
     _start.col = MIN(MAX(0, _start.col), weights().cols() - 1);
+    _path_cost = 1e32f;
+    _path.clear();
 }
 
 AStar::~AStar()
@@ -141,21 +131,15 @@ const WeightMap& AStar::weights()const
     return *_map;
 }
 
-bool AStar::search(const Point& s, const Point& e)
+bool AStar::searh_path()
 {
-    _path_cost = 1e32f;
-    _path.clear();
-    set_end(e);
-    set_start(s);
-    Node n;
-    n.cost = 0;
-    n.pos = start();
-    n.parent = 0;
-    n.dist = end().distance_sqrf(start());
     std::list<Node> _open;
     std::list<Node> _closed;
-    _open.push_back(n);
+
+    _open.push_back({ start(), Point(-1, -1), (float)end().manhattan_distance(start()), 0.0f });
+
     bool success = false;
+
     while (!_open.empty())
     {
         Node n = _open.front();
@@ -174,9 +158,19 @@ bool AStar::search(const Point& s, const Point& e)
     return success;
 }
 
-bool AStar::search() 
+
+bool AStar::search(const Point& s, const Point& e)
 {
-    return search(Point(0, 0), Point(weights().rows() - 1, weights().cols() - 1));
+    set_end  (e);
+    set_start(s);
+    return searh_path();
+}
+
+bool AStar::search() 
+{   
+    if (start() == Point(-1, -1)) set_start({ 0,0 });
+    if (end() == Point(-1, -1)) set_end({ weights().rows() - 1, weights().cols() - 1 });
+    return searh_path();
 }
 
 const std::list<Point>& AStar::path()const 
@@ -199,7 +193,7 @@ std::ostream& operator <<(std::ostream& stream, const AStar& a_star)
 
     for (int index = 0; index < a_star.weights().ncells(); index++)
     {
-        char_map[index] = (a_star.weights()[index] == 1.0f ? '#' : '_');
+        char_map[index] = (a_star.weights()[index] > 1.0f ? '#' : '_');
     }
     
     if (a_star.path().size() != 0)
@@ -207,6 +201,10 @@ std::ostream& operator <<(std::ostream& stream, const AStar& a_star)
         {
             char_map[pt.row * a_star.weights().cols() + pt.col] = '.';
         }
+
+    char_map[a_star.start().row * a_star.weights().cols() + a_star.start().col] = '+';
+    char_map[a_star.end().row * a_star.weights().cols() + a_star.end().col] = '+';
+
 
     for (int index = 0; index < a_star.weights().ncells(); index++)
     {

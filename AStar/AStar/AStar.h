@@ -7,6 +7,8 @@
 #include "../Map/WeightMap.h"
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
+#define MAX_WEIGHT 1000.0f
+#define MIN_WEIGHT 1.0f
 
 struct Node 
 {
@@ -14,8 +16,16 @@ public:
     bool operator == (const Node&  o)const { return pos == o.pos; }
     bool operator == (const Point& o)const { return pos == o; }
     bool operator  < (const Node&  o)const { return dist + cost < o.dist + o.cost; }
-    Point pos, parent;
-    float dist, cost;
+    Point pos;
+    Point parent;
+    float dist;
+    float cost;
+};
+
+struct Vector2 
+{
+    float x;
+    float y;
 };
 
 class AStar 
@@ -23,11 +33,11 @@ class AStar
 
 private:
     static Point neighboursPoints[8];
-    // Point*           _neighbours;
     WeightMap*       _map;
     std::list<Point> _path;
     float            _path_cost;
-    Point _end, _start;
+    Point            _end, _start;
+    // Vector2          _size, _origin;
 
     bool is_valid(Point& p)const;
 
@@ -35,6 +45,8 @@ private:
 
     bool fill_open(Node& n, std::list<Node>& _open, std::list<Node>& _closed);
 
+    bool searh_path();
+    
     void build_path(std::list<Node>& closed);
 	
 public:

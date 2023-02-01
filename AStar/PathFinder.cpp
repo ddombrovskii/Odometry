@@ -80,11 +80,6 @@ DLL_EXPORT Path*    find_path(const Map* map, const Pt* start, const  Pt* end)
 	return path;
 }
 
-void summa(const float a, const float b, float& res) 
-{
-	res = a + b;
-}
-
 
 #define _X 1000.0f
 #define _F 1.0f
@@ -128,8 +123,7 @@ int main(int argc, char* argv[])
 	  _F, _F, _F, _F, _F, _F, _F, _X, _X, _F, _F, _F, _X, _F, _F, _F, _F, _F, _F, _F, _F, _F, _F, _X, _X, _F, _F, _F, _X, _F, _F, _F
 	};
 
-
-    WeightMap map(32, 32, raw_map);
+	WeightMap map(32, 32, raw_map);
     std::cout << map;
     std::cout << "\n";
     AStar a_star(32, 32, raw_map);

@@ -22,16 +22,22 @@ public:
     float cost;
 };
 
+struct Vector2 
+{
+    float x;
+    float y;
+};
+
 class AStar 
 {
 
 private:
     static Point neighboursPoints[8];
-    // Point*           _neighbours;
     WeightMap*       _map;
     std::list<Point> _path;
     float            _path_cost;
-    Point _end, _start;
+    Point            _end, _start;
+    // Vector2          _size, _origin;
 
     bool is_valid(Point& p)const;
 
@@ -39,6 +45,8 @@ private:
 
     bool fill_open(Node& n, std::list<Node>& _open, std::list<Node>& _closed);
 
+    bool searh_path();
+    
     void build_path(std::list<Node>& closed);
 	
 public:

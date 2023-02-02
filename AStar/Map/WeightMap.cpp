@@ -6,8 +6,36 @@ const int    WeightMap::    cols()const { return _cols;}
 const int    WeightMap::  ncells()const { return rows() * cols(); }
 float        WeightMap::operator[](const int index)const
 {
-    if (index < 0)        return 1.0f;
-    if (index >= ncells())return 1.0f;
+    if (index < 0)        return MAX_WEIGHT;
+    if (index >= ncells())return MAX_WEIGHT;
+    return _map[index];
+}
+float        WeightMap::operator[](const Point& index)const
+{
+    return (*this)[index.row * cols() + index.col];
+}
+float        WeightMap::operator() (const int row, const int col) const
+{
+    int index = row * cols() + col;
+    if (index >= ncells()) return MAX_WEIGHT;
+    if (index < 0) return MAX_WEIGHT;
+    return _map[index];
+}
+float&       WeightMap::operator[](const int index)
+{
+    assert(index < 0);
+    assert(index >= ncells());
+    return _map[index];
+}
+float&       WeightMap::operator[](const Point& index)
+{
+    return (*this)[index.row * cols() + index.col];
+}
+float&       WeightMap::operator() (const int row, const int col)
+{
+    int index = row * cols() + col;
+    assert(index < ncells());
+    assert(index > 0);
     return _map[index];
 }
 WeightMap::WeightMap(int rows, int cols, const float* map)
@@ -22,20 +50,6 @@ WeightMap::WeightMap(int rows, int cols, const float* map)
 WeightMap::~WeightMap()
 {
     if (_map != NULL)free(_map);
-}
-float WeightMap::operator() (const int row, const int col) const
-{
-    int index = row * cols() + col;
-    if (index >= ncells()) return MAX_WEIGHT;
-    if (index < 0) return MAX_WEIGHT;
-    return _map[row * cols() + col];
-}
-float& WeightMap::operator() (const int row, const int col)
-{
-    int index = row * cols() + col;
-    assert(index < ncells());
-    assert(index > 0);
-    return _map[row * cols() + col];
 }
 std::ostream& operator<<(std::ostream& stream, const WeightMap& map)
 {

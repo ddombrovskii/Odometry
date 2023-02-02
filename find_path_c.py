@@ -35,21 +35,80 @@ def print_path_data(path_p: Path):
 
 
 def test_path_finder():
-    py_weights = [0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0,
-                  0.1, 0.9, 0.9, 0.1, 0.0, 1.0, 0.0, 1.0,
-                  1.1, 0.2, 0.9, 0.2, 0.1, 1.0, 0.0, 1.0,
-                  1.0, 0.0, 0.3, 0.0, 1.0, 1.0, 0.0, 0.0,
-                  1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0,
-                  1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0,
-                  1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                  1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    _F = 1.0
+    _X = 1000.0
+    py_weights = [_F, _X, _F, _F, _F, _F, _F, _F, _F, _X, _F, _F, _F, _F, _F, _F, _F, _X, _F, _F, _F, _F, _F, _F, _F,
+                  _X, _F, _F, _F, _F, _F, _F,
+                  _F, _X, _F, _F, _F, _F, _F, _F, _F, _X, _F, _F, _F, _F, _F, _F, _F, _X, _F, _F, _F, _F, _F, _F, _F,
+                  _X, _F, _F, _F, _F, _F, _F,
+                  _F, _X, _F, _X, _F, _F, _F, _F, _F, _X, _F, _F, _F, _X, _F, _F, _F, _X, _F, _X, _F, _F, _F, _F, _F,
+                  _X, _F, _F, _F, _X, _F, _F,
+                  _F, _X, _F, _X, _F, _F, _F, _F, _F, _F, _F, _F, _F, _X, _F, _F, _F, _X, _F, _X, _F, _F, _F, _F, _F,
+                  _F, _F, _F, _F, _X, _F, _F,
+                  _F, _X, _F, _X, _F, _F, _F, _F, _F, _F, _F, _F, _F, _X, _F, _F, _F, _X, _F, _X, _F, _F, _F, _F, _F,
+                  _F, _F, _F, _F, _X, _F, _F,
+                  _F, _F, _F, _X, _F, _X, _X, _X, _X, _X, _X, _F, _F, _X, _F, _F, _F, _F, _F, _X, _F, _X, _X, _X, _X,
+                  _X, _X, _F, _F, _X, _F, _F,
+                  _F, _F, _F, _X, _F, _F, _F, _F, _F, _F, _X, _F, _F, _X, _F, _F, _F, _F, _F, _X, _F, _F, _F, _F, _F,
+                  _F, _X, _F, _F, _X, _F, _F,
+                  _F, _F, _F, _F, _F, _F, _F, _F, _F, _F, _X, _F, _F, _X, _F, _F, _F, _F, _F, _F, _F, _F, _F, _F, _F,
+                  _F, _X, _F, _F, _X, _F, _F,
+                  _F, _F, _F, _F, _F, _F, _F, _F, _F, _F, _X, _F, _F, _X, _F, _F, _F, _F, _F, _F, _F, _F, _F, _F, _F,
+                  _F, _X, _F, _F, _X, _F, _F,
+                  _F, _X, _F, _X, _X, _X, _F, _F, _F, _F, _X, _F, _F, _F, _F, _F, _F, _X, _F, _X, _X, _X, _F, _F, _F,
+                  _F, _X, _F, _F, _F, _F, _F,
+                  _F, _X, _F, _F, _F, _F, _F, _F, _F, _F, _X, _F, _F, _F, _F, _F, _F, _X, _F, _F, _F, _F, _F, _F, _F,
+                  _F, _X, _F, _F, _F, _F, _F,
+                  _F, _X, _F, _F, _F, _F, _F, _X, _X, _F, _X, _F, _X, _F, _F, _F, _F, _X, _F, _F, _F, _F, _F, _X, _X,
+                  _F, _X, _F, _X, _F, _F, _F,
+                  _F, _X, _X, _X, _X, _F, _F, _X, _X, _F, _X, _F, _X, _F, _F, _F, _F, _X, _X, _X, _X, _F, _F, _X, _X,
+                  _F, _X, _F, _X, _F, _F, _F,
+                  _F, _F, _F, _F, _F, _F, _F, _X, _X, _F, _F, _F, _X, _F, _F, _F, _F, _F, _F, _F, _F, _F, _F, _X, _X,
+                  _F, _F, _F, _X, _F, _F, _F,
+                  _F, _F, _F, _F, _F, _F, _F, _X, _X, _F, _F, _F, _X, _F, _F, _F, _F, _F, _F, _F, _F, _F, _F, _X, _X,
+                  _F, _F, _F, _X, _F, _F, _F,
+                  _F, _F, _F, _F, _F, _F, _F, _X, _X, _F, _F, _F, _X, _F, _F, _F, _F, _F, _F, _F, _F, _F, _F, _X, _X,
+                  _F, _F, _F, _X, _F, _F, _F,
+                  _F, _X, _F, _F, _F, _F, _F, _F, _F, _X, _F, _F, _F, _F, _F, _F, _F, _X, _F, _F, _F, _F, _F, _F, _F,
+                  _X, _F, _F, _F, _F, _F, _F,
+                  _F, _X, _F, _F, _F, _F, _F, _F, _F, _X, _F, _F, _F, _F, _F, _F, _F, _X, _F, _F, _F, _F, _F, _F, _F,
+                  _X, _F, _F, _F, _F, _F, _F,
+                  _F, _X, _F, _X, _F, _F, _F, _F, _F, _X, _F, _F, _F, _X, _F, _F, _F, _X, _F, _X, _F, _F, _F, _F, _F,
+                  _X, _F, _F, _F, _X, _F, _F,
+                  _F, _X, _F, _X, _F, _F, _F, _F, _F, _F, _F, _F, _F, _X, _F, _F, _F, _X, _F, _X, _F, _F, _F, _F, _F,
+                  _F, _F, _F, _F, _X, _F, _F,
+                  _F, _X, _F, _X, _F, _F, _F, _F, _F, _F, _F, _F, _F, _X, _F, _F, _F, _X, _F, _X, _F, _F, _F, _F, _F,
+                  _F, _F, _F, _F, _X, _F, _F,
+                  _F, _F, _F, _X, _F, _X, _X, _X, _X, _X, _X, _F, _F, _X, _F, _F, _F, _F, _F, _X, _F, _X, _X, _X, _X,
+                  _X, _X, _F, _F, _X, _F, _F,
+                  _F, _F, _F, _X, _F, _F, _F, _F, _F, _F, _X, _F, _F, _X, _F, _F, _F, _F, _F, _X, _F, _F, _F, _F, _F,
+                  _F, _X, _F, _F, _X, _F, _F,
+                  _F, _F, _F, _F, _F, _F, _F, _F, _F, _F, _X, _F, _F, _X, _F, _F, _F, _F, _F, _F, _F, _F, _F, _F, _F,
+                  _F, _X, _F, _F, _X, _F, _F,
+                  _F, _F, _F, _F, _F, _F, _F, _F, _F, _F, _X, _F, _F, _X, _F, _F, _F, _F, _F, _F, _F, _F, _F, _F, _F,
+                  _F, _X, _F, _F, _X, _F, _F,
+                  _F, _X, _F, _X, _X, _X, _F, _F, _F, _F, _X, _F, _F, _F, _F, _F, _F, _X, _F, _X, _X, _X, _F, _F, _F,
+                  _F, _X, _F, _F, _F, _F, _F,
+                  _F, _X, _F, _F, _F, _F, _F, _F, _F, _F, _X, _F, _F, _F, _F, _F, _F, _X, _F, _F, _F, _F, _F, _F, _F,
+                  _F, _X, _F, _F, _F, _F, _F,
+                  _F, _X, _F, _F, _F, _F, _F, _X, _X, _F, _X, _F, _X, _F, _F, _F, _F, _X, _F, _F, _F, _F, _F, _X, _X,
+                  _F, _X, _F, _X, _F, _F, _F,
+                  _F, _X, _X, _X, _X, _F, _F, _X, _X, _F, _X, _F, _X, _F, _F, _F, _F, _X, _X, _X, _X, _F, _F, _X, _X,
+                  _F, _X, _F, _X, _F, _F, _F,
+                  _F, _F, _F, _F, _F, _F, _F, _X, _X, _F, _F, _F, _X, _F, _F, _F, _F, _F, _F, _F, _F, _F, _F, _X, _X,
+                  _F, _F, _F, _X, _F, _F, _F,
+                  _F, _F, _F, _F, _F, _F, _F, _X, _X, _F, _F, _F, _X, _F, _F, _F, _F, _F, _F, _F, _F, _F, _F, _X, _X,
+                  _F, _F, _F, _X, _F, _F, _F,
+                  _F, _F, _F, _F, _F, _F, _F, _X, _X, _F, _F, _F, _X, _F, _F, _F, _F, _F, _F, _F, _F, _F, _F, _X, _X,
+                  _F, _F, _F, _X, _F, _F, _F
+                  ]
 
     c_weights = (c_float * len(py_weights))(*py_weights)
-    rows, cols = c_int(8), c_int(8)
+    rows, cols = c_int(32), c_int(32)
 
     new_map = Map(rows, cols, c_weights)
     start_pt = Pt(0, 0)
-    end_pt = Pt(7, 7)
+    end_pt = Pt(31, 31)
 
     # a_star_lib.print_map(new_map)
 
@@ -61,7 +120,7 @@ def test_path_finder():
     print("Path pointer was deleted")
 
 
-def get_weights_from_image(img_path: str, scale: float = 0.25) -> [Array[Any], int, int, list]:
+def get_weights_from_binary_image(img_path: str, scale: float = 0.25) -> [Array[Any], int, int, list]:
     image = cv2.imread(img_path, 0)
     image = cv2.bitwise_not(image)
     resized_image = image
@@ -71,13 +130,13 @@ def get_weights_from_image(img_path: str, scale: float = 0.25) -> [Array[Any], i
         down_points = (int(image.shape[1] * scale), int(image.shape[0] * scale))
         resized_image = cv2.resize(image, down_points, interpolation=cv2.INTER_LINEAR)
     print(f"resized image shape: {resized_image.shape}")
-    # cv2.imshow("resized inverted image", resized_image)
-    # cv2.waitKey(0)
     py_weights = []
     for row in resized_image:
         py_weights += list(row)
-    py_weights = np.array(py_weights)
+    py_weights = np.array(py_weights, dtype=int)
     py_weights %= 2
+    py_weights *= 999
+    py_weights += 1
     c_weights = (c_float * len(py_weights))(*py_weights)
     return c_weights, resized_image.shape[0], resized_image.shape[1], resized_image
 
@@ -97,9 +156,9 @@ def find_first_zero(c_weights: POINTER(c_float), rows: int, cols: int) -> Pt:
 
 
 def find_last_zero(c_weights: POINTER(c_float), rows: int, cols: int) -> Pt:
-    for i in range(rows-1, -1, -1):
+    for i in range(rows - 1, -1, -1):
         for j in range(cols - 1, -1, -1):
-            if c_weights[rows*i + j] == 0.0:
+            if c_weights[rows * i + j] == 0.0:
                 return Pt(i, j)
 
 
@@ -108,60 +167,7 @@ def select_point(event, x, y, flags, param):
         print(f'({y}, {x})')
 
 
-def test_path_finder_on_map_from_img():
-    c_weights, rows, cols, resized_image = get_weights_from_image("./mapping/map1.png")
-
-    # создаю окно для получения координат начальной и конечной точек (дабл клик ЛКМ)
-    # cv2.namedWindow("select point")
-    # cv2.setMouseCallback("select point", select_point)
-    # cv2.imshow("select point", resized_image)
-    # cv2.waitKey(0)
-
-    # start_point = find_first_zero(c_weights, rows, cols)
-    # end_point = find_last_zero(c_weights, rows, cols)
-
-    # path №1
-    # start_point = Pt(5, 97)
-    # end_point = Pt(143, 32)
-
-    # path №2
-    # start_point = Pt(5, 97)
-    # end_point = Pt(98, 192)
-
-    # path №3
-    # start_point = Pt(5, 97)
-    # end_point = Pt(104, 72)
-
-    #  path №4
-    # start_point = Pt(5, 97)
-    # end_point = Pt(4, 178)
-
-    #  path №5
-    # start_point = Pt(98, 193)
-    # end_point = Pt(4, 179)
-
-    # path №6
-    # start_point = Pt(98, 193)
-    # end_point = Pt(42, 3)
-
-    # path №7
-    start_point = Pt(61, 137)
-    end_point = Pt(57, 52)
-
-    print(f"start point: ({start_point.row}, {start_point.col})")
-    print(f"end point: ({end_point.row}, {end_point.col})")
-
-    map_from_img = Map(c_int(cols), c_int(rows), c_weights)
-    # a_star_lib.print_map(map_from_img)
-
-    path_p = find_path_func(map_from_img, start_point, end_point)
-    print_path_data(path_p)
-    show_path(resized_image, path_p)
-
-    path_del_func(path_p)
-
-
-def show_path(image, path_p: POINTER(Path)):
+def show_path(image, path_p: POINTER(Path), start_point, end_point):
     image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
     for i in range(path_p.contents.n_points):
         x = path_p.contents.path_points[i].col
@@ -170,11 +176,90 @@ def show_path(image, path_p: POINTER(Path)):
         # отмечаю выбранные точки на картинке
         image = cv2.circle(image, (x, y), radius=1, color=(255, 0, 0), thickness=-1)
 
+    image = cv2.circle(image, (start_point.col, start_point.row), radius=3, color=(0, 255, 0), thickness=-1)
+    image = cv2.circle(image, (end_point.col, end_point.row), radius=3, color=(0, 0, 255), thickness=-1)
     cv2.imshow("path", image)
     cv2.waitKey(0)
 
 
-if __name__ == "__main__":
-    test_path_finder()
+def test_path_finder_on_map_from_img():
+    # c_weights, rows, cols, resized_image = get_weights_from_binary_image("./mapping/map1.png")
+    # c_weights, rows, cols, resized_image = get_weights_from_binary_image("./mapping/map_low_res.png", scale=1.0)
+    # c_weights, rows, cols, resized_image = get_weights_from_binary_image("./mapping/map_blured.png")
 
-    # test_path_finder_on_map_from_img()
+    # создаю окно для получения координат начальной и конечной точек (дабл клик ЛКМ)
+    # cv2.namedWindow("select point")
+    # cv2.setMouseCallback("select point", select_point)
+    # cv2.imshow("select point", resized_image)
+    # cv2.waitKey(0)
+
+    _F = 1.0
+    _X = 1000.0
+    _B = 500.0
+
+    weights_7x30 = [
+        _F, _F, _X, _X, _X, _X, _X, _X, _X, _X, _X, _X, _X, _X, _X, _X, _X, _X, _X, _X, _X, _X, _X, _X, _X, _X, _X, _X, _F, _F,
+        _F, _F, _F, _F, _F, _F, _F, _F, _F, _F, _F, _F, _F, _B, _F, _F, _F, _F, _F, _F, _F, _F, _F, _F, _F, _F, _F, _F, _F, _F,
+        _X, _F, _X, _X, _F, _F, _F, _F, _F, _X, _X, _X, _X, _X, _X, _X, _X, _X, _X, _F, _F, _F, _F, _F, _F, _F, _F, _F, _F, _X,
+        _X, _B, _X, _X, _F, _F, _F, _F, _F, _X, _X, _X, _X, _X, _X, _X, _X, _X, _X, _F, _F, _F, _F, _F, _F, _F, _F, _F, _F, _X,
+        _X, _F, _F, _F, _F, _X, _X, _F, _F, _F, _F, _F, _F, _F, _F, _F, _F, _F, _F, _F, _F, _F, _F, _F, _F, _F, _F, _F, _F, _X,
+        _X, _F, _F, _F, _F, _X, _X, _F, _F, _F, _F, _F, _F, _X, _X, _F, _F, _F, _F, _F, _F, _F, _F, _F, _F, _F, _F, _F, _F, _F,
+        _X, _X, _X, _X, _X, _X, _X, _X, _X, _X, _X, _X, _X, _X, _X, _X, _X, _X, _X, _X, _X, _X, _X, _X, _X, _X, _X, _X, _F, _F
+    ]
+    cols = 30
+    rows = 7
+    c_weights = (c_float * len(weights_7x30))(*weights_7x30)
+
+    tests_1 = [
+        (Pt(5, 97), Pt(139, 32)),
+        (Pt(5, 97), Pt(98, 192)),
+        (Pt(5, 97), Pt(104, 72)),
+        (Pt(5, 97), Pt(4, 178)),
+        (Pt(98, 193), Pt(4, 179)),
+        (Pt(98, 193), Pt(42, 3)),
+        (Pt(61, 137), Pt(57, 52))
+    ]
+
+    tests_2 = [
+        (Pt(3, 2), Pt(84, 5)),
+        (Pt(3, 2), Pt(143, 5)),
+        (Pt(3, 2), Pt(142, 36)),
+        (Pt(3, 2), Pt(143, 82)),
+        (Pt(3, 2), Pt(143, 146)),
+        (Pt(3, 2), Pt(142, 190)),
+        (Pt(3, 2), Pt(113, 192)),
+        (Pt(3, 2), Pt(61, 176)),
+        (Pt(3, 2), Pt(68, 158)),
+        (Pt(3, 2), Pt(24, 184)),
+        (Pt(3, 2), Pt(22, 131)),
+        (Pt(3, 2), Pt(41, 87)),
+        (Pt(3, 2), Pt(94, 66)),
+    ]
+
+    tests_3 = [
+        (Pt(0, 0), Pt(4, 1)),
+        (Pt(0, 0), Pt(1, 14)),
+        (Pt(0, 0), Pt(0, 29)),
+        (Pt(0, 0), Pt(6, 29))
+    ]
+
+    map_from_img = Map(c_int(cols), c_int(rows), c_weights)
+    # a_star_lib.print_map(map_from_img)
+
+    for points in tests_3:
+        start_point = points[0]
+        end_point = points[1]
+
+        print(f"start point: ({start_point.row}, {start_point.col})")
+        print(f"end point: ({end_point.row}, {end_point.col})")
+
+        path_p = find_path_func(map_from_img, start_point, end_point)
+        print_path_data(path_p)
+        # show_path(resized_image, path_p, start_point, end_point)
+        path_del_func(path_p)
+
+
+if __name__ == "__main__":
+    # test_path_finder()
+
+    test_path_finder_on_map_from_img()

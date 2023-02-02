@@ -26,36 +26,40 @@ bool AStar::point_exists(const Point& point, const float cost, std::list<Node>& 
 {
     /// <summary>
     /// почему проверяются оба списка?
+    /// что будет, если поментья проверки местами?
     /// </summary>
-    std::list<Node>::iterator i;
+    std::list<Node>::iterator _iterator;
     
-    i = std::find(_closed.begin(), _closed.end(), point);
-    if (i != _closed.end())
+    _iterator = std::find(_open.begin(), _open.end(), point);
+
+    if (_iterator != _open.end())
     {
-        if ((*i).cost + (*i).dist < cost)
+        if ((*_iterator).cost + (*_iterator).dist < cost)
         {
             return true;
         }
-        _closed.erase(i);
+        _open.erase(_iterator);
         return false;
     }
 
-    i = std::find(_open.begin(), _open.end(), point);
-    if (i != _open.end())
+    _iterator = std::find(_closed.begin(), _closed.end(), point);
+
+    if (_iterator != _closed.end())
     {
-        if ((*i).cost + (*i).dist < cost)
+        if ((*_iterator).cost + (*_iterator).dist < cost)
         {
             return true;
         }
-        _open.erase(i);
+        _closed.erase(_iterator);
         return false;
     }
+
     return false;
 }
 
-bool AStar::fill_open(Node& _node, std::list<Node>& _open, std::list<Node>& _closed)
+bool AStar::fill_open(Node& node, std::list<Node>& _open, std::list<Node>& _closed)
 {
-    if (_node.pos == _end)return true;
+    if (node.pos == _end)return true;
 
     float newCost, stepWeight, dist;
 
@@ -63,23 +67,30 @@ bool AStar::fill_open(Node& _node, std::list<Node>& _open, std::list<Node>& _clo
 
     for (int index = 0; index < 8; index++)
     {
-        neighbour = _node.pos + neighboursPoints[index];
+        neighbour = node.pos + neighboursPoints[index];
 
         if (!is_valid(neighbour))continue;
 
-        if (neighbour == _end)return true;
+        if (neighbour == _end)return true; // <- мб условия на 62 строке уже достаточно?
 
         stepWeight = weights()[neighbour];
 
-        if (stepWeight >= MAX_WEIGHT)continue;
+        if (stepWeight >= MAX_WEIGHT)continue; /// <- если закомментировать, то всё перестаёт работать
 
-        newCost = 1.0f + (index < 4 ? 1.414f : 1.0f) * stepWeight + _node.cost; /// <- с весами какая-то ерунда...
+        newCost = 1.0f + (index < 4 ? 1.414f : 1.0f) * stepWeight + node.cost; /// <- с весами какая-то ерунда... Как их прикрутить?(
 
         dist = _end.manhattan_distance(neighbour);
 
         if (point_exists(neighbour, newCost + dist, _open, _closed))continue;
 
-        _open.push_back({ neighbour, _node.pos, dist, newCost });
+        Node new_node; 
+        new_node.cost   = newCost;
+        new_node.dist   = dist;
+        new_node.parent = node.pos;
+        new_node.pos    = neighbour;
+
+        _open.push_back(new_node);
+
     }
     return false;
 }
@@ -88,9 +99,10 @@ void AStar::build_path(std::list<Node>& closed)
 {
    /* for (const auto& pt : closed) 
     {
-        _path.push_back(pt.pos);
+        _path.push_back(pt.pos); <- тупо вывод всех закрытых клеток, что были исследованы в процессе работы алгоритма 
     }*/
-    
+
+    /// магия...
     _path.push_front(_end);
     _path_cost = closed.back().cost;
     _path.push_front(closed.back().pos);
@@ -161,15 +173,21 @@ bool AStar::searh_path()
 
     std::list<Node> _open;
     std::list<Node> _closed;
-
-    _open.push_back({ start(), Point::MinusOne, (float)end().manhattan_distance(start()), 0.0f });
+    
+    Node node;
+    node.cost   = 0.0f;
+    node.dist   = (float)end().manhattan_distance(start());
+    node.parent = Point::MinusOne;
+    node.pos    = start();
+    
+    _open.push_back(node);
 
     bool success = false;
     int cntr = 0;
     while (true)
     {
         _closed.push_back(_open.front()); //тудым...
-        _open.pop_front();//сюдым...
+        _open.pop_front(); //сюдым...
         if (fill_open(_closed.back(), _open, _closed))
         {
             success = true;

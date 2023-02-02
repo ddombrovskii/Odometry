@@ -87,7 +87,6 @@ DLL_EXPORT Path*    find_path(const Map* map, const Pt* start, const  Pt* end)
 
 int main(int argc, char* argv[])
 {
-	
     const float* raw_map = new float[1024]
 	{ _F, _X, _F, _F, _F, _F, _F, _F, _F, _X, _F, _F, _F, _F, _F, _F, _F, _X, _F, _F, _F, _F, _F, _F, _F, _X, _F, _F, _F, _F, _F, _F,
 	  _F, _X, _F, _F, _F, _F, _F, _F, _F, _X, _F, _F, _F, _F, _F, _F, _F, _X, _F, _F, _F, _F, _F, _F, _F, _X, _F, _F, _F, _F, _F, _F,

@@ -90,7 +90,6 @@ bool AStar::fill_open(Node& node, std::list<Node>& _open, std::list<Node>& _clos
         new_node.pos    = neighbour;
 
         _open.push_back(new_node);
-
     }
     return false;
 }
@@ -243,7 +242,7 @@ std::ostream& operator <<(std::ostream& stream, const AStar& a_star)
 
     for (int index = 0; index < a_star.weights().ncells(); index++)
     {
-        char_map[index] = (a_star.weights()[index] > 1.0f ? '#' : '_');
+        char_map[index] = (a_star.weights()[index] >= MAX_WEIGHT ? '#' : '_');
     }
     
     if (a_star.path().size() != 0)
@@ -254,7 +253,6 @@ std::ostream& operator <<(std::ostream& stream, const AStar& a_star)
 
     char_map[a_star.start().row * a_star.weights().cols() + a_star.start().col] = '+';
     char_map[a_star.end().row * a_star.weights().cols() + a_star.end().col] = '+';
-
 
     for (int index = 0; index < a_star.weights().ncells(); index++)
     {

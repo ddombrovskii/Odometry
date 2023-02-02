@@ -82,7 +82,7 @@ DLL_EXPORT Path*    find_path(const Map* map, const Pt* start, const  Pt* end)
 
 
 #define _X 1000.0f
-#define _F 1.0f
+#define _F 1.01f
 
 
 int main(int argc, char* argv[])

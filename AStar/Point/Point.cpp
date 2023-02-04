@@ -35,7 +35,7 @@ Point Point::operator-(const Point& o)const
 
 int Point::manhattan_distance(const Point& o)const 
 {
-    return abs(o.row - row) + abs(o.col - col);
+    return (abs(o.row - row) + abs(o.col - col));
 }
 
 int Point::magnitude_sqr()const

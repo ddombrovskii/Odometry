@@ -9,6 +9,9 @@
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 #define MAX_WEIGHT 1000.0f
 #define MIN_WEIGHT 1.0f
+#define LINEAR_WEIGHT 1.0f
+#define DIAGONAL_WEIGHT 1.414f
+
 
 struct Node 
 {
@@ -30,7 +33,9 @@ struct Vector2
 
 class AStar 
 {
-
+/// <summary>
+///  TODO добавить кеширование запросов путей 
+/// </summary>
 private:
     static Point neighboursPoints[8];
     WeightMap*       _map;
@@ -40,14 +45,14 @@ private:
     // Vector2          _size, _origin;
 
     bool is_valid(Point& p)const;
-
+    
     bool point_exists(const Point& p, const float cost, std::list<Node>& _open, std::list<Node>& _closed)const;
-
+    
     bool fill_open(Node& n, std::list<Node>& _open, std::list<Node>& _closed);
-
-    bool searh_path();
     
     void build_path(std::list<Node>& closed);
+
+    bool searh_path();
 	
 public:
     const Point& end()const;

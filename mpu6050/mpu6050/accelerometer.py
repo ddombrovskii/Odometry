@@ -1,3 +1,6 @@
+import math
+
+from cgeo import rot_m_to_euler_angles, Mat4
 from cgeo.numeric_methods import Integrator3d
 from cgeo.filtering import RealTimeFilter
 from typing import List, Tuple
@@ -482,7 +485,7 @@ class Accelerometer:
             accel_values.append(val)
 
         if len(accel_values) != len(gyro_values):
-            self.__gyro_calib = Vec3(0, 0, 0)
+            self.__gyro_calib  = Vec3(0, 0, 0)
             self.__accel_calib = Vec3(0, 0, 0)
             return
 
@@ -495,53 +498,39 @@ class Accelerometer:
         divider = 1.0 / len(accel_values)
 
         for a, g in zip(accel_values, gyro_values):
-            avg_accel.x += a.x
-            avg_accel.y += a.y
-            avg_accel.z += a.z
-            avg_gyro.x  += g.x
-            avg_gyro.y  += g.y
-            avg_gyro.z  += g.z
+            avg_accel += a
+            avg_gyro  += g
 
-        avg_accel.x *= divider
-        avg_accel.y *= divider
-        avg_accel.z *= divider
-        avg_gyro.x  *= divider
-        avg_gyro.y  *= divider
-        avg_gyro.z  *= divider
+        avg_accel *= divider
+        avg_gyro  *= divider
 
         for a, g in zip(accel_values, gyro_values):
-            rms_accel.x += (avg_accel.x - a.x)**2
-            rms_accel.y += (avg_accel.y - a.y)**2
-            rms_accel.z += (avg_accel.z - a.z)**2
-            rms_gyro.x  += (avg_gyro.x - g.x) **2
-            rms_gyro.y  += (avg_gyro.y - g.y) **2
-            rms_gyro.z  += (avg_gyro.z - g.z) **2
+            rms_accel += (avg_accel - a) ** 2
+            rms_gyro  += (avg_gyro  - g) ** 2
 
-        rms_accel.x = math.sqrt(divider * rms_accel.x)
-        rms_accel.y = math.sqrt(divider * rms_accel.y)
-        rms_accel.z = math.sqrt(divider * rms_accel.z)
-        rms_gyro.x  = math.sqrt(divider * rms_gyro.x )
-        rms_gyro.y  = math.sqrt(divider * rms_gyro.y )
-        rms_gyro.z  = math.sqrt(divider * rms_gyro.z )
+        rms_accel = math.sqrt(divider * rms_accel)
+        rms_gyro  = math.sqrt(divider * rms_gyro )
 
-        ey = -avg_accel.normalized
+        ey = avg_accel.normalized()
+
         if forward is None:
             ex = Vec3.cross(ey, Vec3(0, 0, 1))
         else:
             ex = Vec3.cross(ey, forward)
+
         ez = Vec3.cross(ex, ey)
 
         angles = rot_m_to_euler_angles(Mat4(ex.x, ey.x, ez.x, 0.0,
                                             ex.y, ey.y, ez.y, 0.0,
                                             ex.z, ey.z, ez.z, 0.0,
                                             0.0,  0.0,  0.0,  1.0))
-        # self.__velocity_integrator.c0 =
+
         self.__angles_integrator.c0 = angles
 
         print(f"{{\n"
               f"\"calibration_info\":\n"
               f"\t{{\n"
-              f"\t\t\"n_measurements\":{n_measurement},\n"
+              f"\t\t\"n_measurements\":{len(accel_values)},\n"
               f"\t\t\"a_calib\"       :{self.__accel_calib},\n"
               f"\t\t\"o_calib\"       :{self.__gyro_calib}\n"
               f"\t}}\n"

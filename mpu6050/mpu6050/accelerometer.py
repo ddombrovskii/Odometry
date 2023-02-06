@@ -1,15 +1,40 @@
-from cgeo.numeric_methods import Integrator3d
+from cgeo import rot_m_to_euler_angles, Mat4
 from cgeo.filtering import RealTimeFilter
+from accelerometer_constants import *
 from typing import List, Tuple
 from cgeo.vectors import Vec3
-from constants import *
 import numpy as np
+import cgeo.mutils
+import random
+import math
 import time
 
 
+_import_success = False
+
+
 class BusDummy:
+    @staticmethod
+    def accel_x(t: float, step: float = 10, width: float = .5) -> float:
+        amp = 10.0
+        val = math.exp(-(t - 20 - 1.0 * step) ** 2 / width ** 2) * amp + \
+              -math.exp(-(t - 20 - 2.0 * step) ** 2 / width ** 2) * amp + \
+              -math.exp(-(t - 20 - 3.0 * step) ** 2 / width ** 2) * amp + \
+              math.exp(-(t - 20 - 4.0 * step) ** 2 / width ** 2) * amp
+
+        if abs(val) < 1e-12:
+            return 0.0 + random.uniform(-0.1, 0.1)
+        return val + random.uniform(-0.1, 0.1)
+
+    @staticmethod
+    def accel_z(t: float, step: float = 10, width: float = .5) -> float:
+        return BusDummy.accel_x(t + 10, step, width)
+
     def __init__(self):
-        pass
+        self.__registers = {ACCEL_X_OUT_H: lambda x: BusDummy.accel_x(2.5 * x),
+                            ACCEL_Y_OUT_H: lambda x: 0.0,
+                            ACCEL_Z_OUT_H: lambda x: BusDummy.accel_z(2.5 * x)}
+        self.__t_start = time.perf_counter()
 
     def SMBus(self, a: int):
         return self
@@ -17,15 +42,20 @@ class BusDummy:
     def write_byte_data(self, a: int, b: int, c: int):
         pass
 
-    def read_byte_data(self, a: int, b: int):
+    def read_byte_data(self, a: int, register: int):
+        if register in self.__registers:
+            return self.__registers[register](time.perf_counter() - self.__t_start)
         return 0
 
 
 try:
     import smbus
+    _import_success = True
+
 # TODO add board version check
 except ImportError as ex:
     smbus = BusDummy()
+    _import_success = False
     print(f"SM Bus import error!!!\n{ex.args}")
 
 
@@ -72,34 +102,31 @@ class Accelerometer:
 
     def __init__(self, address: int = 0x68):
         self.__i2c_bus = None
-
         self.__address: int = address  # mpu 6050
-
         self.__filters: List[List[RealTimeFilter]] = []
-
         self.__acceleration_range: int = -1  # 2
-
         self.__acceleration_range_raw: int = -1
-
         self.__gyroscope_range: int = -1  # 250
-
         self.__gyroscope_range_raw: int = -1
-
         self.__hardware_filter_range_raw: int = -1
-
         self.__use_filtering: bool = True
 
-        self.__angles_integrator: Integrator3d = Integrator3d()
+        self.__t_curr: float = 0.0
+        self.__t_prev: float = 0.0
+        self.__t_start: float = time.perf_counter()
 
-        self.__velocity_integrator: Integrator3d = Integrator3d()
+        self.__acceleration:  Vec3 = Vec3(0.0)
+        self.__velocity:      Vec3 = Vec3(0.0)
+        self.__position:      Vec3 = Vec3(0.0)
+        self.__velocity_prev: Vec3 = Vec3(0.0)
+        self.__acceleration_prev: Vec3 = Vec3(0.0)
 
-        self.__position_integrator: Integrator3d = Integrator3d()
+        self.__velocity_ang: Vec3 = Vec3(0.0)
+        self.__angles:       Vec3 = Vec3(0.0)
+        self.__velocity_ang_prev:  Vec3 = Vec3(0.0)
 
         self.__gyro_calib:  Vec3 = Vec3(0.0)
         self.__accel_calib: Vec3 = Vec3(0.0)
-
-        self.__angles_velocity: Vec3 = Vec3(0.0)
-        self.__accelerations:   Vec3 = Vec3(0.0)
 
         if not self.__init_bus():
             raise RuntimeError("Accelerometer init failed")
@@ -173,6 +200,8 @@ class Accelerometer:
         self.gyroscope_range_raw = 250
 
     def __read_bus(self, addr: int) -> np.int16:
+        if not _import_success:
+            return self.bus.read_byte_data(self.address, addr)
         # Accelerometer and Gyro value are 16-bit
         high = self.bus.read_byte_data(self.address, addr)
         low  = self.bus.read_byte_data(self.address, addr + 1)
@@ -188,46 +217,90 @@ class Accelerometer:
             val = _filter.filter(val)
         return val
 
-    def __read_acceleration_data(self) -> Tuple[bool, Vec3]:
-
-        acceleration = Vec3(0.0)
+    def __read_acceleration_data(self) -> Tuple[bool, Tuple[float, float, float]]:
 
         scl = 1.0 / self.acceleration_scale * GRAVITY_CONSTANT
 
         try:
-            if self.__use_filtering:
-                acceleration.x = self.__filter_value(float(self.__read_bus(ACCEL_X_OUT_H)) * scl, FILTER_AX)
-                acceleration.y = self.__filter_value(float(self.__read_bus(ACCEL_Y_OUT_H)) * scl, FILTER_AY)
-                acceleration.z = self.__filter_value(float(self.__read_bus(ACCEL_Z_OUT_H)) * scl, FILTER_AZ)
-            else:
-                acceleration.x = float(self.__read_bus(ACCEL_X_OUT_H)) * scl
-                acceleration.y = float(self.__read_bus(ACCEL_Y_OUT_H)) * scl
-                acceleration.z = float(self.__read_bus(ACCEL_Z_OUT_H)) * scl
+            if False:  # self.__use_filtering:
+                return True, (self.__filter_value(float(self.__read_bus(ACCEL_X_OUT_H)) * scl, FILTER_AX),
+                              self.__filter_value(float(self.__read_bus(ACCEL_Y_OUT_H)) * scl, FILTER_AY),
+                              self.__filter_value(float(self.__read_bus(ACCEL_Z_OUT_H)) * scl, FILTER_AZ))
+            return True, (float(self.__read_bus(ACCEL_X_OUT_H)) * scl,
+                          float(self.__read_bus(ACCEL_Y_OUT_H)) * scl,
+                          float(self.__read_bus(ACCEL_Z_OUT_H)) * scl)
         except Exception as _ex:
             print(f"acceleration data read error\n{_ex.args}")
-            return False, acceleration
-        return True, acceleration
-
-    def __read_gyro_data(self) -> Tuple[bool, Vec3]:
-
-        orientation = Vec3(0.0)
-
+            return False, (0.0, 0.0, 0.0)
+            
+    def __read_gyro_data(self) -> Tuple[bool, Tuple[float, float, float]]:
         scl = 1.0 / self.gyroscope_scale
-
         try:
-            if self.__use_filtering:
-                orientation.x = self.__filter_value(float(self.__read_bus(GYRO_X_OUT_H)) * scl, FILTER_GX)
-                orientation.y = self.__filter_value(float(self.__read_bus(GYRO_Y_OUT_H)) * scl, FILTER_GY)
-                orientation.z = self.__filter_value(float(self.__read_bus(GYRO_Z_OUT_H)) * scl, FILTER_GZ)
-            else:
-                orientation.x = float(self.__read_bus(GYRO_X_OUT_H)) * scl
-                orientation.y = float(self.__read_bus(GYRO_Y_OUT_H)) * scl
-                orientation.z = float(self.__read_bus(GYRO_Z_OUT_H)) * scl
+            if False: #self.__use_filtering:
+                return True, (self.__filter_value(float(self.__read_bus(GYRO_X_OUT_H)) * scl, FILTER_GX),
+                              self.__filter_value(float(self.__read_bus(GYRO_Y_OUT_H)) * scl, FILTER_GY),
+                              self.__filter_value(float(self.__read_bus(GYRO_Z_OUT_H)) * scl, FILTER_GZ))
+            return True, (float(self.__read_bus(GYRO_X_OUT_H)) * scl,
+                          float(self.__read_bus(GYRO_Y_OUT_H)) * scl,
+                          float(self.__read_bus(GYRO_Z_OUT_H)) * scl)
         except Exception as _ex:
             print(f"gyroscope data read error\n{_ex.args}")
-            return False, orientation
+            return False, (0.0, 0.0, 0.0)
 
-        return True, orientation
+    def __compute_start_params(self, compute_time: float = 10.0, forward: Vec3 = None):
+        self.__acceleration  = Vec3(0.0)
+        self.__velocity      = Vec3(0.0)
+        self.__position      = Vec3(0.0)
+        self.__velocity_prev = Vec3(0.0)
+        self.__acceleration_prev = Vec3(0.0)
+
+        self.__velocity_ang  = Vec3(0.0)
+        self.__angles        = Vec3(0.0)
+        self.__velocity_ang_prev = Vec3(0.0)
+
+        self.__gyro_calib    = Vec3(0.0)
+        self.__accel_calib   = Vec3(0.0)
+        
+        t = time.perf_counter()
+        accel = Vec3()
+        n_accel_read = 0
+        n_angel_read = 0
+        while time.perf_counter() - t < compute_time:
+            flag, val = self.__read_acceleration_data()
+            if flag:
+                accel.x += val[0]
+                accel.y += val[1]
+                accel.z += val[2]
+                n_accel_read += 1
+            flag, val = self.__read_gyro_data()
+            if flag:
+                self.__gyro_calib.x += val[0]
+                self.__gyro_calib.y += val[1]
+                self.__gyro_calib.z += val[2]
+                n_angel_read += 1
+
+        self.__gyro_calib.x /= n_angel_read
+        self.__gyro_calib.y /= n_angel_read
+        self.__gyro_calib.z /= n_angel_read
+        self.__angles.x = self.__gyro_calib.x
+        self.__angles.y = self.__gyro_calib.y
+        self.__angles.z = self.__gyro_calib.z
+        accel.x /= n_accel_read
+        accel.y /= n_accel_read
+        accel.z /= n_accel_read
+
+        ey = accel.normalized()
+        ex = Vec3.cross(ey, Vec3(0, 0, 1)) if forward is None else Vec3.cross(accel, forward)
+        ez = Vec3.cross(ex, ey)
+
+        self.__angles_start = rot_m_to_euler_angles(Mat4(ex.x, ey.x, ez.x, 0.0,
+                                                         ex.y, ey.y, ez.y, 0.0,
+                                                         ex.z, ey.z, ez.z, 0.0,
+                                                         0.0, 0.0, 0.0, 1.0))
+
+        self.__accel_calib.x = -ex.x * accel.x + ex.y * accel.y + ex.z * accel.z
+        self.__accel_calib.y = -GRAVITY_CONSTANT - ey.x * accel.x + ey.y * accel.y + ey.z * accel.z
+        self.__accel_calib.z = -ez.x * accel.x + ez.y * accel.y + ez.z * accel.z
 
     @property
     def bus(self):
@@ -293,7 +366,7 @@ class Accelerometer:
         ACCEL_SCALE_MODIFIER_8G = 4096.0
         ACCEL_SCALE_MODIFIER_16G = 2048.0
         """
-        return self.__acceleration_range_raw  # HardwareAccelerometer.__acc_ranges[self.__acceleration_range]
+        return self.__acceleration_range_raw
 
     @acceleration_range_raw.setter
     def acceleration_range_raw(self, accel_range: int) -> None:
@@ -334,7 +407,7 @@ class Accelerometer:
         GYRO_RANGE_1000DEG = 0x10
         GYRO_RANGE_2000DEG = 0x18
         """
-        return self.__gyroscope_range_raw  # HardwareAccelerometer.__acc_ranges[self.__acceleration_range]
+        return self.__gyroscope_range_raw
 
     @gyroscope_range_raw.setter
     def gyroscope_range_raw(self, gyro_range: int) -> None:
@@ -392,170 +465,135 @@ class Accelerometer:
     def acceleration_calibration(self) -> Vec3:
         return self.__accel_calib
 
-    @angles_velocity_calibration.setter
-    def angles_velocity_calibration(self, val: Vec3) -> None:
-        self.__gyro_calib = val
-
-    @acceleration_calibration.setter
-    def acceleration_calibration(self, val: Vec3) -> None:
-        self.__accel_calib = val
-
     @property
     def angles_velocity(self) -> Vec3:
-        return self.__angles_velocity
+        return self.__velocity_ang
 
     @property
     def angles(self) -> Vec3:
-        return self.__angles_integrator.curr_val
+        return self.__angles
 
     @property
     def acceleration(self) -> Vec3:
-        return self.__accelerations
+        return self.__acceleration
 
     @property
     def velocity(self) -> Vec3:
-        return self.__velocity_integrator.curr_val
+        return self.__velocity
 
     @property
     def position(self) -> Vec3:
-        return self.__position_integrator.curr_val
+        return self.__position
 
     @property
-    def accel_t(self) -> float:
+    def delta_t(self) -> float:
         """
         Последнее время, когда было измерено ускорение
         """
-        return self.__velocity_integrator.time_val
+        return self.curr_t - self.prev_t
 
     @property
-    def accel_dt(self) -> float:
+    def curr_t(self) -> float:
         """
-        Прошедшее время между последним изменрением ускорения и предыдущим
+        Последнее время, когда было измерено ускорение
         """
-        return self.__velocity_integrator.time_delta
+        return self.__t_curr
 
     @property
-    def gyro_t(self) -> float:
+    def prev_t(self) -> float:
         """
-        Последнее время, когда были измерены угловые скорости
+        Последнее время, когда было измерено ускорение
         """
-        return self.__angles_integrator.time_val
-
-    @property
-    def gyro_dt(self) -> float:
-        """
-        Прошедшее время между последним изменрением скорости измениния углов и предыдущим
-        """
-        return self.__angles_integrator.time_delta
+        return self.__t_prev
 
     def reset(self, reset_ranges: bool = False, reset_calibration: bool = False) -> None:
         for filter_list in self.__filters:
             for f in filter_list:
                 f.clean_up()
-        self.__angles_velocity = Vec3(0.0)
-        self.__accelerations = Vec3(0.0)
+
+        self.__acceleration  = Vec3(0.0)
+        self.__velocity      = Vec3(0.0)
+        self.__position      = Vec3(0.0)
+
+        self.__velocity_ang  = self.__gyro_calib
+        self.__angles        = Vec3(0.0)
+
         if reset_ranges:
             self.acceleration_range_raw = 2
             self.gyroscope_range_raw = 250
         if reset_calibration:
-            self.__gyro_calib = Vec3(0.0)
+            self.__gyro_calib  = Vec3(0.0)
             self.__accel_calib = Vec3(0.0)
+            self.__velocity_ang = Vec3(0.0)
 
     def calibrate(self, calib_time: float = 2.0, forward: Vec3 = None) -> None:
         _use_filtering = self.use_filtering
         self.use_filtering = not _use_filtering
-        self.__gyro_calib = Vec3(0.0)
-        self.__accel_calib = Vec3(0.0)
-        t = time.perf_counter()
-        gyro_values = []
-        accel_values = []
-        while time.perf_counter() - t < calib_time:
-            flag, val = self.__read_gyro_data()
-            if not flag:
-                print("calibration failed")
-                break
-            flag, val = self.__read_acceleration_data()
-            gyro_values.append(val)
-            if not flag:
-                print("calibration failed")
-                break
-            accel_values.append(val)
-
-        if len(accel_values) != len(gyro_values):
-            self.__gyro_calib = Vec3(0, 0, 0)
-            self.__accel_calib = Vec3(0, 0, 0)
-            return
-
-        avg_accel = Vec3(0, 0, 0)
-        avg_gyro  = Vec3(0, 0, 0)
-
-        rms_accel = Vec3(0, 0, 0)
-        rms_gyro  = Vec3(0, 0, 0)
-
-        divider = 1.0 / len(accel_values)
-
-        for a, g in zip(accel_values, gyro_values):
-            avg_accel.x += a.x
-            avg_accel.y += a.y
-            avg_accel.z += a.z
-            avg_gyro.x  += g.x
-            avg_gyro.y  += g.y
-            avg_gyro.z  += g.z
-
-        avg_accel.x *= divider
-        avg_accel.y *= divider
-        avg_accel.z *= divider
-        avg_gyro.x  *= divider
-        avg_gyro.y  *= divider
-        avg_gyro.z  *= divider
-
-        for a, g in zip(accel_values, gyro_values):
-            rms_accel.x += (avg_accel.x - a.x)**2
-            rms_accel.y += (avg_accel.y - a.y)**2
-            rms_accel.z += (avg_accel.z - a.z)**2
-            rms_gyro.x  += (avg_gyro.x - g.x) **2
-            rms_gyro.y  += (avg_gyro.y - g.y) **2
-            rms_gyro.z  += (avg_gyro.z - g.z) **2
-
-        rms_accel.x = math.sqrt(divider * rms_accel.x)
-        rms_accel.y = math.sqrt(divider * rms_accel.y)
-        rms_accel.z = math.sqrt(divider * rms_accel.z)
-        rms_gyro.x  = math.sqrt(divider * rms_gyro.x )
-        rms_gyro.y  = math.sqrt(divider * rms_gyro.y )
-        rms_gyro.z  = math.sqrt(divider * rms_gyro.z )
-
-        ey = -avg_accel.normalized
-        if forward is None:
-            ex = Vec3.cross(ey, Vec3(0, 0, 1))
-        else:
-            ex = Vec3.cross(ey, forward)
-        ez = Vec3.cross(ex, ey)
-
-        angles = rot_m_to_euler_angles(Mat4(ex.x, ey.x, ez.x, 0.0,
-                                            ex.y, ey.y, ez.y, 0.0,
-                                            ex.z, ey.z, ez.z, 0.0,
-                                            0.0,  0.0,  0.0,  1.0))
-        # self.__velocity_integrator.c0 =
-        self.__angles_integrator.c0 = angles
-
+        self.__compute_start_params(calib_time, forward)
         print(f"{{\n"
               f"\"calibration_info\":\n"
               f"\t{{\n"
-              f"\t\t\"n_measurements\":{n_measurement},\n"
-              f"\t\t\"a_calib\"       :{self.__accel_calib},\n"
-              f"\t\t\"o_calib\"       :{self.__gyro_calib}\n"
+              f"\t\t\"ang_start\"   :{self.__angles_start},\n"
+              f"\t\t\"accel_calib\" :{self.__accel_calib},\n"
+              f"\t\t\"ang_calib\"   :{self.__gyro_calib}\n"
               f"\t}}\n"
               f"}}")
 
-    def read_accel_measurements(self) -> bool:
+    def angles_fast(self) -> Tuple[float, float, float]:
+        return math.pi + math.atan2(self.acceleration.z, self.acceleration.z),\
+               math.pi + math.atan2(self.acceleration.y, self.acceleration.z),\
+               math.pi + math.atan2(self.acceleration.y, self.acceleration.x)
+
+    def read_accel_measurements(self, kx: float = 0.95, ky: float = 1.0, kz: float = 0.95) -> bool:
+        self.__t_prev = self.__t_curr
+        self.__t_curr = time.perf_counter() - self.__t_start
+        dt: float = self.delta_t * 0.5
+        # print(dt)
+        _2pi: float = math.pi * 2.0
+
         flag1, val = self.__read_acceleration_data()
+
         if flag1:
-            self.__accelerations = val - self.acceleration_calibration
-            self.__velocity_integrator(self.acceleration, time.perf_counter())
-            self.__position_integrator(self.__velocity_integrator.curr_val, time.perf_counter())
+            self.__acceleration.x = val[0] - self.acceleration_calibration.x
+            self.__acceleration.y = val[1] - self.acceleration_calibration.y
+            self.__acceleration.z = val[2] - self.acceleration_calibration.z
+            
+            self.__velocity.x += (self.__acceleration_prev.x + self.__acceleration.x ) * dt 
+            self.__velocity.y += (self.__acceleration_prev.y + self.__acceleration.y ) * dt 
+            self.__velocity.z += (self.__acceleration_prev.z + self.__acceleration.z ) * dt 
+            
+            self.__acceleration_prev.x = self.__acceleration.x
+            self.__acceleration_prev.y = self.__acceleration.y
+            self.__acceleration_prev.z = self.__acceleration.z
+            
+            self.__position.x += (self.__velocity_prev.x + self.__velocity.x) * dt
+            self.__position.y += (self.__velocity_prev.y + self.__velocity.y) * dt
+            self.__position.z += (self.__velocity_prev.z + self.__velocity.z) * dt
+            
+            self.__velocity_prev.x = self.__velocity.x
+            self.__velocity_prev.y = self.__velocity.y
+            self.__velocity_prev.z = self.__velocity.z
 
         flag2, val = self.__read_gyro_data()
         if flag2:
-            self.__angles_velocity = val - self.angles_velocity_calibration
-            self.__angles_integrator(self.angles_velocity, time.perf_counter())
+            self.__velocity_ang.x = val[0] - self.angles_velocity_calibration.x
+            self.__velocity_ang.y = val[1] - self.angles_velocity_calibration.y
+            self.__velocity_ang.z = val[2] - self.angles_velocity_calibration.z
+    
+            self.__angles.x += (self.__velocity_ang_prev.x + self.__velocity_ang.x) * dt
+            self.__angles.y += (self.__velocity_ang_prev.y + self.__velocity_ang.y) * dt
+            self.__angles.z += (self.__velocity_ang_prev.z + self.__velocity_ang.z) * dt
+            
+            self.__velocity_ang_prev.x = self.__velocity_ang.x
+            self.__velocity_ang_prev.y = self.__velocity_ang.y
+            self.__velocity_ang_prev.z = self.__velocity_ang.z
+            
+            ax, ay, az = self.angles_fast()
+            kx = cgeo.mutils.clamp(kx, 0.0, 1.0)
+            ky = cgeo.mutils.clamp(ky, 0.0, 1.0)
+            kz = cgeo.mutils.clamp(kz, 0.0, 1.0)
+            self.__angles.x = (self.__angles.x * kx + ax * (1.0 - kx))
+            self.__angles.y = (self.__angles.y * ky + ay * (1.0 - ky))
+            self.__angles.z = (self.__angles.z * kz + az * (1.0 - kz))
+
         return flag2 or flag1

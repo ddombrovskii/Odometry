@@ -1,7 +1,7 @@
 from cgeo import Vec3
 from cgeo.filtering import RealTimeFilter
 from accelerometer import Accelerometer
-from constants import *
+from accelerometer_constants import *
 import json
 
 
@@ -47,24 +47,6 @@ def load_accelerometer_settings(acc: Accelerometer, settings_file: str) -> bool:
     try:
         if "use_filtering" in json_file:
             acc.use_filtering = bool(json_file["use_filtering"])
-            flag |= True
-    except RuntimeWarning as _ex:
-        print("use_filtering read error")
-
-    try:
-        if "angles_velocity_calibration" in json_file:
-            acc.angles_velocity_calibration = Vec3(float(json_file["angles_velocity_calibration"]["x"]),
-                                                   float(json_file["angles_velocity_calibration"]["y"]),
-                                                   float(json_file["angles_velocity_calibration"]["z"]))
-            flag |= True
-    except RuntimeWarning as _ex:
-        print("use_filtering read error")
-
-    try:
-        if "acceleration_calibration" in json_file:
-            acc.acceleration_calibration = Vec3(float(json_file["acceleration_calibration"]["x"]),
-                                                float(json_file["acceleration_calibration"]["y"]),
-                                                float(json_file["acceleration_calibration"]["z"]))
             flag |= True
     except RuntimeWarning as _ex:
         print("use_filtering read error")

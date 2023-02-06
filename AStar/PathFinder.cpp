@@ -82,7 +82,7 @@ DLL_EXPORT Path*    find_path(const Map* map, const Pt* start, const  Pt* end)
 
 
 #define _X 1000.0f
-#define _F 1.01f
+#define _F 1.0f
 
 
 DLL_EXPORT void		print_map(const Map* map)
@@ -150,6 +150,8 @@ int main(int argc, char* argv[])
 		std::cout << "\n";
 	}
 	*/
+	std::cout << a_star.path_cost()<<"\n";
+
     std::cout << a_star;
 
     return 0;

@@ -41,23 +41,23 @@ def read_current_data(accelerometer: Accelerometer, mode: int = 3) -> str:
     accelerometer.read_accel_measurements()
     if mode == 0:
         return f"{{\n" \
-               f"\t\"{DTIME}\"           : {accelerometer.accel_dt},\n" \
-               f"\t\"{TIME}\"            : {accelerometer.accel_t},\n" \
+               f"\t\"{DTIME}\"           : {accelerometer.delta_t},\n" \
+               f"\t\"{TIME}\"            : {accelerometer.curr_t},\n" \
                f"\t\"{ACCELERATION}\"    : {accelerometer.acceleration}\n" \
                f"\n}}"
 
     if mode == 1:
         return f"{{\n" \
-               f"\t\"{DTIME}\"           : {accelerometer.accel_dt},\n" \
-               f"\t\"{TIME}\"            : {accelerometer.accel_t},\n" \
+               f"\t\"{DTIME}\"           : {accelerometer.delta_t},\n" \
+               f"\t\"{TIME}\"            : {accelerometer.curr_t},\n" \
                f"\t\"{ACCELERATION}\"    : {accelerometer.acceleration},\n" \
                f"\t\"{ANG_VELOCITY}\"    : {accelerometer.angles_velocity}\n" \
                f"\n}}"
 
     if mode == 2:
         return f"{{\n" \
-               f"\t\"{DTIME}\"           : {accelerometer.accel_dt},\n" \
-               f"\t\"{TIME}\"            : {accelerometer.accel_t},\n" \
+               f"\t\"{DTIME}\"           : {accelerometer.delta_t},\n" \
+               f"\t\"{TIME}\"            : {accelerometer.curr_t},\n" \
                f"\t\"{ACCELERATION}\"    : {accelerometer.acceleration},\n" \
                f"\t\"{VELOCITY}\"        : {accelerometer.velocity},\n" \
                f"\t\"{ANG_VELOCITY}\" : {accelerometer.angles_velocity}\n" \
@@ -65,8 +65,8 @@ def read_current_data(accelerometer: Accelerometer, mode: int = 3) -> str:
 
     if mode == 3:
         return f"{{\n" \
-               f"\t\"{DTIME}\"           : {accelerometer.accel_dt},\n" \
-               f"\t\"{TIME}\"            : {accelerometer.accel_t},\n" \
+               f"\t\"{DTIME}\"           : {accelerometer.delta_t},\n" \
+               f"\t\"{TIME}\"            : {accelerometer.curr_t},\n" \
                f"\t\"{ACCELERATION}\"    : {accelerometer.acceleration},\n" \
                f"\t\"{VELOCITY}\"        : {accelerometer.velocity},\n" \
                f"\t\"{POSITION}\"        : {accelerometer.position},\n" \
@@ -75,8 +75,8 @@ def read_current_data(accelerometer: Accelerometer, mode: int = 3) -> str:
 
     if mode == 4:
         return f"{{\n" \
-               f"\t\"{DTIME}\"           : {accelerometer.accel_dt},\n" \
-               f"\t\"{TIME}\"            : {accelerometer.accel_t},\n" \
+               f"\t\"{DTIME}\"           : {accelerometer.delta_t},\n" \
+               f"\t\"{TIME}\"            : {accelerometer.curr_t},\n" \
                f"\t\"{ACCELERATION}\"    : {accelerometer.acceleration},\n" \
                f"\t\"{VELOCITY}\"        : {accelerometer.velocity},\n" \
                f"\t\"{POSITION}\"        : {accelerometer.position},\n" \
@@ -85,8 +85,8 @@ def read_current_data(accelerometer: Accelerometer, mode: int = 3) -> str:
                f"\n}}"
 
     return f"{{\n" \
-           f"\t\"{DTIME}\"           : {accelerometer.accel_dt},\n" \
-           f"\t\"{TIME}\"            : {accelerometer.accel_t},\n" \
+           f"\t\"{DTIME}\"           : {accelerometer.delta_t},\n" \
+           f"\t\"{TIME}\"            : {accelerometer.curr_t},\n" \
            f"\t\"{ACCELERATION}\"    : {accelerometer.acceleration}\n" \
            f"\n}}"
 
@@ -105,7 +105,7 @@ def read_data(accelerometer: Accelerometer, reading_time: float = 1.0, time_delt
 
 
 def read_and_save_data(file_path: str, accelerometer: Accelerometer,
-                       reading_time: float = 1.0, time_delta: float = 0.075, mode: int = 3) -> None:
+                       reading_time: float = 1.0, time_delta: float = 0.075, mode: int = 1) -> None:
     with open(file_path, 'wt') as out_put:
         print(f"{{\n\"record_date\": \"{dt.datetime.now().strftime('%H; %M; %S')}\",\n", file=out_put)
         print("\"way_points\" :[", file=out_put)

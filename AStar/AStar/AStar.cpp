@@ -24,35 +24,13 @@ bool AStar::is_valid(Point& p)const
 
 bool AStar::point_exists(const Point& point, const float cost, std::list<Node>& _open, std::list<Node>& _closed)const
 {
-    /// <summary>
-    /// почему провер€ютс€ оба списка?
-    /// что будет, если поменть€ проверки местами?
-    /// </summary>
-    std::list<Node>::iterator _iterator;
-    
-    _iterator = std::find(_open.begin(), _open.end(), point);
+    std::list<Node>::iterator _iterator = std::find(_open.begin(), _open.end(), point);
 
-    if (_iterator != _open.end())
-    {
-        if ((*_iterator).cost + (*_iterator).dist < cost)
-        {
-            return true;
-        }
-        _open.erase(_iterator);
-        return false;
-    }
+    if (_iterator == _open.end()) return false;
 
-    _iterator = std::find(_closed.begin(), _closed.end(), point);
+    if ((*_iterator).cost + (*_iterator).dist < cost) return true;
 
-    if (_iterator != _closed.end())
-    {
-        if ((*_iterator).cost + (*_iterator).dist < cost)
-        {
-            return true;
-        }
-        _closed.erase(_iterator);
-        return false;
-    }
+    _open.erase(_iterator);
 
     return false;
 }
@@ -61,7 +39,7 @@ bool AStar::fill_open(Node& node, std::list<Node>& _open, std::list<Node>& _clos
 {
     if (node.pos == _end)return true;
 
-    float newCost, stepWeight, dist;
+    float newCost, stepWeight, distance;
 
     Point neighbour;
 
@@ -71,21 +49,21 @@ bool AStar::fill_open(Node& node, std::list<Node>& _open, std::list<Node>& _clos
 
         if (!is_valid(neighbour))continue;
 
-        if (neighbour == _end)return true; // <- мб услови€ на 62 строке уже достаточно?
+        if (neighbour == _end)return true; 
 
-        stepWeight = weights()[neighbour];
+        if (std::find(_closed.begin(), _closed.end(), neighbour) != _closed.end())continue;
 
-        if (stepWeight >= MAX_WEIGHT)continue; /// <- если закомментировать, то всЄ перестаЄт работать
+        if ((stepWeight = weights()[neighbour]) >= MAX_WEIGHT)continue;
 
-        newCost = 1.0f + (index < 4 ? 1.414f : 1.0f) * stepWeight + node.cost; /// <- с весами кака€-то ерунда...  ак их прикрутить?(
+        newCost = ((index < 4) ? DIAGONAL_WEIGHT * stepWeight : LINEAR_WEIGHT * stepWeight) + node.cost;
 
-        dist = _end.manhattan_distance(neighbour);
+        distance = (_end.manhattan_distance(neighbour));
 
-        if (point_exists(neighbour, newCost + dist, _open, _closed))continue;
+        if (point_exists(neighbour, newCost + distance, _open, _closed))continue;
 
         Node new_node; 
         new_node.cost   = newCost;
-        new_node.dist   = dist;
+        new_node.dist   = distance;
         new_node.parent = node.pos;
         new_node.pos    = neighbour;
 
@@ -96,25 +74,25 @@ bool AStar::fill_open(Node& node, std::list<Node>& _open, std::list<Node>& _clos
 
 void AStar::build_path(std::list<Node>& closed)
 {
-   /* for (const auto& pt : closed) 
-    {
-        _path.push_back(pt.pos); <- тупо вывод всех закрытых клеток, что были исследованы в процессе работы алгоритма 
-    }*/
-
-    /// маги€...
-    _path.push_front(_end);
+    _path.push_front(_end); // <-нужна ли эта точка
+    
     _path_cost = closed.back().cost;
+    
     _path.push_front(closed.back().pos);
+    
     Point parent = closed.back().parent;
 
-    for (std::list<Node>::reverse_iterator i = closed.rbegin(); i != closed.rend(); i++)
-    {
-        if (!((*i).pos == parent)) continue;
-        if (  (*i).pos == _start)  continue;
-        _path.push_front((*i).pos);
-        parent = (*i).parent;
+   for (std::list<Node>::reverse_iterator i = closed.rbegin(); i != closed.rend(); i++)
+    {   
+       if (!((*i).pos == parent))continue;
+
+       if ((*i).pos == start()) continue;
+
+       _path.push_front((*i).pos);
+
+       parent = (*i).parent;
     }
-    _path.push_front(_start);
+    _path.push_front(_start); // <-нужна ли эта точка
 }
 
 AStar::AStar(const int rows, const int cols, const float* map)
@@ -174,7 +152,7 @@ bool AStar::searh_path()
     std::list<Node> _closed;
     
     Node node;
-    node.cost   = 0.0f;
+    node.cost   = 1.0f;
     node.dist   = (float)end().manhattan_distance(start());
     node.parent = Point::MinusOne;
     node.pos    = start();
@@ -185,6 +163,7 @@ bool AStar::searh_path()
     int cntr = 0;
     while (true)
     {
+        _open.sort();
         _closed.push_back(_open.front()); //тудым...
         _open.pop_front(); //сюдым...
         if (fill_open(_closed.back(), _open, _closed))
@@ -192,7 +171,7 @@ bool AStar::searh_path()
             success = true;
             break;
         };
-        if (cntr == weights().ncells()) break; // <- а так можно вообще? кака€ верхн€€ оценка количества итераций
+        if (cntr == weights().ncells()) break;
         if (_open.empty()) break;
         cntr++;
     }
@@ -206,7 +185,6 @@ bool AStar::searh_path()
     }
     return success;
 }
-
 
 bool AStar::search(const Point& s, const Point& e)
 {
@@ -234,22 +212,19 @@ float AStar::path_cost()const
 
 std::ostream& operator <<(std::ostream& stream, const AStar& a_star)
 {
+#ifdef _DEBUG
+    /// <summary>
+    /// Shows map and path if exists
+    /// </summary>
     std::string _str_map;
     
     char* char_map = (char*)malloc(a_star.weights().ncells() * sizeof(char) + 1);
 
     char_map[a_star.weights().ncells()] = '\0';
 
-    for (int index = 0; index < a_star.weights().ncells(); index++)
-    {
-        char_map[index] = (a_star.weights()[index] >= MAX_WEIGHT ? '#' : '_');
-    }
+    for (int index = 0; index < a_star.weights().ncells(); index++) char_map[index] = (a_star.weights()[index] >= MAX_WEIGHT ? '#' : '_');
     
-    if (a_star.path().size() != 0)
-        for (const auto& pt : a_star.path()) 
-        {
-            char_map[pt.row * a_star.weights().cols() + pt.col] = '.';
-        }
+    if (a_star.path().size() != 0)for (const auto& pt : a_star.path()) char_map[pt.row * a_star.weights().cols() + pt.col] = '.';
 
     char_map[a_star.start().row * a_star.weights().cols() + a_star.start().col] = '+';
     char_map[a_star.end().row * a_star.weights().cols() + a_star.end().col] = '+';
@@ -257,11 +232,22 @@ std::ostream& operator <<(std::ostream& stream, const AStar& a_star)
     for (int index = 0; index < a_star.weights().ncells(); index++)
     {
         std::cout << char_map[index];
-        if (index % a_star.weights().cols() == a_star.weights().cols() - 1)
-        {
-            std::cout << "\n";
-        }
+        if (index % a_star.weights().cols() == a_star.weights().cols() - 1)std::cout << "\n";
     }
     free(char_map);
+#else
+    std::cout << "{\n";
+    std::cout << "\"map\"       :\n"<< a_star.weights() << ",\n";
+    std::cout << "\"path_cost\" : " << a_star.path_cost() << ",\n";
+    std::cout << "\"path\"      : [\n";
+    const std::list<Point>& path = a_star.path();
+    int index = 1;
+    for (const Point& p : path)
+    {
+        std::cout << p << (index != path.size() ? ",\n" : "");
+        index++;
+    }
+    std::cout <<"]\n}}";
+#endif
     return stream;
 }

@@ -212,6 +212,10 @@ float AStar::path_cost()const
 
 std::ostream& operator <<(std::ostream& stream, const AStar& a_star)
 {
+#ifdef _DEBUG
+    /// <summary>
+    /// Shows map and path if exists
+    /// </summary>
     std::string _str_map;
     
     char* char_map = (char*)malloc(a_star.weights().ncells() * sizeof(char) + 1);
@@ -231,5 +235,19 @@ std::ostream& operator <<(std::ostream& stream, const AStar& a_star)
         if (index % a_star.weights().cols() == a_star.weights().cols() - 1)std::cout << "\n";
     }
     free(char_map);
+#else
+    std::cout << "{\n";
+    std::cout << "\"map\"       :\n"<< a_star.weights() << ",\n";
+    std::cout << "\"path_cost\" : " << a_star.path_cost() << ",\n";
+    std::cout << "\"path\"      : [\n";
+    const std::list<Point>& path = a_star.path();
+    int index = 1;
+    for (const Point& p : path)
+    {
+        std::cout << p << (index != path.size() ? ",\n" : "");
+        index++;
+    }
+    std::cout <<"]\n}}";
+#endif
     return stream;
 }

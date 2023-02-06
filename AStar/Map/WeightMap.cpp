@@ -53,24 +53,28 @@ WeightMap::~WeightMap()
 }
 std::ostream& operator<<(std::ostream& stream, const WeightMap& map)
 {
-    stream << "{\n \"rows\": "<< map.rows()<< ",\n"; 
-    stream <<    " \"cols\": "<< map.cols()<< ",\n";
-    stream <<    " \"map\" : "<<"\n [\n";
-    for (int row = 0; row < map.rows(); row++) 
+stream << "{\n \"rows\": " << map.rows() << ",\n";
+stream << " \"cols\": " << map.cols() << ",\n";
+stream << " \"map\" : " << "\n [\n";
+for (int row = 0; row < map.rows(); row++)
+{
+    stream << "  ";
+    for (int col = 0; col < map.cols(); col++)
     {
-        stream << "  ";
-        for (int col = 0; col < map.cols(); col++)
-        {
-            stream << std::setw(4) << std::setfill(' ') << map(row, col) << ((col != map.cols() - 1) ? "," : "");
-        }
-        if (row != map.rows() - 1)
-        {
-            stream << ",\n";
-            continue;
-        }
-        stream << "\n ]\n";
+#ifdef _DEBUG
+        stream << std::setw(6) << std::setfill(' ') << int(map(row, col)) << ((col != map.cols() - 1) ? "," : "");
+#else
+        stream << map(row, col) << ((col != map.cols() - 1) ? ", " : "");
+#endif
     }
-    stream << "}";
+    if (row != map.rows() - 1)
+    {
+        stream << ",\n";
+        continue;
+    }
+    stream << "\n ]\n";
+}
+stream << "}";
 
-    return stream;
+return stream;
 }

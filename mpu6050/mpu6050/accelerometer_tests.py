@@ -20,8 +20,6 @@ def accelerometer_test():
             print(f"\t\"acceleration\"   : {accelerometer.acceleration},", file=out_put)
             print(f"\t\"velocity\"       : {accelerometer.velocity},", file=out_put)
             print(f"\t\"position\"       : {accelerometer.position},", file=out_put)
-            print(f"\t\"time_delta\"     : {accelerometer.accel_dt},", file=out_put)
-            print(f"\t\"time\"           : {accelerometer.accel_t}", file=out_put)
             print("\t},", file=out_put)
         print("\t]\n}", file=out_put)
     with open('settings.json', 'wt') as out_put:

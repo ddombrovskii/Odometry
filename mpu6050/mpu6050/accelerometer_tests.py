@@ -1,6 +1,9 @@
 from mpu6050 import Accelerometer
 
 
+# TODO remove this file
+
+
 def accelerometer_test():
     accelerometer = Accelerometer()
 

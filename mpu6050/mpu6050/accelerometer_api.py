@@ -3,6 +3,9 @@ from cgeo import LoopTimer, BitSet32
 import datetime as dt
 import os.path
 
+
+# TODO run console and accelerometer on separated threads
+
 ACC_RUNNING = 0
 ACC_LOGGING = 1
 ACC_ALIVE = 2

@@ -1,10 +1,13 @@
-import math
-import random
-from typing import Tuple, List
-
-import matplotlib.pyplot as plt
 from cgeo import Vec3, Mat4, rot_m_to_euler_angles
 from cgeo.filtering import RealTimeFilter
+import matplotlib.pyplot as plt
+from typing import Tuple, List
+import random
+import math
+
+
+# TODO refactor as bus simulation
+
 
 filter_1 = RealTimeFilter()
 filter_1.mode = 1

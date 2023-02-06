@@ -1,10 +1,13 @@
 from accelerometer_settings import load_accelerometer_settings, save_accelerometer_settings
-from accelerometer_recording import read_current_data, read_and_save_data, read_record, \
+from accelerometer_recording import read_current_data, read_and_save_data, load_accel_record, \
     accelerations, time_values, ang_velocities, velocities, positions
 from cgeo.filtering import RealTimeFilter
 from accelerometer import Accelerometer
 from cgeo.loop_timer import LoopTimer
 import matplotlib.pyplot as plt
+
+
+# TODO refactor or remove idgf...
 
 
 def read_with_time_interval_example(read_time: float = 5.0, delta_read_time: float = 0.033) -> None:
@@ -27,7 +30,7 @@ def read_and_save_with_time_interval_example(file_path: str, read_time: float = 
 
 
 def read_and_show_velocity_log(log_file: str, show_filtered: bool = False):
-    log = read_record(log_file)
+    log = load_accel_record(log_file)
     x, y, z = velocities(log)
     t = time_values(log)
 
@@ -79,7 +82,7 @@ def read_and_show_velocity_log(log_file: str, show_filtered: bool = False):
 
 
 def read_and_show_accel_log(log_file: str, show_filtered: bool = False):
-    log = read_record(log_file)
+    log = load_accel_record(log_file)
     x, y, z = accelerations(log)
     t = time_values(log)
 
@@ -130,7 +133,7 @@ def read_and_show_accel_log(log_file: str, show_filtered: bool = False):
 
 
 def read_and_show_position_log(log_file: str, show_filtered: bool = False):
-    log = read_record(log_file)
+    log = load_accel_record(log_file)
     x, y, z = positions(log)
     # t = time_values(log)
     plt.plot(x, z, 'r')
@@ -139,7 +142,7 @@ def read_and_show_position_log(log_file: str, show_filtered: bool = False):
 
 
 def read_and_show_ang_vel_log(log_file: str, show_filtered: bool  = True):
-    log = read_record(log_file)
+    log = load_accel_record(log_file)
     x, y, z = ang_velocities(log)
     t = time_values(log)
 
@@ -191,14 +194,19 @@ def mask(shift: int) -> int:
 
 
 if __name__ == "__main__":
-    #log = read_record('model.json')
+    #acc = Accelerometer()
+    #time.sleep(60)
+    #acc.calibrate(30)
+    #read_and_save_data("building_way.json", acc, 180.0, 0.001, mode=4)
+
+    #log = load_accel_record('model.json')
     #dt = [p.time for p in log.way_points]
     #plt.plot(dt)
     #plt.show()
     # read_with_time_interval_example()
-    # read_and_show_ang_vel_log('model.json')
-    read_and_save_with_time_interval_example('model.json', read_time=30)
-    read_and_show_position_log('model.json')
+    read_and_show_ang_vel_log('building_way.json')
+    #read_and_save_with_time_interval_example('model.json', read_time=30)
+    #read_and_show_position_log('model.json')
     # read_and_show_accel_log('model.json')
     # read_and_show_accel_log('model.json')
     #

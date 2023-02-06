@@ -17,10 +17,10 @@ class BusDummy:
     @staticmethod
     def accel_x(t: float, step: float = 10, width: float = .5) -> float:
         amp = 10.0
-        val = math.exp(-(t - 20 - 1.0 * step) ** 2 / width ** 2) * amp + \
+        val =  math.exp(-(t - 20 - 1.0 * step) ** 2 / width ** 2) * amp + \
               -math.exp(-(t - 20 - 2.0 * step) ** 2 / width ** 2) * amp + \
               -math.exp(-(t - 20 - 3.0 * step) ** 2 / width ** 2) * amp + \
-              math.exp(-(t - 20 - 4.0 * step) ** 2 / width ** 2) * amp
+               math.exp(-(t - 20 - 4.0 * step) ** 2 / width ** 2) * amp
 
         if abs(val) < 1e-12:
             return 0.0 + random.uniform(-0.1, 0.1)
@@ -109,7 +109,7 @@ class Accelerometer:
         self.__gyroscope_range: int = -1  # 250
         self.__gyroscope_range_raw: int = -1
         self.__hardware_filter_range_raw: int = -1
-        self.__use_filtering: bool = True
+        self.__use_filtering: bool = False
 
         self.__t_curr: float = 0.0
         self.__t_prev: float = 0.0
@@ -222,7 +222,7 @@ class Accelerometer:
         scl = 1.0 / self.acceleration_scale * GRAVITY_CONSTANT
 
         try:
-            if False:  # self.__use_filtering:
+            if self.__use_filtering:
                 return True, (self.__filter_value(float(self.__read_bus(ACCEL_X_OUT_H)) * scl, FILTER_AX),
                               self.__filter_value(float(self.__read_bus(ACCEL_Y_OUT_H)) * scl, FILTER_AY),
                               self.__filter_value(float(self.__read_bus(ACCEL_Z_OUT_H)) * scl, FILTER_AZ))
@@ -236,7 +236,7 @@ class Accelerometer:
     def __read_gyro_data(self) -> Tuple[bool, Tuple[float, float, float]]:
         scl = 1.0 / self.gyroscope_scale
         try:
-            if False: #self.__use_filtering:
+            if self.__use_filtering:
                 return True, (self.__filter_value(float(self.__read_bus(GYRO_X_OUT_H)) * scl, FILTER_GX),
                               self.__filter_value(float(self.__read_bus(GYRO_Y_OUT_H)) * scl, FILTER_GY),
                               self.__filter_value(float(self.__read_bus(GYRO_Z_OUT_H)) * scl, FILTER_GZ))
@@ -248,19 +248,7 @@ class Accelerometer:
             return False, (0.0, 0.0, 0.0)
 
     def __compute_start_params(self, compute_time: float = 10.0, forward: Vec3 = None):
-        self.__acceleration  = Vec3(0.0)
-        self.__velocity      = Vec3(0.0)
-        self.__position      = Vec3(0.0)
-        self.__velocity_prev = Vec3(0.0)
-        self.__acceleration_prev = Vec3(0.0)
-
-        self.__velocity_ang  = Vec3(0.0)
-        self.__angles        = Vec3(0.0)
-        self.__velocity_ang_prev = Vec3(0.0)
-
-        self.__gyro_calib    = Vec3(0.0)
-        self.__accel_calib   = Vec3(0.0)
-        
+        self.reset()
         t = time.perf_counter()
         accel = Vec3()
         n_accel_read = 0
@@ -299,7 +287,7 @@ class Accelerometer:
                                                          0.0, 0.0, 0.0, 1.0))
 
         self.__accel_calib.x = -ex.x * accel.x + ex.y * accel.y + ex.z * accel.z
-        self.__accel_calib.y = -GRAVITY_CONSTANT - ey.x * accel.x + ey.y * accel.y + ey.z * accel.z
+        self.__accel_calib.y = -ey.x * accel.x + ey.y * accel.y + ey.z * accel.z
         self.__accel_calib.z = -ez.x * accel.x + ez.y * accel.y + ez.z * accel.z
 
     @property
@@ -506,7 +494,7 @@ class Accelerometer:
         """
         return self.__t_prev
 
-    def reset(self, reset_ranges: bool = False, reset_calibration: bool = False) -> None:
+    def reset(self, reset_ranges: bool = False) -> None:
         for filter_list in self.__filters:
             for f in filter_list:
                 f.clean_up()
@@ -514,22 +502,26 @@ class Accelerometer:
         self.__acceleration  = Vec3(0.0)
         self.__velocity      = Vec3(0.0)
         self.__position      = Vec3(0.0)
+        self.__velocity_prev = Vec3(0.0)
+        self.__acceleration_prev = Vec3(0.0)
 
-        self.__velocity_ang  = self.__gyro_calib
+        self.__velocity_ang  = Vec3(0.0)
         self.__angles        = Vec3(0.0)
+        self.__velocity_ang_prev = Vec3(0.0)
+
+        self.__gyro_calib    = Vec3(0.0)
+        self.__accel_calib   = Vec3(0.0)
 
         if reset_ranges:
             self.acceleration_range_raw = 2
             self.gyroscope_range_raw = 250
-        if reset_calibration:
-            self.__gyro_calib  = Vec3(0.0)
-            self.__accel_calib = Vec3(0.0)
-            self.__velocity_ang = Vec3(0.0)
 
-    def calibrate(self, calib_time: float = 2.0, forward: Vec3 = None) -> None:
+    def calibrate(self, calib_time: float = 10.0, forward: Vec3 = None) -> None:
         _use_filtering = self.use_filtering
         self.use_filtering = not _use_filtering
+        # self.reset()
         self.__compute_start_params(calib_time, forward)
+        self.__t_start = time.perf_counter()
         print(f"{{\n"
               f"\"calibration_info\":\n"
               f"\t{{\n"
@@ -545,9 +537,9 @@ class Accelerometer:
                math.pi + math.atan2(self.acceleration.y, self.acceleration.x)
 
     def read_accel_measurements(self, kx: float = 0.95, ky: float = 1.0, kz: float = 0.95) -> bool:
+        dt: float = self.delta_t * 0.5
         self.__t_prev = self.__t_curr
         self.__t_curr = time.perf_counter() - self.__t_start
-        dt: float = self.delta_t * 0.5
         # print(dt)
         _2pi: float = math.pi * 2.0
 

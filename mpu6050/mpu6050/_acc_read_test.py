@@ -197,8 +197,8 @@ if __name__ == "__main__":
     #plt.show()
     # read_with_time_interval_example()
     # read_and_show_ang_vel_log('model.json')
-    read_and_save_with_time_interval_example('model.json', read_time=30)
-    read_and_show_position_log('model.json')
+    # read_and_save_with_time_interval_example('accelerometer_records/model.json', read_time=30)
+    read_and_show_position_log('accelerometer_records/model.json')
     # read_and_show_accel_log('model.json')
     # read_and_show_accel_log('model.json')
     #

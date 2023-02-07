@@ -1,7 +1,7 @@
-from cgeo import Vec3
+from accelerometer_constants import ACCEL_RANGE_2G, GYRO_RANGE_250DEG
 from cgeo.filtering import RealTimeFilter
 from accelerometer import Accelerometer
-from accelerometer_constants import *
+from cgeo import Vec3
 import json
 
 
@@ -43,6 +43,26 @@ def load_accelerometer_settings(acc: Accelerometer, settings_file: str) -> bool:
             flag |= True
     except RuntimeWarning as _ex:
         print("hardware_filter_range_raw read error")
+
+    try:
+        if "angles_velocity_calibration" in json_file:
+            value = json_file["angles_velocity_calibration"]
+            acc.angles_velocity_calibration =  Vec3(float(value['x']),
+                                                    float(value['y']),
+                                                    float(value['z']))
+            flag |= True
+    except RuntimeWarning as _ex:
+        print("angles_velocity_calibration read error")
+
+    try:
+        if "acceleration_calibration" in json_file:
+            value = json_file["acceleration_calibration"]
+            acc.acceleration_calibration = Vec3(float(value['x']),
+                                                float(value['y']),
+                                                float(value['z']))
+            flag |= True
+    except RuntimeWarning as _ex:
+        print("acceleration_calibration read error")
 
     try:
         if "use_filtering" in json_file:

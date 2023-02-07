@@ -36,7 +36,7 @@ void              a_start_del(AStar* a_star)
 	if (a_star == nullptr)return;
 	delete a_star;
 }
-Path*     path_new(const int n_points)
+DLL_EXPORT Path*     path_new(const int n_points)
 {
 	Path* p = (Path*)malloc(sizeof(Path));
 	assert(p);
@@ -46,13 +46,13 @@ Path*     path_new(const int n_points)
 	assert(p->path_points);
 	return p;
 }
-void      path_del(Path* path)
+DLL_EXPORT void      path_del(Path* path)
 {
 	if (path == NULL)return;
 	if (path->path_points != NULL)free(path->path_points);
 	free(path);
 }
-Path*    find_path(const Map* map, const Pt* start, const  Pt* end)
+DLL_EXPORT Path*    find_path(const Map* map, const Pt* start, const  Pt* end)
 {
 	AStar* path_finder = a_start_new(map->rows, map->cols, map->weights);
 	
@@ -85,7 +85,7 @@ Path*    find_path(const Map* map, const Pt* start, const  Pt* end)
 #define _F 1.0f
 
 
-void		print_map(const Map* map)
+DLL_EXPORT void		print_map(const Map* map)
 {
 	int rows = map->rows;
 	int cols = map->cols;
@@ -99,7 +99,7 @@ void		print_map(const Map* map)
 	}
 }
 
-void		test_lib()
+DLL_EXPORT void		test_lib()
 {
 	std::cout << "Hello world!" << std::endl;
 }

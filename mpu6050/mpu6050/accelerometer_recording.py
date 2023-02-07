@@ -11,7 +11,7 @@ DTIME = "dtime"
 ACCELERATION = "acceleration"
 VELOCITY = "velocity"
 POSITION = "position"
-ANG_VELOCITY = "angles_velocity"
+ANGLES_VELOCITY = "angles_velocity"
 ANGLES = "angles"
 
 DEVICE_NAME = "device_name"
@@ -51,7 +51,7 @@ def read_current_data(accelerometer: Accelerometer, mode: int = 3) -> str:
                f"\t\"{DTIME}\"           : {accelerometer.delta_t},\n" \
                f"\t\"{TIME}\"            : {accelerometer.curr_t},\n" \
                f"\t\"{ACCELERATION}\"    : {accelerometer.acceleration},\n" \
-               f"\t\"{ANG_VELOCITY}\"    : {accelerometer.angles_velocity}\n" \
+               f"\t\"{ANGLES_VELOCITY}\" : {accelerometer.angles_velocity}\n" \
                f"\n}}"
 
     if mode == 2:
@@ -60,7 +60,7 @@ def read_current_data(accelerometer: Accelerometer, mode: int = 3) -> str:
                f"\t\"{TIME}\"            : {accelerometer.curr_t},\n" \
                f"\t\"{ACCELERATION}\"    : {accelerometer.acceleration},\n" \
                f"\t\"{VELOCITY}\"        : {accelerometer.velocity},\n" \
-               f"\t\"{ANG_VELOCITY}\" : {accelerometer.angles_velocity}\n" \
+               f"\t\"{ANGLES_VELOCITY}\" : {accelerometer.angles_velocity}\n" \
                f"\n}}"
 
     if mode == 3:
@@ -70,7 +70,7 @@ def read_current_data(accelerometer: Accelerometer, mode: int = 3) -> str:
                f"\t\"{ACCELERATION}\"    : {accelerometer.acceleration},\n" \
                f"\t\"{VELOCITY}\"        : {accelerometer.velocity},\n" \
                f"\t\"{POSITION}\"        : {accelerometer.position},\n" \
-               f"\t\"{ANG_VELOCITY}\" : {accelerometer.angles_velocity}\n" \
+               f"\t\"{ANGLES_VELOCITY}\" : {accelerometer.angles_velocity}\n" \
                f"\n}}"
 
     if mode == 4:
@@ -80,8 +80,8 @@ def read_current_data(accelerometer: Accelerometer, mode: int = 3) -> str:
                f"\t\"{ACCELERATION}\"    : {accelerometer.acceleration},\n" \
                f"\t\"{VELOCITY}\"        : {accelerometer.velocity},\n" \
                f"\t\"{POSITION}\"        : {accelerometer.position},\n" \
-               f"\t\"{ANG_VELOCITY}\" : {accelerometer.angles_velocity},\n" \
-               f"\t\"{ANGLES}\"          : {accelerometer.angles_velocity}\n" \
+               f"\t\"{ANGLES_VELOCITY}\" : {accelerometer.angles_velocity},\n" \
+               f"\t\"{ANGLES}\"          : {accelerometer.angles}\n" \
                f"\n}}"
 
     return f"{{\n" \
@@ -104,8 +104,8 @@ def read_data(accelerometer: Accelerometer, reading_time: float = 1.0, time_delt
     return records
 
 
-def read_and_save_data(file_path: str, accelerometer: Accelerometer,
-                       reading_time: float = 1.0, time_delta: float = 0.075, mode: int = 1) -> None:
+def record_accel_log(file_path: str, accelerometer: Accelerometer, reading_time: float = 1.0,
+                     time_delta: float = 0.075, mode: int = 1) -> None:
     with open(file_path, 'wt') as out_put:
         print(f"{{\n\"record_date\": \"{dt.datetime.now().strftime('%H; %M; %S')}\",\n", file=out_put)
         print("\"way_points\" :[", file=out_put)
@@ -126,48 +126,48 @@ def read_record(record_path: str) -> AccelerometerLog:
         log_time_start = raw_json[LOG_TIME_START] if LOG_TIME_START in raw_json else "no-name"
         device_name = raw_json[DEVICE_NAME] if DEVICE_NAME in raw_json else "no-time"
         way_points = [] * len(raw_json[WAY_POINTS])
-        v = Vec3(0.0)
-        p = Vec3(0.0)
+        # v = Vec3(0.0)
+        # p = Vec3(0.0)
 
         for item in raw_json[WAY_POINTS]:
             if ACCELERATION in item:
-                a = Vec3(float(item[ACCELERATION]["x"]),
-                         float(item[ACCELERATION]["y"]),
-                         float(item[ACCELERATION]["z"]))
+                acceleration = Vec3(float(item[ACCELERATION]["x"]),
+                                    float(item[ACCELERATION]["y"]),
+                                    float(item[ACCELERATION]["z"]))
             else:
-                a = Vec3(0, 0, 0)
+                acceleration = Vec3(0, 0, 0)
 
-            if ANG_VELOCITY in item:
-                o = Vec3(float(item[ANG_VELOCITY]["x"]),
-                         float(item[ANG_VELOCITY]["y"]),
-                         float(item[ANG_VELOCITY]["z"]))
+            if ANGLES_VELOCITY in item:
+                a_velocity = Vec3(float(item[ANGLES_VELOCITY]["x"]),
+                                  float(item[ANGLES_VELOCITY]["y"]),
+                                  float(item[ANGLES_VELOCITY]["z"]))
             else:
-                o = Vec3(0, 0, 0)
+                a_velocity = Vec3(0, 0, 0)
 
             if ANGLES in item:
-                o_ = Vec3(float(item[ANGLES]["x"]),
-                          float(item[ANGLES]["y"]),
-                          float(item[ANGLES]["z"]))
+                angles = Vec3(float(item[ANGLES]["x"]),
+                              float(item[ANGLES]["y"]),
+                              float(item[ANGLES]["z"]))
             else:
-                o_ = Vec3(0, 0, 0)
+                angles = Vec3(0, 0, 0)
 
             if VELOCITY in item:
-                v = Vec3(float(item[VELOCITY]["x"]),
-                         float(item[VELOCITY]["y"]),
-                         float(item[VELOCITY]["z"]))
+                velocity = Vec3(float(item[VELOCITY]["x"]),
+                                float(item[VELOCITY]["y"]),
+                                float(item[VELOCITY]["z"]))
             else:
-                v = Vec3(0, 0, 0)
+                velocity = Vec3(0, 0, 0)
 
             if POSITION in item:
-                p = Vec3(float(item[POSITION]["x"]),
-                         float(item[POSITION]["y"]),
-                         float(item[POSITION]["z"]))
+                position = Vec3(float(item[POSITION]["x"]),
+                                float(item[POSITION]["y"]),
+                                float(item[POSITION]["z"]))
             else:
-                p = Vec3(0, 0, 0)
+                position = Vec3(0, 0, 0)
 
             t = float(item[TIME])
             dt = float(item[DTIME])
-            way_points.append(WayPoint(t, dt, a, v, p, o, o_))
+            way_points.append(WayPoint(t, dt, acceleration, velocity, position, a_velocity, angles))
 
         return AccelerometerLog(device_name, log_time_start, way_points)
 
@@ -211,5 +211,77 @@ def time_values(log: AccelerometerLog, start_time: float = 0.0) -> List[float]:
     t0 =  log.way_points[0].time
     return [v.time - t0 for v in log.way_points if v.time -  t0 >= start_time]
 
+
+def integrate_angles(log: AccelerometerLog) -> Tuple[List[float], List[float], List[float]]:
+    a_prev = Vec3(0)  # log.way_points[0].angle
+    a_curr = Vec3(0)
+    ax: List[float] = []
+    ay: List[float] = []
+    az: List[float] = []
+    for wp in log.way_points:
+        dti = wp.dtime
+        a_curr = wp.angles_velocity
+        ax.append(ax[-1] + (a_prev.x + a_curr.x) * 0.5 * dti) if len(ax) != 0 else ax.append((a_prev.x + a_curr.x) * 0.5 * dti)
+        ay.append(ay[-1] + (a_prev.y + a_curr.y) * 0.5 * dti) if len(ay) != 0 else ay.append((a_prev.y + a_curr.y) * 0.5 * dti)
+        az.append(az[-1] + (a_prev.z + a_curr.z) * 0.5 * dti) if len(az) != 0 else az.append((a_prev.z + a_curr.z) * 0.5 * dti)
+        a_prev = a_curr
+    return ax, ay, az
+
+
+def integrate_accelerations(log: AccelerometerLog) -> Tuple[List[float], List[float], List[float]]:
+    a_prev = Vec3(0)  # log.way_points[0].angle
+    a_curr = Vec3(0)
+    ax: List[float] = []
+    ay: List[float] = []
+    az: List[float] = []
+    for wp in log.way_points:
+        dti = wp.dtime
+        a_curr = wp.acceleration
+        ax.append(ax[-1] + (a_prev.x + a_curr.x) * 0.5 * dti) if len(ax) != 0 else ax.append((a_prev.x + a_curr.x) * 0.5 * dti)
+        ay.append(ay[-1] + (a_prev.y + a_curr.y) * 0.5 * dti) if len(ay) != 0 else ay.append((a_prev.y + a_curr.y) * 0.5 * dti)
+        az.append(az[-1] + (a_prev.z + a_curr.z) * 0.5 * dti) if len(az) != 0 else az.append((a_prev.z + a_curr.z) * 0.5 * dti)
+        a_prev = a_curr
+    return ax, ay, az
+
+
+def integrate_velocities(log: AccelerometerLog) -> Tuple[List[float], List[float], List[float]]:
+    vx, vy, vz = integrate_accelerations(log)
+    s_prev = Vec3(0)
+    s_curr = Vec3(0)
+    sx: List[float] = []
+    sy: List[float] = []
+    sz: List[float] = []
+    for index in range(min((len(vx), len(vy), len(vz)))):
+        dti = log.way_points[index].dtime
+        s_curr.x = vx[index]
+        s_curr.y = vy[index]
+        s_curr.z = vz[index]
+        sx.append(sx[-1] + (s_prev.x + s_curr.x) * 0.5 * dti) if len(sx) != 0 else sx.append((s_prev.x + s_curr.x) * 0.5 * dti)
+        sy.append(sy[-1] + (s_prev.y + s_curr.y) * 0.5 * dti) if len(sy) != 0 else sy.append((s_prev.y + s_curr.y) * 0.5 * dti)
+        sz.append(sz[-1] + (s_prev.z + s_curr.z) * 0.5 * dti) if len(sz) != 0 else sz.append((s_prev.z + s_curr.z) * 0.5 * dti)
+        s_prev = s_curr
+    return sx, sy, sz
+
+
+def integrate(log: AccelerometerLog) -> Tuple[List[float], List[float], List[float],  
+                                              List[float], List[float], List[float],  
+                                              List[float], List[float], List[float]]:
+    vx, vy, vz = integrate_accelerations(log)
+    ax, ay, az = integrate_angles(log)
+    s_prev = Vec3(0)
+    s_curr = Vec3(0)
+    sx: List[float] = []
+    sy: List[float] = []
+    sz: List[float] = []
+    for index in range(min((len(vx), len(vy), len(vz)))):
+        dti = log.way_points[index].dtime
+        s_curr.x = vx[index]
+        s_curr.y = vy[index]
+        s_curr.z = vz[index]
+        sx.append(sx[-1] + (s_prev.x + s_curr.x) * 0.5 * dti) if len(sx) != 0 else sx.append((s_prev.x + s_curr.x) * 0.5 * dti)
+        sy.append(sy[-1] + (s_prev.y + s_curr.y) * 0.5 * dti) if len(sy) != 0 else sy.append((s_prev.y + s_curr.y) * 0.5 * dti)
+        sz.append(sz[-1] + (s_prev.z + s_curr.z) * 0.5 * dti) if len(sz) != 0 else sz.append((s_prev.z + s_curr.z) * 0.5 * dti)
+        s_prev = s_curr
+    return vx, vy, vz, sx, sy, sz, ax, ay, az
 
 

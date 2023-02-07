@@ -1,4 +1,5 @@
 #include "WeightMap.h"
+#include <cstring>
 
 const float* WeightMap::map_vals()const { return _map; }
 const int    WeightMap::    rows()const { return _rows;}

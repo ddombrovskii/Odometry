@@ -4,8 +4,8 @@ from PIL import Image, ImageDraw
 import cv2
 import numpy as np
 
-a_star_lib = CDLL('./AStar/x64/Release/AStar.dll')
-
+# a_star_lib = CDLL('./AStar/x64/Release/AStar.dll')
+a_star_lib = CDLL('./AStar/lib_astar.so')
 
 class Pt(Structure):
     _fields_ = ("row", c_int), ("col", c_int)
@@ -277,7 +277,8 @@ def test_path_finder_on_map_from_img():
 
 
 if __name__ == "__main__":
-    # test_path_finder_on_binary_map()
+    test_path_finder_on_binary_map()
     # test_path_finder_on_non_binary_map()
 
-    test_path_finder_on_map_from_img()
+    # test_path_finder_on_map_from_img()
+    # a_star_lib.test_lib()

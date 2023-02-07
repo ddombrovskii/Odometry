@@ -1,6 +1,6 @@
 #ifndef __PATH_FINDER_H__
 #define __PATH_FINDER_H__
-#define DLL_EXPORT __declspec(dllexport)
+//#define DLL_EXPORT __declspec(dllexport)
 #include "AStar/AStar.h"
 
 #ifdef __cplusplus
@@ -27,10 +27,15 @@ extern "C"
 	
 	AStar*            a_start_new(const int rows, const int cols, const float* weights);
 	void              a_start_del(AStar* a_star);
-	DLL_EXPORT Path*     path_new(const int n_points);
+	/*DLL_EXPORT Path*     path_new(const int n_points);
 	DLL_EXPORT void      path_del(Path* path);
 	DLL_EXPORT Path*    find_path(const Map* map, const Pt* start, const  Pt* end);
-	DLL_EXPORT void		print_map(const Map* map);
+	DLL_EXPORT void		print_map(const Map* map);*/
+	Path*     path_new(const int n_points);
+	void      path_del(Path* path);
+	Path*    find_path(const Map* map, const Pt* start, const  Pt* end);
+	void		print_map(const Map* map);
+	void		test_lib();
 #ifdef __cplusplus
 }
 #endif

@@ -1,15 +1,12 @@
 #ifndef __PATH_FINDER_H__
 #define __PATH_FINDER_H__
-
+#include "AStar/AStar.h"
 
 #ifdef _WIN32
 	#define DLL_EXPORT  __declspec( dllexport )
 #else
 	#define DLL_EXPORT
 #endif
-
-
-#include "AStar/AStar.h"
 
 #ifdef __cplusplus
 extern "C"

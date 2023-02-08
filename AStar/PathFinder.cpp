@@ -111,6 +111,20 @@ DLL_EXPORT Path3*  find_path_3(const Map3* map, const Pt3* start, const  Pt3* en
 #define _F 1.0f
 
 
+DLL_EXPORT void		print_map(const Map* map)
+{
+	int rows = map->rows;
+	int cols = map->cols;
+	std::cout << "Rows: " << rows << std::endl;
+	std::cout << "Cols: " << cols << std::endl;
+	for (int i = 0; i < rows; ++i)
+	{
+		for (int j = 0; j < cols; ++j)
+			std::cout << map->weights[rows * i + j] << ' ';
+		std::cout << std::endl;
+	}
+}
+
 int main(int argc, char* argv[])
 {
     const float* raw_map = new float[1024]

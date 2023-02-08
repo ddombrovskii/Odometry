@@ -1,44 +1,44 @@
-#include "WeightMap.h"
+#include "WeightMap2.h"
 
-const float* WeightMap::map_vals()const { return _map; }
-const int    WeightMap::    rows()const { return _rows;}
-const int    WeightMap::    cols()const { return _cols;}
-const int    WeightMap::  ncells()const { return rows() * cols(); }
-float        WeightMap::operator[](const int index)const
+const float* WeightMap2::map_vals()const { return _map; }
+const int    WeightMap2::    rows()const { return _rows;}
+const int    WeightMap2::    cols()const { return _cols;}
+const int    WeightMap2::  ncells()const { return rows() * cols(); }
+float        WeightMap2::operator[](const int index)const
 {
     if (index < 0)        return MAX_WEIGHT;
     if (index >= ncells())return MAX_WEIGHT;
     return _map[index];
 }
-float        WeightMap::operator[](const Point& index)const
+float        WeightMap2::operator[](const Point2& index)const
 {
     return (*this)[index.row * cols() + index.col];
 }
-float        WeightMap::operator() (const int row, const int col) const
+float        WeightMap2::operator() (const int row, const int col) const
 {
     int index = row * cols() + col;
     if (index >= ncells()) return MAX_WEIGHT;
     if (index < 0) return MAX_WEIGHT;
     return _map[index];
 }
-float&       WeightMap::operator[](const int index)
+float&       WeightMap2::operator[](const int index)
 {
     assert(index < 0);
     assert(index >= ncells());
     return _map[index];
 }
-float&       WeightMap::operator[](const Point& index)
+float&       WeightMap2::operator[](const Point2& index)
 {
     return (*this)[index.row * cols() + index.col];
 }
-float&       WeightMap::operator() (const int row, const int col)
+float&       WeightMap2::operator() (const int row, const int col)
 {
     int index = row * cols() + col;
     assert(index < ncells());
     assert(index > 0);
     return _map[index];
 }
-WeightMap::WeightMap(int rows, int cols, const float* map)
+WeightMap2::WeightMap2(int rows, int cols, const float* map)
 {
     assert(map);
    _rows = rows;
@@ -47,13 +47,14 @@ WeightMap::WeightMap(int rows, int cols, const float* map)
     assert(_map);
    memcpy(_map, map, ncells() * sizeof(float));
 }
-WeightMap::~WeightMap()
+WeightMap2::~WeightMap2()
 {
     if (_map != NULL)free(_map);
 }
-std::ostream& operator<<(std::ostream& stream, const WeightMap& map)
+std::ostream& operator<<(std::ostream& stream, const WeightMap2& map)
 {
-stream << "{\n \"rows\": " << map.rows() << ",\n";
+stream << "{\n";
+stream << " \"rows\": " << map.rows() << ",\n";
 stream << " \"cols\": " << map.cols() << ",\n";
 stream << " \"map\" : " << "\n [\n";
 for (int row = 0; row < map.rows(); row++)
@@ -61,11 +62,7 @@ for (int row = 0; row < map.rows(); row++)
     stream << "  ";
     for (int col = 0; col < map.cols(); col++)
     {
-#ifdef _DEBUG
-        stream << std::setw(6) << std::setfill(' ') << int(map(row, col)) << ((col != map.cols() - 1) ? "," : "");
-#else
-        stream << map(row, col) << ((col != map.cols() - 1) ? ", " : "");
-#endif
+        stream << std::fixed << std::setw(10) << std::setprecision(3) << std::setfill(' ') << map(row, col) << ((col != map.cols() - 1) ? "," : "");
     }
     if (row != map.rows() - 1)
     {

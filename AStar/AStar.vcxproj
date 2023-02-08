@@ -147,20 +147,26 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="AStar\AStar.h" />
+    <ClInclude Include="AStar\AStar2.h" />
+    <ClInclude Include="AStar\AStar3.h" />
     <ClInclude Include="framework.h" />
-    <ClInclude Include="Map\WeightMap.h" />
+    <ClInclude Include="Map\WeightMap2.h" />
+    <ClInclude Include="Map\WeightMap3.h" />
     <ClInclude Include="PathFinder.h" />
     <ClInclude Include="pch.h" />
-    <ClInclude Include="Point\Point.h" />
+    <ClInclude Include="Point\Point2.h" />
+    <ClInclude Include="Point\Point3.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="AStar\AStar.cpp" />
+    <ClCompile Include="AStar\AStar2.cpp" />
+    <ClCompile Include="AStar\AStar3.cpp" />
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="Map\WeightMap3.cpp" />
     <ClCompile Include="PathFinder.cpp" />
-    <ClCompile Include="Map\WeightMap.cpp" />
+    <ClCompile Include="Map\WeightMap2.cpp" />
     <ClCompile Include="pch.cpp" />
-    <ClCompile Include="Point\Point.cpp" />
+    <ClCompile Include="Point\Point2.cpp" />
+    <ClCompile Include="Point\Point3.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

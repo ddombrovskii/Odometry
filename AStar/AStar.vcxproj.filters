@@ -24,15 +24,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Point\Point.h">
-      <Filter>Point</Filter>
-    </ClInclude>
-    <ClInclude Include="Map\WeightMap.h">
-      <Filter>Map</Filter>
-    </ClInclude>
-    <ClInclude Include="AStar\AStar.h">
-      <Filter>AStar</Filter>
-    </ClInclude>
     <ClInclude Include="PathFinder.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
@@ -42,25 +33,52 @@
     <ClInclude Include="framework.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
+    <ClInclude Include="Point\Point2.h">
+      <Filter>Point</Filter>
+    </ClInclude>
+    <ClInclude Include="Point\Point3.h">
+      <Filter>Point</Filter>
+    </ClInclude>
+    <ClInclude Include="Map\WeightMap2.h">
+      <Filter>Map</Filter>
+    </ClInclude>
+    <ClInclude Include="Map\WeightMap3.h">
+      <Filter>Map</Filter>
+    </ClInclude>
+    <ClInclude Include="AStar\AStar2.h">
+      <Filter>AStar</Filter>
+    </ClInclude>
+    <ClInclude Include="AStar\AStar3.h">
+      <Filter>AStar</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Point\Point.cpp">
-      <Filter>Point</Filter>
-    </ClCompile>
-    <ClCompile Include="Map\WeightMap.cpp">
-      <Filter>Map</Filter>
-    </ClCompile>
     <ClCompile Include="PathFinder.cpp">
       <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="AStar\AStar.cpp">
-      <Filter>AStar</Filter>
     </ClCompile>
     <ClCompile Include="dllmain.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="pch.cpp">
       <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Point\Point2.cpp">
+      <Filter>Point</Filter>
+    </ClCompile>
+    <ClCompile Include="Point\Point3.cpp">
+      <Filter>Point</Filter>
+    </ClCompile>
+    <ClCompile Include="Map\WeightMap2.cpp">
+      <Filter>Map</Filter>
+    </ClCompile>
+    <ClCompile Include="Map\WeightMap3.cpp">
+      <Filter>Map</Filter>
+    </ClCompile>
+    <ClCompile Include="AStar\AStar2.cpp">
+      <Filter>AStar</Filter>
+    </ClCompile>
+    <ClCompile Include="AStar\AStar3.cpp">
+      <Filter>AStar</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -1,5 +1,3 @@
-#include "Map/WeightMap.h"
-#include "AStar/AStar.h"
 #include "PathFinder.h"
 
 /*
@@ -27,55 +25,83 @@ find_path.argtypes = [POINTER(_Map), POINTER(_Pt), POINTER(_Pt)]
 find_path.restype  =  POINTER(_Path)
 */
 
-AStar*            a_start_new(const int rows, const int cols, const float* weights)
+DLL_EXPORT Path2*   path_2_new(const int n_points)
 {
-	return new AStar(rows, cols, weights);
-}
-void              a_start_del(AStar* a_star)
-{
-	if (a_star == nullptr)return;
-	delete a_star;
-}
-DLL_EXPORT Path*     path_new(const int n_points)
-{
-	Path* p = (Path*)malloc(sizeof(Path));
+	Path2* p = (Path2*)malloc(sizeof(Path2));
 	assert(p);
 	if (n_points == 0) return p;
 	p->n_points = n_points;
-	p->path_points = (Pt*)malloc(sizeof(Pt) * n_points);
+	p->path_points = (Pt2*)malloc(sizeof(Pt2) * n_points);
 	assert(p->path_points);
 	return p;
 }
-DLL_EXPORT void      path_del(Path* path)
+DLL_EXPORT void     path_2_del(Path2* path)
 {
 	if (path == NULL)return;
 	if (path->path_points != NULL)free(path->path_points);
 	free(path);
 }
-DLL_EXPORT Path*    find_path(const Map* map, const Pt* start, const  Pt* end)
+DLL_EXPORT Path2*  find_path_2(const Map2* map, const Pt2* start, const  Pt2* end)
 {
-	AStar* path_finder = a_start_new(map->rows, map->cols, map->weights);
+	AStar2 path_finder(map->rows, map->cols, map->weights);
 	
-	assert(path_finder);
-	
-	if (!path_finder->search(Point(start->row, start->col), Point(end->row, end->col)))
+	if (!path_finder.search(Point2(start->row, start->col), Point2(end->row, end->col)))
 	{
-		a_start_del(path_finder);
-		return path_new(0);
+		return path_2_new(0);
 	}
+	
+	Path2* path = path_2_new(path_finder.path().size());
+	
+	path->cost = path_finder.path_cost();
+	
 	int index = 0;
-	
-	Path* path = path_new(path_finder->path().size());
-	
-	path->cost = path_finder->path_cost();
 
-	for (const auto& pt : path_finder->path())
+	for (const auto& pt : path_finder.path())
 	{
 		path->path_points[index] = { pt.row, pt.col };
 		index++;
 	}
 
-	a_start_del(path_finder);
+	return path;
+}
+
+
+DLL_EXPORT Path3*   path_3_new(const int n_points)
+{
+	Path3* p = (Path3*)malloc(sizeof(Path3));
+	assert(p);
+	if (n_points == 0) return p;
+	p->n_points = n_points;
+	p->path_points = (Pt3*)malloc(sizeof(Pt3) * n_points);
+	assert(p->path_points);
+	return p;
+}
+DLL_EXPORT void     path_3_del(Path3* path)
+{
+	if (path == NULL)return;
+	if (path->path_points != NULL)free(path->path_points);
+	free(path);
+}
+DLL_EXPORT Path3*  find_path_3(const Map3* map, const Pt3* start, const  Pt3* end)
+{
+	AStar3 path_finder(map->rows, map->cols, map->layers, map->weights);
+
+	if (!path_finder.search(Point3(start->row, start->col, start->layer), Point3(end->row, end->col, end->layer)))
+	{
+		return path_3_new(0);
+	}
+
+	Path3* path = path_3_new(path_finder.path().size());
+
+	path->cost = path_finder.path_cost();
+	
+	int index = 0;
+
+	for (const auto& pt : path_finder.path())
+	{
+		path->path_points[index] = { pt.row, pt.col };
+		index++;
+	}
 
 	return path;
 }
@@ -141,12 +167,44 @@ int main(int argc, char* argv[])
 	  _F, _F, _F, _F, _F, _F, _F, _X, _X, _F, _F, _F, _X, _F, _F, _F, _F, _F, _F, _F, _F, _F, _F, _X, _X, _F, _F, _F, _X, _F, _F, _F
 	};
 
-	// WeightMap map(32, 32, raw_map);
-    // std::cout << map;
-    std::cout << "\n";
-    AStar a_star(32, 32, raw_map);
-	a_star.search(); // ({ 0, 0 }, { 14, 26 });
+	const float* map3 = new float[49 * 3]
+	{
+		_F, _X, _F, _F, _F, _F, _F,
+		_F, _X, _F, _F, _F, _F, _F,
+		_F, _X, _X, _X, _X, _F, _F,
+		_F, _F, _F, _F, _X, _F, _F,
+		_F, _F, _F, _F, _X, _F, _F,
+		_F, _F, _F, _F, _X, _F, _F,
+		_F, _F, _F, _F, _X, _F, _F,
+	//		   .0f	 .0f   .0f	 .0f   .0f	 .0f
+		_F, _X, _F, _F, _F, _F, _F,
+		_F, _X, _F, _F, _F, _F, _F,
+		_F, _X, _X, _X, _X, _F, _F,
+		_F, _X, _F, _F, _F, _X, _F,
+		_F, _X, _F, _F, _F, _X, _F,
+		_F, _X, _X, _X, _X, _X, _F,
+		_F, _F, _F, _F, _X, _F, _F,
+	//		   .0f	 .0f   .0f	 .0f   .0f	 .0f
+		_F, _X, _F, _F, _F, _F, _F,
+		_F, _X, _F, _F, _F, _F, _F,
+		_F, _X, _X, _X, _X, _F, _F,
+		_F, _X, _F, _X, _X, _X, _X,
+		_F, _X, _F, _X, _F, _F, _X,
+		_F, _X, _X, _X, _X, _F, _X,
+		_F, _F, _F, _F, _X, _F, _F,
+	};
 
+	// WeightMap3 map(7, 7, 3, map3);
+	// WeightMap map(32, 32, raw_map);
+    //std::cout << map;
+    // std::cout << "\n";
+    AStar2 a_star2(32, 32, raw_map);
+	AStar3 a_star3(7, 7, 3, map3);
+
+	delete[] raw_map;
+	delete[] map3;
+	a_star2.search(); // ({ 0, 0 }, { 14, 26 });
+	a_star3.search();
 	/*
 	
 	for (const auto& p : a_star.path())
@@ -155,10 +213,15 @@ int main(int argc, char* argv[])
 		std::cout << "\n";
 	}
 	*/
-	std::cout << a_star.path_cost()<<"\n";
+	std::cout << a_star2.path_cost()<<"\n";
 
-    std::cout << a_star;
+    std::cout << a_star2;
+	std::cout << "\n";
 
+	std::cout << a_star3.path_cost() << "\n";
+
+	std::cout << a_star3;
+	std::cout << "\n";
     return 0;
 }
 

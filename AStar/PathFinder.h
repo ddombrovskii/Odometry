@@ -40,14 +40,20 @@ extern "C"
 	struct Map2
 	{
 		int cols, rows;
-		float* weights;
+		const float* weights;
 	};
 	
 	struct Map3
 	{
 		int cols, rows, layers;
-		float* weights;
+		const float* weights;
 	};
+
+	DLL_EXPORT Map2* map_2_new(const int rows, const int cols, const float* map);
+	DLL_EXPORT void  map_2_del(Map2* map); // TODO check if map copy in A*
+	DLL_EXPORT Map3* map_3_new(const int rows, const int cols, const int layers, const float* map);
+	DLL_EXPORT void  map_3_del(Map3* map); // TODO check if map copy in A*
+
 
 	DLL_EXPORT Path2*   path_2_new(const int n_points);
 	DLL_EXPORT void     path_2_del(Path2* path);
@@ -58,7 +64,6 @@ extern "C"
 	DLL_EXPORT void     path_3_del(Path3* path);
 	DLL_EXPORT Path3*  find_path_3(const Map3* map, const Pt3* start, const Pt3* end);
 	DLL_EXPORT void     print_map2(const Map2* map);
-	DLL_EXPORT void     test_lib();
 #ifdef __cplusplus
 }
 #endif

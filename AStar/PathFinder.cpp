@@ -25,6 +25,42 @@ find_path.argtypes = [POINTER(_Map), POINTER(_Pt), POINTER(_Pt)]
 find_path.restype  =  POINTER(_Path)
 */
 
+
+DLL_EXPORT Map2* map_2_new(const int rows, const int cols, const float* weights)
+{
+	assert(weights);
+	Map2* map = (Map2*)malloc(sizeof(Map2));
+	assert(map);
+	map->cols = cols;
+	map->rows = rows;
+	map->weights = weights;
+	return map;
+}
+
+DLL_EXPORT void  map_2_del(Map2* map) 
+{
+	assert(map);
+	free(map);
+}
+
+DLL_EXPORT Map3* map_3_new(const int rows, const int cols, const int layers, const float* weights)
+{
+	assert(weights);
+	Map3* map = (Map3*)malloc(sizeof(Map3));
+	assert(map);
+	map->cols = cols;
+	map->rows = rows;
+	map->layers = layers;
+	map->weights = weights;
+	return map;
+}
+
+DLL_EXPORT void  map_3_del(Map3* map)
+{
+	assert(map);
+	free(map);
+}
+
 DLL_EXPORT Path2*   path_2_new(const int n_points)
 {
 	Path2* p = (Path2*)malloc(sizeof(Path2));
@@ -35,12 +71,14 @@ DLL_EXPORT Path2*   path_2_new(const int n_points)
 	assert(p->path_points);
 	return p;
 }
+
 DLL_EXPORT void     path_2_del(Path2* path)
 {
 	if (path == NULL)return;
 	if (path->path_points != NULL)free(path->path_points);
 	free(path);
 }
+
 DLL_EXPORT Path2*  find_path_2(const Map2* map, const Pt2* start, const  Pt2* end)
 {
 	AStar2 path_finder(map->rows, map->cols, map->weights);
@@ -65,7 +103,6 @@ DLL_EXPORT Path2*  find_path_2(const Map2* map, const Pt2* start, const  Pt2* en
 	return path;
 }
 
-
 DLL_EXPORT Path3*   path_3_new(const int n_points)
 {
 	Path3* p = (Path3*)malloc(sizeof(Path3));
@@ -76,12 +113,14 @@ DLL_EXPORT Path3*   path_3_new(const int n_points)
 	assert(p->path_points);
 	return p;
 }
+
 DLL_EXPORT void     path_3_del(Path3* path)
 {
 	if (path == NULL)return;
 	if (path->path_points != NULL)free(path->path_points);
 	free(path);
 }
+
 DLL_EXPORT Path3*  find_path_3(const Map3* map, const Pt3* start, const  Pt3* end)
 {
 	AStar3 path_finder(map->rows, map->cols, map->layers, map->weights);
@@ -113,6 +152,7 @@ DLL_EXPORT Path3*  find_path_3(const Map3* map, const Pt3* start, const  Pt3* en
 
 DLL_EXPORT void		print_map2(const Map2* map)
 {
+	/// вообще-то можно взыать у WeightMap2 или WeightMap3 перегрузку оператора <<
 	int rows = map->rows;
 	int cols = map->cols;
 	std::cout << "Rows: " << rows << std::endl;
@@ -125,10 +165,6 @@ DLL_EXPORT void		print_map2(const Map2* map)
 	}
 }
 
-DLL_EXPORT void		test_lib()
-{
-	std::cout << "Hello world!" << std::endl;
-}
 
 int main(int argc, char* argv[])
 {

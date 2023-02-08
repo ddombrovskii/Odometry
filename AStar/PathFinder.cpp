@@ -111,7 +111,7 @@ DLL_EXPORT Path3*  find_path_3(const Map3* map, const Pt3* start, const  Pt3* en
 #define _F 1.0f
 
 
-DLL_EXPORT void		print_map(const Map* map)
+DLL_EXPORT void		print_map2(const Map2* map)
 {
 	int rows = map->rows;
 	int cols = map->cols;
@@ -123,6 +123,11 @@ DLL_EXPORT void		print_map(const Map* map)
 			std::cout << map->weights[rows * i + j] << ' ';
 		std::cout << std::endl;
 	}
+}
+
+DLL_EXPORT void		test_lib()
+{
+	std::cout << "Hello world!" << std::endl;
 }
 
 int main(int argc, char* argv[])

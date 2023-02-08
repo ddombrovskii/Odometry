@@ -57,6 +57,8 @@ extern "C"
 	DLL_EXPORT Path3*   path_3_new(const int n_points);
 	DLL_EXPORT void     path_3_del(Path3* path);
 	DLL_EXPORT Path3*  find_path_3(const Map3* map, const Pt3* start, const Pt3* end);
+	DLL_EXPORT void     print_map2(const Map2* map);
+	DLL_EXPORT void     test_lib();
 #ifdef __cplusplus
 }
 #endif

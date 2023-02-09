@@ -52,9 +52,6 @@ class _Map3(Structure):
     _fields_ = ("cols", c_int), ("rows", c_int), ("layers", c_int), ("weights", NP_ARRAY_3_D_POINTER)
 
 
-# test_lib = a_star_lib.test_lib
-# В
-
 _map_2_new = a_star_lib.map_2_new
 _map_2_new.argtypes = [c_int, c_int, NP_ARRAY_2_D_POINTER]
 _map_2_new.restype  = POINTER(_Map2)
@@ -271,8 +268,8 @@ class PathFinder:
                     self. _start_point = None
                     cost = self._path_p.contents.cost
                     n_points = self._path_p.contents.n_points
-                    print(f"{cost=}")
-                    print(f"{n_points=}\n")
+                    print(f"cost = {cost}")
+                    print(f"n_points = {n_points}\n")
                     path_data_x = []
                     path_data_y = []
                     if n_points > 0:

@@ -1,4 +1,5 @@
-from mpu6050 import Accelerometer
+from accelerometer import Accelerometer
+from accelerometer_settings import load_accelerometer_settings, save_accelerometer_settings
 from cgeo import LoopTimer, Vec3
 import math
 
@@ -21,6 +22,9 @@ class IMU:
         self._ang: Vec3 = Vec3(0.0)
         self._vel: Vec3 = Vec3(0.0)
         self._pos: Vec3 = Vec3(0.0)
+        if not load_accelerometer_settings(self._accelerometer, "accel_settings.json"):
+            self.calibrate(30)
+            save_accelerometer_settings(self._accelerometer, "accel_settings.json")
 
     @property
     def angles_velocity(self) -> Vec3:
@@ -63,10 +67,11 @@ class IMU:
         """
         return self._accelerometer.prev_t
 
-    def _update(self) -> None:
+    def read(self) -> bool:
         with self._timer:
             if not self._accelerometer.read_accel_measurements():
-                raise RuntimeError("accelerometer reading error")
+                return False
+                #raise RuntimeError("accelerometer reading error")
 
             curr_accel = self._accelerometer.acceleration
             prev_accel = self._accelerometer.prev_acceleration
@@ -111,6 +116,7 @@ class IMU:
             self._pos.x += self._vel.x * dt
             self._pos.y += self._vel.y * dt
             self._pos.z += self._vel.z * dt
+            return True
 
     def calibrate(self, timeout: float, forward: Vec3) -> None:
         self._accelerometer.calibrate(timeout, forward)

@@ -1,5 +1,3 @@
-#include "Map/WeightMap.h"
-#include "AStar/AStar.h"
 #include "PathFinder.h"
 
 /*
@@ -27,55 +25,122 @@ find_path.argtypes = [POINTER(_Map), POINTER(_Pt), POINTER(_Pt)]
 find_path.restype  =  POINTER(_Path)
 */
 
-AStar*            a_start_new(const int rows, const int cols, const float* weights)
+
+DLL_EXPORT Map2* map_2_new(const int rows, const int cols, const float* weights)
 {
-	return new AStar(rows, cols, weights);
+	assert(weights);
+	Map2* map = (Map2*)malloc(sizeof(Map2));
+	assert(map);
+	map->cols = cols;
+	map->rows = rows;
+	map->weights = weights;
+	return map;
 }
-void              a_start_del(AStar* a_star)
+
+DLL_EXPORT void  map_2_del(Map2* map) 
 {
-	if (a_star == nullptr)return;
-	delete a_star;
+	assert(map);
+	free(map);
 }
-DLL_EXPORT Path*     path_new(const int n_points)
+
+DLL_EXPORT Map3* map_3_new(const int rows, const int cols, const int layers, const float* weights)
 {
-	Path* p = (Path*)malloc(sizeof(Path));
+	assert(weights);
+	Map3* map = (Map3*)malloc(sizeof(Map3));
+	assert(map);
+	map->cols = cols;
+	map->rows = rows;
+	map->layers = layers;
+	map->weights = weights;
+	return map;
+}
+
+DLL_EXPORT void  map_3_del(Map3* map)
+{
+	assert(map);
+	free(map);
+}
+
+DLL_EXPORT Path2*   path_2_new(const int n_points)
+{
+	Path2* p = (Path2*)malloc(sizeof(Path2));
 	assert(p);
 	if (n_points == 0) return p;
 	p->n_points = n_points;
-	p->path_points = (Pt*)malloc(sizeof(Pt) * n_points);
+	p->path_points = (Pt2*)malloc(sizeof(Pt2) * n_points);
 	assert(p->path_points);
 	return p;
 }
-DLL_EXPORT void      path_del(Path* path)
+
+DLL_EXPORT void     path_2_del(Path2* path)
 {
 	if (path == NULL)return;
 	if (path->path_points != NULL)free(path->path_points);
 	free(path);
 }
-DLL_EXPORT Path*    find_path(const Map* map, const Pt* start, const  Pt* end)
-{
-	AStar* path_finder = a_start_new(map->rows, map->cols, map->weights);
-	
-	assert(path_finder);
-	
-	if (!path_finder->search(Point(start->row, start->col), Point(end->row, end->col)))
-	{
-		a_start_del(path_finder);
-		return path_new(0);
-	}
-	int index = 0;
-	
-	Path* path = path_new(path_finder->path().size());
-	
-	path->cost = path_finder->path_cost();
 
-	for (const auto& pt : path_finder->path())
+DLL_EXPORT Path2*  find_path_2(const Map2* map, const Pt2* start, const  Pt2* end)
+{
+	AStar2 path_finder(map->rows, map->cols, map->weights);
+	
+	if (!path_finder.search(Point2(start->row, start->col), Point2(end->row, end->col)))
+	{
+		return path_2_new(0);
+	}
+	
+	Path2* path = path_2_new(path_finder.path().size());
+	
+	path->cost = path_finder.path_cost();
+	
+	int index = 0;
+
+	for (const auto& pt : path_finder.path())
 	{
 		path->path_points[index] = { pt.row, pt.col };
 		index++;
 	}
 
-	a_start_del(path_finder);
+	return path;
+}
+
+DLL_EXPORT Path3*   path_3_new(const int n_points)
+{
+	Path3* p = (Path3*)malloc(sizeof(Path3));
+	assert(p);
+	if (n_points == 0) return p;
+	p->n_points = n_points;
+	p->path_points = (Pt3*)malloc(sizeof(Pt3) * n_points);
+	assert(p->path_points);
+	return p;
+}
+
+DLL_EXPORT void     path_3_del(Path3* path)
+{
+	if (path == NULL)return;
+	if (path->path_points != NULL)free(path->path_points);
+	free(path);
+}
+
+DLL_EXPORT Path3*  find_path_3(const Map3* map, const Pt3* start, const  Pt3* end)
+{
+	AStar3 path_finder(map->rows, map->cols, map->layers, map->weights);
+
+	if (!path_finder.search(Point3(start->row, start->col, start->layer), Point3(end->row, end->col, end->layer)))
+	{
+		return path_3_new(0);
+	}
+
+	Path3* path = path_3_new(path_finder.path().size());
+
+	path->cost = path_finder.path_cost();
+	
+	int index = 0;
+
+	for (const auto& pt : path_finder.path())
+	{
+		path->path_points[index] = { pt.row, pt.col };
+		index++;
+	}
 
 	return path;
 }
@@ -83,6 +148,22 @@ DLL_EXPORT Path*    find_path(const Map* map, const Pt* start, const  Pt* end)
 
 #define _X 1000.0f
 #define _F 1.0f
+
+
+DLL_EXPORT void		print_map2(const Map2* map)
+{
+	/// вообще-то можно взыать у WeightMap2 или WeightMap3 перегрузку оператора <<
+	int rows = map->rows;
+	int cols = map->cols;
+	std::cout << "Rows: " << rows << std::endl;
+	std::cout << "Cols: " << cols << std::endl;
+	for (int i = 0; i < rows; ++i)
+	{
+		for (int j = 0; j < cols; ++j)
+			std::cout << map->weights[rows * i + j] << ' ';
+		std::cout << std::endl;
+	}
+}
 
 
 int main(int argc, char* argv[])
@@ -122,12 +203,44 @@ int main(int argc, char* argv[])
 	  _F, _F, _F, _F, _F, _F, _F, _X, _X, _F, _F, _F, _X, _F, _F, _F, _F, _F, _F, _F, _F, _F, _F, _X, _X, _F, _F, _F, _X, _F, _F, _F
 	};
 
-	// WeightMap map(32, 32, raw_map);
-    // std::cout << map;
-    std::cout << "\n";
-    AStar a_star(32, 32, raw_map);
-	a_star.search(); // ({ 0, 0 }, { 14, 26 });
+	const float* map3 = new float[49 * 3]
+	{
+		_F, _X, _F, _F, _F, _F, _F,
+		_F, _X, _F, _F, _F, _F, _F,
+		_F, _X, _X, _X, _X, _F, _F,
+		_F, _F, _F, _F, _X, _F, _F,
+		_F, _F, _F, _F, _X, _F, _F,
+		_F, _F, _F, _F, _X, _F, _F,
+		_F, _F, _F, _F, _X, _F, _F,
+	//		   .0f	 .0f   .0f	 .0f   .0f	 .0f
+		_F, _X, _F, _F, _F, _F, _F,
+		_F, _X, _F, _F, _F, _F, _F,
+		_F, _X, _X, _X, _X, _F, _F,
+		_F, _X, _F, _F, _F, _X, _F,
+		_F, _X, _F, _F, _F, _X, _F,
+		_F, _X, _X, _X, _X, _X, _F,
+		_F, _F, _F, _F, _X, _F, _F,
+	//		   .0f	 .0f   .0f	 .0f   .0f	 .0f
+		_F, _X, _F, _F, _F, _F, _F,
+		_F, _X, _F, _F, _F, _F, _F,
+		_F, _X, _X, _X, _X, _F, _F,
+		_F, _X, _F, _X, _X, _X, _X,
+		_F, _X, _F, _X, _F, _F, _X,
+		_F, _X, _X, _X, _X, _F, _X,
+		_F, _F, _F, _F, _X, _F, _F,
+	};
 
+	// WeightMap3 map(7, 7, 3, map3);
+	// WeightMap map(32, 32, raw_map);
+    //std::cout << map;
+    // std::cout << "\n";
+    AStar2 a_star2(32, 32, raw_map);
+	AStar3 a_star3(7, 7, 3, map3);
+
+	delete[] raw_map;
+	delete[] map3;
+	a_star2.search(); // ({ 0, 0 }, { 14, 26 });
+	a_star3.search();
 	/*
 	
 	for (const auto& p : a_star.path())
@@ -136,10 +249,15 @@ int main(int argc, char* argv[])
 		std::cout << "\n";
 	}
 	*/
-	std::cout << a_star.path_cost()<<"\n";
+	std::cout << a_star2.path_cost()<<"\n";
 
-    std::cout << a_star;
+    std::cout << a_star2;
+	std::cout << "\n";
 
+	std::cout << a_star3.path_cost() << "\n";
+
+	std::cout << a_star3;
+	std::cout << "\n";
     return 0;
 }
 

@@ -4,11 +4,9 @@ from accelerometer_constants import *
 from typing import List, Tuple
 from cgeo.vectors import Vec3
 import numpy as np
-import cgeo.mutils
 import random
 import math
 import time
-
 
 _import_success = False
 
@@ -50,6 +48,7 @@ class BusDummy:
 
 try:
     import smbus
+
     _import_success = True
 
 # TODO add board version check
@@ -103,6 +102,8 @@ class Accelerometer:
     def __init__(self, address: int = 0x68):
         self.__i2c_bus = None
         self.__address: int = address  # mpu 6050
+        if not self.__init_bus():
+            raise RuntimeError("Accelerometer bus init failed...")
         self.__filters: List[List[RealTimeFilter]] = []
         self.__acceleration_range: int = -1  # 2
         self.__acceleration_range_raw: int = -1
@@ -110,26 +111,36 @@ class Accelerometer:
         self.__gyroscope_range_raw: int = -1
         self.__hardware_filter_range_raw: int = -1
         self.__use_filtering: bool = False
-
+        # Время: текущее измеренное, предыдущее измеренное, время начала движения
         self.__t_curr: float = 0.0
         self.__t_prev: float = 0.0
         self.__t_start: float = time.perf_counter()
-
-        self.__acceleration:  Vec3 = Vec3(0.0)
-        self.__velocity:      Vec3 = Vec3(0.0)
-        self.__position:      Vec3 = Vec3(0.0)
-        self.__velocity_prev: Vec3 = Vec3(0.0)
-        self.__acceleration_prev: Vec3 = Vec3(0.0)
-
+        # текущее значение ускорения
+        self.__acceleration: Vec3 = Vec3(0.0)
+        # текущее значение угловой скорости
         self.__velocity_ang: Vec3 = Vec3(0.0)
-        self.__angles:       Vec3 = Vec3(0.0)
-        self.__velocity_ang_prev:  Vec3 = Vec3(0.0)
+        # предыдущее значение ускорения
+        self.__prev_acceleration: Vec3 = Vec3(0.0)
+        # предыдущее значение угловой скорости
+        self.__prev_velocity_ang: Vec3 = Vec3(0.0)
+        # значение ускорения в начальный момент времени
+        self.__start_angles: Vec3 = Vec3(0.0)
+        # значение углов в начальный момент времени
+        self.__start_accel:  Vec3 = Vec3(0.0)
+        
+        # self.__velocity: Vec3 = Vec3(0.0)
+        # self.__position: Vec3 = Vec3(0.0)
+        # self.__velocity_prev: Vec3 = Vec3(0.0)
+        # self.__acceleration_prev: Vec3 = Vec3(0.0)
 
-        self.__gyro_calib:  Vec3 = Vec3(0.0)
-        self.__accel_calib: Vec3 = Vec3(0.0)
+        # self.__angles: Vec3 = Vec3(0.0)
+        # self.__velocity_ang_prev: Vec3 = Vec3(0.0)
 
-        if not self.__init_bus():
-            raise RuntimeError("Accelerometer init failed")
+        self._ang_velocity_calib: Vec3 = Vec3(0.0)
+        self._acceleration_calib: Vec3 = Vec3(0.0)
+        
+        self.__default_settings()
+
 
     def __str__(self):
         separator = ",\n"
@@ -183,9 +194,6 @@ class Accelerometer:
         except AttributeError as ex_:
             print(f"Accelerometer init error {ex_.args}")
             return False
-
-        self.__default_settings()
-
         return True
 
     def __default_settings(self) -> None:
@@ -204,7 +212,7 @@ class Accelerometer:
             return self.bus.read_byte_data(self.address, addr)
         # Accelerometer and Gyro value are 16-bit
         high = self.bus.read_byte_data(self.address, addr)
-        low  = self.bus.read_byte_data(self.address, addr + 1)
+        low = self.bus.read_byte_data(self.address, addr + 1)
         # concatenate higher and lower value
         value = (high << 8) | low
         # to get signed value from mpu6050
@@ -232,7 +240,7 @@ class Accelerometer:
         except Exception as _ex:
             print(f"acceleration data read error\n{_ex.args}")
             return False, (0.0, 0.0, 0.0)
-            
+
     def __read_gyro_data(self) -> Tuple[bool, Tuple[float, float, float]]:
         scl = 1.0 / self.gyroscope_scale
         try:
@@ -251,9 +259,18 @@ class Accelerometer:
         self.reset()
         t = time.perf_counter()
         accel = Vec3()
+        v_ang = Vec3()
+        
         n_accel_read = 0
         n_angel_read = 0
         while time.perf_counter() - t < compute_time:
+            filler_l = int((time.perf_counter() - t) / compute_time * 56)  # 56 - title chars count
+            filler_r = 55 - filler_l
+            print(f'|---------------Accelerometer calibration...------------|\n |'
+                  f'|-------------Please stand by and hold still...---------|\n |'
+                  f'{"":#>{str(filler_l)}}{"":.<{str(filler_r)}}|')
+            clear()
+
             flag, val = self.__read_acceleration_data()
             if flag:
                 accel.x += val[0]
@@ -262,29 +279,48 @@ class Accelerometer:
                 n_accel_read += 1
             flag, val = self.__read_gyro_data()
             if flag:
-                self.__gyro_calib.x += val[0]
-                self.__gyro_calib.y += val[1]
-                self.__gyro_calib.z += val[2]
+                v_ang.x += val[0]
+                v_ang.y += val[1]
+                v_ang.z += val[2]
                 n_angel_read += 1
 
-        self.__gyro_calib.x /= n_angel_read
-        self.__gyro_calib.y /= n_angel_read
-        self.__gyro_calib.z /= n_angel_read
-        self.__angles.x = self.__gyro_calib.x
-        self.__angles.y = self.__gyro_calib.y
-        self.__angles.z = self.__gyro_calib.z
+        self._ang_velocity_calib.x = v_ang.x / n_angel_read
+        self._ang_velocity_calib.y = v_ang.y / n_angel_read
+        self._ang_velocity_calib.z = v_ang.z / n_angel_read
+        # среднее значение угловой скорости в состоянии покоя - bias угловых скоростей
+        # self.__angles.x = self._ang_velocity_calib.x
+        # self.__angles.y = self._ang_velocity_calib.y
+        # self.__angles.z = self._ang_velocity_calib.z
+        # среднее значение ускорения в состоянии покоя в собственной системе координат акселерометра
         accel.x /= n_accel_read
         accel.y /= n_accel_read
         accel.z /= n_accel_read
+        # так как состояние в состоянии покоя ускорение совпадает с G, то можно построить базис,
+        # взяв вектор ускорения в качестве оси Y, а направление вперёд (oZ) можно получить, как
+        # с компаса, так и передать вручную
+        
+        self.__start_accel = accel
+        self.__acceleration = accel
+        self.__prev_acceleration = accel
 
         ey = accel.normalized()
         ex = Vec3.cross(ey, Vec3(0, 0, 1)) if forward is None else Vec3.cross(accel, forward)
         ez = Vec3.cross(ex, ey)
-
-        self.__angles_start = rot_m_to_euler_angles(Mat4(ex.x, ey.x, ez.x, 0.0,
+        # ex, ey, ez - образуют матрицу поворота из мировой системы координат в систему координат акселерометра
+        # матрица M = {ex, ey, ez} - эрмитова, следовательно обратная M^-1 = transpose(M)
+        # Рассчитаем углы в состоянии покоя ...
+        self.__start_angles = rot_m_to_euler_angles(Mat4(ex.x, ey.x, ez.x, 0.0,
                                                          ex.y, ey.y, ez.y, 0.0,
                                                          ex.z, ey.z, ez.z, 0.0,
-                                                         0.0, 0.0, 0.0, 1.0))
+                                                         0.0, 0.0, 0.0,    1.0))
+        #  углы в состоянии покоя - ИНВАРИАНТНЫ ОТНОСИТЕЛЬНО ТЕКУЩЕЙ СИСТЕМЫ КООРДИНАТ АКСЕЛЕРОМЕТРА
+        #  Преобразуем вектор ускорения из собственной системы координат акселерометра в мировую и определим разницу c G
+        self._acceleration_calib.x = -ex.x * accel.x + ex.y * accel.y + ex.z * accel.z
+        self._acceleration_calib.y = -ey.x * accel.x + ey.y * accel.y + ey.z * accel.z  # + GRAVITY_CONSTANT ???
+        self._acceleration_calib.z = -ez.x * accel.x + ez.y * accel.y + ez.z * accel.z
+        # КАЛИБРОВКА УСКОРЕНИЯ ЗАДАНА В МИРОВОЙ СИСТЕМЕ КООРДИНАТ!!! 
+        # ПРИ ПРИМЕНЕНИИ КАИБРОВОЧНЫХ ЗНАЧЕНИЙ НЕОБХОДИМ ПЕРЕХОД В ТЕКУЩУЮ СИСТЕМУ КООРДИНАТ АКСЕЛЕРОМЕТРА!!!
+        del os
 
         self.__accel_calib.x = -ex.x * accel.x + ex.y * accel.y + ex.z * accel.z
         self.__accel_calib.y = -ey.x * accel.x + ey.y * accel.y + ey.z * accel.z
@@ -447,31 +483,62 @@ class Accelerometer:
 
     @property
     def angles_velocity_calibration(self) -> Vec3:
-        return self.__gyro_calib
+        return self._ang_velocity_calib
 
     @property
     def acceleration_calibration(self) -> Vec3:
-        return self.__accel_calib
+        """
+        Задана в мировой системе координат
+        """
+        return self._acceleration_calib
+
+    @angles_velocity_calibration.setter
+    def angles_velocity_calibration(self, value: Vec3) -> None:
+        self._ang_velocity_calib = value
+
+    @acceleration_calibration.setter
+    def acceleration_calibration(self, value: Vec3) -> None:
+        """
+        Задана в мировой системе координат
+        """
+        self._acceleration_calib = value
 
     @property
-    def angles_velocity(self) -> Vec3:
+    def ang_velocity(self) -> Vec3:
         return self.__velocity_ang
 
     @property
-    def angles(self) -> Vec3:
-        return self.__angles
-
-    @property
     def acceleration(self) -> Vec3:
+        """
+        Задана в системе координат акселерометра
+        """
         return self.__acceleration
 
     @property
-    def velocity(self) -> Vec3:
-        return self.__velocity
+    def prev_ang_velocity(self) -> Vec3:
+        return self.__prev_velocity_ang
 
     @property
-    def position(self) -> Vec3:
-        return self.__position
+    def prev_acceleration(self) -> Vec3:
+        """
+        Задана в системе координат акселерометра
+        """
+        return self.__prev_acceleration
+
+    @property
+    def start_acceleration(self) -> Vec3:
+        """
+        Задана в системе координат акселерометра
+        """
+        return self.__start_angles
+    
+    @property
+    def start_ang_values(self) -> Vec3:
+        return self.__start_angles
+
+    # @property
+    # def position(self) -> Vec3:
+    #     return self.__position
 
     @property
     def delta_t(self) -> float:
@@ -498,6 +565,15 @@ class Accelerometer:
         for filter_list in self.__filters:
             for f in filter_list:
                 f.clean_up()
+        
+        self.__acceleration      = Vec3(0.0)
+        self.__velocity_ang      = Vec3(0.0)
+        self.__prev_acceleration = Vec3(0.0)
+        self.__prev_velocity_ang = Vec3(0.0)
+        self.__start_angles      = Vec3(0.0)
+        self.__start_accel       = Vec3(0.0)
+        self._ang_velocity_calib = Vec3(0.0)
+        self._acceleration_calib = Vec3(0.0)
 
         self.__acceleration  = Vec3(0.0)
         self.__velocity      = Vec3(0.0)
@@ -526,66 +602,76 @@ class Accelerometer:
               f"\"calibration_info\":\n"
               f"\t{{\n"
               f"\t\t\"ang_start\"   :{self.__angles_start},\n"
-              f"\t\t\"accel_calib\" :{self.__accel_calib},\n"
-              f"\t\t\"ang_calib\"   :{self.__gyro_calib}\n"
+              f"\t\t\"ang_start\"   :{self.start_ang_values},\n"
+              f"\t\t\"accel_calib\" :{self._acceleration_calib},\n"
+              f"\t\t\"ang_calib\"   :{self._ang_velocity_calib}\n"
               f"\t}}\n"
               f"}}")
 
     def angles_fast(self) -> Tuple[float, float, float]:
-        return math.pi + math.atan2(self.acceleration.z, self.acceleration.z),\
-               math.pi + math.atan2(self.acceleration.y, self.acceleration.z),\
+        return math.pi + math.atan2(self.acceleration.z, self.acceleration.z), \
+               math.pi + math.atan2(self.acceleration.y, self.acceleration.z), \
                math.pi + math.atan2(self.acceleration.y, self.acceleration.x)
 
-    def read_accel_measurements(self, kx: float = 0.95, ky: float = 1.0, kz: float = 0.95) -> bool:
+    def read_accel_measurements(self) -> bool:
+        """
+        Пишет данные без учёта калибровочных параметров!!!
+        """
         dt: float = self.delta_t * 0.5
         self.__t_prev = self.__t_curr
         self.__t_curr = time.perf_counter() - self.__t_start
         # print(dt)
-        _2pi: float = math.pi * 2.0
+        # _2pi: float = math.pi * 2.0
 
         flag1, val = self.__read_acceleration_data()
 
         if flag1:
-            self.__acceleration.x = val[0] - self.acceleration_calibration.x
-            self.__acceleration.y = val[1] - self.acceleration_calibration.y
-            self.__acceleration.z = val[2] - self.acceleration_calibration.z
-            
-            self.__velocity.x += (self.__acceleration_prev.x + self.__acceleration.x ) * dt 
-            self.__velocity.y += (self.__acceleration_prev.y + self.__acceleration.y ) * dt 
-            self.__velocity.z += (self.__acceleration_prev.z + self.__acceleration.z ) * dt 
-            
-            self.__acceleration_prev.x = self.__acceleration.x
-            self.__acceleration_prev.y = self.__acceleration.y
-            self.__acceleration_prev.z = self.__acceleration.z
-            
-            self.__position.x += (self.__velocity_prev.x + self.__velocity.x) * dt
-            self.__position.y += (self.__velocity_prev.y + self.__velocity.y) * dt
-            self.__position.z += (self.__velocity_prev.z + self.__velocity.z) * dt
-            
-            self.__velocity_prev.x = self.__velocity.x
-            self.__velocity_prev.y = self.__velocity.y
-            self.__velocity_prev.z = self.__velocity.z
+            self.__prev_acceleration.x = self.__acceleration.x
+            self.__prev_acceleration.y = self.__acceleration.y
+            self.__prev_acceleration.z = self.__acceleration.z
+            self.__acceleration.x = val[0] # - self.acceleration_calibration.x
+            self.__acceleration.y = val[1] # - self.acceleration_calibration.y
+            self.__acceleration.z = val[2] # - self.acceleration_calibration.z
+
+            # self.__velocity.x += (self.__acceleration_prev.x + self.__acceleration.x) * dt
+            # self.__velocity.y += (self.__acceleration_prev.y + self.__acceleration.y) * dt
+            # self.__velocity.z += (self.__acceleration_prev.z + self.__acceleration.z) * dt
+            # 
+            # self.__acceleration_prev.x = self.__acceleration.x
+            # self.__acceleration_prev.y = self.__acceleration.y
+            # self.__acceleration_prev.z = self.__acceleration.z
+            # 
+            # self.__position.x += (self.__velocity_prev.x + self.__velocity.x) * dt
+            # self.__position.y += (self.__velocity_prev.y + self.__velocity.y) * dt
+            # self.__position.z += (self.__velocity_prev.z + self.__velocity.z) * dt
+            # 
+            # self.__velocity_prev.x = self.__velocity.x
+            # self.__velocity_prev.y = self.__velocity.y
+            # self.__velocity_prev.z = self.__velocity.z
 
         flag2, val = self.__read_gyro_data()
         if flag2:
-            self.__velocity_ang.x = val[0] - self.angles_velocity_calibration.x
-            self.__velocity_ang.y = val[1] - self.angles_velocity_calibration.y
-            self.__velocity_ang.z = val[2] - self.angles_velocity_calibration.z
-    
-            self.__angles.x += (self.__velocity_ang_prev.x + self.__velocity_ang.x) * dt
-            self.__angles.y += (self.__velocity_ang_prev.y + self.__velocity_ang.y) * dt
-            self.__angles.z += (self.__velocity_ang_prev.z + self.__velocity_ang.z) * dt
-            
-            self.__velocity_ang_prev.x = self.__velocity_ang.x
-            self.__velocity_ang_prev.y = self.__velocity_ang.y
-            self.__velocity_ang_prev.z = self.__velocity_ang.z
-            
-            ax, ay, az = self.angles_fast()
-            kx = cgeo.mutils.clamp(kx, 0.0, 1.0)
-            ky = cgeo.mutils.clamp(ky, 0.0, 1.0)
-            kz = cgeo.mutils.clamp(kz, 0.0, 1.0)
-            self.__angles.x = (self.__angles.x * kx + ax * (1.0 - kx))
-            self.__angles.y = (self.__angles.y * ky + ay * (1.0 - ky))
-            self.__angles.z = (self.__angles.z * kz + az * (1.0 - kz))
+            self.__prev_velocity_ang.x = self.__velocity_ang.x
+            self.__prev_velocity_ang.y = self.__velocity_ang.y
+            self.__prev_velocity_ang.z = self.__velocity_ang.z
+
+            self.__velocity_ang.x = self.angles_velocity_calibration.x
+            self.__velocity_ang.y = self.angles_velocity_calibration.y
+            self.__velocity_ang.z = self.angles_velocity_calibration.z
+            # self.__angles.x += (self.__velocity_ang_prev.x + self.__velocity_ang.x) * dt
+            # self.__angles.y += (self.__velocity_ang_prev.y + self.__velocity_ang.y) * dt
+            # self.__angles.z += (self.__velocity_ang_prev.z + self.__velocity_ang.z) * dt
+            # 
+            # self.__velocity_ang_prev.x = self.__velocity_ang.x
+            # self.__velocity_ang_prev.y = self.__velocity_ang.y
+            # self.__velocity_ang_prev.z = self.__velocity_ang.z
+            # 
+            # ax, ay, az = self.angles_fast()
+            # kx = cgeo.mutils.clamp(kx, 0.0, 1.0)
+            # ky = cgeo.mutils.clamp(ky, 0.0, 1.0)
+            # kz = cgeo.mutils.clamp(kz, 0.0, 1.0)
+            # self.__angles.x = (self.__angles.x * kx + ax * (1.0 - kx))
+            # self.__angles.y = (self.__angles.y * ky + ay * (1.0 - ky))
+            # self.__angles.z = (self.__angles.z * kz + az * (1.0 - kz))
 
         return flag2 or flag1

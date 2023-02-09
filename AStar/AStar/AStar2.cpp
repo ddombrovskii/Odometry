@@ -1,19 +1,31 @@
-#include "AStar.h"
+#include "AStar2.h"
 #include <cassert>
 
-Point AStar::neighboursPoints[8] =
+Point2 AStar2::_neighboursPoints[8] =
 {
-    Point(-1, -1),
-    Point( 1, -1),
-    Point(-1,  1),
-    Point( 1,  1),
-    Point( 0, -1),
-    Point(-1,  0),
-    Point( 0,  1),
-    Point( 1,  0) 
+    Point2(-1, -1),
+    Point2( 1, -1),
+    Point2(-1,  1),
+    Point2( 1,  1),
+    Point2( 0, -1),
+    Point2(-1,  0),
+    Point2( 0,  1),
+    Point2( 1,  0) 
 };
 
-bool AStar::is_valid(Point& p)const
+float AStar2::_neighboursCost[8] =
+{
+    DIAGONAL_WEIGHT,
+    DIAGONAL_WEIGHT,
+    DIAGONAL_WEIGHT,
+    DIAGONAL_WEIGHT,
+    LINEAR_WEIGHT,
+    LINEAR_WEIGHT,
+    LINEAR_WEIGHT,
+    LINEAR_WEIGHT
+};
+
+bool AStar2::is_valid(Point2& p)const
 {
     if (p.row < 0) return false;
     if (p.col < 0) return false;
@@ -22,7 +34,7 @@ bool AStar::is_valid(Point& p)const
     return true;
 }
 
-bool AStar::point_exists(const Point& point, const float cost, std::list<Node>& _open, std::list<Node>& _closed)const
+bool AStar2::point_exists(const Point2& point, const float cost, std::list<Node>& _open, std::list<Node>& _closed)const
 {
     std::list<Node>::iterator _iterator = std::find(_open.begin(), _open.end(), point);
 
@@ -35,17 +47,17 @@ bool AStar::point_exists(const Point& point, const float cost, std::list<Node>& 
     return false;
 }
 
-bool AStar::fill_open(Node& node, std::list<Node>& _open, std::list<Node>& _closed)
+bool AStar2::fill_open(Node& node, std::list<Node>& _open, std::list<Node>& _closed)
 {
     if (node.pos == _end)return true;
 
     float newCost, stepWeight, distance;
 
-    Point neighbour;
+    Point2 neighbour;
 
     for (int index = 0; index < 8; index++)
     {
-        neighbour = node.pos + neighboursPoints[index];
+        neighbour = node.pos + _neighboursPoints[index];
 
         if (!is_valid(neighbour))continue;
 
@@ -55,7 +67,7 @@ bool AStar::fill_open(Node& node, std::list<Node>& _open, std::list<Node>& _clos
 
         if ((stepWeight = weights()[neighbour]) >= MAX_WEIGHT)continue;
 
-        newCost = ((index < 4) ? DIAGONAL_WEIGHT * stepWeight : LINEAR_WEIGHT * stepWeight) + node.cost;
+        newCost = _neighboursCost[index] * stepWeight + node.cost;
 
         distance = (_end.manhattan_distance(neighbour));
 
@@ -72,7 +84,7 @@ bool AStar::fill_open(Node& node, std::list<Node>& _open, std::list<Node>& _clos
     return false;
 }
 
-void AStar::build_path(std::list<Node>& closed)
+void AStar2::build_path(std::list<Node>& closed)
 {
     _path.push_front(_end); // <-нужна ли эта точка
     
@@ -80,7 +92,7 @@ void AStar::build_path(std::list<Node>& closed)
     
     _path.push_front(closed.back().pos);
     
-    Point parent = closed.back().parent;
+    Point2 parent = closed.back().parent;
 
    for (std::list<Node>::reverse_iterator i = closed.rbegin(); i != closed.rend(); i++)
     {   
@@ -95,25 +107,25 @@ void AStar::build_path(std::list<Node>& closed)
     _path.push_front(_start); // <-нужна ли эта точка
 }
 
-AStar::AStar(const int rows, const int cols, const float* map)
+AStar2::AStar2(const int& rows, const int& cols, const float* map)
 {
-    _map       = new WeightMap(rows, cols, map);
+    _map       = new WeightMap2(rows, cols, map);
     _path_cost = 1e12f;
-    _start     = Point::MinusOne;
-    _end       = Point::MinusOne;
+    _start     = Point2::MinusOne;
+    _end       = Point2::MinusOne;
 }
 
-const Point& AStar::end()const
+const Point2& AStar2::end()const
 {
     return _end;
 }
 
-const Point& AStar::start()const
+const Point2& AStar2::start()const
 {
     return _start;
 }
 
-void AStar::set_end(const Point& pt)
+void AStar2::set_end(const Point2& pt)
 {   
     if (_end == pt)return;
     _end = pt;
@@ -123,7 +135,7 @@ void AStar::set_end(const Point& pt)
     _path.clear();
 }
 
-void AStar::set_start(const Point& pt) 
+void AStar2::set_start(const Point2& pt) 
 {
     if (_start == pt)return;
     _start = pt;
@@ -133,17 +145,17 @@ void AStar::set_start(const Point& pt)
     _path.clear();
 }
 
-AStar::~AStar()
+AStar2::~AStar2()
 {
    if (_map != nullptr) delete _map;
 }
 
-const WeightMap& AStar::weights()const
+const WeightMap2& AStar2::weights()const
 {
     return *_map;
 }
 
-bool AStar::searh_path()
+bool AStar2::searh_path()
 {
     if (weights()[start()] >= MAX_WEIGHT) return false;
     if (weights()[end()]   >= MAX_WEIGHT) return false;
@@ -154,7 +166,7 @@ bool AStar::searh_path()
     Node node;
     node.cost   = 1.0f;
     node.dist   = (float)end().manhattan_distance(start());
-    node.parent = Point::MinusOne;
+    node.parent = Point2::MinusOne;
     node.pos    = start();
     
     _open.push_back(node);
@@ -186,36 +198,37 @@ bool AStar::searh_path()
     return success;
 }
 
-bool AStar::search(const Point& s, const Point& e)
+bool AStar2::search(const Point2& s, const Point2& e)
 {
     set_end  (e);
     set_start(s);
     return searh_path();
 }
 
-bool AStar::search() 
+bool AStar2::search() 
 {   
-    if (start() == Point::MinusOne) set_start({ 0,0 });
-    if (end()   == Point::MinusOne) set_end({ weights().rows() - 1, weights().cols() - 1 });
+    if (start() == Point2::MinusOne) set_start({ 0,0 });
+    if (end()   == Point2::MinusOne) set_end({ weights().rows() - 1, weights().cols() - 1 });
     return searh_path();
 }
 
-const std::list<Point>& AStar::path()const 
+const std::list<Point2>& AStar2::path()const 
 {
     return _path;
 }
 
-float AStar::path_cost()const
+float AStar2::path_cost()const
 {
     return _path_cost;
 }
 
-std::ostream& operator <<(std::ostream& stream, const AStar& a_star)
+std::ostream& operator <<(std::ostream& stream, const AStar2& a_star)
 {
 #ifdef _DEBUG
     /// <summary>
     /// Shows map and path if exists
     /// </summary>
+
     std::string _str_map;
     
     char* char_map = (char*)malloc(a_star.weights().ncells() * sizeof(char) + 1);
@@ -240,9 +253,9 @@ std::ostream& operator <<(std::ostream& stream, const AStar& a_star)
     std::cout << "\"map\"       :\n"<< a_star.weights() << ",\n";
     std::cout << "\"path_cost\" : " << a_star.path_cost() << ",\n";
     std::cout << "\"path\"      : [\n";
-    const std::list<Point>& path = a_star.path();
+    const std::list<Point2>& path = a_star.path();
     int index = 1;
-    for (const Point& p : path)
+    for (const Point2& p : path)
     {
         std::cout << p << (index != path.size() ? ",\n" : "");
         index++;

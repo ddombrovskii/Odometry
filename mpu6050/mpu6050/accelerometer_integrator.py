@@ -1,11 +1,9 @@
-import math
-from typing import Tuple
-
-import numpy as np
-from matplotlib import pyplot as plt
-
-from mpu6050.accelerometer_recording import read_record, accelerations, integrate_accelerations, integrate_velocities, \
+from mpu6050.accelerometer_recording import read_accel_log, accelerations, integrate_accelerations, integrate_velocities, \
     ang_velocities, integrate_angles, time_values
+from matplotlib import pyplot as plt
+from typing import Tuple
+import numpy as np
+import math
 
 
 # TODO remove
@@ -16,7 +14,7 @@ def comp_filter(path: str, k: float):
         return math.pi + math.atan2(_az, _az),\
                math.pi + math.atan2(_ay, _az),\
                math.pi + math.atan2(_ay, _ax)
-    _log = read_record(path)
+    _log = read_accel_log(path)
     ax, ay, az = accelerations(_log)
     ang_vx, ang_vy, ang_vz = ang_velocities(_log)
     t_vals = []

@@ -57,12 +57,12 @@ extern "C"
 
 	DLL_EXPORT Path2*   path_2_new(const int n_points);
 	DLL_EXPORT void     path_2_del(Path2* path);
-	DLL_EXPORT Path2*  find_path_2(const Map2* map, const Pt2* start, const  Pt2* end);
+	DLL_EXPORT Path2*  find_path_2(const Map2* map, const Pt2* start, const  Pt2* end, const int& heuristics);
 
 
 	DLL_EXPORT Path3*   path_3_new(const int n_points);
 	DLL_EXPORT void     path_3_del(Path3* path);
-	DLL_EXPORT Path3*  find_path_3(const Map3* map, const Pt3* start, const Pt3* end);
+	DLL_EXPORT Path3*  find_path_3(const Map3* map, const Pt3* start, const Pt3* end, const int& heuristics);
 	DLL_EXPORT void     print_map2(const Map2* map);
 #ifdef __cplusplus
 }

@@ -9,6 +9,13 @@ Point2::Point2(int _row, int _col)
     col = _col;
 }
 
+Point2::Point2(const Point2& original)
+{
+    row = original.row;
+    col = original.col;
+}
+
+
 Point2& Point2::operator = (const Point2& point)
 {
     row = point.row;

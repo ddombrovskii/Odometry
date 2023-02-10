@@ -12,6 +12,8 @@ public:
 
     Point2(int _row = 0, int _col = 0);
 
+    Point2(const Point2& original);
+
     Point2& operator = (const Point2& point);
 
     bool operator ==(const Point2& point)const;

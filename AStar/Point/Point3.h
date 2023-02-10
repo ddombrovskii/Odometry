@@ -12,6 +12,8 @@ public:
 
     Point3(int _row = 0, int _col = 0, int layer = 0);
 
+    Point3(const Point3& original);
+
     Point3& operator = (const Point3& point);
 
     bool operator ==(const Point3& point)const;

@@ -150,6 +150,7 @@
     <ClInclude Include="AStar\AStar2.h" />
     <ClInclude Include="AStar\AStar3.h" />
     <ClInclude Include="framework.h" />
+    <ClInclude Include="Heuristics.h" />
     <ClInclude Include="Map\WeightMap2.h" />
     <ClInclude Include="Map\WeightMap3.h" />
     <ClInclude Include="PathFinder.h" />
@@ -161,6 +162,7 @@
     <ClCompile Include="AStar\AStar2.cpp" />
     <ClCompile Include="AStar\AStar3.cpp" />
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="Heuristics.cpp" />
     <ClCompile Include="Map\WeightMap3.cpp" />
     <ClCompile Include="PathFinder.cpp" />
     <ClCompile Include="Map\WeightMap2.cpp" />

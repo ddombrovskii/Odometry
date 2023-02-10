@@ -51,6 +51,9 @@
     <ClInclude Include="AStar\AStar3.h">
       <Filter>AStar</Filter>
     </ClInclude>
+    <ClInclude Include="Heuristics.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="PathFinder.cpp">
@@ -79,6 +82,9 @@
     </ClCompile>
     <ClCompile Include="AStar\AStar3.cpp">
       <Filter>AStar</Filter>
+    </ClCompile>
+    <ClCompile Include="Heuristics.cpp">
+      <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

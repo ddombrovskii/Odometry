@@ -79,28 +79,30 @@ DLL_EXPORT void     path_2_del(Path2* path)
 	free(path);
 }
 
-DLL_EXPORT Path2*  find_path_2(const Map2* map, const Pt2* start, const  Pt2* end)
+DLL_EXPORT Path2*  find_path_2(const Map2* map, const Pt2* start, const  Pt2* end, const int& heuristics)
 {
 	AStar2 path_finder(map->rows, map->cols, map->weights);
 	
-	if (!path_finder.search(Point2(start->row, start->col), Point2(end->row, end->col)))
+	Path2d path = path_finder.search(Point2(start->row, start->col), Point2(end->row, end->col), heuristics);
+
+	if (path == nullptr)
 	{
 		return path_2_new(0);
 	}
 	
-	Path2* path = path_2_new(path_finder.path().size());
+	Path2* out_path = path_2_new(path->size());
 	
-	path->cost = path_finder.path_cost();
+	/// path->cost = path->back().;
 	
 	int index = 0;
 
-	for (const auto& pt : path_finder.path())
+	for (const auto& pt : *path)
 	{
-		path->path_points[index] = { pt.row, pt.col };
+		out_path->path_points[index] = { pt.row, pt.col };
 		index++;
 	}
 
-	return path;
+	return out_path;
 }
 
 DLL_EXPORT Path3*   path_3_new(const int n_points)
@@ -121,28 +123,30 @@ DLL_EXPORT void     path_3_del(Path3* path)
 	free(path);
 }
 
-DLL_EXPORT Path3*  find_path_3(const Map3* map, const Pt3* start, const  Pt3* end)
+DLL_EXPORT Path3*  find_path_3(const Map3* map, const Pt3* start, const  Pt3* end, const int& heuristics)
 {
 	AStar3 path_finder(map->rows, map->cols, map->layers, map->weights);
 
-	if (!path_finder.search(Point3(start->row, start->col, start->layer), Point3(end->row, end->col, end->layer)))
+	Path3d path = path_finder.search(Point3(start->row, start->col, start->layer), Point3(end->row, end->col, end->layer), heuristics);
+
+	if (path == nullptr)
 	{
 		return path_3_new(0);
 	}
 
-	Path3* path = path_3_new(path_finder.path().size());
+	Path3* new_path = path_3_new(path->size());
 
-	path->cost = path_finder.path_cost();
+	// path->cost = path_finder.path_cost();
 	
 	int index = 0;
 
-	for (const auto& pt : path_finder.path())
+	for (const auto& pt : *path)
 	{
-		path->path_points[index] = { pt.row, pt.col };
+		new_path->path_points[index] = { pt.row, pt.col, pt.layer };
 		index++;
 	}
 
-	return path;
+	return new_path;
 }
 
 
@@ -239,8 +243,8 @@ int main(int argc, char* argv[])
 
 	delete[] raw_map;
 	delete[] map3;
-	a_star2.search(); // ({ 0, 0 }, { 14, 26 });
-	a_star3.search();
+	// a_star2.search(); // ({ 0, 0 }, { 14, 26 });
+	// a_star3.search();
 	/*
 	
 	for (const auto& p : a_star.path())
@@ -249,12 +253,12 @@ int main(int argc, char* argv[])
 		std::cout << "\n";
 	}
 	*/
-	std::cout << a_star2.path_cost()<<"\n";
+	/// std::cout << a_star2.path_cost()<<"\n";
 
     std::cout << a_star2;
 	std::cout << "\n";
 
-	std::cout << a_star3.path_cost() << "\n";
+	//std::cout << a_star3.path_cost() << "\n";
 
 	std::cout << a_star3;
 	std::cout << "\n";

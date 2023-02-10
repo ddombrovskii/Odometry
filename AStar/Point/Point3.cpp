@@ -10,6 +10,13 @@ Point3::Point3(int _row, int _col, int _layer)
 	layer = _layer;
 }
 
+Point3::Point3(const Point3& original)
+{
+    row   = original.row;
+    col   = original.col;
+    layer = original.layer;
+}
+
 Point3& Point3::operator = (const Point3& point)
 {
     row   = point.row;
@@ -38,7 +45,7 @@ Point3 Point3::operator-(const Point3& o)const
 
 int Point3::manhattan_distance(const Point3& o)const 
 {
-    return (abs(o.row - row) + abs(o.col - col) + abs(o.layer - layer));
+    return abs(o.row - row) + abs(o.col - col) + abs(o.layer - layer);
 }
 
 int Point3::magnitude_sqr()const

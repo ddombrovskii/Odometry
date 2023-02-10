@@ -1,5 +1,4 @@
-from mpu6050.accelerometer_recording import read_accel_log, accelerations, integrate_accelerations, integrate_velocities, \
-    ang_velocities, integrate_angles, time_values
+from accelerometer_recording import read_accel_log, ang_velocities, time_values, accelerations, read_imu_log
 from matplotlib import pyplot as plt
 from typing import Tuple
 import numpy as np
@@ -9,12 +8,12 @@ import math
 # TODO remove
 
 
-def comp_filter(path: str, k: float):
+def comp_filter(path: str, k: float, t0: float, t1: float):
     def angles_fast(_ax, _ay, _az) -> Tuple[float, float, float]:
         return math.pi + math.atan2(_az, _az),\
                math.pi + math.atan2(_ay, _az),\
                math.pi + math.atan2(_ay, _ax)
-    _log = read_accel_log(path)
+    _log = read_imu_log(path)
     ax, ay, az = accelerations(_log)
     ang_vx, ang_vy, ang_vz = ang_velocities(_log)
     t_vals = []
@@ -48,43 +47,46 @@ def comp_filter(path: str, k: float):
         f_ang_y.append((f_ang_y[-1] + ang_vy[index] * dt) * k + _ay * (1.0 - k))if len(f_ang_y) != 0 else f_ang_y.append(0.0)
         f_ang_z.append((f_ang_z[-1] + ang_vz[index] * dt) * k + _az * (1.0 - k))if len(f_ang_z) != 0 else f_ang_z.append(0.0)
 
-    _figure, _ax = plt.subplots(3, 1)
-    _ax[0].plot(t_vals, a_ang_x, 'r')
-    #_ax[0].plot(t_vals, r_ang_x, 'g')
-    #_ax[0].plot(t_vals, f_ang_x, 'b')
-    _ax[0].legend(['accel angle', 'integral angle', 'comp angle'], loc='upper left')
-    _ax[0].set_xlabel("$t,[sec]$")
-    _ax[0].set_ylabel("$angle,[{rad}]$")
-    _ax[0].set_title("x - angle")
+    #_figure, _ax = plt.subplots(3, 1)
+    #_ax[0].plot(t_vals, a_ang_x, 'r')
+    ##_ax[0].plot(t_vals, r_ang_x, 'g')
+    ##_ax[0].plot(t_vals, f_ang_x, 'b')
+    #_ax[0].legend(['accel angle', 'integral angle', 'comp angle'], loc='upper left')
+    #_ax[0].set_xlabel("$t,[sec]$")
+    #_ax[0].set_ylabel("$ax,[{m}/{sec^2}]$")
+    #_ax[0].set_title("x - acceleration")
     ##########################
-    _ax[1].plot(t_vals, a_ang_y, 'r')
+    #_ax[1].plot(t_vals, a_ang_y, 'r')
     #_ax[1].plot(t_vals, r_ang_y, 'g')
     #_ax[1].plot(t_vals, f_ang_y, 'b')
-    _ax[1].legend(['accel angle', 'integral angle', 'comp angle'], loc='upper left')
-    _ax[1].set_xlabel("$t,[sec]$")
-    _ax[1].set_ylabel("$angle,[{rad}]$")
-    _ax[1].set_title("y - angle")
+    #_ax[1].legend(['accel angle', 'integral angle', 'comp angle'], loc='upper left')
+    #_ax[1].set_xlabel("$t,[sec]$")
+    #_ax[1].set_ylabel("$ay,[{m}/{sec^2}]$")
+    #_ax[1].set_title("y - acceleration")
     ##########################
-    _ax[2].plot(t_vals, a_ang_z, 'r')
+    #_ax[2].plot(t_vals, a_ang_z, 'r')
     #_ax[2].plot(t_vals, r_ang_z, 'g')
     #_ax[2].plot(t_vals, f_ang_z, 'b')
-    _ax[2].legend(['accel angle', 'integral angle', 'comp angle'], loc='upper left')
-    _ax[2].set_xlabel("$t,[sec]$")
-    _ax[2].set_ylabel("$angle,[{rad}]$")
-    _ax[2].set_title("z - angle")
+    #_ax[2].legend(['accel angle', 'integral angle', 'comp angle'], loc='upper left')
+    #_ax[2].set_xlabel("$t,[sec]$")
+    #_ax[2].set_ylabel("$az,[{m}/{sec^2}]$")
+    #_ax[2].set_title("z - acceleration")
     ##########################
-    plt.show()
+    # plt.show()
     sx = [0.0]
     sz = [0.0]
     t = 0
     dt = [v.dtime for v in _log.way_points]
     for index in range(len(dt)):
-
-        sx.append(sx[-1] + ax[index] * math.sin(r_ang_y[index]/60) * dt[index])
-        sz.append(sz[-1] - ax[index] * math.cos(r_ang_y[index]/60) * dt[index])
-        t +=dt[index]
-        if t> 100:
+        if t > t1:
             break
+        t +=dt[index]
+        if t < t0:
+            continue
+        sx.append(sx[-1] + ax[index] * math.sin(r_ang_y[index] * 1.0) * dt[index])
+        sz.append(sz[-1] - ax[index] * math.cos(r_ang_y[index] * 1.0) * dt[index])
+
+
     fig, axs = plt.subplots(1)
     axs.plot(sx, sz)
     axs.set_aspect('equal', 'box')
@@ -102,8 +104,11 @@ def comp_filter(path: str, k: float):
 
 if __name__ == "__main__":
 
-    comp_filter('accelerometer_records/building_way.json', 0.9)
-   # _log = read_record('building_way.json')
+    comp_filter('building_walk_drunk.json', 1.0, 35, 140)
+    comp_filter('building_walk_straight.json', 1.0, 10, 90)
+    comp_filter('building_way_2.json', 1.0, 15, 120)
+    comp_filter('building_way_3.json', 1.0, 15, 130)
+    # _log = read_record('building_way.json')
    # ax, ay, az = accelerations(_log)
    # plt.plot(ax, 'r')
    # plt.plot(ay, 'g')

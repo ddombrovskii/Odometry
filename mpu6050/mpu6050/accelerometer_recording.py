@@ -36,8 +36,8 @@ class WayPoint:
 class AccelMeasurement:
     def __init__(self, _t: float, d_t: float, accel: Vec3, ang_vel: Vec3):
         """
-		raw accelerometer read data
-		"""
+        raw accelerometer read data
+        """
         self.time: float           = _t
         self.dtime: float          = d_t
         self.acceleration: Vec3    = accel
@@ -223,6 +223,20 @@ def read_imu_log(record_path: str) -> IMULog:
             way_points.append(WayPoint(t, dt, accel, velocity, position, ang_vel, angle))
 
         return IMULog(device_name, log_time_start, way_points)
+
+
+def accelerations(log: AccelerometerLog, start_time: float = 0.0) -> Tuple[List[float], List[float], List[float]]:
+    t0 = log.way_points[0].time
+    return [v.acceleration.x for v in log.way_points if v.time -  t0 >= start_time], \
+           [v.acceleration.y for v in log.way_points if v.time -  t0 >= start_time], \
+           [v.acceleration.z for v in log.way_points if v.time -  t0 >= start_time]
+
+
+def ang_velocities(log: AccelerometerLog, start_time: float = 0.0) -> Tuple[List[float], List[float], List[float]]:
+    t0 = log.way_points[0].time
+    return [v.angles_velocity.x for v in log.way_points if v.time -  t0 >= start_time], \
+           [v.angles_velocity.y for v in log.way_points if v.time -  t0 >= start_time], \
+           [v.angles_velocity.z for v in log.way_points if v.time -  t0 >= start_time]
 
 
 def imu_accelerations(log: IMULog, start_time: float = 0.0) -> Tuple[List[float], List[float], List[float]]:

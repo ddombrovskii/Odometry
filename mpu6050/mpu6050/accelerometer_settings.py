@@ -3,9 +3,13 @@ from cgeo.filtering import RealTimeFilter
 from accelerometer import Accelerometer
 from cgeo import Vec3
 import json
-
+import os.path
 
 def load_accelerometer_settings(acc: Accelerometer, settings_file: str) -> bool:
+    
+    if not os.path.exists(settings_file):
+        return False
+        
     json_file = None
     with open(settings_file, "rt") as output_file:
         json_file = json.load(output_file)

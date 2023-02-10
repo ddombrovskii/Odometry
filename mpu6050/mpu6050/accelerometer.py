@@ -110,7 +110,7 @@ class Accelerometer:
         self._gyroscope_range: int = -1  # 250
         self._gyroscope_range_raw: int = -1
         self._hardware_filter_range_raw: int = -1
-        self._use_filtering: bool = False
+        self._use_filtering: bool = True
         # Время: текущее измеренное, предыдущее измеренное, время начала движения
         self._t_curr: float = 0.0
         self._t_prev: float = 0.0
@@ -231,7 +231,7 @@ class Accelerometer:
             return False, (0.0, 0.0, 0.0)
 
     def __read_gyro_data(self) -> Tuple[bool, Tuple[float, float, float]]:
-        scl = 1.0 / self.gyroscope_scale
+        scl = 1.0 / self.gyroscope_scale / 180.0 * math.pi
         try:
             if self._use_filtering:
                 return True, (self.__filter_value(float(self.__read_bus(GYRO_X_OUT_H)) * scl, FILTER_GX),
@@ -243,8 +243,22 @@ class Accelerometer:
         except Exception as _ex:
             print(f"gyroscope data read error\n{_ex.args}")
             return False, (0.0, 0.0, 0.0)
-
-    def __compute_start_params(self, compute_time: float = 10.0, forward: Vec3 = None):
+            
+    def compute_static_orientation(self, forward: Vec3 = None)->Tuple[float, float, float]:
+        accel = self._acceleration
+        ey = accel.normalized()
+        ex = Vec3.cross(ey, Vec3(0, 0, 1)) if forward is None else Vec3.cross(accel, forward)
+        ez = Vec3.cross(ex, ey)
+        # ex, ey, ez - образуют матрицу поворота из мировой системы координат в систему координат акселерометра
+        # матрица M = {ex, ey, ez} - эрмитова, следовательно обратная M^-1 = transpose(M)
+        # Рассчитаем углы в состоянии покоя ...
+        self._start_angles = rot_m_to_euler_angles(Mat4(ex.x, ey.x, ez.x, 0.0,
+                                                        ex.y, ey.y, ez.y, 0.0,
+                                                        ex.z, ey.z, ez.z, 0.0,
+                                                        0.0, 0.0, 0.0,    1.0))
+    
+    
+    def __compute_start_params(self, compute_time: float = 10.0, forward: Vec3 = None, start_up_time: float = 5.0):
         import os
 
         def clear():
@@ -260,13 +274,18 @@ class Accelerometer:
         
         n_accel_read = 0
         n_angel_read = 0
-        while time.perf_counter() - t < compute_time:
-            filler_l = int((time.perf_counter() - t) / compute_time * 56)  # 56 - title chars count
+        t_total = start_up_time + compute_time
+        while time.perf_counter() - t < t_total:
+            filler_l = int((time.perf_counter() - t) / t_total * 56)  # 56 - title chars count
             filler_r = 55 - filler_l
             print(f'|---------------Accelerometer calibration...------------|\n'
                   f'|-------------Please stand by and hold still...---------|\n'
                   f'|{"":#>{str(filler_l)}}{"":.<{str(filler_r)}}|')
             clear()
+            if time.perf_counter() - t < start_up_time:
+                self.__read_acceleration_data()
+                self.__read_gyro_data()
+                continue
 
             flag, val = self.__read_acceleration_data()
             if flag:
@@ -300,6 +319,7 @@ class Accelerometer:
         self._acceleration = accel
         self._prev_acceleration = accel
 
+        accel = self._acceleration
         ey = accel.normalized()
         ex = Vec3.cross(ey, Vec3(0, 0, 1)) if forward is None else Vec3.cross(accel, forward)
         ez = Vec3.cross(ex, ey)
@@ -310,11 +330,12 @@ class Accelerometer:
                                                         ex.y, ey.y, ez.y, 0.0,
                                                         ex.z, ey.z, ez.z, 0.0,
                                                         0.0, 0.0, 0.0,    1.0))
+
         #  углы в состоянии покоя - ИНВАРИАНТНЫ ОТНОСИТЕЛЬНО ТЕКУЩЕЙ СИСТЕМЫ КООРДИНАТ АКСЕЛЕРОМЕТРА
         #  Преобразуем вектор ускорения из собственной системы координат акселерометра в мировую и определим разницу c G
-        self._acceleration_calib.x = -ex.x * accel.x + ex.y * accel.y + ex.z * accel.z
-        self._acceleration_calib.y = -ey.x * accel.x + ey.y * accel.y + ey.z * accel.z  # + GRAVITY_CONSTANT ???
-        self._acceleration_calib.z = -ez.x * accel.x + ez.y * accel.y + ez.z * accel.z
+        self._acceleration_calib.x = ex.x * accel.x + ex.y * accel.y + ex.z * accel.z
+        self._acceleration_calib.y = ey.x * accel.x + ey.y * accel.y + ey.z * accel.z  # + GRAVITY_CONSTANT ???
+        self._acceleration_calib.z = ez.x * accel.x + ez.y * accel.y + ez.z * accel.z
         # КАЛИБРОВКА УСКОРЕНИЯ ЗАДАНА В МИРОВОЙ СИСТЕМЕ КООРДИНАТ!!! 
         # ПРИ ПРИМЕНЕНИИ КАИБРОВОЧНЫХ ЗНАЧЕНИЙ НЕОБХОДИМ ПЕРЕХОД В ТЕКУЩУЮ СИСТЕМУ КООРДИНАТ АКСЕЛЕРОМЕТРА!!!
         del os

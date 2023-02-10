@@ -1,17 +1,12 @@
-import platform
-from ctypes import CDLL, Structure, c_int, c_float, POINTER, Array
-from typing import Any, List
-# from cv2 import
-import numpy as np
-from PIL import Image, ImageOps  # ImageDraw
+from ctypes import CDLL, Structure, c_int, c_float, POINTER
 from matplotlib import pyplot as plt
-# from matplotlib import image as mpimg
-# import matplotlib
+from PIL import Image, ImageOps
+import numpy as np
+import platform
 # matplotlib.use('Qt5Agg') # wtf
 
 
 a_star_lib = None
-
 if platform.system() == 'Linux':
     a_star_lib = CDLL('./path_finder/lib_astar.so')
 elif platform.system() == 'Windows':
@@ -96,7 +91,7 @@ _find_path_3.restype = POINTER(_Path3)
 
 class Map2:
     def __init__(self, array: np.ndarray):
-        self.__array: _Map2 = None
+        self.__array = None
         if array.ndim != 2:
             raise RuntimeError()
         self.__array = _map_2_new(array.shape[0], array.shape[1], array)
@@ -131,7 +126,7 @@ class Map2:
 
 class Map3:
     def __init__(self, array: np.ndarray):
-        self.__array: _Map3 = None
+        self.__array = None
         if array.ndim != 3:
             raise RuntimeError()
         self.__array = _map_3_new(array.shape[0], array.shape[1], array.shape[2], array)
@@ -208,35 +203,11 @@ class PathFinder:
         self._path_p = None
         self._map = None
         self._image_arr = None
-    
- #   def __get_weights_from_image(self, img_path: str, img_type: str = 'binary',  scale: float = 0.25) -> [Array[Any], int, int, List]:
- #       if img_type.lower() not in ('binary', 'non_binary'):
- #           assert ValueError("image type might be one of this: 'binary' or 'non_biary'") # эм... ну так-то это любая картинка...
- #
- #       try:
- #           img = ImageOps.grayscale(Image.open(img_path))
- #           resized_image = img.resize((int(img.size[0]*scale), int(img.size[1]*scale)))
- #           img_arr = np.asarray(resized_image)
- #           img_arr = 255 - img_arr
- #           py_weights = []
- #           for row in img_arr:
- #                py_weights += list(row)
- #           py_weights = np.array(py_weights, dtype=int)
- #
- #           if img_type == 'binary':
- #               py_weights %= 2
- #               py_weights *= 999
- #           py_weights += 1
- #
- #           c_weights = (c_float * len(py_weights))(*py_weights)
- #           return c_weights, img_arr.shape[0], img_arr.shape[1], img_arr
- #       except Exception as ex:
- #           print(ex)
- #           exit(-1)
 
     def find_path_on_image(self, img_path: str, scale: float = 0.25):
-        # c_weights, rows, cols, self._image_arr = self.__get_weights_from_image(img_path, img_type='non_binary', scale=scale)
-        # self._map = Map2(c_int(cols), c_int(rows), c_weights)
+        #  c_weights, rows, cols, self._image_arr =
+        #  self.__get_weights_from_image(img_path, img_type='non_binary', scale=scale)
+        #  self._map = Map2(c_int(cols), c_int(rows), c_weights)
         img = ImageOps.grayscale(Image.open(img_path))
         self._image_arr = img.resize((int(img.size[0] * scale), int(img.size[1] * scale)))
         img_arr = np.asarray(self._image_arr, dtype=np.float32)

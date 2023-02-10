@@ -1,6 +1,7 @@
 from accelerometer import Accelerometer
 from accelerometer_settings import load_accelerometer_settings, save_accelerometer_settings
-from cgeo import LoopTimer, Vec3
+from cgeo import LoopTimer, Vec3, Mat4
+from cgeo.gutils import rotate_z, rotate_y, rotate_x
 import math
 
 
@@ -12,7 +13,14 @@ class IMU:
         except RuntimeError as err:
             print(err.args)
             exit(-13)
-        self._k = 0.99
+        self.calibrate(20)
+            
+        #if not load_accelerometer_settings(self._accelerometer, "accel_settings.json"):
+         #   self.calibrate(10)
+         #   save_accelerometer_settings(self._accelerometer, "accel_settings.json")
+        #else:
+            #self._accelerometer.compute_static_orientation()
+        self._k = 0.98
         # TODO connection to accelerometer check...
         self._timer: LoopTimer = LoopTimer(0.001)
 
@@ -22,9 +30,7 @@ class IMU:
         self._ang: Vec3 = Vec3(0.0)
         self._vel: Vec3 = Vec3(0.0)
         self._pos: Vec3 = Vec3(0.0)
-        if not load_accelerometer_settings(self._accelerometer, "accel_settings.json"):
-            self.calibrate(30)
-            save_accelerometer_settings(self._accelerometer, "accel_settings.json")
+        # self.calibrate(5.0)
 
     @property
     def angles_velocity(self) -> Vec3:
@@ -36,7 +42,7 @@ class IMU:
 
     @property
     def acceleration(self) -> Vec3:
-        return self._accelerometer.acceleration
+        return self._accel
 
     @property
     def velocity(self) -> Vec3:
@@ -73,28 +79,26 @@ class IMU:
                 return False
                 #raise RuntimeError("accelerometer reading error")
 
-            curr_accel = self._accelerometer.acceleration
-            prev_accel = self._accelerometer.prev_acceleration
-
+            _accel = self._accelerometer.acceleration
+            
             dt = self._accelerometer.delta_t
             # Считается, что общий вклад вектора G неизменен, поэтому разница между предыдущим и следующим
             # значением позволит исключить его влияние на измеренное ускорение
-            self._accel.x += curr_accel.x - prev_accel.x
-            self._accel.y += curr_accel.y - prev_accel.y
-            self._accel.z += curr_accel.z - prev_accel.z
+            self._accel.x = _accel.x
+            self._accel.y = _accel.y
+            self._accel.z = _accel.z
             # углы из значения ускорения (верно лишь при относительно небольших значениях)
-            accel_a_x = math.pi + math.atan2(curr_accel.z, curr_accel.z)
-            accel_a_y = math.pi + math.atan2(curr_accel.y, curr_accel.z)
-            accel_a_z = math.pi + math.atan2(curr_accel.y, curr_accel.x)
+            accel_a_x = math.pi + math.atan2(_accel.z, _accel.z)
+            accel_a_y = math.pi + math.atan2(_accel.y, _accel.z)
+            accel_a_z = math.pi + math.atan2(_accel.y, _accel.x)
             # Наивное интегрирование угла
-            self._ang.x += self._accelerometer.ang_velocity.x * dt
-            self._ang.z += self._accelerometer.ang_velocity.z * dt
-            self._ang.y += self._accelerometer.ang_velocity.y * dt
             # Корректировка дрейфа угла гироскопа комплиментарным фильтром
-            self._ang.x = self._k * self._ang.x + (1.0 - self._k) * accel_a_x
-            self._ang.z = self._k * self._ang.z + (1.0 - self._k) * accel_a_y
-            self._ang.y = self._k * self._ang.y + (1.0 - self._k) * accel_a_z
+            self._ang.x = (self._ang.x + self._accelerometer.ang_velocity.x * dt) * self._k + (1.0 - self._k) * accel_a_x
+            self._ang.z = (self._ang.y + self._accelerometer.ang_velocity.z * dt) * self._k + (1.0 - self._k) * accel_a_y
+            self._ang.y = (self._ang.z + self._accelerometer.ang_velocity.y * dt) * self._k + (1.0 - self._k) * accel_a_z
+       
             # Построение локального базиса гироскопа на основе вычисленных углов
+            """
             sin_a, sin_b, sin_g = math.sin(self._ang.x), math.sin(self._ang.y), math.sin(self._ang.z)
             cos_a, cos_b, cos_g = math.cos(self._ang.x), math.cos(self._ang.y), math.cos(self._ang.z)
 
@@ -107,17 +111,41 @@ class IMU:
                   sin_b * cos_g)
 
             ez = (sin_a * sin_b, -cos_a * sin_b, cos_b)
+            """
+            rm =  rotate_z(-self._ang.z) * rotate_y(-self._ang.y) * rotate_x(-self._ang.x)
             # Расчёт значения скорости в мировых координатах
-            accel_c = self._accelerometer.acceleration_calibration
-            self._vel.x += ((ex[0] * self._accel.x + ex[1] * self._accel.y + ex[2] * self._accel.z) - accel_c.x) * dt
-            self._vel.y += ((ey[0] * self._accel.x + ey[1] * self._accel.y + ey[2] * self._accel.z) - accel_c.y) * dt
-            self._vel.z += ((ez[0] * self._accel.x + ez[1] * self._accel.y + ez[2] * self._accel.z) - accel_c.z) * dt
+            # accel_c = self._accelerometer.acceleration_calibration
+            #self._accel.x = curr_accel.x# - prev_accel.x
+            #self._accel.y = curr_accel.y# - prev_accel.y
+            #self._accel.z = curr_accel.z# - prev_accel.z
+            # print(self._ang)
+            # print(ex)
+            # print(ey)
+            # print(ez)
+            # print(accel_c)
+            # print(curr_accel)
+            # print((rm.m00 * curr_accel.x + rm.m01 * curr_accel.y + rm.m02 * curr_accel.z))
+            # print((rm.m10 * curr_accel.x + rm.m11 * curr_accel.y + rm.m12 * curr_accel.z))
+            # print((rm.m20 * curr_accel.x + rm.m21 * curr_accel.y + rm.m22 * curr_accel.z))
+            # print("________________________________________________________")
+            
+            # ax = ((rm.m00 * curr_accel.x + rm.m01 * curr_accel.y + rm.m02 * curr_accel.z) + (rm.m00 * accel_c.x + rm.m01 * accel_c.y + rm.m02 * accel_c.z))
+            # ay = ((rm.m10 * curr_accel.x + rm.m11 * curr_accel.y + rm.m12 * curr_accel.z) + (rm.m10 * accel_c.x + rm.m11 * accel_c.y + rm.m12 * accel_c.z))
+            # az = ((rm.m20 * curr_accel.x + rm.m21 * curr_accel.y + rm.m22 * curr_accel.z) + (rm.m20 * accel_c.x + rm.m21 * accel_c.y + rm.m22 * accel_c.z))
+          
+            # self._accel.x = (rm.m00 * curr_accel.x + rm.m01 * curr_accel.y + rm.m02 * curr_accel.z) + (rm.m00 * accel_c.x + rm.m01 * accel_c.x + rm.m02 * accel_c.x)
+            # self._accel.y = (rm.m10 * curr_accel.x + rm.m11 * curr_accel.y + rm.m12 * curr_accel.z) + (rm.m10 * accel_c.y + rm.m11 * accel_c.y + rm.m12 * accel_c.y)
+            # self._accel.z = (rm.m20 * curr_accel.x + rm.m21 * curr_accel.y + rm.m22 * curr_accel.z) + (rm.m20 * accel_c.z + rm.m21 * accel_c.z + rm.m22 * accel_c.z)
+            
+            self._vel.x += (rm.m00 * self._accel.x + rm.m01 * self._accel.y + rm.m02 * self._accel.z) * dt
+            self._vel.y += (rm.m10 * self._accel.x + rm.m11 * self._accel.y + rm.m12 * self._accel.z) * dt
+            self._vel.z += (rm.m20 * self._accel.x + rm.m21 * self._accel.y + rm.m22 * self._accel.z) * dt
             # Расчёт значения положения в мировых координатах
             self._pos.x += self._vel.x * dt
             self._pos.y += self._vel.y * dt
             self._pos.z += self._vel.z * dt
             return True
 
-    def calibrate(self, timeout: float, forward: Vec3) -> None:
+    def calibrate(self, timeout: float, forward: Vec3 = None) -> None:
         self._accelerometer.calibrate(timeout, forward)
         self._ang = self._accelerometer.start_ang_values

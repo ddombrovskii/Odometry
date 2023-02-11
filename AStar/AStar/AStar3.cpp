@@ -92,7 +92,7 @@ bool AStar3::is_valid(Point3& p)const
     return true;
 }
 
-bool AStar3::point_exists(const Point3& point, const float& cost, Nodes3& _open, Nodes3& _closed)const
+bool AStar3::point_exists(const Point3& point, const float& cost, std::list<Node3>& _open, std::list<Node3>& _closed)const
 {
     std::list<Node3>::iterator _iterator = std::find(_open.begin(), _open.end(), point);
 
@@ -105,7 +105,7 @@ bool AStar3::point_exists(const Point3& point, const float& cost, Nodes3& _open,
     return false;
 }
 
-bool AStar3::fill_open(const Point3& target, const Node3& current, Nodes3& _open, Nodes3& _closed, Heuristic3d heuristic)
+bool AStar3::fill_open(const Point3& target, const Node3& current, std::list<Node3>& _open, std::list<Node3>& _closed, Heuristic3d heuristic)
 {
     if (current.pos == target)return true;
 
@@ -136,21 +136,20 @@ bool AStar3::fill_open(const Point3& target, const Node3& current, Nodes3& _open
         new_node.dist   = distance;
         new_node.parent = current.pos;
         new_node.pos    = neighbour;
-
         _open.push_back(new_node);
     }
     return false;
 }
 
-Path3d AStar3::build_path(const Point3& start, const Point3& end, Nodes3& closed)
+const Path3d& AStar3::build_path(const Point3& start, const Point3& end, std::list<Node3>& closed)
 {
-    Path3d _path(new std::list<Point3>);
+    Path3d* _path = new Path3d();
 
-    _path->push_front(end); // <-нужна ли эта точка
+    _path->path.push_front(end); // <-нужна ли эта точка
     
-    // _path_cost = closed.back().cost;
+    _path->path.push_front(closed.back().pos);
     
-    _path->push_front(closed.back().pos);
+    _path->cost = closed.back().cost;
     
     Point3 parent = closed.back().parent;
 
@@ -160,21 +159,28 @@ Path3d AStar3::build_path(const Point3& start, const Point3& end, Nodes3& closed
 
        if ((*i).pos == start) continue;
 
-       _path->push_front((*i).pos);
+       _path->path.push_front((*i).pos);
 
        parent = (*i).parent;
     }
-    _path->push_front(start); // <-нужна ли эта точка
+   _path->path.push_front(start); // <-нужна ли эта точка
+
+    _paths_cashe.emplace(Point3::hash_points_pair(start, end), _path);
+
+    return *_path;
 }
 
 AStar3::AStar3(const int& rows, const int& cols, const int& layers, const float* map)
 {
-    _map       = new WeightMap3(rows, cols, layers, map);
+    _map = new WeightMap3(rows, cols, layers, map);
 }
 
 AStar3::~AStar3()
 {
    if (_map != nullptr) delete _map;
+   if (_paths_cashe.size() == 0)return;
+   for (auto& pair : _paths_cashe) delete pair.second;
+
 }
 
 const WeightMap3& AStar3::weights()const
@@ -182,10 +188,10 @@ const WeightMap3& AStar3::weights()const
     return *_map;
 }
 
-Path3d AStar3::searh_path(const Point3& start, const Point3& end, Heuristic3d heuristic)
+const Path3d& AStar3::searh_path(const Point3& start, const Point3& end, Heuristic3d heuristic)
 {
-    if (weights()[start] >= MAX_WEIGHT) return nullptr;
-    if (weights()[end]   >= MAX_WEIGHT) return nullptr;
+    if (weights()[start] >= MAX_WEIGHT) return _empty_path;
+    if (weights()[end]   >= MAX_WEIGHT) return _empty_path;
 
     std::list<Node3> _open;
     std::list<Node3> _closed;
@@ -217,11 +223,11 @@ Path3d AStar3::searh_path(const Point3& start, const Point3& end, Heuristic3d he
 #ifdef _DEBUG
     std::cout << "iters elapsed: " << cntr << ", while cells count is " << weights().ncells()<<'\n';
 #endif // DEBUG
-    if (!success) return nullptr;// Path2d(new std::list<Point2>()); // <-пустой путь
+    if (!success) return _empty_path;// Path2d(new std::list<Point2>()); // <-пустой путь
     return build_path(start, end, _closed);
 }
 
-Path3d AStar3::search(const Point3& s, const Point3& e, const int& heuristics)
+const Path3d& AStar3::search(const Point3& s, const Point3& e, const int& heuristics)
 {
     Point3 _start(s);
     _start.row   = MIN(MAX(0, _start.row), weights().rows() - 1);
@@ -232,14 +238,13 @@ Path3d AStar3::search(const Point3& s, const Point3& e, const int& heuristics)
     _end.row   = MIN(MAX(0, _end.row), weights().rows() - 1);
     _end.col   = MIN(MAX(0, _end.col), weights().cols() - 1);
     _end.layer = MIN(MAX(0, _end.layer), weights().layers() - 1);
-    return searh_path(_start, _end, resolve_heuristics_3d(heuristics));
+    return searh_path(_start, _end, resolve_heuristic_3d(heuristics));
 }
 
-Path3d AStar3::search(const int& heuristics)
+const Path3d& AStar3::search(const int& heuristics)
 {   
-    return searh_path({ 0,0,0 }, { weights().rows() - 1, weights().cols() - 1, weights().layers() - 1 }, resolve_heuristics_3d(heuristics));
+    return searh_path({ 0,0,0 }, { weights().rows() - 1, weights().cols() - 1, weights().layers() - 1 }, resolve_heuristic_3d(heuristics));
 }
-
 
 std::ostream& operator <<(std::ostream& stream, const AStar3& a_star)
 {

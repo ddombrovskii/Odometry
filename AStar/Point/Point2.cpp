@@ -3,7 +3,23 @@
 const Point2 Point2::Zero     = Point2(0, 0);
 const Point2 Point2::MinusOne = Point2(-1,-1);
 
-Point2::Point2(int _row, int _col)
+Point2 Point2::unhash(const int& hash)
+{
+    return Point2(hash & 0x0000ffff, (hash >> 16) & 0x0000ffff);
+}
+
+Points2dPairHash Point2::hash_points_pair(const Point2& p1, const Point2& p2)
+{
+    return (((Points2dPairHash)p1.hash() << 32) | (Points2dPairHash)p2.hash());
+}
+
+void Point2::unhash_points_pair(const Points2dPairHash& pair_hash, Point2& p1, Point2& p2)
+{
+    p1 = unhash((pair_hash >> 32) & MASK_X_64);
+    p2 = unhash(pair_hash & MASK_X_64);
+}
+
+Point2::Point2(I16 _row, I16 _col)
 {
     row = _row;
     col = _col;
@@ -15,6 +31,10 @@ Point2::Point2(const Point2& original)
     col = original.col;
 }
 
+int Point2::hash()const
+{
+    return ((0x0000ffff & col) << 16) | (0x0000ffff & row);
+}
 
 Point2& Point2::operator = (const Point2& point)
 {
@@ -32,37 +52,12 @@ bool Point2::operator ==(const Point2& point)const
 
 Point2 Point2::operator+(const Point2& o)const
 { 
-    return Point2(o.row + row, o.col + col); 
+    return Point2(o.row + row, o.col + col);
 }
 
 Point2 Point2::operator-(const Point2& o)const
 {
     return Point2(o.row - row, o.col - col);
-}
-
-int Point2::manhattan_distance(const Point2& o)const 
-{
-    return (abs(o.row - row) + abs(o.col - col));
-}
-
-int Point2::magnitude_sqr()const
-{
-    return row * row + col * col;
-}
-
-int Point2::distance_sqr(const Point2& o)const
-{
-    return (o - (*this)).magnitude_sqr();
-}
-
-float Point2::magnitude_sqrf()const
-{
-    return (float)(magnitude_sqr());
-}
-
-float Point2::distance_sqrf(const Point2& o)const
-{
-    return (float)distance_sqr(o);
 }
 
 std::ostream& operator<<(std::ostream& stream, const Point2& point)

@@ -50,20 +50,20 @@ extern "C"
 	};
 
 	DLL_EXPORT Map2* map_2_new(const int rows, const int cols, const float* map);
-	DLL_EXPORT void  map_2_del(Map2* map); // TODO check if map copy in A*
+	DLL_EXPORT void  map_2_del(Map2* map);
 	DLL_EXPORT Map3* map_3_new(const int rows, const int cols, const int layers, const float* map);
-	DLL_EXPORT void  map_3_del(Map3* map); // TODO check if map copy in A*
+	DLL_EXPORT void  map_3_del(Map3* map);
 
 
 	DLL_EXPORT Path2*   path_2_new(const int n_points);
 	DLL_EXPORT void     path_2_del(Path2* path);
-	DLL_EXPORT Path2*  find_path_2(const Map2* map, const Pt2* start, const  Pt2* end, const int& heuristics);
+	DLL_EXPORT Path2*  find_path_2(const Map2* map, const Pt2* start, const  Pt2* end, int heuristics);
 
 
 	DLL_EXPORT Path3*   path_3_new(const int n_points);
 	DLL_EXPORT void     path_3_del(Path3* path);
-	DLL_EXPORT Path3*  find_path_3(const Map3* map, const Pt3* start, const Pt3* end, const int& heuristics);
-	DLL_EXPORT void     print_map2(const Map2* map);
+	DLL_EXPORT Path3*  find_path_3(const Map3* map, const Pt3* start, const Pt3* end, int heuristics);
+	// DLL_EXPORT void     print_map2(const Map2* map);
 #ifdef __cplusplus
 }
 #endif

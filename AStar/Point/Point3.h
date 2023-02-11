@@ -3,10 +3,13 @@
 
 struct Point3
 {
-
 public:
     static const Point3 Zero;
     static const Point3 MinusOne;
+
+    static std::size_t hash_points_pair(const Point3& p1, const Point3& p2);
+    
+    std::size_t hash()const;
 
     int row, col, layer;
 

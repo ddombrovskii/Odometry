@@ -11,7 +11,8 @@ if platform.system() == 'Linux':
     a_star_lib = CDLL('./path_finder/lib_astar.so')
 elif platform.system() == 'Windows':
     if platform.architecture()[0] == '64bit':
-        a_star_lib = CDLL('./path_finder/x64/AStar.dll')
+        a_star_lib = CDLL(r'E:\GitHub\Odometry\Odometry\AStar\x64\Release\AStar.dll')
+        # a_star_lib = CDLL('./path_finder/x64/AStar.dll')
     else:
         a_star_lib = CDLL('./path_finder/x86/AStar.dll')
 if a_star_lib is None:
@@ -70,11 +71,11 @@ _path_2_del = a_star_lib.path_2_del
 _path_2_del.argtypes = [POINTER(_Path2)]
 
 _find_path_2 = a_star_lib.find_path_2
-_find_path_2.argtypes = [POINTER(_Map2), POINTER(_Pt2), POINTER(_Pt2)]
+_find_path_2.argtypes = [POINTER(_Map2), POINTER(_Pt2), POINTER(_Pt2), c_int]
 _find_path_2.restype  = POINTER(_Path2)
 
-_print_map2 = a_star_lib.print_map2
-_print_map2.argtypes = [POINTER(_Map2)]
+# _print_map2 = a_star_lib.print_map2
+# _print_map2.argtypes = [POINTER(_Map2)]
 
 # 3D functions
 _path_3_new = a_star_lib.path_3_new
@@ -85,15 +86,17 @@ _path_3_del = a_star_lib.path_3_del
 _path_3_del.argtypes = [POINTER(_Path3)]
 
 _find_path_3 = a_star_lib.find_path_3
-_find_path_3.argtypes = [POINTER(_Map3), POINTER(_Pt3), POINTER(_Pt3)]
+_find_path_3.argtypes = [POINTER(_Map3), POINTER(_Pt3), POINTER(_Pt3), c_int]
 _find_path_3.restype = POINTER(_Path3)
 
 
 class Map2:
     def __init__(self, array: np.ndarray):
         self.__array = None
+        self.__array_np = None
         if array.ndim != 2:
             raise RuntimeError()
+        self.__array_np = array
         self.__array = _map_2_new(array.shape[0], array.shape[1], array)
 
     def __enter__(self):
@@ -165,100 +168,84 @@ class Map3:
 
 class PathFinder:
 
-    def __init__(self):
-        # self.test_lib = a_star_lib.test_lib
-        # В
-        # 2D functions
-        # self._path_2_new = a_star_lib.path_2_new
-        # self._path_2_new.argtypes = [c_int]
-        # self._path_2_new.restype = POINTER(Path2)
-        # 
-        # self._path_2_del = a_star_lib.path_2_del
-        # self._path_2_del.argtypes = [POINTER(Path2)]
-        # 
-        # self._find_path_2 = a_star_lib.find_path_2
-        # self._find_path_2.argtypes = [POINTER(Map2), POINTER(Pt2), POINTER(Pt2)]
-        # self._find_path_2.restype = POINTER(Path2)
-        # 
-        # self._print_map2 = a_star_lib.print_map2
-        # self._print_map2.argtypes = [POINTER(Map2)]
-
-
-        # 3D functions
-        # self._path_3_new = a_star_lib.path_3_new
-        # self._path_3_new.argtypes = [c_int]
-        # self._path_3_new.restype = POINTER(Path3)
-        # 
-        # self._path_3_del = a_star_lib.path_3_del
-        # self._path_3_del.argtypes = [POINTER(Path3)]
-        # 
-        # self._find_path_3 = a_star_lib.find_path_3
-        # self._find_path_3.argtypes = [POINTER(Map3), POINTER(Pt3), POINTER(Pt3)]
-        # self._find_path_3.restype = POINTER(Path3)
-
+    def __init__(self, path_to_map: str = None):
         self._fig = None
         self._ax = None
         self._start_point = None
         self._end_point = None
         self._path_p = None
         self._map = None
-        self._image_arr = None
-
-    def find_path_on_image(self, img_path: str, scale: float = 0.25):
-        #  c_weights, rows, cols, self._image_arr =
-        #  self.__get_weights_from_image(img_path, img_type='non_binary', scale=scale)
-        #  self._map = Map2(c_int(cols), c_int(rows), c_weights)
-        img = ImageOps.grayscale(Image.open(img_path))
-        self._image_arr = img.resize((int(img.size[0] * scale), int(img.size[1] * scale)))
-        img_arr = np.asarray(self._image_arr, dtype=np.float32)
-        img_arr = 255 - img_arr
-        self._map = Map2(img_arr)
         self._fig, self._ax = plt.subplots()
-        self._ax.imshow(self._image_arr)
+        self.load_map_image(path_to_map)
 
-        def onclick(event):
-            if not event.dblclick:
-                x, y = int(event.xdata), int(event.ydata)
-                if self._start_point is None:
-                    self._start_point = _Pt2(y, x)
-                    self._end_point = None
-                    self._path_p = None
-                    self._ax.plot(x, y, marker='o', markersize=3, color='red', label='start')
-                    self._fig.canvas.draw()
-                    print(f"Start point: {y}, {x}")
-                else:
-                    self._end_point = _Pt2(y, x)
-                    self._ax.plot(x, y, marker='o', markersize=3, color='green', label='end')
-                    self._fig.canvas.draw()
-                    print(f"End point: {y}, {x}")
+    def __call__(self, *args, **kwargs):
+        self.start()
 
-                if self._start_point is not None and self._end_point is not None:
-                    self._path_p = _find_path_2(self._map.ptr, self._start_point, self._end_point)
+    def load_map_image(self, path_to_map: str, invert: bool = True, scale_ratio: float = 1.0) -> bool:
+        try:
+            scale_ratio = max(scale_ratio, 0.1)
+            img = ImageOps.grayscale(Image.open(path_to_map))
+            img_resized = img.resize((int(img.size[0] * scale_ratio), int(img.size[1] * scale_ratio)))
+            img_arr = np.asarray(img_resized, dtype=np.float32) / 255.0 * 1000.0
+            if invert:
+                img_arr = 1000.0 - img_arr
+            self._map = Map2(img_arr)
+            self._ax.imshow(img_arr)
+            return True
+        except IOError as error:
+            print(error.args)
+            return False
 
-                if self._path_p is not None:
-                    self. _start_point = None
-                    cost = self._path_p.contents.cost
-                    n_points = self._path_p.contents.n_points
-                    print(f"cost = {cost}")
-                    print(f"n_points = {n_points}\n")
-                    path_data_x = []
-                    path_data_y = []
-                    if n_points > 0:
-                        for i in range(n_points):
-                            path_data_x.append(self._path_p.contents.path_points[i].col)
-                            path_data_y.append(self._path_p.contents.path_points[i].row)
-                        self._ax.plot(path_data_x, path_data_y, color='blue', linewidth=1)
-                        self._ax.plot(path_data_x[0], path_data_y[0], marker='o', markersize=3, color='red', label='start')
-                        self._ax.plot(path_data_x[n_points - 1], path_data_y[n_points - 1], marker='o', markersize=3, color='green', label='end')
-                        self._fig.canvas.draw()
-                    else:
-                        print("Path not found\n")
-            else:
-                plt.cla()
-                self._ax.imshow(self._image_arr)
-                self._fig.canvas.draw()
-                self._start_point = None
+    def onclick(self, event):
+        if event.dblclick:
+            self._ax.lines.clear()
+            self._fig.canvas.draw()
+            self._start_point = None
+            self._end_point = None
+            self._path_p = None
+            return
 
-        cid = self._fig.canvas.mpl_connect('button_press_event', onclick)
+        try:
+            x, y = int(event.xdata), int(event.ydata)
+        except TypeError as error:
+            print(error.args)
+            return
+
+        if self._start_point is None:
+            self._start_point = _Pt2(y, x)
+            self._ax.plot(x, y, marker='o', markersize=3, color='red', label='start')
+            self._fig.canvas.draw()
+            print(f"Start point: {y}, {x}")
+        else:
+            self._end_point = _Pt2(y, x)
+            self._ax.plot(x, y, marker='o', markersize=3, color='green', label='end')
+            self._fig.canvas.draw()
+            print(f"End point: {y}, {x}")
+
+        if self._start_point is not None and self._end_point is not None:
+            self._path_p = _find_path_2(self._map.ptr, self._start_point, self._end_point, 4)
+            self._end_point   = None
+            self._start_point = None
+            if self._path_p.contents.n_points == 0:
+                print("empty path...")
+                return
+            print(f"cost     = {self._path_p.contents.cost}")
+            print(f"n_points = {self._path_p.contents.n_points}\n")
+            path_data_x = []
+            path_data_y = []
+            for i in range(self._path_p.contents.n_points):
+                path_data_x.append(self._path_p.contents.path_points[i].col)
+                path_data_y.append(self._path_p.contents.path_points[i].row)
+
+            self._ax.plot(path_data_x, path_data_y, color='blue', linewidth=1)
+            self._ax.plot(path_data_x[0], path_data_y[0], marker='o', markersize=3, color='red', label='start')
+            self._ax.plot(path_data_x[-1], path_data_y[-1], marker='o', markersize=3, color='green', label='end')
+            self._fig.canvas.draw()
+
+    def start(self):
+        cid = self._fig.canvas.mpl_connect('button_press_event', self.onclick)
         self._fig.suptitle('One click - select point\nDouble click - clear figure')
         plt.show()
+
+
+

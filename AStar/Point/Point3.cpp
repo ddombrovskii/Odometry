@@ -3,6 +3,16 @@
 const Point3 Point3::Zero     = Point3( 0, 0, 0);
 const Point3 Point3::MinusOne = Point3(-1,-1,-1);
 
+std::size_t Point3::hash_points_pair(const Point3& p1, const Point3& p2)
+{
+    return p1.hash() ^ (p2.hash() << 1);
+}
+
+std::size_t Point3::hash()const
+{
+    return (std::hash<int>{}(row) ^ (std::hash<int>{}(col) << 1)) ^ (std::hash<int>{}(layer) << 1); 
+}
+
 Point3::Point3(int _row, int _col, int _layer)
 {
     row   = _row;

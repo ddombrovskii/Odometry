@@ -11,8 +11,8 @@ if platform.system() == 'Linux':
     a_star_lib = CDLL('./path_finder/lib_astar.so')
 elif platform.system() == 'Windows':
     if platform.architecture()[0] == '64bit':
-        a_star_lib = CDLL(r'E:\GitHub\Odometry\Odometry\AStar\x64\Release\AStar.dll')
-        # a_star_lib = CDLL('./path_finder/x64/AStar.dll')
+        # a_star_lib = CDLL(r'E:\GitHub\Odometry\Odometry\AStar\x64\Release\AStar.dll')
+        a_star_lib = CDLL('./path_finder/x64/AStar.dll')
     else:
         a_star_lib = CDLL('./path_finder/x86/AStar.dll')
 if a_star_lib is None:

@@ -238,12 +238,12 @@ const Path3d& AStar3::search(const Point3& s, const Point3& e, const int& heuris
     _end.row   = MIN(MAX(0, _end.row), weights().rows() - 1);
     _end.col   = MIN(MAX(0, _end.col), weights().cols() - 1);
     _end.layer = MIN(MAX(0, _end.layer), weights().layers() - 1);
-    return searh_path(_start, _end, resolve_heuristic_3d(heuristics));
+    return searh_path(_start, _end, resolve_heuristics_3d(heuristics));
 }
 
 const Path3d& AStar3::search(const int& heuristics)
 {   
-    return searh_path({ 0,0,0 }, { weights().rows() - 1, weights().cols() - 1, weights().layers() - 1 }, resolve_heuristic_3d(heuristics));
+    return searh_path({ 0,0,0 }, { weights().rows() - 1, weights().cols() - 1, weights().layers() - 1 }, resolve_heuristics_3d(heuristics));
 }
 
 std::ostream& operator <<(std::ostream& stream, const AStar3& a_star)

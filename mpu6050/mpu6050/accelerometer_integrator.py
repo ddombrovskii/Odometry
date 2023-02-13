@@ -45,10 +45,10 @@ def quaternion_mul(q1: Quaternion, q2: Quaternion) -> Quaternion:
            q1[0] * q2[2] + q1[1] * q2[3] + q1[2] * q2[0] - q1[3] * q2[1],\
            q1[0] * q2[3] - q1[1] * q2[2] + q1[2] * q2[1] + q1[3] * q2[0]
 
-    # return _qw * qw - _qx * qx - _qy * qy - _qz * qz, \
-    #        _qw * qx + _qx * qw + _qy * qz - _qz * qy, \
-    #        _qw * qy + _qy * qw + _qz * qx - _qx * qz, \
-    #        _qw * qz + _qz * qw + _qx * qy - _qy * qx
+   # return _qw * qw - _qx * qx - _qy * qy - _qz * qz, \
+   #        _qw * qx + _qx * qw + _qy * qz - _qz * qy, \
+   #        _qw * qy + _qy * qw + _qz * qx - _qx * qz, \
+   #        _qw * qz + _qz * qw + _qx * qy - _qy * qx
 
 
 def quaternion_rot(v: Tuple[float, float, float], q: Quaternion) -> \

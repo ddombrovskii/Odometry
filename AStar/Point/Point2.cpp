@@ -34,6 +34,7 @@ Point2::Point2(const Point2& original)
 int Point2::hash()const
 {
     return ((0x0000ffff & col) << 16) | (0x0000ffff & row);
+    // return std::hash<int>{}(row) ^ (std::hash<int>{}(col) << 1);
 }
 
 Point2& Point2::operator = (const Point2& point)

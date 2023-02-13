@@ -181,14 +181,14 @@ class PathFinder:
     def __call__(self, *args, **kwargs):
         self.start()
 
-    def load_map_image(self, path_to_map: str, invert: bool = True, scale_ratio: float = 0.25) -> bool:
+    def load_map_image(self, path_to_map: str, invert: bool = True, scale_ratio: float = 0.125) -> bool:
         try:
             scale_ratio = max(scale_ratio, 0.1)
             img = ImageOps.grayscale(Image.open(path_to_map))
             img_resized = img.resize((int(img.size[0] * scale_ratio), int(img.size[1] * scale_ratio)))
-            img_arr = np.asarray(img_resized, dtype=np.float32) #  / 255.0 * 1000.0
+            img_arr = np.asarray(img_resized, dtype=np.float32) / 255.0 * 1000.0
             if invert:
-                img_arr = 255.0 - img_arr
+                img_arr = 1000.0 - img_arr
             self._map = Map2(img_arr)
             self._ax.imshow(img_arr)
             return True
@@ -237,8 +237,8 @@ class PathFinder:
                 path_data_x.append(self._path_p.contents.path_points[i].col)
                 path_data_y.append(self._path_p.contents.path_points[i].row)
 
-            self._ax.plot(path_data_x, path_data_y, color='blue', linewidth=1)
-            self._ax.plot(path_data_x[0], path_data_y[0], marker='o', markersize=3, color='red', label='start')
+            self._ax.plot(path_data_x, path_data_y, color='red', linewidth=1)
+            self._ax.plot(path_data_x[0], path_data_y[0], marker='o', markersize=3, color='blue', label='start')
             self._ax.plot(path_data_x[-1], path_data_y[-1], marker='o', markersize=3, color='green', label='end')
             self._fig.canvas.draw()
 

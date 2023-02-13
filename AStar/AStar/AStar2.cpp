@@ -1,4 +1,4 @@
-#include "AStar2.h"
+п»ї#include "AStar2.h"
 #include <cassert>
 
 Point2 AStar2::_neighboursPoints[8] =
@@ -60,7 +60,6 @@ bool AStar2::fill_open(const Point2& target, const Node2& current, nodes_map& _o
         if (!is_valid(neighbour))continue;
 
         hash = neighbour.hash();
-
         if (_closed.find(hash) != _closed.end())continue;
 
         if ((stepWeight = weights()[neighbour]) >= MAX_WEIGHT)continue;
@@ -76,7 +75,7 @@ bool AStar2::fill_open(const Point2& target, const Node2& current, nodes_map& _o
         new_node.dist   = distance;
         new_node.pos    = neighbour;
         new_node.parent = current.pos;
-        _open.emplace(hash, new_node);
+        _open.insert({ hash, new_node });
     } 
     return false;
 }
@@ -85,17 +84,43 @@ const Path2d& AStar2::build_path(const Point2& start, const Point2& end, nodes_m
 {
    Path2d* _path = new Path2d();
    Node2 current = std::prev(closed.end())->second;
-
    while (!(current.parent == Point2::MinusOne))
    {
        _path->path.push_front(current.pos);
        current = closed.at(current.parent.hash());
    }
    _path->path.push_front(start);
-  
-   _paths_cashe.emplace(Point2::hash_points_pair(start, end), _path);
-
-   return *_path;
+   
+   _paths_cashe.insert({ Point2::hash_points_pair(start, end), _path });
+   // 
+   // return *_path;
+    // Path2d* _path = new Path2d();
+    // 
+    // _path->path.push_front(end); // <-Г­ГіГ¦Г­Г  Г«ГЁ ГЅГІГ  ГІГ®Г·ГЄГ 
+    // 
+    // Node2 current = std::prev(closed.end())->second;
+    // 
+    // _path->path.push_front(current.pos);
+    // 
+    // Point2 parent = current.parent;
+    // 
+    // nodes_map::iterator iter = closed.end();
+    // 
+    // while (iter != closed.begin())
+    // {
+    //     iter--;
+    // 
+    //     if (!((*iter).second.pos == parent))continue;
+    // 
+    //     if ((*iter).second.pos == start) continue;
+    // 
+    //     _path->path.push_front((*iter).second.pos);
+    // 
+    //     parent = (*iter).second.parent;
+    // }
+    // _path->path.push_front(start);
+    // _paths_cashe.insert({ Point2::hash_points_pair(start, end), _path });
+    return *_path;
 }
 
 AStar2::AStar2(const int& rows, const int& cols, const float* map)
@@ -128,24 +153,23 @@ const Path2d& AStar2::searh_path(const Point2& start, const Point2& end, Heurist
     nodes_map _clsd;
 
     bool  _success = false;
-    int   _hash    = start.hash();
-    int   _cntr    = 0;
+    int   _hash  = start.hash();
+    int   _cntr  = 0;
     Node2 _node;
-    _node.cost     = 0.0f;
-    _node.pos      = start;
-    _node.parent   = Point2::MinusOne;
-    _node.dist     = heuristic(end, start);
-    _open.emplace(_hash, _node);
+    _node.cost   = 0.0f;
+    _node.pos    = start;
+    _node.parent = Point2::MinusOne;
+    _node.dist   = heuristic(end, start);
+    _open.insert({ _hash, _node }); // emplace(_hash, _node);
     nodes_map::iterator it;
     
     while (true)
     {
-        // _node = std::next(_open.begin())->second; // очень плохо работает
-        _node = std::prev(_open.end())->second; // работает немного лучше
-        for (it = _open.begin(); it != _open.end(); it++) if ((*it).second < _node) _node = (*it).second; // поиск минимального
-        _hash = _node.pos.hash(); // ключ по которому добавляем 
-        _clsd.emplace(_hash, _node); //тудым...
-        _open.erase  (_hash); //сюдым...
+        _node = _open.begin()->second;
+        for (it = _open.begin(); it != _open.end(); it++) if ((*it).second < _node) _node = (*it).second; // РїРѕРёСЃРє РјРёРЅРёРјР°Р»СЊРЅРѕРіРѕ
+        _hash = _node.pos.hash(); // РєР»СЋС‡ РїРѕ РєРѕС‚РѕСЂРѕРјСѓ РґРѕР±Р°РІР»СЏРµРј 
+        _clsd.insert({ _hash, _node }); //С‚СѓРґС‹Рј...
+        _open.erase  (_hash); //СЃСЋРґС‹Рј...
         if (fill_open(end, _node, _open, _clsd, heuristic))
         {
             _success = true;
@@ -171,12 +195,12 @@ const Path2d& AStar2::search(const Point2& s, const Point2& e, const int& heuris
     Point2 _end(e);
     _end.row = MIN(MAX(0, _end.row), weights().rows() - 1);
     _end.col = MIN(MAX(0, _end.col), weights().cols() - 1);
-    return searh_path(_start, _end, resolve_heuristic_2d(heuristics));
+    return searh_path(_start, _end, resolve_heuristics_2d(heuristics));
 }
 
 const Path2d& AStar2::search(const int& heuristics)
 {   
-    return searh_path({ 0,0 }, { short(weights().rows() - 1), short(weights().cols() - 1) }, resolve_heuristic_2d(heuristics));
+    return searh_path({ 0,0 }, { short(weights().rows() - 1), short(weights().cols() - 1) }, resolve_heuristics_2d(heuristics));
     // return searh_path({ short(weights().rows() - 1), short(weights().cols() - 1) }, { 0,0 }, resolve_heuristic_2d(heuristics));
 
 }

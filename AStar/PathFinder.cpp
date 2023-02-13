@@ -233,17 +233,16 @@ int main(int argc, char* argv[])
 	delete[] raw_map;
 	delete[] map3;
 
-	const auto& path1 = a_star2.search();
-	const auto& path2 = a_star2.search();
-	const auto& path3 = a_star2.search();
-	// a_star2.search(); // ({ 0, 0 }, { 14, 26 });
-	// a_star3.search();
+	// const auto& path1 = a_star2.search();
+	// const auto& path2 = a_star2.search();
+	// const auto& path3 = a_star2.search();
+	a_star2.search({ 31, 0 }, { 1, 26 });
 	
-	for (const auto& p : path1.path)
-	{
-		std::cout << p;
-		std::cout << "\n";
-	}
+	// for (const auto& p : path1.path)
+	// {
+	// 	std::cout << p;
+	// 	std::cout << "\n";
+	// }
 	
 	/// std::cout << a_star2.path_cost()<<"\n";
 

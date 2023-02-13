@@ -45,10 +45,7 @@ bool AStar2::point_exists(const Point2& point, const float cost, nodes_map& _ope
 
 bool AStar2::fill_open(const Point2& target, const Node2& current, nodes_map& _open, nodes_map& _closed, Heuristic2d heuristic)const
 {
-    if (current.pos == target) 
-    {
-        return true;
-    }
+    if (current.pos == target) return true;
 
     float newCost, stepWeight, distance;
 
@@ -77,8 +74,8 @@ bool AStar2::fill_open(const Point2& target, const Node2& current, nodes_map& _o
         Node2 new_node;
         new_node.cost   = newCost;
         new_node.dist   = distance;
-        new_node.parent = current.pos;
         new_node.pos    = neighbour;
+        new_node.parent = current.pos;
         _open.emplace(hash, new_node);
     } 
     return false;
@@ -129,30 +126,29 @@ const Path2d& AStar2::searh_path(const Point2& start, const Point2& end, Heurist
 
     nodes_map _open;
     nodes_map _clsd;
-    bool success = false;
-    int _hash   = start.hash();
-    int _cntr   = 0;
+
+    bool  _success = false;
+    int   _hash    = start.hash();
+    int   _cntr    = 0;
     Node2 _node;
-    _node.cost   = 0.0f;
-    _node.dist   = heuristic(end, start);
-    _node.parent = Point2::MinusOne;
-    _node.pos    = start;
+    _node.cost     = 0.0f;
+    _node.pos      = start;
+    _node.parent   = Point2::MinusOne;
+    _node.dist     = heuristic(end, start);
     _open.emplace(_hash, _node);
-    
     nodes_map::iterator it;
+    
     while (true)
     {
-        _node = std::prev(_open.end())->second;
-        for (it = _open.begin(); it != _open.end(); it++)
-        {
-            if ((*it).second < _node) _node = (*it).second;
-        }
-        _hash = _node.pos.hash();
+        // _node = std::next(_open.begin())->second; // очень плохо работает
+        _node = std::prev(_open.end())->second; // работает немного лучше
+        for (it = _open.begin(); it != _open.end(); it++) if ((*it).second < _node) _node = (*it).second; // поиск минимального
+        _hash = _node.pos.hash(); // ключ по которому добавляем 
         _clsd.emplace(_hash, _node); //тудым...
-        _open.  erase  (_hash); //сюдым...
+        _open.erase  (_hash); //сюдым...
         if (fill_open(end, _node, _open, _clsd, heuristic))
         {
-            success = true;
+            _success = true;
             break;
         };
         if (_cntr == weights().ncells()) break;
@@ -162,7 +158,7 @@ const Path2d& AStar2::searh_path(const Point2& start, const Point2& end, Heurist
 #ifdef _DEBUG
     std::cout << "iters elapsed: " << _cntr << ", while cells count is " << weights().ncells()<<'\n';
 #endif // DEBUG
-    if (!success) return _empty_path;
+    if (!_success) return _empty_path;
     return build_path(start, end, _clsd);
 }
 
@@ -220,6 +216,4 @@ std::ostream& operator <<(std::ostream& stream, const AStar2& a_star)
     std::cout << "\"map\"       :\n" << a_star.weights() << "\n}";
 #endif
     return stream;
-
-
 }

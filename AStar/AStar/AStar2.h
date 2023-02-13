@@ -28,6 +28,8 @@ public:
     bool operator == (const Node2&  o) const { return pos == o.pos; }
     bool operator == (const Point2& o) const { return pos == o; }
     bool operator  < (const Node2&  o) const { return dist + cost < o.dist + o.cost; }
+    bool operator  <= (const Node2& o) const { return dist + cost <= o.dist + o.cost; }
+
     Point2 pos;
     Point2 parent;
     float dist;
@@ -45,9 +47,9 @@ private:
     std::unordered_map<Points2dPairHash, Path2d*> _paths_cashe;
     WeightMap2*       _map;
 
-    bool is_valid(const Point2& p)const;
-    bool point_exists(const Point2& p, const float cost, nodes_map& _open, nodes_map& _closed)const;
-    bool fill_open(const Point2& target, const Node2& current, nodes_map& _open, nodes_map& _closed, Heuristic2d heuristic)const;
+    bool  is_valid    (const Point2& p)const;
+    bool  point_exists(const Point2& p, const float cost, nodes_map& _open, nodes_map& _closed)const;
+    bool  fill_open   (const Point2& target, const Node2& current, nodes_map& _open, nodes_map& _closed, Heuristic2d heuristic)const;
     const Path2d& build_path(const Point2& start, const Point2& end, nodes_map& closed);
     const Path2d& searh_path(const Point2& start, const Point2& end, Heuristic2d heuristic);
 	
@@ -56,7 +58,7 @@ public:
     AStar2(const int& rows, const int& cols, const float* map);
     ~AStar2();
     const WeightMap2& weights()const;
-    const Path2d& search(const Point2& s, const Point2& e, const int& heuristics = MANHATTAN_DISTANCE);
-    const Path2d& search(const int& heuristics = MANHATTAN_DISTANCE);
+    const Path2d&     search (const Point2& s, const Point2& e, const int& heuristics = MANHATTAN_DISTANCE);
+    const Path2d&     search (const int& heuristics = MANHATTAN_DISTANCE);
     friend std::ostream& operator <<(std::ostream& stream, const AStar2& point);
 };

@@ -244,7 +244,7 @@ class Accelerometer:
             print(f"gyroscope data read error\n{_ex.args}")
             return False, (0.0, 0.0, 0.0)
             
-    def compute_static_orientation(self, forward: Vec3 = None)->Tuple[float, float, float]:
+    def compute_static_orientation(self, forward: Vec3 = None) -> Tuple[float, float, float]:
         accel = self._acceleration
         ey = accel.normalized()
         ex = Vec3.cross(ey, Vec3(0, 0, 1)) if forward is None else Vec3.cross(accel, forward)

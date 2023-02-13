@@ -11,8 +11,8 @@ if platform.system() == 'Linux':
     a_star_lib = CDLL('./path_finder/lib_astar.so')
 elif platform.system() == 'Windows':
     if platform.architecture()[0] == '64bit':
-        # a_star_lib = CDLL(r'E:\GitHub\Odometry\Odometry\AStar\x64\Release\AStar.dll')
-        a_star_lib = CDLL('./path_finder/x64/AStar.dll')
+        a_star_lib = CDLL(r'E:\GitHub\Odometry\Odometry\AStar\x64\Release\AStar.dll')
+        # a_star_lib = CDLL('./path_finder/x64/AStar.dll')
     else:
         a_star_lib = CDLL('./path_finder/x86/AStar.dll')
 if a_star_lib is None:
@@ -181,14 +181,14 @@ class PathFinder:
     def __call__(self, *args, **kwargs):
         self.start()
 
-    def load_map_image(self, path_to_map: str, invert: bool = True, scale_ratio: float = 1.0) -> bool:
+    def load_map_image(self, path_to_map: str, invert: bool = True, scale_ratio: float = 0.25) -> bool:
         try:
             scale_ratio = max(scale_ratio, 0.1)
             img = ImageOps.grayscale(Image.open(path_to_map))
             img_resized = img.resize((int(img.size[0] * scale_ratio), int(img.size[1] * scale_ratio)))
-            img_arr = np.asarray(img_resized, dtype=np.float32) / 255.0 * 1000.0
+            img_arr = np.asarray(img_resized, dtype=np.float32) #  / 255.0 * 1000.0
             if invert:
-                img_arr = 1000.0 - img_arr
+                img_arr = 255.0 - img_arr
             self._map = Map2(img_arr)
             self._ax.imshow(img_arr)
             return True
@@ -223,7 +223,7 @@ class PathFinder:
             print(f"End point: {y}, {x}")
 
         if self._start_point is not None and self._end_point is not None:
-            self._path_p = _find_path_2(self._map.ptr, self._start_point, self._end_point, 4)
+            self._path_p = _find_path_2(self._map.ptr, self._start_point, self._end_point, 0)
             self._end_point   = None
             self._start_point = None
             if self._path_p.contents.n_points == 0:

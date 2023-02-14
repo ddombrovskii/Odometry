@@ -34,24 +34,28 @@ bool AStar2::is_valid(const Point2& p)const
     return true;
 }
 
-bool AStar2::point_exists(const Point2& point, const float cost, nodes_map& _open, nodes_map& _closed)const
-{
-    std::unordered_map<int, Node2>::iterator _iterator = _open.find(point.hash());
-    if (_iterator == _open.end()) return false;
-    if ((*_iterator).second.cost + (*_iterator).second.dist < cost) return true;
-    _open.erase(_iterator);
-    return false;
-}
+// bool AStar2::point_exists(const Point2& point, const float& cost, nodes_map& _open, nodes_map& _closed)const
+// {
+//     nodes_map::iterator _iterator = _open.find(point.hash());
+//     if (_iterator != _open.end())
+//     {
+//         if ((*_iterator).second.cost + (*_iterator).second.dist < cost) return true;
+//     }
+//     else {}
+//     _open.erase(_iterator);
+//     return false;
+// }
 
-bool AStar2::fill_open(const Point2& target, const Node2& current, nodes_map& _open, nodes_map& _closed, Heuristic2d heuristic)const
+bool AStar2::fill_open(const Point2& start, const Point2& target, const Node2& current, nodes_map& _open, nodes_map& _closed, Heuristic2d heuristic)const
 {
     if (current.pos == target) return true;
-
-    float newCost, stepWeight, distance;
-
+    int    hash;
+    float  newCost;
+    float  stepWeight;
+    float  totalCost;
+    float  distance;
     Point2 neighbour;
-
-    int hash;
+    nodes_map::iterator _iterator;
 
     for (int index = 0; index < 8; index++)
     {
@@ -60,15 +64,22 @@ bool AStar2::fill_open(const Point2& target, const Node2& current, nodes_map& _o
         if (!is_valid(neighbour))continue;
 
         hash = neighbour.hash();
+
         if (_closed.find(hash) != _closed.end())continue;
 
         if ((stepWeight = weights()[neighbour]) >= MAX_WEIGHT)continue;
-
+        
         newCost =  _neighboursCost[index] * stepWeight + current.cost;
 
-        distance = heuristic(target, neighbour);
+        distance = heuristic(target, neighbour) + abs(Point2::cross(neighbour - target, start - target)) * 0.001f;
 
-        if (point_exists(neighbour, newCost + distance, _open, _closed))continue;
+        totalCost = newCost + distance;
+
+        _iterator = _open.find(hash);
+        if (_iterator != _open.end()) if ((*_iterator).second.cost + (*_iterator).second.dist < totalCost) continue;
+
+        _iterator = _closed.find(hash);
+        if (_iterator != _closed.end()) if ((*_iterator).second.cost + (*_iterator).second.dist < totalCost) continue;
 
         Node2 new_node;
         new_node.cost   = newCost;
@@ -84,6 +95,7 @@ const Path2d& AStar2::build_path(const Point2& start, const Point2& end, nodes_m
 {
    Path2d* _path = new Path2d();
    Node2 current = std::prev(closed.end())->second;
+
    while (!(current.parent == Point2::MinusOne))
    {
        _path->path.push_front(current.pos);
@@ -92,34 +104,7 @@ const Path2d& AStar2::build_path(const Point2& start, const Point2& end, nodes_m
    _path->path.push_front(start);
    
    _paths_cashe.insert({ Point2::hash_points_pair(start, end), _path });
-   // 
-   // return *_path;
-    // Path2d* _path = new Path2d();
-    // 
-    // _path->path.push_front(end); // <-íóæíà ëè ýòà òî÷êà
-    // 
-    // Node2 current = std::prev(closed.end())->second;
-    // 
-    // _path->path.push_front(current.pos);
-    // 
-    // Point2 parent = current.parent;
-    // 
-    // nodes_map::iterator iter = closed.end();
-    // 
-    // while (iter != closed.begin())
-    // {
-    //     iter--;
-    // 
-    //     if (!((*iter).second.pos == parent))continue;
-    // 
-    //     if ((*iter).second.pos == start) continue;
-    // 
-    //     _path->path.push_front((*iter).second.pos);
-    // 
-    //     parent = (*iter).second.parent;
-    // }
-    // _path->path.push_front(start);
-    // _paths_cashe.insert({ Point2::hash_points_pair(start, end), _path });
+
     return *_path;
 }
 
@@ -160,7 +145,7 @@ const Path2d& AStar2::searh_path(const Point2& start, const Point2& end, Heurist
     _node.pos    = start;
     _node.parent = Point2::MinusOne;
     _node.dist   = heuristic(end, start);
-    _open.insert({ _hash, _node }); // emplace(_hash, _node);
+    _open.insert({ _hash, _node });
     nodes_map::iterator it;
     
     while (true)
@@ -168,9 +153,9 @@ const Path2d& AStar2::searh_path(const Point2& start, const Point2& end, Heurist
         _node = _open.begin()->second;
         for (it = _open.begin(); it != _open.end(); it++) if ((*it).second < _node) _node = (*it).second; // поиск минимального
         _hash = _node.pos.hash(); // ключ по которому добавляем 
-        _clsd.insert({ _hash, _node }); //тудым...
         _open.erase  (_hash); //сюдым...
-        if (fill_open(end, _node, _open, _clsd, heuristic))
+        _clsd.insert({ _hash, _node }); //тудым...
+        if (fill_open(start, end, _node, _open, _clsd, heuristic))
         {
             _success = true;
             break;
@@ -195,14 +180,12 @@ const Path2d& AStar2::search(const Point2& s, const Point2& e, const int& heuris
     Point2 _end(e);
     _end.row = MIN(MAX(0, _end.row), weights().rows() - 1);
     _end.col = MIN(MAX(0, _end.col), weights().cols() - 1);
-    return searh_path(_start, _end, resolve_heuristics_2d(heuristics));
+    return searh_path(_start, _end, resolve_heuristic_2d(heuristics));
 }
 
 const Path2d& AStar2::search(const int& heuristics)
 {   
-    return searh_path({ 0,0 }, { short(weights().rows() - 1), short(weights().cols() - 1) }, resolve_heuristics_2d(heuristics));
-    // return searh_path({ short(weights().rows() - 1), short(weights().cols() - 1) }, { 0,0 }, resolve_heuristic_2d(heuristics));
-
+    return searh_path({ 0,0 }, { short(weights().rows() - 1), short(weights().cols() - 1) }, resolve_heuristic_2d(heuristics));
 }
 
 std::ostream& operator <<(std::ostream& stream, const AStar2& a_star)
@@ -228,9 +211,15 @@ std::ostream& operator <<(std::ostream& stream, const AStar2& a_star)
         }
         char_map[index] = (a_star.weights()(index / (a_star.weights().cols() + 1), index % (a_star.weights().cols() + 1)) >= MAX_WEIGHT ? '#' : '_');
     }
+    Point2 point;
     for (const auto& p : a_star._paths_cashe)
     {
         for (const auto& pt : p.second->path) char_map[pt.row * (a_star.weights().cols() + 1) + pt.col] = '.';
+        
+        point = *p.second->path.begin();
+        char_map[point.row * (a_star.weights().cols() + 1) + point.col] = 'X';
+        point = *std::prev(p.second->path.end());
+        char_map[point.row * (a_star.weights().cols() + 1) + point.col] = 'X';
     }
     std::cout << char_map;
 

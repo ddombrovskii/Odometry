@@ -12,6 +12,7 @@ public:
     static const Point2 Zero;
     static const Point2 MinusOne;
     static Point2 unhash(const int& hash);
+    static int cross(const Point2& p1, const Point2& p2);
     static Points2dPairHash hash_points_pair(const Point2& p1, const Point2& p2);
     static void unhash_points_pair(const Points2dPairHash& pair_hash, Point2& p1, Point2& p2);
 

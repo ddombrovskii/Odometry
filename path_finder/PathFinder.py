@@ -181,7 +181,7 @@ class PathFinder:
     def __call__(self, *args, **kwargs):
         self.start()
 
-    def load_map_image(self, path_to_map: str, invert: bool = True, scale_ratio: float = 0.125) -> bool:
+    def load_map_image(self, path_to_map: str, invert: bool = True, scale_ratio: float = 0.250) -> bool:
         try:
             scale_ratio = max(scale_ratio, 0.1)
             img = ImageOps.grayscale(Image.open(path_to_map))

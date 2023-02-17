@@ -29,14 +29,14 @@ public:
     bool operator == (const Point2& o) const { return pos == o; }
     bool operator  < (const Node2&  o) const { return dist + cost < o.dist + o.cost; }
     bool operator  <= (const Node2& o) const { return dist + cost <= o.dist + o.cost; }
-
     Point2 pos;
     Point2 parent;
     float dist;
     float cost;
+    float total_cost() const { return dist + cost; }
 };
 
-typedef std::unordered_map<int, Node2> nodes_map;
+typedef std::unordered_map<int, Node2> nodes_map_2d;
 
 class AStar2
 {
@@ -44,13 +44,12 @@ private:
     static Point2     _neighboursPoints[8];
     static float      _neighboursCost  [8];
     Path2d            _empty_path;
-    std::unordered_map<Points2dPairHash, Path2d*> _paths_cashe;
     WeightMap2*       _map;
+    std::unordered_map<Points2dPairHash, Path2d*> _paths_cashe;
 
     bool  is_valid          (const Point2& target)const;
-    // bool  point_exists      (const Point2& target, const float& cost,    nodes_map& _open, nodes_map& _closed)const;
-    bool  fill_open         (const Point2& start,  const Point2& target, const Node2& current, nodes_map& _open, nodes_map& _closed, Heuristic2d heuristic)const;
-    const Path2d& build_path(const Point2& start,  const Point2& end,    nodes_map& closed);
+    bool  fill_open         (const Point2& start,  const Point2& target, const Node2& current, nodes_map_2d& _open, nodes_map_2d& _closed, Heuristic2d heuristic)const;
+    const Path2d& build_path(const Point2& start,  const Point2& end,    nodes_map_2d& closed);
     const Path2d& searh_path(const Point2& start,  const Point2& end,    Heuristic2d heuristic);
 	
 public:

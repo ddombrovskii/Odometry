@@ -6,7 +6,7 @@
 #include "../Point/Point3.h"
 #include "../Map/WeightMap3.h"
 #include "../Heuristics.h"
-#include <map>
+#include <unordered_map>
 
 
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
@@ -36,7 +36,10 @@ public:
     Point3 parent;
     float dist;
     float cost;
+    float total_cost() const { return dist + cost; }
 };
+
+typedef std::unordered_map<int, Node3> nodes_map_3d;
 
 
 class AStar3
@@ -47,12 +50,11 @@ private:
     static float      _neighboursCost  [26];
     WeightMap3*       _map;
     Path3d            _empty_path;
-    std::map<Points2dPairHash, Path3d*> _paths_cashe;
+    std::unordered_map<Points2dPairHash, Path3d*> _paths_cashe;
 
-    bool   is_valid         (Point3& p)const;
-    bool   point_exists     (const Point3& p,      const float& cost,    std::list<Node3>& _open, std::list<Node3>& _closed)const;
-    bool   fill_open        (const Point3& target, const Node3& current, std::list<Node3>& _open, std::list<Node3>& _closed, Heuristic3d heuristic);
-    const Path3d& build_path(const Point3& start,  const Point3& end,    std::list<Node3>& closed);
+    bool  is_valid          (Point3& p)const;
+    bool  fill_open         (const Point3& start, const Point3& target, const Node3& current, nodes_map_3d& _open, nodes_map_3d& _closed, Heuristic3d heuristic)const;
+    const Path3d& build_path(const Point3& start,  const Point3& end,    nodes_map_3d& closed);
     const Path3d& searh_path(const Point3& start,  const Point3& end,    Heuristic3d heuristic);
 	
 public:

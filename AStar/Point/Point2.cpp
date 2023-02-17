@@ -7,6 +7,7 @@ Point2 Point2::unhash(const int& hash)
 {
     return Point2(hash & 0x0000ffff, (hash >> 16) & 0x0000ffff);
 }
+
 int Point2::cross(const Point2& p1, const Point2& p2)
 {
     return p1.row * p2.col - p2.row * p1.col;

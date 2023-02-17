@@ -34,19 +34,8 @@ bool AStar2::is_valid(const Point2& p)const
     return true;
 }
 
-// bool AStar2::point_exists(const Point2& point, const float& cost, nodes_map& _open, nodes_map& _closed)const
-// {
-//     nodes_map::iterator _iterator = _open.find(point.hash());
-//     if (_iterator != _open.end())
-//     {
-//         if ((*_iterator).second.cost + (*_iterator).second.dist < cost) return true;
-//     }
-//     else {}
-//     _open.erase(_iterator);
-//     return false;
-// }
 
-bool AStar2::fill_open(const Point2& start, const Point2& target, const Node2& current, nodes_map& _open, nodes_map& _closed, Heuristic2d heuristic)const
+bool AStar2::fill_open(const Point2& start, const Point2& target, const Node2& current, nodes_map_2d& _open, nodes_map_2d& _closed, Heuristic2d heuristic)const
 {
     if (current.pos == target) return true;
     int    hash;
@@ -55,7 +44,7 @@ bool AStar2::fill_open(const Point2& start, const Point2& target, const Node2& c
     float  totalCost;
     float  distance;
     Point2 neighbour;
-    nodes_map::iterator _iterator;
+    nodes_map_2d::iterator _iterator;
 
     for (int index = 0; index < 8; index++)
     {
@@ -76,10 +65,19 @@ bool AStar2::fill_open(const Point2& start, const Point2& target, const Node2& c
         totalCost = newCost + distance;
 
         _iterator = _open.find(hash);
-        if (_iterator != _open.end()) if ((*_iterator).second.cost + (*_iterator).second.dist < totalCost) continue;
+
+        if (_iterator != _open.end())
+        {
+            if ((*_iterator).second.total_cost() < totalCost) continue;
+            _open.erase(_iterator);
+        }
 
         _iterator = _closed.find(hash);
-        if (_iterator != _closed.end()) if ((*_iterator).second.cost + (*_iterator).second.dist < totalCost) continue;
+        if (_iterator != _closed.end())
+        {
+            if ((*_iterator).second.total_cost() < totalCost) continue;
+            _closed.erase(_iterator);
+        }
 
         Node2 new_node;
         new_node.cost   = newCost;
@@ -91,7 +89,7 @@ bool AStar2::fill_open(const Point2& start, const Point2& target, const Node2& c
     return false;
 }
 
-const Path2d& AStar2::build_path(const Point2& start, const Point2& end, nodes_map& closed)
+const Path2d& AStar2::build_path(const Point2& start, const Point2& end, nodes_map_2d& closed)
 {
    Path2d* _path = new Path2d();
    Node2 current = std::prev(closed.end())->second;
@@ -134,8 +132,8 @@ const Path2d& AStar2::searh_path(const Point2& start, const Point2& end, Heurist
     std::unordered_map<Points2dPairHash, Path2d*>::iterator _iterator;
     if ((_iterator = _paths_cashe.find(p1p2_hash)) != _paths_cashe.end()) return *(*_iterator).second;
 
-    nodes_map _open;
-    nodes_map _clsd;
+    nodes_map_2d _open;
+    nodes_map_2d _clsd;
 
     bool  _success = false;
     int   _hash  = start.hash();
@@ -146,7 +144,7 @@ const Path2d& AStar2::searh_path(const Point2& start, const Point2& end, Heurist
     _node.parent = Point2::MinusOne;
     _node.dist   = heuristic(end, start);
     _open.insert({ _hash, _node });
-    nodes_map::iterator it;
+    nodes_map_2d::iterator it;
     
     while (true)
     {

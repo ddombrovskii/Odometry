@@ -3,19 +3,19 @@
 
 Point3 AStar3::_neighboursPoints[26] =
 {
-    /// <summary>
-    /// layer -1
-    /// </summary>
-    Point3(-1, -1, -1),
-    Point3( 1, -1, -1),
-    Point3(-1,  1, -1),
-    Point3( 1,  1, -1),
-    Point3( 0,  0, -1),
-    Point3( 0, -1, -1),
-    Point3(-1,  0, -1),
-    Point3( 0,  1, -1),
-    Point3( 1,  0, -1),
-    /// <summary>
+   /// <summary>
+   /// layer -1
+   /// </summary>
+   Point3(-1, -1, -1),
+   Point3( 1, -1, -1),
+   Point3(-1,  1, -1),
+   Point3( 1,  1, -1),
+   Point3( 0,  0, -1),
+   Point3( 0, -1, -1),
+   Point3(-1,  0, -1),
+   Point3( 0,  1, -1),
+   Point3( 1,  0, -1),
+   /// <summary>
    /// layer 0
    /// </summary>
    Point3(-1, -1, 0),
@@ -91,27 +91,18 @@ bool AStar3::is_valid(Point3& p)const
     if (p.layer >= weights().layers()) return false;
     return true;
 }
+ 
 
-bool AStar3::point_exists(const Point3& point, const float& cost, std::list<Node3>& _open, std::list<Node3>& _closed)const
-{
-    std::list<Node3>::iterator _iterator = std::find(_open.begin(), _open.end(), point);
-
-    if (_iterator == _open.end()) return false;
-
-    if ((*_iterator).cost + (*_iterator).dist < cost) return true;
-
-    _open.erase(_iterator);
-
-    return false;
-}
-
-bool AStar3::fill_open(const Point3& target, const Node3& current, std::list<Node3>& _open, std::list<Node3>& _closed, Heuristic3d heuristic)
+bool AStar3::fill_open(const Point3& start, const Point3& target, const Node3& current, nodes_map_3d& _open, nodes_map_3d& _closed, Heuristic3d heuristic)const
 {
     if (current.pos == target)return true;
-
-    float newCost, stepWeight, distance;
-
+    int    hash;
+    float  newCost;
+    float  stepWeight;
+    float  totalCost;
+    float  distance;
     Point3 neighbour;
+    nodes_map_3d::iterator _iterator;
 
     for (int index = 0; index < 26; index++)
     {
@@ -119,53 +110,53 @@ bool AStar3::fill_open(const Point3& target, const Node3& current, std::list<Nod
 
         if (!is_valid(neighbour))continue;
 
-        if (neighbour == target)return true;
-
-        if (std::find(_closed.begin(), _closed.end(), neighbour) != _closed.end())continue;
+        if (_closed.find(hash) != _closed.end())continue;
 
         if ((stepWeight = weights()[neighbour]) >= MAX_WEIGHT)continue;
 
         newCost = _neighboursCost[index] * stepWeight + current.cost;
 
         distance = heuristic(target, neighbour);
+     
+        totalCost = newCost + distance;
 
-        if (point_exists(neighbour, newCost + distance, _open, _closed))continue;
+        if (_iterator != _open.end())
+        {
+            if ((*_iterator).second.total_cost() < totalCost) continue;
+            _open.erase(_iterator);
+        }
+
+        _iterator = _closed.find(hash);
+        if (_iterator != _closed.end())
+        {
+            if ((*_iterator).second.total_cost() < totalCost) continue;
+            _closed.erase(_iterator);
+        }
 
         Node3 new_node;
         new_node.cost   = newCost;
         new_node.dist   = distance;
         new_node.parent = current.pos;
         new_node.pos    = neighbour;
-        _open.push_back(new_node);
+        _open.insert({ hash, new_node });
     }
     return false;
 }
 
-const Path3d& AStar3::build_path(const Point3& start, const Point3& end, std::list<Node3>& closed)
+const Path3d& AStar3::build_path(const Point3& start, const Point3& end, nodes_map_3d& closed)
 {
     Path3d* _path = new Path3d();
 
-    _path->path.push_front(end); // <-нужна ли эта точка
-    
-    _path->path.push_front(closed.back().pos);
-    
-    _path->cost = closed.back().cost;
-    
-    Point3 parent = closed.back().parent;
+    Node3 current = std::prev(closed.end())->second;
 
-   for (std::list<Node3>::reverse_iterator i = closed.rbegin(); i != closed.rend(); i++)
-    {   
-       if (!((*i).pos == parent))continue;
-
-       if ((*i).pos == start) continue;
-
-       _path->path.push_front((*i).pos);
-
-       parent = (*i).parent;
+    while (!(current.parent == Point3::MinusOne))
+    {
+        _path->path.push_front(current.pos);
+        current = closed.at(current.parent.hash());
     }
-   _path->path.push_front(start); // <-нужна ли эта точка
+    _path->path.push_front(start);
 
-    _paths_cashe.emplace(Point3::hash_points_pair(start, end), _path);
+    _paths_cashe.insert({ Point3::hash_points_pair(start, end), _path });
 
     return *_path;
 }
@@ -193,38 +184,41 @@ const Path3d& AStar3::searh_path(const Point3& start, const Point3& end, Heurist
     if (weights()[start] >= MAX_WEIGHT) return _empty_path;
     if (weights()[end]   >= MAX_WEIGHT) return _empty_path;
 
-    std::list<Node3> _open;
-    std::list<Node3> _closed;
+    nodes_map_3d _open;
+    nodes_map_3d _clsd;
     
-    Node3 node;
-    node.cost   = 0.0f;
-    node.dist   = heuristic(end, start);
-    node.parent = Point3::MinusOne;
-    node.pos    = start;
-    
-    _open.push_back(node);
+    bool  _success = false;
+    int   _hash = start.hash();
+    int   _cntr = 0;
+    Node3 _node;
+    _node.cost = 0.0f;
+    _node.pos = start;
+    _node.parent = Point3::MinusOne;
+    _node.dist = heuristic(end, start);
+    _open.insert({ _hash, _node });
+    nodes_map_3d::iterator it;
 
-    bool success = false;
-    int cntr = 0;
     while (true)
     {
-        _open.sort();
-        _closed.push_back(_open.front()); //тудым...
-        _open.pop_front(); //сюдым...
-        if (fill_open(end, _closed.back(), _open, _closed, heuristic))
+        _node = _open.begin()->second;
+        for (it = _open.begin(); it != _open.end(); it++) if ((*it).second < _node) _node = (*it).second; // поиск минимального
+        _hash = _node.pos.hash(); // ключ по которому добавляем 
+        _open.erase(_hash); //сюдым...
+        _clsd.insert({ _hash, _node }); //тудым...
+        if (fill_open(start, end, _node, _open, _clsd, heuristic))
         {
-            success = true;
+            _success = true;
             break;
         };
-        if (cntr == weights().ncells()) break;
+        if (_cntr == weights().ncells()) break;
         if (_open.empty()) break;
-        cntr++;
+        _cntr++;
     }
 #ifdef _DEBUG
     std::cout << "iters elapsed: " << cntr << ", while cells count is " << weights().ncells()<<'\n';
 #endif // DEBUG
-    if (!success) return _empty_path;// Path2d(new std::list<Point2>()); // <-пустой путь
-    return build_path(start, end, _closed);
+    if (!_success) return _empty_path;// Path2d(new std::list<Point2>()); // <-пустой путь
+    return build_path(start, end, _clsd);
 }
 
 const Path3d& AStar3::search(const Point3& s, const Point3& e, const int& heuristics)

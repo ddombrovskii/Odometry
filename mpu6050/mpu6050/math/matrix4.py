@@ -80,6 +80,42 @@ class Matrix4(namedtuple('Matrix4', 'm00, m01, m02, m03,'
                    ex[2], ey[2], ez[2], 0.0,
                    0.0, 0.0, 0.0, 1.0)
 
+    @classmethod
+    def build_transform(cls, front: Vector3, up: Vector3, right: Vector3, origin: Vector3 = None):
+        """
+        НЕ ПРОВЕРЯЕТ ОРТОГОНАЛЬНОСТЬ front, up, right !!!
+        :param front:
+        :param up:
+        :param right:
+        :param origin:
+        :return:
+        """
+        if origin is None:
+            return cls(front[0], up[0], right[0], 0.0,
+                       front[1], up[1], right[1], 0.0,
+                       front[2], up[2], right[2], 0.0,
+                       0.0, 0.0, 0.0, 1.0)
+        return cls(front[0], up[0], right[0], origin[0],
+                   front[1], up[1], right[1], origin[1],
+                   front[2], up[2], right[2], origin[2],
+                   0.0, 0.0, 0.0, 1.0)
+
+    @property
+    def front(self) -> Vector3:
+        return Vector3(self.m00, self.m10, self.m20)
+
+    @property
+    def up(self) -> Vector3:
+        return Vector3(self.m01, self.m11, self.m21)
+
+    @property
+    def right(self) -> Vector3:
+        return Vector3(self.m02, self.m12, self.m22)
+
+    @property
+    def origin(self) -> Vector3:
+        return Vector3(self.m03, self.m13, self.m23)
+
     def transpose(self):
         return Matrix4(self.m00, self.m10, self.m20, self.m30,
                        self.m01, self.m11, self.m21, self.m31,

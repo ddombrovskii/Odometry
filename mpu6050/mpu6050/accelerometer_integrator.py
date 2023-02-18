@@ -4,7 +4,7 @@ from typing import Tuple
 import numpy as np
 import math
 
-from mpu6050.math.quaternion_math import *
+from math.quaternion import *
 
 
 def read_csv(path: str):
@@ -92,7 +92,7 @@ def comp_filter(path: str):
     curr_t = 0.0
     for index in range(min((len(ax), len(ay), len(az), len(ang_vx), len(ang_vy), len(ang_vz)))):
         # _ax, _ay, _az = angles_fast(ax[index], ay[index], az[index])
-        dt = 0.01 # _log.way_points[index].dtime
+        dt = 0.01  # _log.way_points[index].dtime
         curr_t += dt
         # if curr_t < 1.0:
         #    continue

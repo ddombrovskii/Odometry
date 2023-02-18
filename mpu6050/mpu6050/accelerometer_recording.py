@@ -135,8 +135,8 @@ def read_accel_log(record_path: str) -> AccelerometerLog:
             return AccelerometerLog("error", "error", [])
         log_time_start = raw_json[LOG_TIME_START] if LOG_TIME_START in raw_json else "no-name"
         device_name = raw_json[DEVICE_NAME] if DEVICE_NAME in raw_json else "no-time"
-        way_points = [] * len(raw_json[WAY_POINTS]) # todo chek...
-        for item in raw_json[WAY_POINTS]:
+        way_points = [] * len(raw_json[WAY_POINTS])  # todo chek...
+        for item_index, item in enumerate(raw_json[WAY_POINTS]):
             if ACCELERATION in item:
                 accel = Vec3(float(item[ACCELERATION]["x"]),
                              float(item[ACCELERATION]["y"]),
@@ -161,7 +161,7 @@ def read_accel_log(record_path: str) -> AccelerometerLog:
             else:
                 dt = 0.0
 
-            way_points.append(AccelMeasurement(t, dt, accel, ang_vel))
+            way_points[item_index] = AccelMeasurement(t, dt, accel, ang_vel)
 
         return AccelerometerLog(device_name, log_time_start, way_points)
 
@@ -175,7 +175,7 @@ def read_imu_log(record_path: str) -> IMULog:
         device_name = raw_json[DEVICE_NAME] if DEVICE_NAME in raw_json else "no-time"
         way_points = [] * len(raw_json[WAY_POINTS])
 
-        for item in raw_json[WAY_POINTS]:
+        for item_index, item in enumerate(raw_json[WAY_POINTS]):
             if ACCELERATION in item:
                 accel = Vec3(float(item[ACCELERATION]["x"]),
                              float(item[ACCELERATION]["y"]),
@@ -220,7 +220,7 @@ def read_imu_log(record_path: str) -> IMULog:
                 dt = float(item[DTIME])
             else:
                 dt = 0.0
-            way_points.append(WayPoint(t, dt, accel, velocity, position, ang_vel, angle))
+            way_points[item_index]  = WayPoint(t, dt, accel, velocity, position, ang_vel, angle)
 
         return IMULog(device_name, log_time_start, way_points)
 

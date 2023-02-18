@@ -168,7 +168,7 @@ class Map3:
 
 class PathFinder:
 
-    def __init__(self, path_to_map: str = None):
+    def __init__(self, path_to_map: str = None, invert: bool = True, scale_ratio: float = 1.0):
         self._fig = None
         self._ax = None
         self._start_point = None
@@ -176,7 +176,7 @@ class PathFinder:
         self._path_p = None
         self._map = None
         self._fig, self._ax = plt.subplots()
-        self.load_map_image(path_to_map)
+        self.load_map_image(path_to_map, invert, scale_ratio)
 
     def __call__(self, *args, **kwargs):
         self.start()

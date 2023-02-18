@@ -69,14 +69,14 @@ bool AStar2::fill_open(const Point2& start, const Point2& target, const Node2& c
         if (_iterator != _open.end())
         {
             if ((*_iterator).second.total_cost() < totalCost) continue;
-            _open.erase(_iterator);
+            // _open.erase(_iterator);
         }
 
         _iterator = _closed.find(hash);
         if (_iterator != _closed.end())
         {
             if ((*_iterator).second.total_cost() < totalCost) continue;
-            _closed.erase(_iterator);
+            // _closed.erase(_iterator);
         }
 
         Node2 new_node;

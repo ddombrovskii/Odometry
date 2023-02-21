@@ -15,7 +15,8 @@ class Matrix4(namedtuple('Matrix4', 'm00, m01, m02, m03,'
                 m10: float = 0.0, m11: float = 0.0, m12: float = 0.0, m13: float = 0.0,
                 m20: float = 0.0, m21: float = 0.0, m22: float = 0.0, m23: float = 0.0,
                 m30: float = 0.0, m31: float = 0.0, m32: float = 0.0, m33: float = 0.0):
-        return super().__new__(cls, float(m00), float(m01), float(m02), float(m03),
+        return super().__new__(cls,
+                               float(m00), float(m01), float(m02), float(m03),
                                float(m10), float(m11), float(m12), float(m13),
                                float(m20), float(m21), float(m22), float(m23),
                                float(m30), float(m31), float(m32), float(m33))
@@ -101,7 +102,7 @@ class Matrix4(namedtuple('Matrix4', 'm00, m01, m02, m03,'
                    0.0, 0.0, 0.0, 1.0)
 
     @property
-    def front(self) -> Vector3:
+    def right(self) -> Vector3:
         return Vector3(self.m00, self.m10, self.m20)
 
     @property
@@ -109,7 +110,7 @@ class Matrix4(namedtuple('Matrix4', 'm00, m01, m02, m03,'
         return Vector3(self.m01, self.m11, self.m21)
 
     @property
-    def right(self) -> Vector3:
+    def front(self) -> Vector3:
         return Vector3(self.m02, self.m12, self.m22)
 
     @property

@@ -1,3 +1,4 @@
+#pragma once
 #include "Point/Point2.h"
 #include "Point/Point3.h"
 #define MANHATTAN_DISTANCE 0
@@ -12,7 +13,6 @@
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 
-#pragma once
 typedef float (*Heuristic2d)(const Point2& p1, const Point2& p2);
 typedef float (*Heuristic3d)(const Point3& p1, const Point3& p2);
 

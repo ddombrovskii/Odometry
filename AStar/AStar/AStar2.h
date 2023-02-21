@@ -38,6 +38,8 @@ public:
 
 typedef std::unordered_map<int, Node2> nodes_map_2d;
 
+void emplace(nodes_map_2d& nodes, const int& key, const Node2& node);
+
 class AStar2
 {
 private:

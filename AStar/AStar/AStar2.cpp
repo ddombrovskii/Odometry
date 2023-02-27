@@ -94,7 +94,8 @@ bool AStar2::fill_open(const Point2& start, const Point2& target, const Node2& c
         new_node.dist   = distance;
         new_node.pos    = neighbour;
         new_node.parent = current.pos;
-        emplace(_open, hash, new_node);
+        // emplace(_open, hash, new_node);
+        _open.emplace(hash, new_node);
         //_open.insert({ hash, new_node });
     } 
     return false;
@@ -154,8 +155,8 @@ const Path2d& AStar2::searh_path(const Point2& start, const Point2& end, Heurist
     _node.pos    = start;
     _node.parent = Point2::MinusOne;
     _node.dist   = heuristic(end, start);
-    emplace(_open, _hash, _node);
-
+    //emplace(_open, _hash, _node);
+    _open.emplace(_hash, _node);
     //_open.insert({ _hash, _node });
     nodes_map_2d::iterator it;
     
@@ -165,13 +166,14 @@ const Path2d& AStar2::searh_path(const Point2& start, const Point2& end, Heurist
         for (it = _open.begin(); it != _open.end(); it++) if ((*it).second < _node) _node = (*it).second; // поиск минимального
         _hash = _node.pos.hash(); // ключ по которому добавляем 
         _open.erase  (_hash); //сюдым...
-        emplace(_clsd, _hash, _node);
+        // emplace(_clsd, _hash, _node);
         // _clsd.insert({ _hash, _node }); //тудым...
         if (fill_open(start, end, _node, _open, _clsd, heuristic))
         {
             _success = true;
             break;
         };
+        _clsd.emplace(_hash, _node);
         if (_cntr == weights().ncells()) break;
         if (_open.empty()) break;
         _cntr++;

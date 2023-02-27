@@ -1,15 +1,6 @@
 ﻿#include "AStar2.h"
 #include <cassert>
 
-void emplace(nodes_map_2d& nodes, const int& key, const Node2& node)
-{
-    if (nodes.find(key) == nodes.end())
-    {
-        nodes.emplace(key, node);
-        return;
-    }
-    nodes[key] = node;
-}
 
 Point2 AStar2::_neighboursPoints[8] =
 {
@@ -76,27 +67,18 @@ bool AStar2::fill_open(const Point2& start, const Point2& target, const Node2& c
 
         _iterator = _open.find(hash);
 
-        if (_iterator != _open.end())
-        {
-            if ((*_iterator).second.total_cost() < totalCost) continue;
-            // _open.erase(_iterator);
-        }
+        if (_iterator != _open.end()) if ((*_iterator).second.total_cost() < totalCost) continue;
 
         _iterator = _closed.find(hash);
-        if (_iterator != _closed.end())
-        {
-            if ((*_iterator).second.total_cost() < totalCost) continue;
-            // _closed.erase(_iterator);
-        }
+
+        if (_iterator != _closed.end())if ((*_iterator).second.total_cost() < totalCost) continue;
 
         Node2 new_node;
         new_node.cost   = newCost;
         new_node.dist   = distance;
         new_node.pos    = neighbour;
         new_node.parent = current.pos;
-        // emplace(_open, hash, new_node);
         _open.emplace(hash, new_node);
-        //_open.insert({ hash, new_node });
     } 
     return false;
 }
@@ -155,9 +137,7 @@ const Path2d& AStar2::searh_path(const Point2& start, const Point2& end, Heurist
     _node.pos    = start;
     _node.parent = Point2::MinusOne;
     _node.dist   = heuristic(end, start);
-    //emplace(_open, _hash, _node);
     _open.emplace(_hash, _node);
-    //_open.insert({ _hash, _node });
     nodes_map_2d::iterator it;
     
     while (true)
@@ -166,14 +146,12 @@ const Path2d& AStar2::searh_path(const Point2& start, const Point2& end, Heurist
         for (it = _open.begin(); it != _open.end(); it++) if ((*it).second < _node) _node = (*it).second; // поиск минимального
         _hash = _node.pos.hash(); // ключ по которому добавляем 
         _open.erase  (_hash); //сюдым...
-        // emplace(_clsd, _hash, _node);
-        // _clsd.insert({ _hash, _node }); //тудым...
+        _clsd.emplace(_hash, _node); //тудым...
         if (fill_open(start, end, _node, _open, _clsd, heuristic))
         {
             _success = true;
             break;
         };
-        _clsd.emplace(_hash, _node);
         if (_cntr == weights().ncells()) break;
         if (_open.empty()) break;
         _cntr++;

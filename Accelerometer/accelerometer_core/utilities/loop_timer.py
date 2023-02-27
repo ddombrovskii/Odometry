@@ -3,7 +3,7 @@ import time
 
 class LoopTimer:
     """
-    Интервальный таймер, который можно использоватьв в контенксте with
+    Интервальный таймер, который можно использоваться в контексте with
     """
     __slots__ = "__timeout", "__loop_time", "__time"
 
@@ -36,7 +36,6 @@ class LoopTimer:
     def time(self) -> float:
         """
         Полное время измеренное таймером
-        :return:
         """
         return self.__time
 
@@ -44,7 +43,6 @@ class LoopTimer:
     def last_loop_time(self) -> float:
         """
         Последнее измеренное время
-        :return:
         """
         return self.__loop_time
 
@@ -52,7 +50,6 @@ class LoopTimer:
     def timeout(self) -> float:
         """
         Время интервала
-        :return:
         """
         return self.__timeout
 

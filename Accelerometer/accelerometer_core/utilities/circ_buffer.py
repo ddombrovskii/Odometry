@@ -2,6 +2,9 @@ from typing import List
 
 
 class CircBuffer:
+    """
+    Кольцевой буфер
+    """
     def _index(self, index: int) -> int:
         return (index + self._indent) % self.capacity
 
@@ -36,6 +39,9 @@ class CircBuffer:
         return sorted(self._values)
 
     def append(self, value) -> None:
+        """
+        Добавляет новый элемент в буфер
+        """
         self._values[self._index(self.n_items)] = value
         if self.n_items != self.capacity:
             self._n_items += 1
@@ -44,16 +50,25 @@ class CircBuffer:
             self._indent %= self.capacity
 
     def peek(self) -> float:
+        """
+        Возвращает последний добавленный элемент
+        """
         if self.n_items == 0:
             raise IndexError(f"CircBuffer :: pop :: items amount is {self.n_items}")
         value = self._values[self._index(self.n_items - 1)]
         return value
 
     def pop(self) -> float:
+        """
+        Возвращает последний добавленный элемент и удаляет его же
+        """
         value = self.peek()
         self._n_items -= 1
         return value
 
     def clear(self) -> None:
+        """
+        Очищает буфер
+        """
         self._indent = 0
         self._n_items = 0

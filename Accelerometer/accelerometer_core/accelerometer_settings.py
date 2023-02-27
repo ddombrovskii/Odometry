@@ -7,7 +7,6 @@ import json
 
 
 def load_accelerometer_settings(acc: Accelerometer, settings_file: str) -> bool:
-    
     if not os.path.exists(settings_file):
         return False
         

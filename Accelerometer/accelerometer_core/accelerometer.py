@@ -7,6 +7,7 @@ import numpy as np
 import random
 import math
 import time
+import sys
 
 
 _import_success = False
@@ -30,9 +31,9 @@ class BusDummy:
         return BusDummy.accel_x(t + 10, step, width)
 
     def __init__(self):
-        self.__registers = {ACCEL_X_OUT_H: lambda x: BusDummy.accel_x(2.5 * x),
-                            ACCEL_Y_OUT_H: lambda x: 0.0,
-                            ACCEL_Z_OUT_H: lambda x: BusDummy.accel_z(2.5 * x)}
+        self.__registers = {ACCEL_X_OUT_H: lambda x: 0.3333 * GRAVITY_CONSTANT,  # BusDummy.accel_x(1.25 * x),
+                            ACCEL_Y_OUT_H: lambda x: 0.3333 * GRAVITY_CONSTANT,
+                            ACCEL_Z_OUT_H: lambda x: 0.3333 * GRAVITY_CONSTANT} # BusDummy.accel_z(1.25 * x)}
         self._t_start = time.perf_counter()
 
     def SMBus(self, a: int):
@@ -236,14 +237,41 @@ class Accelerometer:
             return False, Vector3(0.0, 0.0, 0.0)
 
     def __compute_start_params(self, compute_time: float = 10.0, forward: Vector3 = None, start_up_time: float = 5.0):
-        import os
+        self.reset()
+        t = time.perf_counter()
+        accel = Vector3()
+        v_ang = Vector3()
+        n_accel_read = 0
+        n_angel_read = 0
+        t_total = start_up_time + compute_time
+        print(f'|----------------Accelerometer start up...--------------|\n'
+              f'|-------------Please stand by and hold still...---------|')
+        while time.perf_counter() - t < t_total:
+            filler_l = int((time.perf_counter() - t) / t_total * 56)  # 56 - title chars count
+            filler_r = 55 - filler_l
+            sys.stdout.write(f'\r|{"":#>{str(filler_l)}}{"":.<{str(filler_r)}}|')
+            sys.stdout.flush()
+            if filler_r == 0:
+                sys.stdout.write('\n\n')
+            if time.perf_counter() - t < start_up_time:
+                self.__read_acceleration_data()
+                self.__read_gyro_data()
+                continue
+            flag, val = self.__read_acceleration_data()
+            if flag:
+                accel += val
+                n_accel_read += 1
+            flag, val = self.__read_gyro_data()
+            if flag:
+                v_ang += val
+                n_angel_read += 1
+        accel /= n_accel_read
+        self._start_accel = accel
+        self._acceleration = accel
+        basis: Matrix3 = Matrix3.build_basis(accel, forward)
+        self._start_angles       = basis.to_euler_angles()
 
-        def clear():
-            if os.name == 'posix':
-                os.system('clear')
-            elif os.name in ('ce', 'nt', 'dos'):
-                os.system('cls')
-
+    def __compute_calib_params(self, compute_time: float = 10.0, forward: Vector3 = None, start_up_time: float = 5.0):
         self.reset()
         t = time.perf_counter()
         accel = Vector3()
@@ -252,13 +280,16 @@ class Accelerometer:
         n_accel_read = 0
         n_angel_read = 0
         t_total = start_up_time + compute_time
+        print(f'|---------------Accelerometer calibration...------------|\n'
+              f'|-------------Please stand by and hold still...---------|')
         while time.perf_counter() - t < t_total:
             filler_l = int((time.perf_counter() - t) / t_total * 56)  # 56 - title chars count
             filler_r = 55 - filler_l
-            print(f'|---------------Accelerometer calibration...------------|\n'
-                  f'|-------------Please stand by and hold still...---------|\n'
-                  f'|{"":#>{str(filler_l)}}{"":.<{str(filler_r)}}|')
-            clear()
+            sys.stdout.write(f'\r|{"":#>{str(filler_l)}}{"":.<{str(filler_r)}}|')
+            sys.stdout.flush()
+            if filler_r == 0:
+                sys.stdout.write('\n\n')
+
             if time.perf_counter() - t < start_up_time:
                 self.__read_acceleration_data()
                 self.__read_gyro_data()
@@ -276,11 +307,10 @@ class Accelerometer:
         accel /= n_accel_read
         self._start_accel = accel
         self._acceleration = accel
-        basis: Matrix3 = Matrix3.build_basis(accel, Vector3(0, 0, 1) if forward is None else forward)
+        basis: Matrix3 = Matrix3.build_basis(accel, forward)
         self._start_angles       = basis.to_euler_angles()
-        self._acceleration_calib = accel * basis
+        self._acceleration_calib = basis.transpose() * accel
         self._ang_velocity_calib = v_ang / n_angel_read
-        del os
 
     @property
     def bus(self):
@@ -514,16 +544,20 @@ class Accelerometer:
             self.acceleration_range_raw = 2
             self.gyroscope_range_raw = 250
 
+    def start_up(self, start_up_time: float = 1.5, forward: Vector3 = None) -> None:
+        self.__compute_start_params(start_up_time, forward, 1.5)
+        self._t_start = time.perf_counter()
+
     def calibrate(self, calib_time: float = 10.0, forward: Vector3 = None) -> None:
         _use_filtering = self.use_filtering
         self.use_filtering = not _use_filtering
-        self.__compute_start_params(calib_time, forward)
+        self.__compute_calib_params(calib_time, forward)
         self._t_start = time.perf_counter()
         self.use_filtering = _use_filtering
         print(f"{{\n"
               f"\"calibration_info\":\n"
               f"\t{{\n"
-              f"\t\t\"ang_start\"   :{self.start_ang_values},\n"
+              f"\t\t\"ang_start\"   :{self.start_ang_values / math.pi * 180},\n"
               f"\t\t\"accel_calib\" :{self._acceleration_calib},\n"
               f"\t\t\"ang_calib\"   :{self._ang_velocity_calib}\n"
               f"\t}}\n"
@@ -536,7 +570,7 @@ class Accelerometer:
 
     def read_accel_measurements(self) -> bool:
         """
-        Пишет данные без учёта калибровочных параметров!!!
+        Пишет данные без учёта калибровочных параметров для G!!!
         """
         self._t_prev = self._t_curr
         self._t_curr = time.perf_counter() - self._t_start

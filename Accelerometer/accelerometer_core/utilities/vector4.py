@@ -17,6 +17,9 @@ class Vector4(namedtuple('Vector4', 'x, y, z w')):
     def __neg__(self):
         return Vector4(*(val for val in self))
 
+    def __abs__(self):
+        return Vector4(abs(self.x), abs(self.y), abs(self.z), abs(self.w))
+
     def __add__(self, other):
         if isinstance(other, Vector4):
             return Vector4(*(s + o for s, o in zip(self, other)))

@@ -3,7 +3,7 @@ from accelerometer_core import read_imu_log, WayPoint, GRAVITY_CONSTANT
 from matplotlib import pyplot as plt
 from typing import List
 import numpy as np
-accel_kfc = 0.9995  # значение параметра комплиментарного фильтра для ускорения
+accel_kfc = 0.999  # значение параметра комплиментарного фильтра для ускорения
 velocity_k = 0.9995  # значение параметра комплиментарного фильтра для ускорения
 
 
@@ -20,8 +20,8 @@ def comp_test(k: float = 0.5):
 
 
 if __name__ == "__main__":
-    comp_test()
-    exit()
+    # comp_test()
+    # exit()
     accel_log = read_imu_log("accelerometer_records/the newest/building_walk_drunk.json")
     time_values = accel_log.time_values
     time_values.insert(0, time_values[0])
@@ -46,7 +46,7 @@ if __name__ == "__main__":
         f = Vector3.cross(u, r).normalized()
         # получим ускорение в мировой системе координат за вычетом ускорения свободного падения
         a: Vector3 = Vector3(r.x * accel.x + r.y * accel.y + r.z * accel.z,
-                             u.x * accel.x + u.y * accel.y + u.z * accel.z - GRAVITY_CONSTANT,
+                             u.x * accel.x + u.y * accel.y + u.z * accel.z - 9.6903,  # - GRAVITY_CONSTANT,
                              f.x * accel.x + f.y * accel.y + f.z * accel.z)
                              
         # angles.     append(Quaternion.from_rotation_matrix(accel_basis[-1]).to_euler_angles())

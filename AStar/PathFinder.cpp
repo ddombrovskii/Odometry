@@ -153,6 +153,36 @@ DLL_EXPORT Path3*  find_path_3(const Map3* map, const Pt3* start, const  Pt3* en
 #define _X 1000.0f
 #define _F 1.0f
 
+#include<windows.h>
+#include<iostream>
+#include <cmath>
+
+void DrawInConsole()
+{
+
+	while (true)
+	{
+		HWND myconsole = GetConsoleWindow();
+		//Get a handle to device context
+		HDC mydc = GetDC(myconsole);
+
+		int pixel = 0;
+
+		//Choose any color
+		COLORREF COLOR = RGB(255, 0, 255);
+		//Draw pixels
+		for (double i = 0; i < 3.1415f * 4; i += 0.05)
+		{
+			SetPixel(mydc, pixel, (int)(50 + 25 * cos(i)), COLOR);
+			pixel += 1;
+		}
+
+		ReleaseDC(myconsole, mydc);
+	}
+	
+	std::cin.ignore();
+}
+
 
 int main(int argc, char* argv[])
 {
@@ -236,7 +266,7 @@ int main(int argc, char* argv[])
 	// const auto& path1 = a_star2.search();
 	// const auto& path2 = a_star2.search();
 	// const auto& path3 = a_star2.search();
-	a_star2.search({ 31, 0 }, { 1, 26 });
+	a_star2.search();// ({ 31, 0 }, { 1, 26 });
 	
 	// for (const auto& p : path1.path)
 	// {
@@ -253,6 +283,7 @@ int main(int argc, char* argv[])
 
 	// std::cout << a_star3;
 	// std::cout << "\n";
+	// DrawInConsole();
     return 0;
 }
 

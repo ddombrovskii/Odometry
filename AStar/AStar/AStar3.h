@@ -11,8 +11,8 @@
 
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
-#define MAX_WEIGHT 1000.0f
-#define MIN_WEIGHT 1.0f
+#define MAX_WEIGHT 1.0f
+#define MIN_WEIGHT 0.001f
 #define LINEAR_WEIGHT 1.0f
 #define DIAGONAL_2_WEIGHT 1.414f
 #define DIAGONAL_3_WEIGHT 1.732f

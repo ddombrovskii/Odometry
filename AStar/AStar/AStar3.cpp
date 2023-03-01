@@ -215,7 +215,7 @@ const Path3d& AStar3::searh_path(const Point3& start, const Point3& end, Heurist
         _cntr++;
     }
 #ifdef _DEBUG
-    std::cout << "iters elapsed: " << cntr << ", while cells count is " << weights().ncells()<<'\n';
+    std::cout << "iters elapsed: " << _cntr << ", while cells count is " << weights().ncells()<<'\n';
 #endif // DEBUG
     if (!_success) return _empty_path;// Path2d(new std::list<Point2>()); // <-пустой путь
     return build_path(start, end, _clsd);

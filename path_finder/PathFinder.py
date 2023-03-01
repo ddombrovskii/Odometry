@@ -186,9 +186,9 @@ class PathFinder:
             scale_ratio = max(scale_ratio, 0.1)
             img = ImageOps.grayscale(Image.open(path_to_map))
             img_resized = img.resize((int(img.size[0] * scale_ratio), int(img.size[1] * scale_ratio)))
-            img_arr = np.asarray(img_resized, dtype=np.float32) / 255.0 * 1000.0
+            img_arr = np.asarray(img_resized, dtype=np.float32) / 255.0 * 99.0
             if invert:
-                img_arr = 1000.0 - img_arr
+                img_arr = 100.0 - img_arr
             self._map = Map2(img_arr)
             self._ax.imshow(img_arr)
             return True
@@ -213,33 +213,35 @@ class PathFinder:
 
         if self._start_point is None:
             self._start_point = _Pt2(y, x)
-            self._ax.plot(x, y, marker='o', markersize=3, color='red', label='start')
+            self._ax.plot(x, y, marker='o', markersize=5, color='red', label='start')
             self._fig.canvas.draw()
             print(f"Start point: {y}, {x}")
         else:
             self._end_point = _Pt2(y, x)
-            self._ax.plot(x, y, marker='o', markersize=3, color='green', label='end')
+            self._ax.plot(x, y, marker='*', markersize=5, color='green', label='end')
             self._fig.canvas.draw()
             print(f"End point: {y}, {x}")
 
         if self._start_point is not None and self._end_point is not None:
-            self._path_p = _find_path_2(self._map.ptr, self._start_point, self._end_point, 0)
+            self._path_p = _find_path_2(self._map.ptr, self._start_point, self._end_point, 5)
             self._end_point   = None
             self._start_point = None
             if self._path_p.contents.n_points == 0:
                 print("empty path...")
                 return
+            print('\n')
             print(f"cost     = {self._path_p.contents.cost}")
-            print(f"n_points = {self._path_p.contents.n_points}\n")
+            print(f"n_points = {self._path_p.contents.n_points}")
+            p1, p2 = self._path_p.contents.path_points[0], self._path_p.contents.path_points[self._path_p.contents.n_points - 1]
             path_data_x = []
             path_data_y = []
             for i in range(self._path_p.contents.n_points):
                 path_data_x.append(self._path_p.contents.path_points[i].col)
                 path_data_y.append(self._path_p.contents.path_points[i].row)
 
-            self._ax.plot(path_data_x, path_data_y, color='red', linewidth=1)
-            self._ax.plot(path_data_x[0], path_data_y[0], marker='o', markersize=3, color='blue', label='start')
-            self._ax.plot(path_data_x[-1], path_data_y[-1], marker='o', markersize=3, color='green', label='end')
+            self._ax.plot(path_data_x, path_data_y, 'r', linewidth=1)
+            # self._ax.plot(path_data_x[0], path_data_y[0], marker='o', markersize=3, color='blue', label='start')
+            # self._ax.plot(path_data_x[-1], path_data_y[-1], marker='o', markersize=3, color='green', label='end')
             self._fig.canvas.draw()
 
     def start(self):

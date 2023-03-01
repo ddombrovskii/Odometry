@@ -10,8 +10,6 @@
 
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
-#define MAX_WEIGHT 1000.0f
-#define MIN_WEIGHT 1.0f
 #define LINEAR_WEIGHT 1.0f
 #define DIAGONAL_WEIGHT 1.414f
 
@@ -25,15 +23,15 @@ public:
 struct Node2
 {
 public:
+    float total_cost() const { return dist + cost; }
     bool operator == (const Node2&  o) const { return pos == o.pos; }
     bool operator == (const Point2& o) const { return pos == o; }
     bool operator  < (const Node2&  o) const { return dist + cost < o.dist + o.cost; }
     bool operator  <= (const Node2& o) const { return dist + cost <= o.dist + o.cost; }
-    Point2 pos;
+    Point2  pos;
     Point2 parent;
-    float dist;
-    float cost;
-    float total_cost() const { return dist + cost; }
+    float   dist;
+    float   cost;
 };
 
 typedef std::unordered_map<int, Node2> nodes_map_2d;

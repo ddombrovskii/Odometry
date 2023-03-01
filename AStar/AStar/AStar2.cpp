@@ -40,7 +40,7 @@ bool AStar2::fill_open(const Point2& start, const Point2& target, const Node2& c
 {
     if (current.pos == target) return true;
     int    hash;
-    float  newCost;
+    float  stepCost;
     float  stepWeight;
     float  totalCost;
     float  distance;
@@ -59,26 +59,21 @@ bool AStar2::fill_open(const Point2& start, const Point2& target, const Node2& c
 
         if ((stepWeight = weights()[neighbour]) >= MAX_WEIGHT)continue;
         
-        newCost =  _neighboursCost[index] * stepWeight + current.cost;
-
-        distance = heuristic(target, neighbour) + abs(Point2::cross(neighbour - target, start - target)) * 0.001f;
-
-        totalCost = newCost + distance;
-
-        _iterator = _open.find(hash);
-
-        if (_iterator != _open.end()) if ((*_iterator).second.total_cost() < totalCost) continue;
-
-        _iterator = _closed.find(hash);
-
-        if (_iterator != _closed.end())if ((*_iterator).second.total_cost() < totalCost) continue;
-
-        Node2 new_node;
-        new_node.cost   = newCost;
-        new_node.dist   = distance;
-        new_node.pos    = neighbour;
-        new_node.parent = current.pos;
-        _open.emplace(hash, new_node);
+        stepCost = current.cost + _neighboursCost[index] * stepWeight;
+        
+        if ((_iterator = _open.find(hash)) == _open.end())
+        {
+            Node2 new_node;
+            new_node.cost   = stepCost;
+            new_node.dist   = heuristic(target, neighbour); // +abs(Point2::cross(neighbour - target, start - target)) * 0.001f;
+            new_node.pos    = neighbour;
+            new_node.parent = current.pos;
+            _open.emplace(hash, new_node);
+            continue;
+        }
+        if ((*_iterator).second.cost < stepCost) { continue; }
+        (*_iterator).second.cost   = stepCost;
+        (*_iterator).second.parent = current.pos;
     } 
     return false;
 }
@@ -86,16 +81,22 @@ bool AStar2::fill_open(const Point2& start, const Point2& target, const Node2& c
 const Path2d& AStar2::build_path(const Point2& start, const Point2& end, nodes_map_2d& closed)
 {
    Path2d* _path = new Path2d();
-   Node2 current = std::prev(closed.end())->second;
-
+   Node2 current = closed.at(end.hash());
+   
+   std::cout << "end : "<< current.pos<<"\n";
+  
    while (!(current.parent == Point2::MinusOne))
    {
-       _path->path.push_front(current.pos);
+       _path->path.insert(_path->path.begin(), current.pos);
        current = closed.at(current.parent.hash());
    }
-   _path->path.push_front(start);
-   
-   _paths_cashe.insert({ Point2::hash_points_pair(start, end), _path });
+   _path->path.insert(_path->path.begin(), start);
+
+   std::cout << "start : " << *_path->path.begin() << "\n";
+
+   _paths_cashe.emplace(Point2::hash_points_pair(start, end), _path);
+   std::cout << "closed list count: " << closed.size() << "\n";
+   std::cout << "path   list count: " << _path->path.size()<<"\n";
 
     return *_path;
 }
@@ -143,10 +144,10 @@ const Path2d& AStar2::searh_path(const Point2& start, const Point2& end, Heurist
     while (true)
     {
         _node = _open.begin()->second;
-        for (it = _open.begin(); it != _open.end(); it++) if ((*it).second < _node) _node = (*it).second; // поиск минимального
-        _hash = _node.pos.hash(); // ключ по которому добавляем 
-        _open.erase  (_hash); //сюдым...
-        _clsd.emplace(_hash, _node); //тудым...
+        for (it = _open.begin(); it != _open.end(); it++) if ((*it).second <= _node) _node = (*it).second; // поиск минимального
+        _hash = _node.pos.hash();    // ключ по которому добавляем 
+        _open.erase  (_hash);        // сюдым...
+        _clsd.emplace(_hash, _node); // тудым...
         if (fill_open(start, end, _node, _open, _clsd, heuristic))
         {
             _success = true;
@@ -160,6 +161,18 @@ const Path2d& AStar2::searh_path(const Point2& start, const Point2& end, Heurist
     std::cout << "iters elapsed: " << _cntr << ", while cells count is " << weights().ncells()<<'\n';
 #endif // DEBUG
     if (!_success) return _empty_path;
+
+    const Node2* pt;
+    
+    for (auto const& pair : _clsd)
+    {
+        pt = &pair.second;
+        if (pair.second.parent == Point2::MinusOne)
+        {
+            std::cout << pt->pos<<"\n";
+            //break;
+        }
+    }
     return build_path(start, end, _clsd);
 }
 

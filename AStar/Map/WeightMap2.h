@@ -4,8 +4,8 @@
 #include <cassert>
 #include "../Point/Point2.h"
 
-#define MAX_WEIGHT 1000.0f
-#define MIN_WEIGHT 1.0f
+#define MAX_WEIGHT 100.0f
+#define MIN_WEIGHT 0.1f
 
 struct WeightMap2
 {

@@ -42,8 +42,6 @@ bool AStar2::fill_open(const Point2& start, const Point2& target, const Node2& c
     int    hash;
     float  stepCost;
     float  stepWeight;
-    float  totalCost;
-    float  distance;
     Point2 neighbour;
     nodes_map_2d::iterator _iterator;
 
@@ -61,19 +59,19 @@ bool AStar2::fill_open(const Point2& start, const Point2& target, const Node2& c
         
         stepCost = current.cost + _neighboursCost[index] * stepWeight;
         
+        Node2 new_node;
+        new_node.cost = stepCost;
+        new_node.dist = heuristic(target, neighbour) + abs(Point2::cross(neighbour - target, start - target)) * 0.001f;
+        new_node.pos = neighbour;
+        new_node.parent = current.pos;
+
         if ((_iterator = _open.find(hash)) == _open.end())
         {
-            Node2 new_node;
-            new_node.cost   = stepCost;
-            new_node.dist   = heuristic(target, neighbour); // +abs(Point2::cross(neighbour - target, start - target)) * 0.001f;
-            new_node.pos    = neighbour;
-            new_node.parent = current.pos;
             _open.emplace(hash, new_node);
             continue;
         }
         if ((*_iterator).second.cost < stepCost) { continue; }
-        (*_iterator).second.cost   = stepCost;
-        (*_iterator).second.parent = current.pos;
+        _open[hash] = new_node;
     } 
     return false;
 }
@@ -82,9 +80,10 @@ const Path2d& AStar2::build_path(const Point2& start, const Point2& end, nodes_m
 {
    Path2d* _path = new Path2d();
    Node2 current = closed.at(end.hash());
-   
+#ifdef _DEBUG
    std::cout << "end : "<< current.pos<<"\n";
-  
+#endif
+
    while (!(current.parent == Point2::MinusOne))
    {
        _path->path.insert(_path->path.begin(), current.pos);
@@ -92,11 +91,15 @@ const Path2d& AStar2::build_path(const Point2& start, const Point2& end, nodes_m
    }
    _path->path.insert(_path->path.begin(), start);
 
+#ifdef _DEBUG
    std::cout << "start : " << *_path->path.begin() << "\n";
+#endif
 
    _paths_cashe.emplace(Point2::hash_points_pair(start, end), _path);
+#ifdef _DEBUG
    std::cout << "closed list count: " << closed.size() << "\n";
    std::cout << "path   list count: " << _path->path.size()<<"\n";
+#endif
 
     return *_path;
 }

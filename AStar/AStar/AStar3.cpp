@@ -97,10 +97,8 @@ bool AStar3::fill_open(const Point3& start, const Point3& target, const Node3& c
 {
     if (current.pos == target)return true;
     int    hash;
-    float  newCost;
+    float  stepCost;
     float  stepWeight;
-    float  totalCost;
-    float  distance;
     Point3 neighbour;
     nodes_map_3d::iterator _iterator;
 
@@ -114,30 +112,21 @@ bool AStar3::fill_open(const Point3& start, const Point3& target, const Node3& c
 
         if ((stepWeight = weights()[neighbour]) >= MAX_WEIGHT)continue;
 
-        newCost = _neighboursCost[index] * stepWeight + current.cost;
-
-        distance = heuristic(target, neighbour);
-     
-        totalCost = newCost + distance;
-
-        if (_iterator != _open.end())
-        {
-            if ((*_iterator).second.total_cost() < totalCost) continue;
-            _open.erase(_iterator);
-        }
-
-        _iterator = _closed.find(hash);
-        if (_iterator != _closed.end())
-        {
-            if ((*_iterator).second.total_cost() < totalCost) continue;
-            _closed.erase(_iterator);
-        }
+        stepCost = _neighboursCost[index] * stepWeight + current.cost;
 
         Node3 new_node;
-        new_node.cost   = newCost;
-        new_node.dist   = distance;
+        new_node.cost = stepCost;
+        new_node.dist = heuristic(target, neighbour);// +abs(Point2::cross(neighbour - target, start - target)) * 0.001f;
+        new_node.pos = neighbour;
         new_node.parent = current.pos;
-        new_node.pos    = neighbour;
+
+        if ((_iterator = _open.find(hash)) == _open.end())
+        {
+            _open.emplace(hash, new_node);
+            continue;
+        }
+        if ((*_iterator).second.cost < stepCost) { continue; }
+        _open[hash] = new_node;
         _open.insert({ hash, new_node });
     }
     return false;
@@ -146,15 +135,14 @@ bool AStar3::fill_open(const Point3& start, const Point3& target, const Node3& c
 const Path3d& AStar3::build_path(const Point3& start, const Point3& end, nodes_map_3d& closed)
 {
     Path3d* _path = new Path3d();
-
-    Node3 current = std::prev(closed.end())->second;
+    Node3 current = closed.at(end.hash());
 
     while (!(current.parent == Point3::MinusOne))
     {
-        _path->path.push_front(current.pos);
+        _path->path.insert(_path->path.begin(), current.pos);
         current = closed.at(current.parent.hash());
     }
-    _path->path.push_front(start);
+    _path->path.insert(_path->path.begin(), start);
 
     _paths_cashe.insert({ Point3::hash_points_pair(start, end), _path });
 
@@ -195,16 +183,16 @@ const Path3d& AStar3::searh_path(const Point3& start, const Point3& end, Heurist
     _node.pos = start;
     _node.parent = Point3::MinusOne;
     _node.dist = heuristic(end, start);
-    _open.insert({ _hash, _node });
+    _open.emplace( _hash, _node);
     nodes_map_3d::iterator it;
 
     while (true)
     {
         _node = _open.begin()->second;
-        for (it = _open.begin(); it != _open.end(); it++) if ((*it).second < _node) _node = (*it).second; // поиск минимального
+        for (it = _open.begin(); it != _open.end(); it++) if ((*it).second <= _node) _node = (*it).second; // поиск минимального
         _hash = _node.pos.hash(); // ключ по которому добавляем 
         _open.erase(_hash); //сюдым...
-        _clsd.insert({ _hash, _node }); //тудым...
+        _clsd.emplace( _hash, _node); //тудым...
         if (fill_open(start, end, _node, _open, _clsd, heuristic))
         {
             _success = true;

@@ -1,6 +1,6 @@
+from accelerometer_core.utilities.loop_timer import LoopTimer
 from accelerometer_core.inertial_measurement_unit import IMU
 from accelerometer_core.accelerometer import Accelerometer
-from accelerometer_core.utilities.loop_timer import LoopTimer
 from accelerometer_core.utilities.vector3 import Vector3
 from collections import namedtuple
 from typing import List
@@ -156,20 +156,20 @@ def read_accel(accelerometer: Accelerometer) -> str:
            f"\t\"{DTIME}\"           : {accelerometer.delta_t},\n" \
            f"\t\"{TIME}\"            : {accelerometer.curr_t},\n" \
            f"\t\"{ACCELERATION}\"    : {accelerometer.acceleration},\n" \
-           f"\t\"{ANGLES_VELOCITY}\" : {accelerometer.ang_velocity}\n" \
+           f"\t\"{ANGLES_VELOCITY}\" : {accelerometer.omega}\n" \
            f"\n}}"
 
 
 def read_imu(imu: IMU) -> str:
-        if not imu.read():
-            raise RuntimeError("IMU read error")
+        # if not imu.read():
+        #     raise RuntimeError("IMU read error")
         return f"{{\n" \
                f"\t\"{DTIME}\"           : {imu.delta_t},\n" \
                f"\t\"{TIME}\"            : {imu.curr_t},\n" \
                f"\t\"{ACCELERATION}\"    : {imu.acceleration},\n" \
                f"\t\"{VELOCITY}\"        : {imu.velocity},\n" \
                f"\t\"{POSITION}\"        : {imu.position},\n" \
-               f"\t\"{ANGLES_VELOCITY}\" : {imu.angles_velocity},\n" \
+               f"\t\"{ANGLES_VELOCITY}\" : {imu.omega},\n" \
                f"\t\"{ANGLES}\"          : {imu.angles}\n" \
                f"\n}}"
 

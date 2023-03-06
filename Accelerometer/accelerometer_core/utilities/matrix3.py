@@ -9,7 +9,6 @@ class Matrix3(namedtuple('Matrix3', 'm00, m01, m02,'
     """
     immutable Matrix 4d
     """
-
     def __new__(cls, m00: float = 0.0, m01: float = 0.0, m02: float = 0.0,
                 m10: float = 0.0, m11: float = 0.0, m12: float = 0.0,
                 m20: float = 0.0, m21: float = 0.0, m22: float = 0.0):
@@ -17,6 +16,18 @@ class Matrix3(namedtuple('Matrix3', 'm00, m01, m02,'
                                float(m00), float(m01), float(m02),
                                float(m10), float(m11), float(m12),
                                float(m20), float(m21), float(m22))
+
+    @classmethod
+    def identity(cls):
+        return cls(1, 0, 0,
+                   0, 1, 0,
+                   0, 0, 1)
+
+    @classmethod
+    def zeros(cls):
+        return cls(0, 0, 0,
+                   0, 0, 0,
+                   0, 0, 0)
 
     @classmethod
     def rotate_x(cls, angle: float, angle_in_rad: bool = True):

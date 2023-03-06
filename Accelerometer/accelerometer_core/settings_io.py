@@ -1,7 +1,7 @@
 from accelerometer_core.accelerometer_constants import ACCEL_RANGE_2G, GYRO_RANGE_250DEG
 from accelerometer_core.utilities.real_time_filter import RealTimeFilter
+# from accelerometer_core.inertial_measurement_unit import IMU
 from accelerometer_core.accelerometer import Accelerometer
-from accelerometer_core.utilities.vector3 import Vector3
 import os.path
 import json
 
@@ -48,25 +48,25 @@ def load_accelerometer_settings(acc: Accelerometer, settings_file: str) -> bool:
     except RuntimeWarning as _ex:
         print("hardware_filter_range_raw read error")
 
-    try:
-        if "angles_velocity_calibration" in json_file:
-            value = json_file["angles_velocity_calibration"]
-            acc.angles_velocity_calibration =  Vector3(float(value['x']),
-                                                       float(value['y']),
-                                                       float(value['z']))
-            flag |= True
-    except RuntimeWarning as _ex:
-        print("angles_velocity_calibration read error")
-
-    try:
-        if "acceleration_calibration" in json_file:
-            value = json_file["acceleration_calibration"]
-            acc.acceleration_calibration = Vector3(float(value['x']),
-                                                   float(value['y']),
-                                                   float(value['z']))
-            flag |= True
-    except RuntimeWarning as _ex:
-        print("acceleration_calibration read error")
+    # try:
+    #     if "angles_velocity_calibration" in json_file:
+    #         value = json_file["angles_velocity_calibration"]
+    #         acc.angles_velocity_calibration =  Vector3(float(value['x']),
+    #                                                    float(value['y']),
+    #                                                    float(value['z']))
+    #         flag |= True
+    # except RuntimeWarning as _ex:
+    #     print("angles_velocity_calibration read error")
+    # 
+    # try:
+    #     if "acceleration_calibration" in json_file:
+    #         value = json_file["acceleration_calibration"]
+    #         acc.acceleration_calibration = Vector3(float(value['x']),
+    #                                                float(value['y']),
+    #                                                float(value['z']))
+    #         flag |= True
+    # except RuntimeWarning as _ex:
+    #     print("acceleration_calibration read error")
 
     try:
         if "use_filtering" in json_file:
@@ -165,3 +165,11 @@ def load_accelerometer_settings(acc: Accelerometer, settings_file: str) -> bool:
 def save_accelerometer_settings(acc: Accelerometer, settings_file: str) -> None:
     with open(settings_file, "wt") as output_file:
         print(acc, file=output_file)
+
+
+# def load_imu_settings(imu: IMU, settings_file: str) -> bool:
+#    pass
+
+
+# def save_imu_settings(imu: IMU, settings_file: str) -> None:
+#    pass

@@ -23,6 +23,20 @@ class Matrix4(namedtuple('Matrix4', 'm00, m01, m02, m03,'
                                float(m30), float(m31), float(m32), float(m33))
 
     @classmethod
+    def identity(cls):
+        return cls(1, 0, 0, 0,
+                   0, 1, 0, 0,
+                   0, 0, 1, 0,
+                   0, 0, 0, 1)
+
+    @classmethod
+    def zeros(cls):
+        return cls(0, 0, 0, 0,
+                   0, 0, 0, 0,
+                   0, 0, 0, 0,
+                   0, 0, 0, 0)
+
+    @classmethod
     def rotate_x(cls, angle: float, angle_in_rad: bool = True):
         cos_a = math.cos(angle)
         sin_a = math.sin(angle)

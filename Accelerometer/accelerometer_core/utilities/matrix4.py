@@ -1,6 +1,7 @@
 from accelerometer_core.utilities.vector4 import Vector4
 from accelerometer_core.utilities.vector3 import Vector3
 from collections import namedtuple
+from typing import Tuple
 import math
 
 
@@ -158,6 +159,10 @@ class Matrix4(namedtuple('Matrix4', 'm00, m01, m02, m03,'
     @property
     def origin(self) -> Vector3:
         return Vector3(self.m03, self.m13, self.m23)
+
+    @property
+    def right_up_front(self) -> Tuple[Vector3, Vector3, Vector3]:
+        return self.right, self.up, self.front
 
     def transpose(self):
         return Matrix4(self.m00, self.m10, self.m20, self.m30,

@@ -1,5 +1,6 @@
 from accelerometer_core.utilities.vector3 import Vector3
 from collections import namedtuple
+from typing import Tuple
 import math
 
 
@@ -124,6 +125,10 @@ class Matrix3(namedtuple('Matrix3', 'm00, m01, m02,'
         return Matrix3(self.m00, self.m10, self.m20,
                        self.m01, self.m11, self.m21,
                        self.m02, self.m12, self.m22)
+
+    @property
+    def right_up_front(self) -> Tuple[Vector3, Vector3, Vector3]:
+        return self.right, self.up, self.front
 
     def invert(self):
         det: float = (self.m00 * (self.m11 * self.m22 - self.m21 * self.m12) -

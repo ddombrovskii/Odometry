@@ -1,6 +1,7 @@
 from accelerometer_core.utilities.real_time_filter import RealTimeFilter
 from accelerometer_core.utilities.vector3 import Vector3
 from accelerometer_core.accelerometer_constants import *
+from accelerometer_core.utilities import Matrix3, Quaternion
 from typing import List, Tuple
 import numpy as np
 import random
@@ -44,7 +45,6 @@ class BusDummy:
         if register in self.__registers:
             return self.__registers[register](time.perf_counter() - self._t_start)
         return 0
-
 
 try:
     import smbus
@@ -105,15 +105,15 @@ class Accelerometer:
         if not self.__init_bus():
             raise RuntimeError("Accelerometer bus init failed...")
         self._filters: List[List[RealTimeFilter]] = []
-        self._acceleration_range: int = -1  # 2
-        self._acceleration_range_raw: int = -1
-        self._gyroscope_range: int = -1  # 250
-        self._gyroscope_range_raw: int = -1
+        self._acceleration_range:        int = -1  # 2
+        self._acceleration_range_raw:    int = -1
+        self._gyroscope_range:           int = -1  # 250
+        self._gyroscope_range_raw:       int = -1
         self._hardware_filter_range_raw: int = -1
-        self._use_filtering: bool = True
+        self._use_filtering:             bool = False
         # Время: текущее измеренное, предыдущее измеренное, время начала движения
-        self._t_curr: float = 0.0
-        self._t_prev: float = 0.0
+        self._t_curr:  float = 0.0
+        self._t_prev:  float = 0.0
         self._t_start: float = time.perf_counter()
         # текущее значение ускорения
         self._accel_curr: Vector3 = Vector3(0.0, 0.0, 0.0)
@@ -121,12 +121,18 @@ class Accelerometer:
         # текущее значение угловой скорости
         self._omega_curr: Vector3 = Vector3(0.0, 0.0, 0.0)
         self._omega_prev: Vector3 = Vector3(0.0, 0.0, 0.0)
-        # значение ускорения в начальный момент времени
-        # self._start_angles: Vector3 = Vector3(0.0, 0.0, 0.0)
-        # значение углов в начальный момент времени
-        # self._start_accel:        Vector3 = Vector3(0.0, 0.0, 0.0)
-        # self._ang_velocity_calib: Vector3 = Vector3(0.0, 0.0, 0.0)
-        # self._acceleration_calib: Vector3 = Vector3(0.0, 0.0, 0.0)
+        # калибровочные значения
+        self._accel_bias:  float = 0.05  # допустимый уровень шума между значениями при калибровке
+        self._calib_cntr:  int = 0
+        self._accel_calib: Vector3 = Vector3(0.0, 0.0, 0.0)
+        self._omega_calib: Vector3 = Vector3(0.0, 0.0, 0.0)
+        # угол поворота
+        self._angle_curr: Vector3 = Vector3(0.0, 0.0, 0.0)
+        self._angle_prev: Vector3 = Vector3(0.0, 0.0, 0.0)
+        self._basis_curr: Matrix3 = Matrix3.identity()
+        self._basis_prev: Matrix3 = Matrix3.identity()
+        self._k_accel: float = 0.999
+
         self.__default_settings()
 
     def __str__(self):
@@ -234,82 +240,11 @@ class Accelerometer:
             print(f"gyroscope data read error\n{_ex.args}")
             return False, Vector3(0.0, 0.0, 0.0)
 
-    # def __compute_start_params(self, compute_time: float = 10.0, forward: Vector3 = None, start_up_time: float = 5.0):
-    #     self.reset()
-    #     t = time.perf_counter()
-    #     accel = Vector3()
-    #     v_ang = Vector3()
-    #     n_accel_read = 0
-    #     n_angel_read = 0
-    #     t_total = start_up_time + compute_time
-    #     print(f'|----------------Accelerometer start up...--------------|\n'
-    #           f'|-------------Please stand by and hold still...---------|')
-    #     while time.perf_counter() - t < t_total:
-    #         filler_l = int((time.perf_counter() - t) / t_total * 56)  # 56 - title chars count
-    #         filler_r = 55 - filler_l
-    #         sys.stdout.write(f'\r|{"":#>{str(filler_l)}}{"":.<{str(filler_r)}}|')
-    #         sys.stdout.flush()
-    #         if filler_r == 0:
-    #             sys.stdout.write('\n\n')
-    #         if time.perf_counter() - t < start_up_time:
-    #             self.__read_acceleration_data()
-    #             self.__read_gyro_data()
-    #             continue
-    #         flag, val = self.__read_acceleration_data()
-    #         if flag:
-    #             accel += val
-    #             n_accel_read += 1
-    #         flag, val = self.__read_gyro_data()
-    #         if flag:
-    #             v_ang += val
-    #             n_angel_read += 1
-    #     accel /= n_accel_read
-    #     self._start_accel = accel
-    #     self._acceleration = accel
-    #     basis: Matrix3 = Matrix3.build_basis(accel, forward)
-    #     self._start_angles       = basis.to_euler_angles()
-
-    # def __compute_calib_params(self, compute_time: float = 10.0, forward: Vector3 = None, start_up_time: float = 5.0):
-    #     self.reset()
-    #     t = time.perf_counter()
-    #     accel = Vector3()
-    #     v_ang = Vector3()
-    # 
-    #     n_accel_read = 0
-    #     n_angel_read = 0
-    #     t_total = start_up_time + compute_time
-    #     print(f'|---------------Accelerometer calibration...------------|\n'
-    #           f'|-------------Please stand by and hold still...---------|')
-    #     while time.perf_counter() - t < t_total:
-    #         filler_l = int((time.perf_counter() - t) / t_total * 56)  # 56 - title chars count
-    #         filler_r = 55 - filler_l
-    #         sys.stdout.write(f'\r|{"":#>{str(filler_l)}}{"":.<{str(filler_r)}}|')
-    #         sys.stdout.flush()
-    #         if filler_r == 0:
-    #             sys.stdout.write('\n\n')
-    # 
-    #         if time.perf_counter() - t < start_up_time:
-    #             self.__read_acceleration_data()
-    #             self.__read_gyro_data()
-    #             continue
-    # 
-    #         flag, val = self.__read_acceleration_data()
-    #         if flag:
-    #             accel += val
-    #             n_accel_read += 1
-    #         flag, val = self.__read_gyro_data()
-    #         if flag:
-    #             v_ang += val
-    #             n_angel_read += 1
-    # 
-    #     accel /= n_accel_read
-    #     self._start_accel = accel
-    #     self._acceleration = accel
-    #     basis: Matrix3 = Matrix3.build_basis(accel, forward)
-    #     self._start_angles       = basis.to_euler_angles()
-    #     self._acceleration_calib = basis.transpose() * accel
-    #     self._ang_velocity_calib = v_ang / n_angel_read
-
+    """
+    ###############################################
+    #####  I2C parameters setter and getters  #####
+    ###############################################
+    """
     @property
     def bus(self):
         return self.__i2c_bus
@@ -326,6 +261,12 @@ class Accelerometer:
             print("incorrect device address in HardwareAccelerometerSettings")
             self.__address = prev_address
             self.__init_bus()
+
+    """
+    #####################################################
+    ##### Programmable filters setters and getters  #####
+    #####################################################
+    """
 
     @property
     def filters_ax(self) -> List[RealTimeFilter]:
@@ -350,6 +291,12 @@ class Accelerometer:
     @property
     def filters_gz(self) -> List[RealTimeFilter]:
         return self._filters[FILTER_GZ]
+
+    """
+    ###################################################
+    #####  MPU6050 parameters setter and getters  #####
+    ###################################################
+    """
 
     @property
     def use_filtering(self) -> bool:
@@ -465,27 +412,26 @@ class Accelerometer:
         ext_sync_set = self.bus.read_byte_data(self.__address, MPU_CONFIG) & 0b00111000
         self.bus.write_byte_data(self.__address, MPU_CONFIG, ext_sync_set | self._hardware_filter_range_raw)
 
-    # @property
-    # def angles_velocity_calibration(self) -> Vector3:
-    #     return self._ang_velocity_calib
-    # 
-    # @property
-    # def acceleration_calibration(self) -> Vector3:
-    #     """
-    #     Задана в мировой системе координат
-    #     """
-    #     return self._acceleration_calib
+    """
+    ###############################################################
+    #####  Local space acceleration, omega and angle getters  #####
+    ###############################################################
+    """
+    @property
+    def acceleration_noize_level(self) -> float:
+        return self._accel_bias
 
-    # @angles_velocity_calibration.setter
-    # def angles_velocity_calibration(self, value: Vector3) -> None:
-    #    self._ang_velocity_calib = value
+    @acceleration_noize_level.setter
+    def acceleration_noize_level(self, value: float) -> None:
+        self._accel_bias = min(max(0.0, value), 10.0)
 
-    # @acceleration_calibration.setter
-    # def acceleration_calibration(self, value: Vector3) -> None:
-    #    """
-    #    Задана в мировой системе координат
-    #    """
-    #    self._acceleration_calib = value
+    @property
+    def k_accel(self) -> float:
+        return self._k_accel
+
+    @k_accel.setter
+    def k_accel(self, value: float) -> None:
+        self._k_accel = min(max(0.0, value), 1.0)
 
     @property
     def omega(self) -> Vector3:
@@ -494,6 +440,18 @@ class Accelerometer:
     @property
     def omega_prev(self) -> Vector3:
         return self._omega_prev
+
+    @property
+    def angle(self) -> Vector3:
+        return self._angle_curr
+
+    @property
+    def angle_prev(self) -> Vector3:
+        return self._angle_prev
+
+    @property
+    def quaternion(self) -> Quaternion:
+        return Quaternion.from_euler_angles(self._angle_curr.x, self._angle_curr.y, self._angle_curr.z)
 
     @property
     def acceleration(self) -> Vector3:
@@ -509,17 +467,67 @@ class Accelerometer:
         """
         return self._accel_prev
 
-    # @property
-    # def start_acceleration(self) -> Vector3:
-    #    """
-    #    Задана в системе координат акселерометра
-    #    """
-    #    return self._start_angles
-    
-    # @property
-    # def start_ang_values(self) -> Vector3:
-    #     return self._start_angles
+    @property
+    def acceleration_calib(self) -> Vector3:
+        """
+        Задана в мировой системе координат
+        """
+        return self._accel_calib
 
+    @property
+    def omega_calib(self) -> Vector3:
+        """
+        Задана в системе координат акселерометра
+        """
+        return self._omega_calib
+
+    """
+    #########################################################
+    #####  Local space to world space transform values  #####
+    #########################################################
+    """
+    @property
+    def basis(self) -> Matrix3:
+        return self._basis_curr
+
+    @property
+    def basis_prev(self) -> Matrix3:
+        return self._basis_prev
+
+    @property
+    def acceleration_world_space(self) -> Vector3:
+        """
+        Задана в мировой системе координат (ускорение без G)
+        """
+        return Vector3(self.basis.m00 * self.acceleration.x +
+                       self.basis.m10 * self.acceleration.y +
+                       self.basis.m20 * self.acceleration.z - self._accel_calib.x,
+                       self.basis.m01 * self.acceleration.x +
+                       self.basis.m11 * self.acceleration.y +
+                       self.basis.m21 * self.acceleration.z - self._accel_calib.y,
+                       self.basis.m02 * self.acceleration.x +
+                       self.basis.m12 * self.acceleration.y +
+                       self.basis.m22 * self.acceleration.z - self._accel_calib.z)
+                       
+    @property
+    def acceleration_local_space(self) -> Vector3:
+        """
+        Задана в системе координат акселерометра (ускорение без G)
+        """
+        return Vector3(self.acceleration.x - (self.basis.m00 * self._accel_calib.x +
+                                              self.basis.m01 * self._accel_calib.y +
+                                              self.basis.m02 * self._accel_calib.z),
+                       self.acceleration.y - (self.basis.m10 * self._accel_calib.x +
+                                              self.basis.m11 * self._accel_calib.y +
+                                              self.basis.m12 * self._accel_calib.z),
+                       self.acceleration.z - (self.basis.m20 * self._accel_calib.x +
+                                              self.basis.m21 * self._accel_calib.y +
+                                              self.basis.m22 * self._accel_calib.z))
+    """
+    #################################
+    #####  Time values getters  #####
+    #################################
+    """
     @property
     def delta_t(self) -> float:
         """
@@ -541,46 +549,66 @@ class Accelerometer:
         """
         return self._t_prev
 
+    """
+    ##########################################
+    #####  Main accelerometer functions  #####
+    ##########################################
+    """
+
     def reset(self, reset_ranges: bool = False) -> None:
         for filter_list in self._filters:
             for f in filter_list:
                 f.clean_up()
-        self._accel_curr = Vector3(0.0, 0.0, 0.0)
-        self._accel_prev = Vector3(0.0, 0.0, 0.0)
-        self._omega_curr = Vector3(0.0, 0.0, 0.0)
-        self._omega_prev = Vector3(0.0, 0.0, 0.0)
-        self._t_start    = time.perf_counter()
-        self._t_curr     = 0.0
-        self._t_prev     = 0.0
+        self._accel_curr  = Vector3(0.0, 0.0, 0.0)
+        self._accel_prev  = Vector3(0.0, 0.0, 0.0)
+        self._omega_curr  = Vector3(0.0, 0.0, 0.0)
+        self._omega_prev  = Vector3(0.0, 0.0, 0.0)
+        self._accel_calib = Vector3(0.0, 0.0, 0.0)
+        self._omega_calib = Vector3(0.0, 0.0, 0.0)
+        self._basis_curr  = Matrix3.identity()
+        self._basis_prev  = Matrix3.identity()
+        self._t_start     = time.perf_counter()
+        self._t_curr      = 0.0
+        self._t_prev      = 0.0
         if reset_ranges:
             self.acceleration_range_raw = 2
             self.gyroscope_range_raw = 250
 
-    # def start_up(self, start_up_time: float = 1.5, forward: Vector3 = None) -> None:
-    #     self.__compute_start_params(start_up_time, forward, 1.5)
-    #     self._t_start = time.perf_counter()
+    def calibrate(self, stop_calib: bool = False, forward: Vector3 = None) -> bool:
+        if (self.acceleration - self.acceleration_prev).magnitude() > self.acceleration_noize_level:
+            stop_calib = True
 
-    # def calibrate(self, calib_time: float = 10.0, forward: Vector3 = None) -> None:
-    #    _use_filtering = self.use_filtering
-    #    self.use_filtering = not _use_filtering
-    #    self.__compute_calib_params(calib_time, forward)
-    #    self._t_start = time.perf_counter()
-    #    self.use_filtering = _use_filtering
-    #    print(f"{{\n"
-    #          f"\"calibration_info\":\n"
-    #          f"\t{{\n"
-    #          f"\t\t\"ang_start\"   :{self.start_ang_values / math.pi * 180},\n"
-    #          f"\t\t\"accel_calib\" :{self._acceleration_calib},\n"
-    #          f"\t\t\"ang_calib\"   :{self._ang_velocity_calib}\n"
-    #          f"\t}}\n"
-    #          f"}}")
+        if stop_calib:
+            if self._calib_cntr == 0:
+                return False
+            self._accel_calib /= self._calib_cntr
+            self._omega_calib /= self._calib_cntr
+            self._calib_cntr = 0
+            self._basis_curr = Matrix3.build_basis(self._accel_calib, forward)
+            self._basis_prev =  self._basis_curr
+            self._accel_calib = Vector3(self.basis.m00 * self._accel_calib.x +
+                                        self.basis.m10 * self._accel_calib.y +
+                                        self.basis.m20 * self._accel_calib.z,
+                                        self.basis.m01 * self._accel_calib.x +
+                                        self.basis.m11 * self._accel_calib.y +
+                                        self.basis.m21 * self._accel_calib.z,
+                                        self.basis.m02 * self._accel_calib.x +
+                                        self.basis.m12 * self._accel_calib.y +
+                                        self.basis.m22 * self._accel_calib.z)
 
-    # def angles_fast(self) -> Tuple[float, float, float]:
-    #     return utilities.pi + utilities.atan2(self.acceleration.z, self.acceleration.z), \
-    #            utilities.pi + utilities.atan2(self.acceleration.y, self.acceleration.z), \
-    #            utilities.pi + utilities.atan2(self.acceleration.y, self.acceleration.x)
+            self._angle_curr = self.basis.to_euler_angles()
+            self._angle_prev = self._angle_curr
+            return False
 
-    def read_accel_measurements(self) -> bool:
+        if not self.read_measurements():
+            return False
+
+        self._calib_cntr += 1
+        self._accel_calib += self.acceleration
+        self._omega_calib += self.omega
+        return True
+
+    def read_measurements(self) -> bool:
         """
         Пишет данные без учёта калибровочных параметров для G!!!
         """
@@ -596,6 +624,20 @@ class Accelerometer:
         flag2, val = self.__read_gyro_data()
         if flag2:
             self._omega_prev = self._omega_curr
-            self._omega_curr = val
+            self._omega_curr = val - self._omega_calib
 
+        u: Vector3 = ((self.basis.up * Vector3.dot(self.basis.up, self.acceleration) +
+                       Vector3.cross(self.omega, self.basis.up) * self.delta_t) * self._k_accel +
+                       self.acceleration * (1.0 - self._k_accel))
+
+        f: Vector3 = (self.basis.front + Vector3.cross(self.omega, self.basis.front) * self.delta_t)
+        r = Vector3.cross(f, u)
+        f = Vector3.cross(u, r)
+        f = f.normalized()
+        u = u.normalized()
+        r = r.normalized()
+        self._basis_prev = self._basis_curr
+        self._basis_curr = Matrix3.build_transform(r, u, f)
+        self._angle_prev  = self._angle_curr
+        self._angle_curr = self.basis.to_euler_angles()
         return flag2 or flag1

@@ -1,5 +1,5 @@
 from accelerometer_core.utilities import Matrix4, Vector3, Quaternion
-from accelerometer_core import read_imu_log, WayPoint, GRAVITY_CONSTANT, read_accel_log, AccelMeasurement
+from accelerometer_core import read_accel_log, AccelMeasurement
 from matplotlib import pyplot as plt
 from typing import List
 
@@ -15,6 +15,7 @@ class AccelIntegrator:
     def __init__(self, log_src: str):
         self._log_file = read_accel_log(log_src)
         self._time_values:  List[float] = []
+        self._omegas:       List[Vector3] = [Vector3(0.0, 0.0, 0.0)]
         self._angles:       List[Vector3] = []
         self._velocities:   List[Vector3] = []  # [Vector3(0.0, 0.0, 0.0)]
         self._positions:    List[Vector3] = []  # [Vector3(0.0, 0.0, 0.0)]
@@ -23,15 +24,15 @@ class AccelIntegrator:
         self._prev_accel:   Vector3 = Vector3(0.0, 0.0, 0.0)
         self._calib_accel:  Vector3 = Vector3(0.0, 0.0, 0.0)
         self._calib_omega:  Vector3 = Vector3(0.0, 0.0, 0.0)
-        self._accel_bias:   float = 0.05
+        self._accel_bias:   float = 0.01
         self._trust_t:      float = 0.1
         self._time:         float = 0.0
         self._warm_up_time: float = 1.0
         self._calib_time:   float = 5.0
         self._calib_cntr:   int = 0
         self._mode:         int = WARM_UP_MODE
-        self._accel_k:      float = 0.95  # значение параметра комплиментарного фильтра для ускорения
-        self._velocity_k:   float = 0.99995  # значение параметра комплиментарного фильтра для ускорения
+        self._accel_k:      float = 0.98  # значение параметра комплиментарного фильтра для ускорения
+        self._velocity_k:   float = 0.9995  # значение параметра комплиментарного фильтра для ускорения
 
     @property
     def accel_k(self) -> float:
@@ -120,6 +121,13 @@ class AccelIntegrator:
         Список углов
         """
         return self._angles
+
+    @property
+    def omegas(self) -> List[Vector3]:
+        """
+        Список углов
+        """
+        return self._omegas
 
     @property
     def velocities(self) -> List[Vector3]:
@@ -244,12 +252,16 @@ class AccelIntegrator:
         dt    = point.dtime
         omega = point.angles_velocity
         basis = self._accel_basis[-1]
-        # комплиментарная фильтрация и привязка u к направлению g
-        u: Vector3 = ((basis.up + Vector3.cross(omega, basis.up) * dt) *
-                      self._accel_k + (1.0 - self._accel_k) * self._curr_accel.normalized()).normalized()
-        f: Vector3 = (basis.front + Vector3.cross(omega, basis.front) * dt).normalized()
+        self._omegas.append(omega)
+        #  комплиментарная фильтрация и привязка u к направлению g
+        u: Vector3 = ((basis.up * Vector3.dot(basis.up, self._curr_accel) + Vector3.cross(omega, basis.up) * dt) *
+                      self._accel_k + (1.0 - self._accel_k) * self._curr_accel)
+        f: Vector3 = (basis.front + Vector3.cross(omega, basis.front) * dt)  # .normalized()
         r = Vector3.cross(f, u)  # .normalized()
         f = Vector3.cross(u, r)  # .normalized()
+        f = f.normalized()
+        u = u.normalized()
+        r = r.normalized()
         # получим ускорение в мировой системе координат за вычетом ускорения свободного падения
         a: Vector3 = Vector3(self._curr_accel.x - (r.x * self._calib_accel.x + u.x * self._calib_accel.y + f.x * self._calib_accel.z),
                              self._curr_accel.y - (r.y * self._calib_accel.x + u.y * self._calib_accel.y + f.y * self._calib_accel.z),
@@ -264,10 +276,12 @@ class AccelIntegrator:
 
         self._accel_basis.append(Matrix4.build_transform(r, u, f, a))
 
+        self._angles.append(self._accel_basis[-1].to_euler_angles())
+
         v = (self._velocities[-1] + (r * a.x + u * a.y + f * a.z) * dt) \
             if self._time <= self._trust_t else Vector3(0.0, 0.0, 0.0)
-
-        self._angles.append(self._angles[-1] + (point.angles_velocity - self._calib_omega) * dt)
+        # v = Vector3(0.1, 0.1, 0.1)  if self._time <= self._trust_t else Vector3(0.0, 0.0, 0.0)
+        # self._angles.append(self._angles[-1] + (point.angles_velocity - self._calib_omega) * dt)
         self._velocities.append(v)
         self._positions.append(self._positions[-1] + (r * v.x + u * v.y + f * v.y) * dt)
         self._time_values.append(self._time_values[-1] + dt)
@@ -275,9 +289,13 @@ class AccelIntegrator:
 
     def show_results(self):
         fig, axes = plt.subplots(5)
+        angles = [m.to_euler_angles() for m in self._accel_basis]
         axes[0].plot(self.time_values, [a.x for a in self.angles], 'r')
         axes[0].plot(self.time_values, [a.y for a in self.angles], 'g')
         axes[0].plot(self.time_values, [a.z for a in self.angles], 'b')
+        axes[0].plot(self.time_values, [a.x for a in angles], ':r')
+        axes[0].plot(self.time_values, [a.y for a in angles], ':g')
+        axes[0].plot(self.time_values, [a.z for a in angles], ':b')
         axes[0].set_xlabel("t, [sec]")
         axes[0].set_ylabel("$angle(t), [rad]$")
         axes[0].set_title("angles")
@@ -311,36 +329,44 @@ class AccelIntegrator:
         plt.show()
 
     def show_results_xz(self):
-        fig, axes = plt.subplots(5)
-        axes[0].plot(self.time_values, [a.x for a in self.angles], 'r')
-        axes[0].plot(self.time_values, [a.z for a in self.angles], 'b')
+        fig, axes = plt.subplots(6)
+        axes[0].plot(self.time_values, [a.x for a in self.omegas], 'r')
+        axes[0].plot(self.time_values, [a.y for a in self.omegas], 'g')
+        axes[0].plot(self.time_values, [a.z for a in self.omegas], 'b')
         axes[0].set_xlabel("t, [sec]")
-        axes[0].set_ylabel("$angle(t), [rad]$")
+        axes[0].set_ylabel("$omega(t), [rad/sec]$")
         axes[0].set_title("angles")
 
-        axes[1].plot(self.time_values, [a.origin.x for a in self.accel_basis], 'r')
-        axes[1].plot(self.time_values, [a.origin.z for a in self.accel_basis], 'b')
+        axes[1].plot(self.time_values, [a.x for a in self.angles], 'r')
+        axes[1].plot(self.time_values, [a.y for a in self.angles], 'g')
+        axes[1].plot(self.time_values, [a.z for a in self.angles], 'b')
         axes[1].set_xlabel("t, [sec]")
-        axes[1].set_ylabel("$a(t), [m/sec^2]$")
-        axes[1].set_title("accelerations - world space")
+        axes[1].set_ylabel("$angle(t), [rad]$")
+        axes[1].set_title("angles")
 
-        axes[2].plot(self.time_values, [v.x for v in self.velocities], 'r')
-        axes[2].plot(self.time_values, [v.z for v in self.velocities], 'b')
+        axes[2].plot(self.time_values, [a.origin.x for a in self.accel_basis], 'r')
+        axes[2].plot(self.time_values, [a.origin.z for a in self.accel_basis], 'b')
         axes[2].set_xlabel("t, [sec]")
-        axes[2].set_ylabel("$v(t), [m/sec]$")
-        axes[2].set_title("velocities - world space")
+        axes[2].set_ylabel("$a(t), [m/sec^2]$")
+        axes[2].set_title("accelerations - world space")
 
-        axes[3].plot(self.time_values, [p.x for p in self.positions], 'r')
-        axes[3].plot(self.time_values, [p.z for p in self.positions], 'b')
+        axes[3].plot(self.time_values, [v.x for v in self.velocities], 'r')
+        axes[3].plot(self.time_values, [v.z for v in self.velocities], 'b')
         axes[3].set_xlabel("t, [sec]")
-        axes[3].set_ylabel("$S(t), [m]$")
-        axes[3].set_title("positions - world space")
+        axes[3].set_ylabel("$v(t), [m/sec]$")
+        axes[3].set_title("velocities - world space")
 
-        axes[4].plot([p.x for p in self.positions], [p.z for p in self.positions], 'r')
-        axes[4].set_aspect('equal', 'box')
-        axes[4].set_xlabel("Sx, [m]")
-        axes[4].set_ylabel("Sz, [m]")
+        axes[4].plot(self.time_values, [p.x for p in self.positions], 'r')
+        axes[4].plot(self.time_values, [p.z for p in self.positions], 'b')
+        axes[4].set_xlabel("t, [sec]")
+        axes[4].set_ylabel("$S(t), [m]$")
         axes[4].set_title("positions - world space")
+
+        axes[5].plot([p.x for p in self.positions], [p.z for p in self.positions], 'r')
+        axes[5].set_aspect('equal', 'box')
+        axes[5].set_xlabel("Sx, [m]")
+        axes[5].set_ylabel("Sz, [m]")
+        axes[5].set_title("positions - world space")
         plt.show()
 
     def show_path(self):

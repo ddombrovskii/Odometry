@@ -150,7 +150,7 @@ class IMULog:
 
 
 def read_accel(accelerometer: Accelerometer) -> str:
-    if not accelerometer.read_accel_measurements():
+    if not accelerometer.read_measurements():
         raise RuntimeError("Accelerometer read error")
     return f"{{\n" \
            f"\t\"{DTIME}\"           : {accelerometer.delta_t},\n" \

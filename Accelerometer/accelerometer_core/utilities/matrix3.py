@@ -20,22 +20,22 @@ class Matrix3(namedtuple('Matrix3', 'm00, m01, m02,'
 
     @classmethod
     def identity(cls):
-        return cls(1, 0, 0,
-                   0, 1, 0,
-                   0, 0, 1)
+        return cls(1.0, 0.0, 0.0,
+                   0.0, 1.0, 0.0,
+                   0.0, 0.0, 1.0)
 
     @classmethod
     def zeros(cls):
-        return cls(0, 0, 0,
-                   0, 0, 0,
-                   0, 0, 0)
+        return cls(0.0, 0.0, 0.0,
+                   0.0, 0.0, 0.0,
+                   0.0, 0.0, 0.0)
 
     @classmethod
     def rotate_x(cls, angle: float, angle_in_rad: bool = True):
         cos_a = math.cos(angle)
         sin_a = math.sin(angle)
         if not angle_in_rad:
-            angle *= (math.pi / 180)
+            angle *= (math.pi / 180.0)
         return cls(1.0, 0.0, 0.0,
                    0.0, cos_a, -sin_a,
                    0.0, sin_a, cos_a)
@@ -43,7 +43,7 @@ class Matrix3(namedtuple('Matrix3', 'm00, m01, m02,'
     @classmethod
     def rotate_y(cls, angle: float, angle_in_rad: bool = True):
         if not angle_in_rad:
-            angle *= (math.pi / 180)
+            angle *= (math.pi / 180.0)
         cos_a = math.cos(angle)
         sin_a = math.sin(angle)
         return cls(cos_a, 0.0, sin_a,
@@ -53,7 +53,7 @@ class Matrix3(namedtuple('Matrix3', 'm00, m01, m02,'
     @classmethod
     def rotate_z(cls, angle: float, angle_in_rad: bool = True):
         if not angle_in_rad:
-            angle *= (math.pi / 180)
+            angle *= (math.pi / 180.0)
         cos_a = math.cos(angle)
         sin_a = math.sin(angle)
         return cls(cos_a, -sin_a, 0.0,
@@ -85,6 +85,19 @@ class Matrix3(namedtuple('Matrix3', 'm00, m01, m02,'
         return cls(ex[0], ey[0], ez[0],
                    ex[1], ey[1], ez[1],
                    ex[2], ey[2], ez[2])
+
+    @classmethod
+    def build_transform(cls, right: Vector3, up: Vector3, front: Vector3):
+        """
+        -- НЕ ПРОВЕРЯЕТ ОРТОГОНАЛЬНОСТЬ front, up, right !!!
+        :param front:
+        :param up:
+        :param right:
+        :return:
+        """
+        return cls(right[0], up[0], front[0],
+                   right[1], up[1], front[1],
+                   right[2], up[2], front[2])
 
     def to_euler_angles(self) -> Vector3:
         """

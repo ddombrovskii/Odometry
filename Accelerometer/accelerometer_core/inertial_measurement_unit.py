@@ -12,7 +12,15 @@ EXIT_MODE          = 4
 WARM_UP_MODE       = 5
 
 
-class IMU(threading.Thread):
+def progres_bar(val: float, max_chars: int = 55, char_progress: str = '#', char_stand_by: str = '.' ):
+    filler_l = int(min(max(0.0, val), 1.0) * max_chars)  # max_chars - title chars count
+    filler_r = max_chars - filler_l
+    sys.stdout.write(f'\r|{"":{char_progress}>{str(filler_l)}}{"":{char_stand_by}<{str(filler_r)}}|')
+    if filler_r == 0:
+         sys.stdout.write('\n')
+
+
+class IMU:  #(threading.Thread):
     def __init__(self):  # , forward: Vector3 = None):
         super().__init__()
         self._lock = threading.Lock()
@@ -23,18 +31,19 @@ class IMU(threading.Thread):
             print(err.args)
             exit(0)
         self._time = 0.0
-        self._dtime = 0.0
+        self._dtime = 1e-6
         # время простоя перед запуском
         self._warm_up_time:   float = 1.0
         # время калибровки
-        self._calib_time:     float = 10.0
+        self._calib_time:     float = 2.0
         # время ...
         self._trust_acc_time: float = 0.1
         self._timer: LoopTimer = LoopTimer(0.001)
-        self._mode: int = STOP_MODE
+        self._mode: int = WARM_UP_MODE
         self._prev_mode: int = -1
         self._vel: Vector3   = Vector3(0.0, 0.0, 0.0)
         self._pos: Vector3   = Vector3(0.0, 0.0, 0.0)
+        self._command: str = ""
 
     @property
     def warm_up_time(self) -> float:
@@ -42,8 +51,8 @@ class IMU(threading.Thread):
 
     @warm_up_time.setter
     def warm_up_time(self, value: float) -> None:
-        with self._lock:
-            self._warm_up_time = min(max(0.125, value), 60)
+        # with self._lock:
+        self._warm_up_time = min(max(0.125, value), 60)
 
     @property
     def calib_time(self) -> float:
@@ -51,8 +60,8 @@ class IMU(threading.Thread):
 
     @calib_time.setter
     def calib_time(self, value: float) -> None:
-        with self._lock:
-            self._calib_time = min(max(0.125, value), 60)
+        # with self._lock:
+        self._calib_time = min(max(0.125, value), 60)
 
     @property
     def trust_acc_time(self) -> float:
@@ -68,8 +77,8 @@ class IMU(threading.Thread):
         Интервал времени для проверки наличия изменения в измерении вектора ускорения
         Если по истечению времени изменений не произошло, то считаем, что акселерометр неподвижен
         """
-        with self._lock:
-            self._trust_acc_time = min(max(0.05, value), 1.0)
+        # with self._lock:
+        self._trust_acc_time = min(max(0.05, value), 1.0)
 
     @property
     def k_gravity(self) -> float:
@@ -83,8 +92,8 @@ class IMU(threading.Thread):
         """
         Параметр комплиментарного фильтра для определения углов поворота
         """
-        with self._lock:
-            self._accelerometer.k_accel = value
+        # with self._lock:
+        self._accelerometer.k_accel = value
 
     @property
     def omega(self) -> Vector3:
@@ -164,20 +173,18 @@ class IMU(threading.Thread):
             return False
         if self._mode == WARM_UP_MODE:
             return False
-        print(f"|--------------Accelerometer calibrating...-------------|\n"
-              f"|-------------Please stand by and hold still...---------|")
-        with self._lock:
-            self._calib_time = self._calib_time if timeout is None else timeout
-            self._mode = CALIBRATION_MODE
-            if forward is None:
-                return True
+        # with self._lock:
+        self._calib_time = self._calib_time if timeout is None else timeout
+        self._mode = CALIBRATION_MODE
+        if forward is None:
             return True
+        return True
 
     def rebuild_basis(self) -> bool:
         if self._mode == CALIBRATION_MODE:
             return False
-        with self._lock:
-            self._mode = BASIS_COMPUTE_MODE
+        # with self._lock:
+        self._mode = BASIS_COMPUTE_MODE
         return True
 
     def read(self) -> bool:
@@ -186,8 +193,8 @@ class IMU(threading.Thread):
         """
         if self._mode == CALIBRATION_MODE:
             return False
-        with self._lock:
-            self._mode = INTEGRATE_MODE
+        # with self._lock:
+        self._mode = INTEGRATE_MODE
         return True
 
     def _integrate(self) -> bool:
@@ -195,10 +202,18 @@ class IMU(threading.Thread):
         if self._mode != INTEGRATE_MODE:
             return False
 
+        if self._time == 0.0:
+            print(f"\n|----------Accelerometer read and integrate...----------|\n"
+                    f"|-------------------Please stand by...------------------|")
+
+        progres_bar((self._time / 3.0) % 1.0, 55, '|', '_')
+
         if not self._accelerometer.read_measurements():
             return False
 
         dt    = self.delta_t
+
+        self._time += self._dtime
 
         if (self._accelerometer.acceleration - self._accelerometer.acceleration_prev).magnitude() > \
                 self._accelerometer.acceleration_noize_level:
@@ -215,6 +230,12 @@ class IMU(threading.Thread):
         self._vel += (r * a.x + u * a.y + f * a.z) * dt if self._time >= self._trust_acc_time else Vector3(0.0, 0.0, 0.0)
         # интегрирование пути
         self._pos += (r * self._vel.x + u * self._vel.y + f * self._vel.z) * dt
+        #sys.stdout.write(f'\n|"omega":{self.omega}|')
+        #sys.stdout.write(f'|"angle":{self.angles}|\n')
+        #sys.stdout.write(f'|"accel":{self.acceleration}|\n')
+        #sys.stdout.write(f'|"vel"  :{self.velocity}|\n')
+        #sys.stdout.write(f'|"pos"  :{self.position}|\n')
+        #sys.stdout.write('\r\b\b\r')
 
     def _compute_basis(self) -> bool:
         if self._mode != BASIS_COMPUTE_MODE:
@@ -227,57 +248,52 @@ class IMU(threading.Thread):
     def _calibrate(self) -> bool:
         if self._mode != CALIBRATION_MODE:
             return False
+        if self._time == 0.0:
+            print(f"\n|--------------Accelerometer calibrating...-------------|\n"
+                  f"|-------------Please stand by and hold still...---------|")
+
+        progres_bar(self._time / self._calib_time, 55, '|', '_')
         # докалибровались
         if self._time >= self._calib_time:
             self._accelerometer.calibrate(True, self._accelerometer.basis.front)
             self._mode = BASIS_COMPUTE_MODE
-            print(f"|-----------------Calibration is done-----------------|\n")
+            self._time = 0.0
+            print(f"|------------------Calibration is done------------------|")
             return False
 
         # тряхнулись в процессе калибровки
         if not self._accelerometer.calibrate(False, self._accelerometer.basis.front):
             self._mode = BASIS_COMPUTE_MODE
-            print(f"|--------------Calibration is interrupted-------------|\n")
+            self._time = 0.0
+            print(f"|---------------Calibration is interrupted--------------|")
             return False
-
-        filler_l = int(self._time / self._calib_time * 56)  # 56 - title chars count
-        filler_r = 55 - filler_l
-        sys.stdout.write(f'\r|{"":#>{str(filler_l)}}{"":.<{str(filler_r)}}|')
-        sys.stdout.flush()
-        if filler_r == 0:
-            sys.stdout.write('\n\n')
         self._time += self._dtime
-
         return True
 
     def _warm_up(self) -> bool:
         if self._mode != WARM_UP_MODE:
             return False
+
         if self._time == 0:
-            print(f'|----------------Accelerometer start up...--------------|\n'
+            print(f'\n|----------------Accelerometer start up...--------------|\n'
                   f'|-------------Please stand by and hold still...---------|')
-        self._time += self._dtime
 
-        filler_l = int(self._time / self._warm_up_time * 56)  # 56 - title chars count
-
-        filler_r = 55 - filler_l
-
-        sys.stdout.write(f'\r|{"":#>{str(filler_l)}}{"":.<{str(filler_r)}}|')
-
-        sys.stdout.flush()
-
-        if filler_r == 0:
-            sys.stdout.write('\n\n')
+        progres_bar(self._time / self._warm_up_time, 55, '|', '_')
 
         if self._time >= self._warm_up_time:
             self._mode = CALIBRATION_MODE
             self._time = 0.0
+            print(f"|--------------------Warm up is done--------------------|")
+            return False
+
+        self._time += self._dtime
+
         return True
 
     def update(self):
-        if self._mode == STOP_MODE:
-            return
         with self._timer:
+            if self._mode == STOP_MODE:
+                return
             if self._warm_up():
                 return
             if self._calibrate():
@@ -287,34 +303,63 @@ class IMU(threading.Thread):
             self._integrate()
 
     def reset(self):
-        with self._lock:
-            self._accelerometer.reset()
-            self._vel = Vector3(0.0, 0.0, 0.0)
-            self._pos = Vector3(0.0, 0.0, 0.0)
-            self._time = 0.0
+        # with self._lock:
+        self._accelerometer.reset()
+        self._vel = Vector3(0.0, 0.0, 0.0)
+        self._pos = Vector3(0.0, 0.0, 0.0)
+        self._time = 0.0
 
     def suspend(self):
-        with self._lock:
-            self._prev_mode = self._mode
-            self._mode = STOP_MODE
+        # with self._lock:
+        self._prev_mode = self._mode
+        self._mode = STOP_MODE
 
     def resume(self):
-        with self._lock:
-            self._mode = self._prev_mode
-            self._prev_mode = -1
+        # with self._lock:
+        self._mode = self._prev_mode
+        self._prev_mode = -1
 
     def stop(self):
-        with self._lock:
-            self._mode = EXIT_MODE
+        # with self._lock:
+        self._mode = EXIT_MODE
 
     def restart(self):
-        with self._lock:
-            self._prev_mode = -1
-            self.reset()
-            self.calibrate()
+        # with self._lock:
+        self._prev_mode = -1
+        self.reset()
+        self.calibrate()
 
     def run(self):
         """ This function running in separated thread"""
         while self._mode != EXIT_MODE:
             self.update()
-            self._dtime = self._timer.last_loop_time
+            self._dtime = max(self._timer.last_loop_time,  self._timer.timeout)
+
+
+# mport os
+# os.system("")
+# LINE_UP = '\033[1A\b'
+# LINE_CLEAR = '\033[2K'
+# COLOR = {
+#     "HEADER": "\033[95m",
+#     "BLUE": "\033[94m",
+#     "GREEN": "\033[92m",
+#     "RED": "\033[91m",
+#     "ENDC": "\033[0m",
+# }
+
+#print(COLOR["HEADER"], "Testing Green!!", COLOR["ENDC"])
+
+
+if __name__ == "__main__":
+
+    # sys.stdout.write('123\n')
+    # sys.stdout.write('123\n')
+    # sys.stdout.write('123\n')
+    # sys.stdout.write(LINE_UP)
+    # sys.stdout.write('456\n')
+    # a = input()
+    # print("ty kurva")
+
+    imu = IMU()
+    imu.run()

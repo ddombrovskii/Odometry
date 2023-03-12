@@ -1,7 +1,7 @@
 from accelerometer_core.utilities.real_time_filter import RealTimeFilter
+from accelerometer_core.utilities import Matrix3, Quaternion
 from accelerometer_core.utilities.vector3 import Vector3
 from accelerometer_core.accelerometer_constants import *
-from accelerometer_core.utilities import Matrix3, Quaternion
 from typing import List, Tuple
 import numpy as np
 import random
@@ -122,7 +122,7 @@ class Accelerometer:
         self._omega_curr: Vector3 = Vector3(0.0, 0.0, 0.0)
         self._omega_prev: Vector3 = Vector3(0.0, 0.0, 0.0)
         # калибровочные значения
-        self._accel_bias:  float = 0.05  # допустимый уровень шума между значениями при калибровке
+        self._accel_bias:  float = 0.5  # допустимый уровень шума между значениями при калибровке
         self._calib_cntr:  int = 0
         self._accel_calib: Vector3 = Vector3(0.0, 0.0, 0.0)
         self._omega_calib: Vector3 = Vector3(0.0, 0.0, 0.0)

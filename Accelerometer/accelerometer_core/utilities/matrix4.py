@@ -25,50 +25,50 @@ class Matrix4(namedtuple('Matrix4', 'm00, m01, m02, m03,'
 
     @classmethod
     def identity(cls):
-        return cls(1, 0, 0, 0,
-                   0, 1, 0, 0,
-                   0, 0, 1, 0,
-                   0, 0, 0, 1)
+        return cls(1.0, 0.0, 0.0, 0.0,
+                   0.0, 1.0, 0.0, 0.0,
+                   0.0, 0.0, 1.0, 0.0,
+                   0.0, 0.0, 0.0, 1.0)
 
     @classmethod
     def zeros(cls):
-        return cls(0, 0, 0, 0,
-                   0, 0, 0, 0,
-                   0, 0, 0, 0,
-                   0, 0, 0, 0)
+        return cls(0.0, 0.0, 0.0, 0.0,
+                   0.0, 0.0, 0.0, 0.0,
+                   0.0, 0.0, 0.0, 0.0,
+                   0.0, 0.0, 0.0, 0.0)
 
     @classmethod
     def rotate_x(cls, angle: float, angle_in_rad: bool = True):
         cos_a = math.cos(angle)
         sin_a = math.sin(angle)
         if not angle_in_rad:
-            angle *= (math.pi / 180)
-        return cls(1, 0, 0, 0,
-                   0, cos_a, -sin_a, 0,
-                   0, sin_a, cos_a, 0,
-                   0, 0, 0, 1)
+            angle *= (math.pi / 180.0)
+        return cls(1.0, 0.0, 0.0, 0.0,
+                   0.0, cos_a, -sin_a, 0.0,
+                   0.0, sin_a, cos_a, 0.0,
+                   0.0, 0.0, 0.0, 1.0)
 
     @classmethod
     def rotate_y(cls, angle: float, angle_in_rad: bool = True):
         if not angle_in_rad:
-            angle *= (math.pi / 180)
+            angle *= (math.pi / 180.0)
         cos_a = math.cos(angle)
         sin_a = math.sin(angle)
-        return cls(cos_a, 0, sin_a, 0,
-                   0, 1, 0, 0,
-                   -sin_a, 0, cos_a, 0,
-                   0, 0, 0, 1)
+        return cls(cos_a, 0.0, sin_a, 0.0,
+                   0.0, 1.0, 0.0, 0.0,
+                   -sin_a, 0.0, cos_a, 0.0,
+                   0.0, 0.0, 0.0, 1.0)
 
     @classmethod
     def rotate_z(cls, angle: float, angle_in_rad: bool = True):
         if not angle_in_rad:
-            angle *= (math.pi / 180)
+            angle *= (math.pi / 180.0)
         cos_a = math.cos(angle)
         sin_a = math.sin(angle)
-        return cls(cos_a, -sin_a, 0, 0,
-                   sin_a, cos_a, 0, 0,
-                   0, 0, 1, 0,
-                   0, 0, 0, 1)
+        return cls(cos_a, -sin_a, 0.0, 0.0,
+                   sin_a,  cos_a, 0.0, 0.0,
+                   0.0, 0.0, 1.0, 0.0,
+                   0.0, 0.0, 0.0, 1.0)
 
     @classmethod
     def rotate_xyz(cls, angle_x: float, angle_y: float, angle_z: float, angle_in_rad: bool = True):
@@ -108,14 +108,11 @@ class Matrix4(namedtuple('Matrix4', 'm00, m01, m02, m03,'
         :return:
         """
         if origin is None:
-            # right = Vector3.cross(front, up).normalized()
-            # front = Vector3.cross(up, right).normalized()
             return cls(right[0], up[0], front[0], 0.0,
                        right[1], up[1], front[1], 0.0,
                        right[2], up[2], front[2], 0.0,
                        0.0, 0.0, 0.0, 1.0)
-        # right = Vector3.cross(front, up).normalized()
-        # front = Vector3.cross(up, right).normalized()
+  
         return cls(right[0], up[0], front[0], origin[0],
                    right[1], up[1], front[1], origin[1],
                    right[2], up[2], front[2], origin[2],

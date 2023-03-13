@@ -1,5 +1,7 @@
-from accelerometer_core.accelerometer_recording import read_imu_log, read_accel_log
+# from accelerometer_core.accelerometer_recording import read_imu_log, read_accel_log
+from Accelerometer.accelerometer_core import read_imu_log, read_accel_log
 from matplotlib import pyplot as plt
+
 
 
 def imu_log_read_test():

@@ -189,7 +189,7 @@ const Path3d& AStar3::searh_path(const Point3& start, const Point3& end, Heurist
     while (true)
     {
         _node = _open.begin()->second;
-        for (it = _open.begin(); it != _open.end(); it++) if ((*it).second <= _node) _node = (*it).second; // поиск минимального
+        for (it = _open.begin(); it != _open.end(); it++) if ((*it).second < _node) _node = (*it).second; // поиск минимального
         _hash = _node.pos.hash(); // ключ по которому добавляем 
         _open.erase(_hash); //сюдым...
         _clsd.emplace( _hash, _node); //тудым...

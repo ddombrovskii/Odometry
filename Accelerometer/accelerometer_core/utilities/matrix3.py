@@ -1,5 +1,7 @@
-from accelerometer_core.utilities.vector3 import Vector3
+# from accelerometer_core.utilities.vector3 import Vector3
+
 from collections import namedtuple
+from .vector3 import Vector3
 from typing import Tuple
 import math
 

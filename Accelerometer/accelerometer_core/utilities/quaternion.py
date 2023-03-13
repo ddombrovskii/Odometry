@@ -1,6 +1,9 @@
-from accelerometer_core.utilities.matrix4 import Matrix4
-from accelerometer_core.utilities.vector3 import Vector3
+# from accelerometer_core.utilities.matrix4 import Matrix4
+# from accelerometer_core.utilities.vector3 import Vector3
+
 from collections import namedtuple
+from .matrix4 import Matrix4
+from .vector3 import Vector3
 import math
 
 

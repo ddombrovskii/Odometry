@@ -1,7 +1,10 @@
-from accelerometer_core.accelerometer import Accelerometer
-from accelerometer_core.utilities import LoopTimer
-from accelerometer_core.utilities import Vector3
-import threading
+# from accelerometer_core.accelerometer import Accelerometer
+# from accelerometer_core.utilities import LoopTimer
+# from accelerometer_core.utilities import Vector3
+
+from utilities.loop_timer import LoopTimer
+from accelerometer import Accelerometer
+from utilities.vector3 import Vector3
 import sys
 
 CALIBRATION_MODE   = 0
@@ -23,7 +26,6 @@ def progres_bar(val: float, max_chars: int = 55, char_progress: str = '#', char_
 class IMU:  #(threading.Thread):
     def __init__(self):  # , forward: Vector3 = None):
         super().__init__()
-        self._lock = threading.Lock()
         self._accelerometer: Accelerometer
         try:
             self._accelerometer = Accelerometer()

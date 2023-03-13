@@ -1,7 +1,14 @@
-from accelerometer_core.utilities.real_time_filter import RealTimeFilter
-from accelerometer_core.utilities import Matrix3, Quaternion
-from accelerometer_core.utilities.vector3 import Vector3
-from accelerometer_core.accelerometer_constants import *
+# from accelerometer_core.utilities.real_time_filter import RealTimeFilter
+# from accelerometer_core.utilities import Matrix3, Quaternion
+# from accelerometer_core.utilities.vector3 import Vector3
+# from accelerometer_core.accelerometer_constants import *
+
+from utilities.real_time_filter import RealTimeFilter
+from utilities.quaternion import Quaternion
+from utilities.vector3 import Vector3
+from utilities.matrix3 import Matrix3
+
+from accelerometer_constants import *
 from typing import List, Tuple
 import numpy as np
 import random

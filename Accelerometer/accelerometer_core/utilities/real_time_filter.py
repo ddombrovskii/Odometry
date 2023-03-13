@@ -1,6 +1,9 @@
-from accelerometer_core.utilities.circ_buffer import CircBuffer
+# from accelerometer_core.utilities.circ_buffer import CircBuffer
+# from circ_buffer import CircBuffer
 from typing import Callable
 import math
+
+from Accelerometer.accelerometer_core.utilities.circ_buffer import CircBuffer
 
 
 def _clamp(val: float, min_: float, max_: float) -> float:

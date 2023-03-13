@@ -1,7 +1,12 @@
-from accelerometer_core.utilities.loop_timer import LoopTimer
-from accelerometer_core.inertial_measurement_unit import IMU
-from accelerometer_core.accelerometer import Accelerometer
-from accelerometer_core.utilities.vector3 import Vector3
+# from accelerometer_core.utilities.loop_timer import LoopTimer
+# from accelerometer_core.inertial_measurement_unit import IMU
+# from accelerometer_core.accelerometer import Accelerometer
+# from accelerometer_core.utilities.vector3 import Vector3
+
+from utilities.loop_timer import LoopTimer
+from inertial_measurement_unit import IMU
+from accelerometer import Accelerometer
+from utilities.vector3 import Vector3
 from collections import namedtuple
 from typing import List
 import datetime as dt

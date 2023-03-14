@@ -3,7 +3,6 @@ from Accelerometer.accelerometer_core import read_imu_log, read_accel_log
 from matplotlib import pyplot as plt
 
 
-
 def imu_log_read_test():
     """
     Пример чтения лог файла для инерциалки

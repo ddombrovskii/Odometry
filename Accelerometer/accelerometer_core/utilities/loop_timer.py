@@ -5,15 +5,17 @@ class LoopTimer:
     """
     Интервальный таймер, который можно использоваться в контексте with
     """
-    __slots__ = "__timeout", "__loop_time", "__time"
+    __slots__ = "__timeout", "__time", "__total_time", "__loop_done", "__delta_time"
 
     def __init__(self, timeout: float = 1.0):
         if timeout <= 0.001:
             self.__timeout = 0.001
         else:
             self.__timeout = timeout
-        self.__loop_time: float = 0.0
         self.__time: float = 0.0
+        self.__delta_time: float = 0.0
+        self.__total_time: float = 0.0
+        self.__loop_done: bool = False
 
     def __str__(self):
         return f"{{\n" \
@@ -23,14 +25,21 @@ class LoopTimer:
                f"}}"
 
     def __enter__(self):
-        self.__loop_time = time.perf_counter()
+        if self.__loop_done:
+            self.__total_time %= self.__timeout
+        self.__time = time.perf_counter()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.__loop_time = time.perf_counter() - self.__loop_time
-        if self.__loop_time < self.__timeout:
-            time.sleep(self.__timeout - self.__loop_time)
-            self.__time += self.__timeout
-        self.__time += self.__loop_time
+        self.__delta_time = time.perf_counter() - self.__time
+        self.__total_time += self.__delta_time
+        self.__loop_done = self.__total_time > self.__timeout
+
+    @property
+    def is_loop(self) -> bool:
+        """
+        Полное время измеренное таймером
+        """
+        return self.__loop_done
 
     @property
     def time(self) -> float:
@@ -44,7 +53,7 @@ class LoopTimer:
         """
         Последнее измеренное время
         """
-        return self.__loop_time
+        return self.__delta_time
 
     @property
     def timeout(self) -> float:

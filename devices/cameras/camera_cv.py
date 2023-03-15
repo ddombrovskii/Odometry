@@ -1,25 +1,25 @@
-from Accelerometer.accelerometer_core.utilities import LoopTimer
 from typing import Tuple, List
 import datetime as datetime
 import numpy as np
 import cv2 as cv
-import json
 import sys
 
+from devices.device import Device, START_MODE, BEGIN_MODE_MESSAGE, RUNNING_MODE_MESSAGE,\
+    END_MODE_MESSAGE, DeviceMessage
 
-CALIBRATION_MODE = 0
-SHOW_VIDEO_MODE = 1
-RECORD_VIDEO_MODE = 2
-SLAM_MODE = 3
-STOP_MODE = 4
-EXIT_MODE = 5
-START_UP_MODE = 6
-ANY_MODE = -1
+CALIBRATION_MODE = 7
+SHOW_VIDEO_MODE = 8
+RECORD_VIDEO_MODE = 9
+SLAM_MODE = 10
+# STOP_MODE = 4
+# EXIT_MODE = 5
+# START_UP_MODE = 6
+# ANY_MODE = -1
 
 # messages
-BEGIN_MODE_MESSAGE   = 0
-RUNNING_MODE_MESSAGE = 1
-END_MODE_MESSAGE     = 2
+# BEGIN_MODE_MESSAGE   = 0
+# RUNNING_MODE_MESSAGE = 1
+# END_MODE_MESSAGE     = 2
 
 
 def progres_bar(val: float, max_chars: int = 55, char_progress: str = '#', char_stand_by: str = '.' ):
@@ -34,28 +34,28 @@ def progres_bar(val: float, max_chars: int = 55, char_progress: str = '#', char_
 #  вроде Keyboard либа может решить эту проблему(если она кроссплатформенная)
 # TODO исправить запись камеры в рапиде (self._record_video)
 # TODO доделать и калибровку (все ли параметры нужны, которые тут используются)
-# TODO ручками организовать запись параметров калибровки в файл в JSON формате (self._calibrate)
+# TODO ручками организовать запись параметров калибровки в файл в JSON формате (self._calibrate) (DONE)
 # TODO проверить адекватность работы LoopTimer
 # TODO что не так с цветом? почему постоянно серый?
 # TODO что сделать с синхронизацией, если например камера работает в одном потоке,
 #  а мы запрашиваем изображение или ещё что из другого потока
-class CameraCV:
+class CameraCV(Device):
 
     def __init__(self):
         self._camera_stream: cv.VideoCapture = None
         try:
             self._camera_stream = cv.VideoCapture(0, cv.CAP_DSHOW)
-            self._camera_stream.set(cv.CAP_PROP_FPS, 40)
         except RuntimeError("CV Camera instantiate error") as ex:
             print(ex.args)
 
         if not self.is_open:
             raise RuntimeError("device init function call error")
+        super().__init__()
         # TODO Calibration info...
         # calibration info:
         self._ches_board_size: Tuple[int, int] = (7, 5)
-        self._objects_points: List[np.ndarray] = []
-        self._image_points: List[np.ndarray] = []
+        self._objects_points: List[np.ndarray] = []  # калибровочные точки в мировом пространстве
+        self._image_points: List[np.ndarray] = []  # калибровочные точки в пространстве изображения
         self._criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 0.001)
         self._camera_matrix: List[np.ndarray] = []
         self._distortion: List[np.ndarray] = []
@@ -71,21 +71,12 @@ class CameraCV:
         self._prev_frame: np.ndarray = np.zeros((self.width, self.height, 3), dtype=np.uint8)  # предыдущий кадр
         # modes callbacks e.t.c...
         self._start_up_time: float = 1.0  # время до начала оперирования
-        self._dtime: float = 1e-6  # временной шаг
-        self._time: float = 0.0   # время существования в некотором режиме
-        # (для режимов с неограниченным временем _time = -1.0)
-        self._curr_mode: int = -1  # текущий режим работы
-        self._prev_mode: int = -1  # предыдущий режим работы
-        self._timer: LoopTimer = LoopTimer(1.0 / self.fps)  # таймер
-        self._messages = []
-        self._callbacks =  {CALIBRATION_MODE: self._calibrate,
-                            SHOW_VIDEO_MODE: self._show_video,
-                            RECORD_VIDEO_MODE: self._record_video,
-                            SLAM_MODE: self._slam,
-                            STOP_MODE: self._pause,
-                            EXIT_MODE: self._exit,
-                            START_UP_MODE: self._start}
-        self._emit_message(START_UP_MODE, BEGIN_MODE_MESSAGE)
+        # инициализация новых режимов работы
+        self.register_callback(CALIBRATION_MODE, self._calibrate)
+        self.register_callback(SHOW_VIDEO_MODE, self._show_video)
+        self.register_callback(RECORD_VIDEO_MODE, self._record_video)
+        self.register_callback(SLAM_MODE, self._slam)
+        self.fps = 30
 
     def __del__(self):
         try:
@@ -200,6 +191,7 @@ class CameraCV:
     def fps(self, fps: int) -> None:
         if not self.camera_cv.set(cv.CAP_PROP_FPS, min(max(1, fps), 120)):
             print(f"incorrect devices fps {fps}")
+        self._timer.timeout = 1.0 / fps
 
     @property
     def curr_frame(self) -> np.ndarray:
@@ -211,7 +203,7 @@ class CameraCV:
 
     @property
     def undistorted_frame(self) -> np.ndarray:
-        if self._is_calibrated and len(self._camera_matrix) > 0:
+        if len(self._camera_matrix) > 0:
             h, w = self.height, self.width
             new_camera_matrix, roi = cv.getOptimalNewCameraMatrix(self._camera_matrix, self._distortion, (w, h), 1, (w, h))
             # undistorted image
@@ -222,6 +214,7 @@ class CameraCV:
             # resize the image
             undistorted_image = cv.resize(undistorted_image, (self.width, self.height), interpolation=cv.INTER_AREA)
             return undistorted_image
+        return self.curr_frame
 
     def read_frame(self) -> bool:
         if not self.is_open:
@@ -237,93 +230,64 @@ class CameraCV:
         return True
 
     def calibrate(self, calib_results_save_path: str = "calibration_results.json"):
-        if self._curr_mode == CALIBRATION_MODE:
+        if self.mode_active(CALIBRATION_MODE):
             return
-        self._emit_message(self._curr_mode, END_MODE_MESSAGE)
-        self._emit_message(CALIBRATION_MODE, BEGIN_MODE_MESSAGE)
+        self.stop_all()
+        self.send_message(CALIBRATION_MODE, BEGIN_MODE_MESSAGE)
         self._file_name = self._file_name if calib_results_save_path is None else calib_results_save_path
 
     def record_video(self, recorded_video_save_path: str = None):
-        if self._curr_mode == RECORD_VIDEO_MODE:
+        if self.mode_active(RECORD_VIDEO_MODE):
             return
-        self._emit_message(self._curr_mode, END_MODE_MESSAGE)
-        self._emit_message(RECORD_VIDEO_MODE, BEGIN_MODE_MESSAGE)
+        self.stop_all()
+        self.send_message(RECORD_VIDEO_MODE, BEGIN_MODE_MESSAGE)
         self._file_name = self._file_name if recorded_video_save_path is None else recorded_video_save_path
 
     def show_video(self):
-        if self._curr_mode == SHOW_VIDEO_MODE:
+        if self.mode_active(SHOW_VIDEO_MODE):
             return
-        self._emit_message(self._curr_mode, END_MODE_MESSAGE)
-        self._emit_message(SHOW_VIDEO_MODE, BEGIN_MODE_MESSAGE)
-
-    def pause(self):
-        if self._curr_mode != STOP_MODE:
-            self._emit_message(STOP_MODE, BEGIN_MODE_MESSAGE)
-        return
-
-    def resume(self):
-        if self._curr_mode == STOP_MODE:
-            self._emit_message(STOP_MODE, END_MODE_MESSAGE)
-        return
-
-    def exit(self):
-        self._emit_message(EXIT_MODE, BEGIN_MODE_MESSAGE)
-        self._emit_message(self._curr_mode, END_MODE_MESSAGE)
+        self.stop_all()
+        self.send_message(SHOW_VIDEO_MODE, BEGIN_MODE_MESSAGE)
 
     def slam(self, slam_results_save_path: str = None) -> bool:
         return False
 
-    def _start(self, message: int) -> bool:
-
+    def on_start(self, message: int):
         if message == BEGIN_MODE_MESSAGE:
             print(f'\n|-------------------Camera start up...------------------|\n'
                     f'|-------------Please stand by and hold still...---------|')
-            return True
-
+            return
         if message == RUNNING_MODE_MESSAGE:
-            self._time += self._dtime
-            progres_bar(self._time / self._start_up_time, 55, '|', '_')
-            if self._time >= self._start_up_time:
-                self._emit_message(START_UP_MODE, END_MODE_MESSAGE)
-                self._emit_message(SHOW_VIDEO_MODE, BEGIN_MODE_MESSAGE)
-                self._time = 0.0
-                # print(f"\n|--------------------Warm up is done--------------------|")
-                return False
-            return True
+            progres_bar(self._mode_times[START_MODE] / self._start_up_time, 55, '|', '_')
+            if self._mode_times[START_MODE] >= self._start_up_time:
+                self.show_video()
 
-        if message == END_MODE_MESSAGE:
-            self._time = 0.0
-            # print(f"\n|--------------------Warm up is done--------------------|")
-            return False
-
-        return False
-
-    def _calibrate(self, message: int) -> bool:
+    def _calibrate(self, message: DeviceMessage):
         """
         "esc", "q" - Прекратить калибровку
         "r" - захват текущего изображения с камеры и калибровка по нему
         """
-        if message == BEGIN_MODE_MESSAGE:
+        if message.mode_arg == BEGIN_MODE_MESSAGE:
             self._time = 3.0
-            print(f"\n|----------------CameraCV calibrating...--------------|\n"
+            print(f"\n|-----------------CameraCV calibrating...---------------|\n"
                   f"|-------------Please stand by and hold still...---------|")
             if self._window_handle != "":
                 cv.destroyWindow(self._window_handle)
             self._window_handle = "calibration-window"
             cv.namedWindow(self._window_handle, cv.WINDOW_NORMAL)
-            return True
+            return
 
-        if message == RUNNING_MODE_MESSAGE:
+        if message.mode_arg == RUNNING_MODE_MESSAGE:
             if not self.read_frame():
                 print(f"\n|---------------Calibration is interrupted--------------|")
-                self._emit_message(CALIBRATION_MODE, END_MODE_MESSAGE)
-                self._emit_message(EXIT_MODE, BEGIN_MODE_MESSAGE)
-                return False
+                self.send_message(CALIBRATION_MODE, END_MODE_MESSAGE)
+                self.exit()
+                return
 
             # чтение текущего кадра
-            self._time += self._dtime
-
             frame_curr = self.curr_frame
+
+            progres_bar((self._mode_times[CALIBRATION_MODE] / 2.0)  % 1.0)
 
             ###############################################
             # Добавляет новый калибровочный кадр по клику #
@@ -335,21 +299,21 @@ class CameraCV:
             if ret:
                 # TODO obj_points - а нужно ли их вообще в лист помещать???
                 # ответ: нужно, но можно каждый раз не создавать obj_points заново
-                if self._time > 2.0:
+                if self._mode_times[CALIBRATION_MODE] > 2.0:
                     self._objects_points.append(self.obj_p)
                     self._image_points.append(corners)
-                    print("added new calibration image")
-                    self._time = 0.0
+                    print("\radded new calibration image")
 
                 corners_2 = cv.cornerSubPix(frame_gray, corners, (11, 11), (-1, -1), self._criteria)
                 cv.drawChessboardCorners(frame_curr, self._ches_board_size, corners_2, ret)
 
             cv.imshow(self._window_handle, frame_curr)
-            return True
+            return
 
-        if message == END_MODE_MESSAGE:
-
-            # print(f"\n|------------------Calibration is done------------------|")
+        if message.mode_arg == END_MODE_MESSAGE:
+            if self._window_handle == "calibration-window":
+                cv.destroyWindow(self._window_handle)
+                self._window_handle = ""
 
             self._time = 0.0
             # TODO завершение калибровки на основе данных из obj_points и _image_points
@@ -363,34 +327,44 @@ class CameraCV:
                     self._rotation_vectors = r_vecs
                     self._translation_vectors = t_vecs
                     self._is_calibrated = True
-
-                    # np.ndarray почему-то не хотят сериализовываться в json-строку
-                    json_data = {"camera_matrix": camera_matrix.tolist(),
-                                 "distortion": dist.tolist(),
-                                 "rotation_vectors": [vec.tolist() for vec in r_vecs],
-                                 "translation_vectors":  [vec.tolist() for vec in t_vecs]}
                     self._file_name = "calibration_results.json"
+                    with open(self._file_name, 'wt') as calib_info:
+                        print("{\n\t\"camera_matrix\": \n\t{", file=calib_info, end="\n\t")
+                        for index, value in enumerate(self._camera_matrix.flat):
+                            row, col = divmod(index, 3)
+                            if index == 8:
+                                print(f"\"m{row}{col}\": {value:20}", file=calib_info, end="\n\t},")
+                                continue
+                            end = "\n\t" if col == 2 else ""
+                            print(f"\"m{row}{col}\": {value:20}, ", file=calib_info, end=end)
 
-                    # TODO открыть файл для записи данных калибровки
-                    # TODO записать данные калибровки
-                    # TODO закрыть файл и назначить None для self._file_name, self._file_handle
-                    print(self._file_name)
-                    with open(self._file_name, "w") as file:
-                        file.write(json.dumps(json_data))
+                        print("\n\t\"distortion\": \n\t[\n\t", file=calib_info, end="")
+
+                        for index, value in enumerate(self._distortion.flat):
+                            if index == self._distortion.size - 1:
+                                print(f"{value:20}\n\t],", file=calib_info, end="")
+                                continue
+                            print(f"{value:10}, ", file=calib_info, end="")
+
+                        print("\n\t\"rotation_vectors\": \n\t[\n\t", file=calib_info, end="")
+                        print(',\n\t'.join(f"\t{{\"x\": {v[0][0]:20}, \"y\": {v[1][0]:20}, \"z\": {v[2][0]:20}}}"
+                                         for v in self._rotation_vectors), file=calib_info, end="")
+                        print("\n\t],", file=calib_info, end="")
+
+                        print("\n\t\"translation_vectors\": \n\t[\n\t", file=calib_info, end="")
+                        print(',\n\t'.join(f"\t{{\"x\": {v[0][0]:20}, \"y\": {v[1][0]:20}, \"z\": {v[2][0]:20}}}"
+                                         for v in self._translation_vectors), file=calib_info, end="")
+                        print("\n\t]\n}", file=calib_info, end="")
 
                     self._file_name, self._file_handle = None, None
                 self._objects_points, self._image_points = [], []
 
-            return False
-        return False
+            return
+        return
 
-    def _record_video(self, message: int) -> bool:
-        if message == BEGIN_MODE_MESSAGE:
-
+    def _record_video(self, message: DeviceMessage):
+        if message.mode_arg == BEGIN_MODE_MESSAGE:
             print(f'\n|----------------CameraCV record video...---------------|')
-
-            self._time = 0.0
-
             if self._window_handle != "":
                 cv.destroyWindow(self._window_handle)
             self._window_handle = "video-recording-window"
@@ -408,11 +382,10 @@ class CameraCV:
             except Exception as _ex:
                 print(f"\nVideo recording start failed...\n{_ex.args}")
                 self.show_video()
-                self._time = 0.0
-                return False
-            return True
+                return
+            return
 
-        if message == RUNNING_MODE_MESSAGE:
+        if message.mode_arg == RUNNING_MODE_MESSAGE:
             if not self.read_frame():
                 print(f"|--------------Record video is interrupted--------------|")
                 self.show_video()
@@ -421,129 +394,72 @@ class CameraCV:
                     self._file_handle.release()
                 except Exception as _ex:
                     print(f"\nVideo recording read frame failed...\n{_ex.args}")
-                return False
+                return
 
-            progres_bar((self._time / 10.0) % 1.0, 55, '|', '_')
-
-            self._time += self._dtime
+            progres_bar((self._mode_times[RECORD_VIDEO_MODE] / 10.0) % 1.0, 55, '|', '_')
 
             cv.imshow(self._window_handle, self.curr_frame)
 
             self._file_handle.write(self.curr_frame)
 
-            return True
+            return
 
-        if message == END_MODE_MESSAGE:
-            self._time = 0.0
-            self._file_name = None
-            if self._window_handle != "":
+        if message.mode_arg == END_MODE_MESSAGE:
+            if self._window_handle == "video-recording-window":
                 cv.destroyWindow(self._window_handle)
                 self._window_handle = ""
+            self._file_name = None
             try:
                 self._file_handle.release()
+                self._file_handle = None
             except Exception as _ex:
                 print(f"\nVideo recording file release failed...\n{_ex.args}")
-            return False
+            return
 
-        return False
+        return
 
-    def _pause(self, message: int) -> bool:
+    def on_pause(self, message: int):
         if message == BEGIN_MODE_MESSAGE:
             print(f"\n|--------------------CameraCV stop...-------------------|")
-            return True
 
         if message == RUNNING_MODE_MESSAGE:
             if len(self._camera_matrix) > 0:
                 cv.imshow(self._window_handle, self.undistorted_frame)
             else:
                 cv.imshow(self._window_handle, self.curr_frame)
-            return True
 
-        if message == END_MODE_MESSAGE:
-            self._emit_message(self._prev_mode, RUNNING_MODE_MESSAGE)
-            return False
-        return False
-
-    def _show_video(self, message: int) -> bool:
-        if message == BEGIN_MODE_MESSAGE:
-            self._time = -1.0
+    def _show_video(self, message: DeviceMessage):
+        if message.mode_arg == BEGIN_MODE_MESSAGE:
             print(f"\n|-----------------CameraCV show video...----------------|")
             if self._window_handle != "":
                 cv.destroyWindow(self._window_handle)
             self._window_handle = "show-video-window"
             cv.namedWindow(self._window_handle, cv.WINDOW_NORMAL)
-            return True
+            return
 
-        if message == RUNNING_MODE_MESSAGE:
+        if message.mode_arg == RUNNING_MODE_MESSAGE:
             if not self.read_frame():
-                self._target_mode = EXIT_MODE
-                self._time = 0.0
+                self.exit()
                 return False
             if len(self._camera_matrix) > 0:
                 cv.imshow(self._window_handle, self.undistorted_frame)
             else:
                 cv.imshow(self._window_handle, self.curr_frame)
-            return True
-
-        if message == END_MODE_MESSAGE:
-            # if self._window_handle != "":
-            #     cv.destroyWindow(self._window_handle)
-            #     self._window_handle = ""
-            return False
-
-        return False
-
-    def _slam(self, message: int) -> bool:
-        if message == START_UP_MODE:
-            return False
-        if message == RUNNING_MODE_MESSAGE:
-            return False
-        if message == END_MODE_MESSAGE:
-            return False
-        return False
-
-    def _exit(self, message: int) -> bool:
-        if message == START_UP_MODE:
-            return False
-        if message == RUNNING_MODE_MESSAGE:
-            return False
-        if message == END_MODE_MESSAGE:
-            return False
-        return False
-
-    def _emit_message(self, mode_info, mode_state):
-        # Если сообщение для всех режимов
-        if mode_info == ANY_MODE:
-            self._messages.insert(0, (mode_info, mode_state))
             return
-        # Если сообщение для ткущего режима
-        if mode_info == self._curr_mode:
-            self._messages.insert(0, (mode_info, mode_state))
-            return
-        #
-        self._prev_mode = self._curr_mode
-        self._curr_mode = mode_info
-        self._messages.insert(0, (mode_info, mode_state))
 
-    def _wait_for_messages(self, wait_time_in_milliseconds: int = 5):
-        key_code = cv.waitKey(wait_time_in_milliseconds)
-        if key_code == -1:
-            self._emit_message(self._curr_mode, RUNNING_MODE_MESSAGE)
+        if message.mode_arg == END_MODE_MESSAGE:
+            if self._window_handle == "show-video-window":
+                cv.destroyWindow(self._window_handle)
+                self._window_handle = ""
             return
-        # приостановка любого выполняющегося режима
-        if key_code == ord('p'):
-            if self._curr_mode != STOP_MODE:
-                self.pause()
-                return
-            self.resume()
-            return
+
+    def _slam(self, message: int):
+        ...
+
+    def on_messages_wait(self, key_code: int) -> None:
         # Завершение работы режима
         if key_code == ord('q'):
             self.show_video()
-            return
-        # Выход из камеры
-        if key_code == 27:
-            self.exit()
             return
         # Включение режима калибровки
         if key_code == ord('c'):
@@ -561,27 +477,6 @@ class CameraCV:
         if key_code == ord('s'):
             self.show_video()  # <- затычка
             return
-
-    def update(self):
-        with self._timer:
-            if not self._timer.is_loop:
-                return
-            self._dtime = max(self._timer.last_loop_time, self._timer.timeout)
-            self._wait_for_messages()
-            while len(self._messages) != 0:
-                mode_info, mode_arg = self._messages.pop()
-                if mode_info == ANY_MODE:
-                    for mode_function in self._callbacks.values():
-                        mode_function.__call__(mode_arg)
-                    continue
-                if mode_info in self._callbacks:
-                    self._callbacks[mode_info].__call__(mode_arg)
-                    continue
-
-    def run(self):
-        """ This function running in separated thread"""
-        while self._curr_mode != EXIT_MODE:
-            self.update()
 
 
 def camera_cv_test():

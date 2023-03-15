@@ -15,7 +15,7 @@ class LoopTimer:
         self.__time: float = 0.0
         self.__delta_time: float = 0.0
         self.__total_time: float = 0.0
-        self.__loop_done: bool = False
+        self.__loop_done: bool = True
 
     def __str__(self):
         return f"{{\n" \

@@ -277,7 +277,7 @@ class IMU:
             pass
 
     def _compute_basis(self) -> bool:
-        if self._mode != BASIS_COMPUTE_MODE:
+        if self._curr_mode != BASIS_COMPUTE_MODE:
             return False
         self._mode = INTEGRATE_MODE
         # self._basis = Matrix4.build_basis(self.acceleration, self._basis.front)
@@ -396,6 +396,7 @@ class IMU:
         with self._timer:
             if not self._timer.is_loop:
                 return
+            self._d_time = max(self._timer.last_loop_time,  self._timer.timeout)
             self._wait_for_messages()
             while len(self._messages) != 0:
                 mode_info, mode_arg = self._messages.pop()
@@ -425,7 +426,6 @@ class IMU:
         """ This function running in separated thread"""
         while self._curr_mode != EXIT_MODE:
             self.update()
-            self._d_time = max(self._timer.last_loop_time,  self._timer.timeout)
 
 
 # mport os

@@ -26,7 +26,6 @@ class DeviceMessage(namedtuple('DeviceMessage', 'mode, mode_arg')):
         return f"{{\"mode_info\": {self.mode}, \"mode_arg\": {self.mode_arg}}}"
 
 
-STOP_MODE  = 0
 START_MODE = 1
 PAUSE_MODE = 2
 EXIT_MODE  = 3
@@ -151,7 +150,7 @@ class Device:
         self.on_messages_wait(key_code)
         # приостановка любого выполняющегося режима
         if key_code == ord('p'):
-            if STOP_MODE in self._curr_modes:
+            if PAUSE_MODE in self._curr_modes:
                 self.resume()
                 return
             self.pause()
@@ -202,14 +201,13 @@ class Device:
         self._messages.insert(0, DeviceMessage(mode_info, mode_state))
 
     def pause(self) -> None:
-        if STOP_MODE in self._curr_modes:
+        if PAUSE_MODE in self._curr_modes:
             return
-        self.send_message(STOP_MODE, BEGIN_MODE_MESSAGE)
+        self.send_message(PAUSE_MODE, BEGIN_MODE_MESSAGE)
 
     def resume(self) -> None:
-        if STOP_MODE in self._curr_modes:
-            return
-        self.send_message(STOP_MODE, END_MODE_MESSAGE)
+        if PAUSE_MODE in self._curr_modes:
+            self.send_message(PAUSE_MODE, END_MODE_MESSAGE)
 
     def exit(self) -> None:
         self.send_message(EXIT_MODE, BEGIN_MODE_MESSAGE)

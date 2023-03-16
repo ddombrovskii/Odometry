@@ -299,15 +299,16 @@ class CameraCV(Device):
             self._time = 0.0
             # TODO завершение калибровки на основе данных из obj_points и _image_points
             if len(self._image_points) > 0 and len(self._objects_points) > 0:
-                status, camera_matrix, dist, r_vecs, t_vecs = cv.calibrateCamera(self._objects_points, self._image_points,
-                                                                                 (self.width, self.height), None, None)
+                status, camera_matrix, dist, r_vectors, t_vectors = \
+                    cv.calibrateCamera(self._objects_points, self._image_points, (self.width, self.height), None, None)
 
                 if status:
                     self._camera_matrix = camera_matrix
                     self._distortion = dist
-                    self._rotation_vectors = r_vecs
-                    self._translation_vectors = t_vecs
+                    self._rotation_vectors = r_vectors
+                    self._translation_vectors = t_vectors
                     self._file_name = "calibration_results.json"
+
                     with open(self._file_name, 'wt') as calib_info:
                         print("{\n\t\"camera_matrix\": \n\t{", file=calib_info, end="\n\t")
                         for index, value in enumerate(self._camera_matrix.flat):
@@ -319,12 +320,7 @@ class CameraCV(Device):
                             print(f"\"m{row}{col}\": {value:20}, ", file=calib_info, end=end)
 
                         print("\n\t\"distortion\": \n\t[\n\t", file=calib_info, end="")
-
-                        for index, value in enumerate(self._distortion.flat):
-                            if index == self._distortion.size - 1:
-                                print(f"{value:20}\n\t],", file=calib_info, end="")
-                                continue
-                            print(f"{value:10}, ", file=calib_info, end="")
+                        print(', '.join(f"{value:20}"for value in self._distortion.flat), end="\n\t],")
 
                         print("\n\t\"rotation_vectors\": \n\t[\n\t", file=calib_info, end="")
                         print(',\n\t'.join(f"\t{{\"x\": {v[0][0]:20}, \"y\": {v[1][0]:20}, \"z\": {v[2][0]:20}}}"
@@ -467,19 +463,4 @@ def camera_cv_test():
 
 
 if __name__ == "__main__":
-    # command = ""
-    # command_list = []
-    # while command != "stop":
-    #    command = sys.stdin.read(1)  # reads one byte at a time, similar to getchar()
-    #    if command == '':
-    #        continue
-    #    if command[-1] == '\n':
-    #        # do command parce
-    #        command = command[:-1]
-    #        command_list.append(command)
-    #        print(f"execute >> {command}")
-    #        continue
-    #    # print(command_list.pop())
-
-    # print("done...")
     camera_cv_test()

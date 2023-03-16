@@ -21,11 +21,25 @@ SLAM_MODE = 10
 # TODO что сделать с синхронизацией, если например камера работает в одном потоке,
 #  а мы запрашиваем изображение или ещё что из другого потока
 class CameraCV(Device):
+    _MAX_CAMERA_PORTS_SUPPORT = 32
+    _LAST_CAMERA_PORT = 0
+    _FREE_CAMERA_PORTS = []
 
     def __init__(self):
+        self._camera_port: int = -1
         self._camera_stream: cv.VideoCapture = None
         try:
-            self._camera_stream = cv.VideoCapture(0, cv.CAP_DSHOW)
+            if len(CameraCV._FREE_CAMERA_PORTS) != 0:
+                self._camera_port = CameraCV._FREE_CAMERA_PORTS.pop()
+                self._camera_stream = cv.VideoCapture(self._camera_port, cv.CAP_DSHOW)
+            else:
+                if CameraCV._MAX_CAMERA_PORTS_SUPPORT < CameraCV._LAST_CAMERA_PORT:
+                    raise RuntimeError("CV Camera exceed max amount of instances...")
+                self._camera_port = CameraCV._LAST_CAMERA_PORT
+                self._camera_stream = cv.VideoCapture(self._camera_port, cv.CAP_DSHOW)
+
+                CameraCV._LAST_CAMERA_PORT += 1
+
         except RuntimeError("CV Camera instantiate error") as ex:
             print(ex.args)
 
@@ -58,10 +72,14 @@ class CameraCV(Device):
         self.register_callback(RECORD_VIDEO_MODE, self._record_video)
         self.register_callback(SLAM_MODE, self._slam)
         self.fps = 30
+        self.width = 1000
+        self.height = 1000
 
     def __del__(self):
         try:
             self.camera_cv.release()
+            CameraCV._FREE_CAMERA_PORTS.append(self._camera_port)
+            print("\nCamera released...")
         except RuntimeError() as ex:
             self.send_log_message(f"\nCamera dispose error:\n {ex.args}")
             return False
@@ -320,7 +338,7 @@ class CameraCV(Device):
                             print(f"\"m{row}{col}\": {value:20}, ", file=calib_info, end=end)
 
                         print("\n\t\"distortion\": \n\t[\n\t", file=calib_info, end="")
-                        print(', '.join(f"{value:20}"for value in self._distortion.flat), end="\n\t],")
+                        print(', '.join(f"{value:20}"for value in self._distortion.flat), file=calib_info, end="\n\t],")
 
                         print("\n\t\"rotation_vectors\": \n\t[\n\t", file=calib_info, end="")
                         print(',\n\t'.join(f"\t{{\"x\": {v[0][0]:20}, \"y\": {v[1][0]:20}, \"z\": {v[2][0]:20}}}"

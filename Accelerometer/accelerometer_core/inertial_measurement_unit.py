@@ -1,37 +1,17 @@
 # from accelerometer_core.accelerometer import Accelerometer
-# from accelerometer_core.utilities import LoopTimer
-# from accelerometer_core.utilities import Vector3
-import time
-import msvcrt
+# from accelerometer_core.Utilities import LoopTimer
+# from accelerometer_core.Utilities import Vector3
 
-from .utilities.loop_timer import LoopTimer
+from Utilities.device import Device, START_MODE, BEGIN_MODE_MESSAGE, RUNNING_MODE_MESSAGE, END_MODE_MESSAGE, \
+    DeviceMessage, device_progres_bar
 from .accelerometer import Accelerometer
-from .utilities.vector3 import Vector3
-from typing import List, Tuple
-import sys
+from Utilities.vector3 import Vector3
 
-
-# messages
-BEGIN_MODE_MESSAGE   = 0
-RUNNING_MODE_MESSAGE = 1
-END_MODE_MESSAGE     = 2
 
 # modes
-CALIBRATION_MODE   = 0
-BASIS_COMPUTE_MODE = 1
-INTEGRATE_MODE     = 2
-STOP_MODE          = 3
-EXIT_MODE          = 4
-START_UP_MODE      = 5
-ANY_MODE           = -1
-
-
-def progres_bar(val: float, max_chars: int = 55, char_progress: str = '#', char_stand_by: str = '.' ):
-    filler_l = int(min(max(0.0, val), 1.0) * max_chars)  # max_chars - title chars count
-    filler_r = max_chars - filler_l
-    sys.stdout.write(f'\r|{"":{char_progress}>{str(filler_l)}}{"":{char_stand_by}<{str(filler_r)}}|')
-    if filler_r == 0:
-         sys.stdout.write('\n')
+CALIBRATION_MODE = 7
+BASIS_COMPUTE_MODE = 8
+INTEGRATE_MODE = 9
 
 
 # TODO Подумать как можно организовать ввод с клавиатуры без cv2.waitKey(timeout)
@@ -39,37 +19,27 @@ def progres_bar(val: float, max_chars: int = 55, char_progress: str = '#', char_
 # TODO проверить адекватность работы LoopTimer
 # TODO что сделать с синхронизацией, если например камера работает в одном потоке,
 #  а мы запрашиваем изображение или ещё что из другого потока
-class IMU:
+class IMU(Device):
     def __init__(self):  # , forward: Vector3 = None):
-        super().__init__()
         self._accelerometer: Accelerometer
         try:
             self._accelerometer = Accelerometer()
         except RuntimeError as err:
             print(err.args)
             exit(0)
-        self._timer: LoopTimer = LoopTimer(0.01)
-        self._mode_time = 0.0
-        self._d_time    = 1e-6
+        super().__init__()
+        self._file_name = ""
         # время простоя перед запуском
         self._start_time:   float = 1.0
         # время калибровки
         self._calib_time:     float = 2.0
         # время ...
         self._trust_acc_time: float = 0.1
-        # self._timer: LoopTimer = LoopTimer(0.001)
+        self._acc_check_time: float = 0.0
         self._vel: Vector3   = Vector3(0.0, 0.0, 0.0)
         self._pos: Vector3   = Vector3(0.0, 0.0, 0.0)
-        self._messages: List[Tuple[int, int]] = []
-        self._curr_mode: int = -1
-        self._prev_mode: int = -1
-        self._callbacks =  {CALIBRATION_MODE: self._calibrate,
-                            BASIS_COMPUTE_MODE: self._compute_basis,
-                            INTEGRATE_MODE: self._integrate,
-                            STOP_MODE: self._pause,
-                            EXIT_MODE: self._exit,
-                            START_UP_MODE: self._start}
-        self._emit_message(START_UP_MODE, BEGIN_MODE_MESSAGE)
+        self.register_callback(CALIBRATION_MODE, self._calibrate)
+        self.register_callback(INTEGRATE_MODE, self._integrate)
 
     @property
     def start_time(self) -> float:
@@ -189,15 +159,16 @@ class IMU:
         """
         return self._accelerometer.prev_t
 
-    def calibrate(self, timeout: float = None, forward: Vector3 = None):
+    def calibrate(self, timeout: float = None, calib_results_save_path: str = None):
         """
         Калибровка акселерометра
         """
-        if self._curr_mode == CALIBRATION_MODE:
+        if self.mode_active(CALIBRATION_MODE):
             return
+        self.stop_all()
+        self.send_message(CALIBRATION_MODE, BEGIN_MODE_MESSAGE)
         self._calib_time = self._calib_time if timeout is None else timeout
-        self._emit_message(self._curr_mode, END_MODE_MESSAGE)
-        self._emit_message(CALIBRATION_MODE, BEGIN_MODE_MESSAGE)
+        self._file_name = self._file_name if calib_results_save_path is None else calib_results_save_path
 
     def rebuild_basis(self):
         pass
@@ -206,240 +177,100 @@ class IMU:
         """
         Чтение данных акселерометра
         """
-        self._emit_message(self._curr_mode, END_MODE_MESSAGE)
-        self._emit_message(INTEGRATE_MODE, BEGIN_MODE_MESSAGE)
+        self.stop_all()
+        self.send_message(INTEGRATE_MODE, BEGIN_MODE_MESSAGE)
 
-    def pause(self):
-        if self._curr_mode != STOP_MODE:
-            self._emit_message(STOP_MODE, BEGIN_MODE_MESSAGE)
-        return
-
-    def resume(self):
-        if self._curr_mode == STOP_MODE:
-            self._emit_message(STOP_MODE, END_MODE_MESSAGE)
-        return
-
-    def exit(self):
-        self._emit_message(EXIT_MODE, BEGIN_MODE_MESSAGE)
-        self._emit_message(self._curr_mode, END_MODE_MESSAGE)
-
-    def _emit_message(self, mode_info, mode_state):
-        # Если сообщение для всех режимов
-        if mode_info == -1:
-            self._messages.insert(0, (mode_info, mode_state))
+    def on_start(self, message: int) -> None:
+        if message == BEGIN_MODE_MESSAGE:
+            self.send_log_message(f'\n|----------------Accelerometer start up...--------------|\n'
+                                  f'|-------------Please stand by and hold still...---------|\n')
             return
-        # Если сообщение для ткущего режима
-        if mode_info == self._curr_mode:
-            self._messages.insert(0, (mode_info, mode_state))
+
+        if message == RUNNING_MODE_MESSAGE:
+            self.send_log_message(device_progres_bar(self._mode_times[START_MODE] / self._start_time, "", 55, '|', '_'))
+            if self._mode_times[START_MODE] >= self._start_time:
+                self.send_message(START_MODE, END_MODE_MESSAGE)
             return
-        #
-        self._prev_mode = self._curr_mode
-        self._curr_mode = mode_info
-        self._messages.insert(0, (mode_info, mode_state))
 
-    def _integrate(self, message: int) -> bool:
-        if message == 0:
-            self._mode_time = 0.0
-            print(f"\n|----------Accelerometer read and integrate...----------|\n"
-                    f"|-------------------Please stand by...------------------|")
-            return True
-
-        if message == 1:
-            self._mode_time += self._d_time
-
-            progres_bar((self._mode_time / 3.0) % 1.0, 55, '|', '_')
-
-            if not self._accelerometer.read_measurements():
-                return False
-
-            dt    = self.delta_t
-
-            if (self._accelerometer.acceleration - self._accelerometer.acceleration_prev).magnitude() > \
-                    self._accelerometer.acceleration_noize_level:
-                self._mode_time = 0.0
-            else:
-                self._mode_time += self.delta_t
-
-            r, u, f =  self._accelerometer.basis.right_up_front
-
-            a = self._accelerometer.acceleration_local_space
-
-            self._vel += (r * a.x + u * a.y + f * a.z) * dt if self._mode_time >= self._trust_acc_time else Vector3(0.0, 0.0, 0.0)
-            # интегрирование пути
-            self._pos += (r * self._vel.x + u * self._vel.y + f * self._vel.z) * dt
-            # sys.stdout.write(f'\n|"omega":{self.omega}|')
-            # sys.stdout.write(f'|"angle":{self.angles}|\n')
-            # sys.stdout.write(f'|"accel":{self.acceleration}|\n')
-            # sys.stdout.write(f'|"vel"  :{self.velocity}|\n')
-            # sys.stdout.write(f'|"pos"  :{self.position}|\n')
-            # sys.stdout.write('\r\b\b\r')
-        if message == 2:
-            pass
-
-    def _compute_basis(self) -> bool:
-        if self._curr_mode != BASIS_COMPUTE_MODE:
-            return False
-        self._mode = INTEGRATE_MODE
-        # self._basis = Matrix4.build_basis(self.acceleration, self._basis.front)
-        # self._ang   = Quaternion.from_rotation_matrix(self._basis).to_euler_angles()
-        return True
-
-    def _start(self, message: int) -> bool:
-        if message == 0:
-            print(f'\n|----------------Accelerometer start up...--------------|\n'
-                  f'|-------------Please stand by and hold still...---------|')
-            self._mode_time = 0
-            return True
-
-        if message == 1:
-            self._mode_time += self._d_time
-            progres_bar(self._mode_time / self._start_time, 55, '|', '_')
-            if self._mode_time >= self._start_time:
-                self.calibrate()
-                return False
-            return True
-
-        if message == 2:
+        if message == END_MODE_MESSAGE:
             self.calibrate()
-            return False
-        return False
-
-    def _calibrate(self, message: int) -> bool:
-        if message == 0:
-            print(f"\n|--------------Accelerometer calibrating...-------------|\n"
-                  f"|-------------Please stand by and hold still...---------|")
-            self._mode_time = 0.0
-            return True
-
-        if message == 1:
-            self._mode_time += self._d_time
-            progres_bar(self._mode_time / self._calib_time, 55, '|', '_')
-
-            if self._mode_time >= self._calib_time:
-                self._accelerometer.calibrate(True, self._accelerometer.basis.front)
-                self._mode_time = 0.0
-                self._emit_message(self._curr_mode, END_MODE_MESSAGE)
-                # print(f"|------------------Calibration is done------------------|")
-                return False
-
-            if not self._accelerometer.calibrate(False, self._accelerometer.basis.front):
-                self._mode_time = 0.0
-                self._emit_message(self._curr_mode, END_MODE_MESSAGE)
-                # print(f"|---------------Calibration is interrupted--------------|")
-                return False
-
-        if message == 2:
-            self._accelerometer.calibrate(True, self._accelerometer.basis.front)
-            self._mode_time = 0.0
-            self._emit_message(INTEGRATE_MODE, BEGIN_MODE_MESSAGE)
-            return False
-        return False
-
-    def _wait_for_messages(self, wait_time_in_milliseconds: int = 5):
-        # if not msvcrt.kbhit():
-        #    return
-        #    # key = msvcrt.getch()
-        key_code = -1  # msvcrt.getch()  # cv.waitKey(wait_time_in_milliseconds)
-        if key_code == -1:
-            self._emit_message(self._curr_mode, RUNNING_MODE_MESSAGE)
             return
-        # приостановка любого выполняющегося режима
-        if key_code == ord('p'):
-            if self._curr_mode != STOP_MODE:
-                self.pause()
-                return
-            self.resume()
-            return
+
+    def on_messages_wait(self, key_code: int) -> None:
         # Завершение работы режима
-        if key_code == ord('q'):
+        if key_code == ord('i'):
             self.integrate()
-            return
-        # Выход из камеры
-        if key_code == 27:
-            self.exit()
             return
         # Включение режима калибровки
         if key_code == ord('c'):
             self.calibrate()
             return
-        # Включение режима записи
-        # if key_code == ord('r'):
-        #    self.record_video()
 
-    def _exit(self, message: int) -> bool:
-        if message == START_UP_MODE:
-            return False
-
-        if message == RUNNING_MODE_MESSAGE:
-            return False
-
-        if message == END_MODE_MESSAGE:
-            return False
-
-        return False
-
-    def _pause(self, message: int) -> bool:
+    def on_reset(self, message: int) -> None:
         if message == BEGIN_MODE_MESSAGE:
-            print(f"\n|---------------Accelerometer stop...---------------|")
-            return True
+            self.stop_all()
+            self._accelerometer.reset()
+            self._vel = Vector3(0.0, 0.0, 0.0)
+            self._pos = Vector3(0.0, 0.0, 0.0)
+            self.send_message(START_MODE, END_MODE_MESSAGE)
 
-        if message == RUNNING_MODE_MESSAGE:
-            return True
+    def on_reboot(self, message: int) -> None:
+        if message == BEGIN_MODE_MESSAGE:
+            self.stop_all()
+            self.send_message(START_MODE, BEGIN_MODE_MESSAGE)
 
-        if message == END_MODE_MESSAGE:
-            self._emit_message(self._prev_mode, RUNNING_MODE_MESSAGE)
-            return False
+    def _integrate(self, message: DeviceMessage) -> None:
+        if message.mode_arg == BEGIN_MODE_MESSAGE:
+            self.send_log_message(f"\n|----------Accelerometer read and integrate...----------|\n"
+                                  f"|-------------------Please stand by...------------------|\n")
+            self._acc_check_time = 0.0
+            return
 
-        return False
+        if message.mode_arg == RUNNING_MODE_MESSAGE:
 
-    def update(self):
-        with self._timer:
-            if not self._timer.is_loop:
+            self.send_log_message(device_progres_bar((self._mode_times[INTEGRATE_MODE] / 3.0) % 1.0, "", 55, '|', '_'))
+
+            if not self._accelerometer.read_measurements():
                 return
-            self._d_time = max(self._timer.last_loop_time,  self._timer.timeout)
-            self._wait_for_messages()
-            while len(self._messages) != 0:
-                mode_info, mode_arg = self._messages.pop()
 
-                if mode_info == ANY_MODE:
-                    for mode_function in self._callbacks.values():
-                        mode_function.__call__(mode_arg)
-                    continue
+            dt  = self.delta_t
 
-                if mode_info in self._callbacks:
-                    self._callbacks[mode_info].__call__(mode_arg)
-                    continue
+            if (self._accelerometer.acceleration - self._accelerometer.acceleration_prev).magnitude() > \
+                    self._accelerometer.acceleration_noize_level:
+                self._acc_check_time = 0.0
+            else:
+                self._acc_check_time += self.delta_t
 
-    def reset(self):
-        # with self._lock:
-        self._accelerometer.reset()
-        self._vel = Vector3(0.0, 0.0, 0.0)
-        self._pos = Vector3(0.0, 0.0, 0.0)
-        self._mode_time = 0.0
+            r, u, f =  self._accelerometer.basis.right_up_front
 
-    def restart(self):
-        self._emit_message(self._curr_mode, END_MODE_MESSAGE)
-        self._emit_message(START_UP_MODE, BEGIN_MODE_MESSAGE)
-        self.reset()
+            a = self._accelerometer.acceleration_local_space
 
-    def run(self):
-        """ This function running in separated thread"""
-        while self._curr_mode != EXIT_MODE:
-            self.update()
+            self._vel += (r * a.x + u * a.y + f * a.z) * dt if self._acc_check_time >= self._trust_acc_time else Vector3(0.0, 0.0, 0.0)
+            # интегрирование пути
+            self._pos += (r * self._vel.x + u * self._vel.y + f * self._vel.z) * dt
 
+        if message.mode_arg == END_MODE_MESSAGE:
+            pass
 
-# mport os
-# os.system("")
-# LINE_UP = '\033[1A\b'
-# LINE_CLEAR = '\033[2K'
-# COLOR = {
-#     "HEADER": "\033[95m",
-#     "BLUE": "\033[94m",
-#     "GREEN": "\033[92m",
-#     "RED": "\033[91m",
-#     "ENDC": "\033[0m",
-# }
+    def _calibrate(self, message: DeviceMessage):
+        if message.mode_arg == BEGIN_MODE_MESSAGE:
+            self.send_log_message(f"\n|--------------Accelerometer calibrating...-------------|\n"
+                                  f"|-------------Please stand by and hold still...---------|\n")
+            self._accelerometer.reset()
+            return
 
-#print(COLOR["HEADER"], "Testing Green!!", COLOR["ENDC"])
+        if message.mode_arg == RUNNING_MODE_MESSAGE:
+            self.send_log_message(device_progres_bar(self._mode_times[message.mode] / self._calib_time, "", 55, '|', '_'))
 
+            if self._mode_times[message.mode] >= self._calib_time:
+                self.send_message(message.mode, END_MODE_MESSAGE)
+                return
 
+            if not self._accelerometer.calibrate(False, self._accelerometer.basis.front):
+                self.send_message(message.mode, END_MODE_MESSAGE)
+                return
+
+        if message.mode_arg == END_MODE_MESSAGE:
+            self._accelerometer.calibrate(True, self._accelerometer.basis.front)
+            self.integrate()
+            return

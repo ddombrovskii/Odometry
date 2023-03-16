@@ -8,5 +8,7 @@ from Accelerometer.accelerometer_core.accelerometer_integrator import AccelInteg
 from Accelerometer.accelerometer_core.inertial_measurement_unit import IMU
 
 if __name__ == "__main__":
+    import cv2 as cv
+    cv.namedWindow("accelerometer", cv.WINDOW_NORMAL)
     imu = IMU()
     imu.run()

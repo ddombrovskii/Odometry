@@ -1,12 +1,13 @@
-# from accelerometer_core.utilities.real_time_filter import RealTimeFilter
-# from accelerometer_core.utilities import Matrix3, Quaternion
-# from accelerometer_core.utilities.vector3 import Vector3
+# from accelerometer_core.Utilities.real_time_filter import RealTimeFilter
+# from accelerometer_core.Utilities import Matrix3, Quaternion
+# from accelerometer_core.Utilities.vector3 import Vector3
 # from accelerometer_core.accelerometer_constants import *
 
-from .utilities.real_time_filter import RealTimeFilter
-from .utilities.quaternion import Quaternion
-from .utilities.vector3 import Vector3
-from .utilities.matrix3 import Matrix3
+
+from Utilities.real_time_filter import RealTimeFilter
+from Utilities import Quaternion
+from Utilities.vector3 import Vector3
+from Utilities import Matrix3
 
 from .accelerometer_constants import *
 from typing import List, Tuple
@@ -139,7 +140,6 @@ class Accelerometer:
         self._basis_curr: Matrix3 = Matrix3.identity()
         self._basis_prev: Matrix3 = Matrix3.identity()
         self._k_accel: float = 0.999
-
         self.__default_settings()
 
     def __str__(self):
@@ -163,8 +163,6 @@ class Accelerometer:
                f"}}"
 
     def __enter__(self):
-        # if not self.init():
-        #    raise Exception("accelerometer init error")
         return self
 
     def __init_bus(self) -> bool:

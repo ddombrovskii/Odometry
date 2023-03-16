@@ -1,10 +1,10 @@
-# from accelerometer_core.utilities import Matrix4, Vector3, Quaternion
+# from accelerometer_core.Utilities import Matrix4, Vector3, Quaternion
 # from accelerometer_core import read_accel_log, AccelMeasurement
 # from matplotlib import pyplot as plt
 from .accelerometer_recording import read_accel_log, AccelMeasurement
-from .utilities.quaternion import Quaternion
-from .utilities.matrix4 import Matrix4
-from .utilities.vector3 import Vector3
+from Utilities import Quaternion
+from Utilities.matrix4 import Matrix4
+from Utilities.vector3 import Vector3
 from matplotlib import pyplot as plt
 from typing import List
 

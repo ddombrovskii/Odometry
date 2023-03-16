@@ -33,7 +33,7 @@ def _color_map_lin(map_amount: int = 3) -> List[str]:
 
 class AnimatedPlot:
     """
-    Анимированный граффик на три кривые
+    Анимированный график на три кривые
     """
     def __init__(self, n_lines: int = 3, fig_title: str = "figure"):
         plt.ion()

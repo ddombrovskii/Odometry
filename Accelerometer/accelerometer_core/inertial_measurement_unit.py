@@ -235,7 +235,7 @@ class IMU(Device):
             if not self._accelerometer.read_measurements():
                 return
 
-            dt  = self.delta_t
+            dt = self.delta_t
 
             if (self._accelerometer.acceleration - self._accelerometer.acceleration_prev).magnitude() > \
                     self._accelerometer.acceleration_noize_level:
@@ -243,7 +243,7 @@ class IMU(Device):
             else:
                 self._acc_check_time += self.delta_t
 
-            r, u, f =  self._accelerometer.basis.right_up_front
+            r, u, f = self._accelerometer.basis.right_up_front
 
             a = self._accelerometer.acceleration_local_space
 

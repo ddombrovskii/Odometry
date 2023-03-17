@@ -143,7 +143,6 @@ class Device:
         self.on_start(message.mode_arg)
 
     def _exit(self, message: DeviceMessage) -> None:
-        # print(message)
         self.__default(message)
         self.on_exit(message.mode_arg)
         if message.mode_arg == BEGIN_MODE_MESSAGE:

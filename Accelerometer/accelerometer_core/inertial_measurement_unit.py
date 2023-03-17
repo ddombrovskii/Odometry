@@ -3,7 +3,7 @@
 # from accelerometer_core.Utilities import Vector3
 
 from Utilities.device import Device, START_MODE, BEGIN_MODE_MESSAGE, RUNNING_MODE_MESSAGE, END_MODE_MESSAGE, \
-    DeviceMessage, device_progres_bar
+    DeviceMessage, device_progres_bar, RESET_MODE, REBOOT_MODE
 from .accelerometer import Accelerometer
 from Utilities.vector3 import Vector3
 
@@ -208,16 +208,18 @@ class IMU(Device):
 
     def on_reset(self, message: int) -> None:
         if message == BEGIN_MODE_MESSAGE:
-            self.stop_all()
+            # self.stop_all()
             self._accelerometer.reset()
             self._vel = Vector3(0.0, 0.0, 0.0)
             self._pos = Vector3(0.0, 0.0, 0.0)
-            self.send_message(START_MODE, END_MODE_MESSAGE)
+            self.send_message(RESET_MODE, END_MODE_MESSAGE)
+            self.send_message(START_MODE, BEGIN_MODE_MESSAGE)
 
     def on_reboot(self, message: int) -> None:
         if message == BEGIN_MODE_MESSAGE:
-            self.stop_all()
-            self.send_message(START_MODE, BEGIN_MODE_MESSAGE)
+            # self.stop_all()
+            self.send_message(REBOOT_MODE, END_MODE_MESSAGE)
+            self.send_message(START_MODE, END_MODE_MESSAGE)
 
     def _integrate(self, message: DeviceMessage) -> None:
         if message.mode_arg == BEGIN_MODE_MESSAGE:

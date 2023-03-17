@@ -59,7 +59,7 @@ class Device:
         self._messages: List[DeviceMessage] = []  # список сообщений для переключения режимов
         self._callbacks: Dict[int, Callable[[DeviceMessage], None]] = {}  # список служебных функций
         self._user_callbacks: Dict[int, Device.DeviceCallback] = {}  # список пользовательских функций
-        self._timer: LoopTimer = LoopTimer(0.01)  # синхронизирующий таймер
+        self._timer: LoopTimer = LoopTimer(0.01, init_state=True)  # синхронизирующий таймер
         # Служебных функции
         self._callbacks.update({START_MODE:  self._start })
         self._callbacks.update({PAUSE_MODE:  self._pause })

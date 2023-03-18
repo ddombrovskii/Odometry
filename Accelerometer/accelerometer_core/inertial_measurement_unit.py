@@ -1,9 +1,11 @@
 # from accelerometer_core.accelerometer import Accelerometer
 # from accelerometer_core.Utilities import LoopTimer
 # from accelerometer_core.Utilities import Vector3
+import os
 
 from Utilities.device import Device, START_MODE, BEGIN_MODE_MESSAGE, RUNNING_MODE_MESSAGE, END_MODE_MESSAGE, \
     DeviceMessage, device_progres_bar, RESET_MODE, REBOOT_MODE, DISCARD_MODE_MESSAGE
+from .accelerometer_settings import load_accelerometer_settings
 from .accelerometer import Accelerometer
 from Utilities.vector3 import Vector3
 import datetime as dt
@@ -28,11 +30,11 @@ LOG_TIME_START  = "log_time_start"
 WAY_POINTS      = "way_points"
 
 
-# TODO запись актуальных калибровочных данных и поиск логов калибровки при запуске
+# TODO запись актуальных калибровочных данных и поиск логов калибровки при запуске (DONE)
 # TODO Подумать как можно организовать ввод с клавиатуры без cv2.waitKey(timeout)
 #  вроде Keyboard либа может решить эту проблему
 # TODO что сделать с синхронизацией, если например камера работает в одном потоке,
-#  а мы запрашиваем изображение или ещё что из другого потока
+#  а мы запрашиваем изображение или ещё что из другого потока (Возможно просто воткнуть Lock...)
 class IMU(Device):
     def __init__(self):  # , forward: Vector3 = None):
         self._accelerometer: Accelerometer
@@ -245,6 +247,8 @@ class IMU(Device):
     def on_reboot(self, message: int) -> None:
         if message == BEGIN_MODE_MESSAGE:
             self.stop_all()
+            self._vel = Vector3(0.0, 0.0, 0.0)
+            self._pos = Vector3(0.0, 0.0, 0.0)
             # self.send_message(REBOOT_MODE, END_MODE_MESSAGE)
             self.send_message(INTEGRATE_MODE, BEGIN_MODE_MESSAGE)
         return END_MODE_MESSAGE
@@ -263,21 +267,22 @@ class IMU(Device):
             if not self._accelerometer.read_measurements():
                 return RUNNING_MODE_MESSAGE
 
-            dt = self.delta_t
+            delta_t = self.delta_t
 
             if (self._accelerometer.acceleration - self._accelerometer.acceleration_prev).magnitude() > \
                     self._accelerometer.acceleration_noize_level:
                 self._acc_check_time = 0.0
             else:
-                self._acc_check_time += self.delta_t
+                self._acc_check_time += delta_t
 
             r, u, f = self._accelerometer.basis.right_up_front
 
             a = self._accelerometer.acceleration_local_space
 
-            self._vel += (r * a.x + u * a.y + f * a.z) * dt if self._acc_check_time >= self._trust_acc_time else Vector3(0.0, 0.0, 0.0)
+            self._vel += (r * a.x + u * a.y + f * a.z) * delta_t \
+                if self._acc_check_time >= self._trust_acc_time else Vector3(0.0, 0.0, 0.0)
             # интегрирование пути
-            self._pos += (r * self._vel.x + u * self._vel.y + f * self._vel.z) * dt
+            self._pos += (r * self._vel.x + u * self._vel.y + f * self._vel.z) * delta_t
             return RUNNING_MODE_MESSAGE
 
         return DISCARD_MODE_MESSAGE
@@ -287,6 +292,22 @@ class IMU(Device):
             self.send_log_message(f"\n|--------------Accelerometer calibrating...-------------|\n"
                                   f"|-------------Please stand by and hold still...---------|\n")
             self._accelerometer.reset()
+            # TODO check this
+            file_dir = os.path.dirname(self._file_name)
+            if file_dir == "":
+                file_dir = '.'
+            for file in os.listdir(file_dir):
+                if file.startswith("accelerometer_calib_info_"):
+                    try:
+                        load_accelerometer_settings(self._accelerometer, file)
+                        self._file_name = ""
+                        self.send_log_message(f"|------------------Loaded from file...------------------|\n")
+                        return END_MODE_MESSAGE
+                    except Exception as _ex:
+                        self.send_log_message(f"Loading error accelerometer calib info from file\n:{self._file_name}...\n")
+                        self.send_log_message(f"{_ex.args}")
+                        return RUNNING_MODE_MESSAGE
+
             return RUNNING_MODE_MESSAGE
 
         if message.mode_arg == RUNNING_MODE_MESSAGE:
@@ -305,9 +326,11 @@ class IMU(Device):
             return RUNNING_MODE_MESSAGE
 
         if message.mode_arg == END_MODE_MESSAGE:
-            self._accelerometer.calibrate(True, self._accelerometer.basis.front)
-            with open(self._file_name, 'wt') as output_file:
-                print(self._accelerometer, file=output_file)
+            if self._file_name != "":
+                self._accelerometer.calibrate(True, self._accelerometer.basis.front)
+                with open(self._file_name, 'wt') as output_file:
+                    print(self._accelerometer, file=output_file)
+                    self._file_name = ""
             self.integrate()
             # self.begin_record() <- тестирование записи
             return DISCARD_MODE_MESSAGE

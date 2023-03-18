@@ -1,7 +1,7 @@
 # from accelerometer_core.accelerometer_constants import ACCEL_RANGE_2G, GYRO_RANGE_250DEG
 # from accelerometer_core.Utilities.real_time_filter import RealTimeFilter
 # from accelerometer_core.accelerometer import Accelerometer
-
+from Utilities import Vector3
 from .accelerometer_constants import ACCEL_RANGE_2G, GYRO_RANGE_250DEG
 from Utilities.real_time_filter import RealTimeFilter
 from .accelerometer import Accelerometer
@@ -12,14 +12,14 @@ import json
 def load_accelerometer_settings(acc: Accelerometer, settings_file: str) -> bool:
     if not os.path.exists(settings_file):
         return False
-        
+
     json_file = None
     with open(settings_file, "rt") as output_file:
         json_file = json.load(output_file)
         if json_file is None:
             return False
     flag = False
-
+    acc.reset()
     if "address" in json_file:
         prev_address = acc.address
         address = int(json_file["address"])
@@ -51,25 +51,39 @@ def load_accelerometer_settings(acc: Accelerometer, settings_file: str) -> bool:
     except RuntimeWarning as _ex:
         print("hardware_filter_range_raw read error")
 
-    # try:
-    #     if "angles_velocity_calibration" in json_file:
-    #         value = json_file["angles_velocity_calibration"]
-    #         acc.angles_velocity_calibration =  Vector3(float(value['x']),
-    #                                                    float(value['y']),
-    #                                                    float(value['z']))
-    #         flag |= True
-    # except RuntimeWarning as _ex:
-    #     print("angles_velocity_calibration read error")
-    # 
-    # try:
-    #     if "acceleration_calibration" in json_file:
-    #         value = json_file["acceleration_calibration"]
-    #         acc.acceleration_calibration = Vector3(float(value['x']),
-    #                                                float(value['y']),
-    #                                                float(value['z']))
-    #         flag |= True
-    # except RuntimeWarning as _ex:
-    #     print("acceleration_calibration read error")
+    try:
+        if "angles_velocity_calibration" in json_file:
+            value = json_file["angles_velocity_calibration"]
+            acc.omega_calib =  Vector3(float(value['x']),
+                                       float(value['y']),
+                                       float(value['z']))
+            flag |= True
+    except RuntimeWarning as _ex:
+        print("angles_velocity_calibration read error")
+
+    try:
+        if "acceleration_calibration" in json_file:
+            value = json_file["acceleration_calibration"]
+            acc.acceleration_calib = Vector3(float(value['x']),
+                                             float(value['y']),
+                                             float(value['z']))
+            flag |= True
+    except RuntimeWarning as _ex:
+        print("acceleration_calibration read error")
+
+    try:
+        if "k_accel" in json_file:
+            acc.k_accel = float(json_file["k_accel"])
+            flag |= True
+    except RuntimeWarning as _ex:
+        print("k_accel read error")
+
+    try:
+        if "acceleration_noize_level" in json_file:
+            acc.acceleration_noize_level = float(json_file["acceleration_noize_level"])
+            flag |= True
+    except RuntimeWarning as _ex:
+        print("acceleration_noize_level read error")
 
     try:
         if "use_filtering" in json_file:
@@ -161,7 +175,7 @@ def load_accelerometer_settings(acc: Accelerometer, settings_file: str) -> bool:
                       f"fiter_id: {filter_id}\nfilter:\n{filter_}")
                 continue
         flag |= True
-    acc.reset()
+
     return flag
 
 

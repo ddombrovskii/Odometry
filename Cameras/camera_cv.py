@@ -16,7 +16,7 @@ SLAM_MODE = 11
 
 # TODO Подумать как можно организовать ввод с клавиатуры без cv2.waitKey(timeout)
 #  вроде Keyboard либа может решить эту проблему(если она кроссплатформенная)
-# TODO исправить запись камеры в рапиде (self._record_video) DONE
+# TODO исправить запись камеры в рапиде (self._record_video)
 # TODO доделать и калибровку (все ли параметры нужны, которые тут используются)
 # TODO проверить адекватность работы LoopTimer DONE
 # TODO что не так с цветом? почему постоянно серый?
@@ -192,9 +192,9 @@ class CameraCV(Device):
 
     @fps.setter
     def fps(self, fps: int) -> None:
-        if not self.camera_cv.set(cv.CAP_PROP_FPS, min(max(1, fps), 120)):
+        if not self.camera_cv.set(cv.CAP_PROP_FPS, min(max(1, fps), 60)):
             self.send_log_message(f"incorrect devices fps {fps}\n")
-        self._timer.timeout = 1.0 / fps
+        self._timer.timeout = 1.0 / self.camera_cv.get(cv.CAP_PROP_FPS)
 
     @property
     def curr_frame(self) -> np.ndarray:

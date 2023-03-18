@@ -195,6 +195,8 @@ class Device:
         :param message:
         :return:
         """
+        if message == BEGIN_MODE_MESSAGE:
+            return END_MODE_MESSAGE
         return message
 
     def on_reset(self, message: int) -> int:
@@ -203,6 +205,8 @@ class Device:
         :param message:
         :return:
         """
+        if message == BEGIN_MODE_MESSAGE:
+            return END_MODE_MESSAGE
         return message
 
     def on_reboot(self, message: int) -> int:
@@ -211,6 +215,8 @@ class Device:
         :param message:
         :return:
         """
+        if message == BEGIN_MODE_MESSAGE:
+            return END_MODE_MESSAGE
         return message
 
     def on_exit(self, message: int) -> int:
@@ -219,6 +225,8 @@ class Device:
         :param message:
         :return:
         """
+        if message == BEGIN_MODE_MESSAGE:
+            return END_MODE_MESSAGE
         return END_MODE_MESSAGE
 
     def on_pause(self, message: int) -> int:
@@ -227,6 +235,8 @@ class Device:
         :param message:
         :return:
         """
+        if message == BEGIN_MODE_MESSAGE:
+            return END_MODE_MESSAGE
         return message
 
     def on_messages_wait(self, key_code: int) -> None:

@@ -232,21 +232,33 @@ class CameraCV(Device):
     def calibrate(self, calib_results_save_path: str = "calibration_results.json"):
         if self.mode_active(CALIBRATION_MODE):
             return
-        self.stop_all_except(READ_FRAME_MODE)
+
+        if self.mode_active(RECORD_VIDEO_MODE):
+            self.send_message(RECORD_VIDEO_MODE, END_MODE_MESSAGE)
+
+        if self.mode_active(SLAM_MODE):
+            self.send_message(SLAM_MODE, END_MODE_MESSAGE)
+
         self.send_message(CALIBRATION_MODE, BEGIN_MODE_MESSAGE)
         self._file_name = self._file_name if calib_results_save_path is None else calib_results_save_path
 
     def record_video(self, recorded_video_save_path: str = None):
         if self.mode_active(RECORD_VIDEO_MODE):
             return
-        self.stop_all_except(READ_FRAME_MODE)
+
+        if self.mode_active(CALIBRATION_MODE):
+            self.send_message(CALIBRATION_MODE, END_MODE_MESSAGE)
+
+        if self.mode_active(SLAM_MODE):
+            self.send_message(SLAM_MODE, END_MODE_MESSAGE)
+
         self.send_message(RECORD_VIDEO_MODE, BEGIN_MODE_MESSAGE)
         self._file_name = self._file_name if recorded_video_save_path is None else recorded_video_save_path
 
     def show_video(self):
         if self.mode_active(SHOW_VIDEO_MODE):
             return
-        self.stop_all_except(READ_FRAME_MODE)
+        # self.stop_all_except(READ_FRAME_MODE)
         self.send_message(SHOW_VIDEO_MODE, BEGIN_MODE_MESSAGE)
 
     def slam(self, slam_results_save_path: str = None) -> bool:
@@ -282,6 +294,16 @@ class CameraCV(Device):
             return RUNNING_MODE_MESSAGE
         return DISCARD_MODE_MESSAGE
 
+    def on_exit(self, message: int) -> int:
+        if message == BEGIN_MODE_MESSAGE:
+            if self._file_handle != "":
+                try:
+                    cv.destroyWindow(self._file_handle)
+                except:
+                    pass
+            return END_MODE_MESSAGE
+        return DISCARD_MODE_MESSAGE
+
     def on_messages_wait(self, key_code: int) -> None:
         # Завершение работы режима
         if key_code == ord('q'):
@@ -310,21 +332,11 @@ class CameraCV(Device):
         "r" - захват текущего изображения с камеры и калибровка по нему
         """
         if message.mode_arg == BEGIN_MODE_MESSAGE:
-            self._time = 3.0
             self.send_log_message(f"\n|-----------------CameraCV calibrating...---------------|\n"
                                   f"|-------------Please stand by and hold still...---------|")
-            if self._window_handle != "":
-                cv.destroyWindow(self._window_handle)
-            self._window_handle = "calibration-window"
-            cv.namedWindow(self._window_handle, cv.WINDOW_NORMAL)
             return RUNNING_MODE_MESSAGE
 
         if message.mode_arg == RUNNING_MODE_MESSAGE:
-            # if not self.read_frame():
-            #    self.send_log_message(f"\n|---------------Calibration is interrupted--------------|")
-            #    # self.send_message(CALIBRATION_MODE, END_MODE_MESSAGE)
-            #    self.exit()
-            #    return END_MODE_MESSAGE
             # чтение текущего кадра
             frame_curr = self.curr_frame
             self.send_log_message(device_progres_bar((self._mode_times[CALIBRATION_MODE] / 2.0)  % 1.0))
@@ -344,14 +356,11 @@ class CameraCV(Device):
                     self.send_log_message("\radded new calibration image")
 
                 corners_2 = cv.cornerSubPix(frame_gray, corners, (11, 11), (-1, -1), self._criteria)
-                cv.drawChessboardCorners(frame_curr, self._ches_board_size, corners_2, ret)
+                self._curr_frame = cv.drawChessboardCorners(frame_curr, self._ches_board_size, corners_2, ret)
             cv.imshow(self._window_handle, frame_curr)
             return RUNNING_MODE_MESSAGE
 
         if message.mode_arg == END_MODE_MESSAGE:
-            if self._window_handle == "calibration-window":
-                cv.destroyWindow(self._window_handle)
-                self._window_handle = ""
             # TODO завершение калибровки на основе данных из obj_points и _image_points
             if len(self._image_points) > 0 and len(self._objects_points) > 0:
                 status, camera_matrix, dist, r_vectors, t_vectors = \
@@ -395,10 +404,6 @@ class CameraCV(Device):
     def _record_video(self, message: DeviceMessage) -> int:
         if message.mode_arg == BEGIN_MODE_MESSAGE:
             self.send_log_message(f'\n|----------------CameraCV record video...---------------|')
-            if self._window_handle != "":
-                cv.destroyWindow(self._window_handle)
-            self._window_handle = "video-recording-window"
-            cv.namedWindow(self._window_handle, cv.WINDOW_NORMAL)
 
             if self._file_name is None:
                 self._file_name = f"camera record {datetime.datetime.now().strftime('%H; %M; %S')}.avi"
@@ -418,17 +423,11 @@ class CameraCV(Device):
         if message.mode_arg == RUNNING_MODE_MESSAGE:
             self.send_log_message(device_progres_bar((self._mode_times[RECORD_VIDEO_MODE] / 10.0) % 1.0, "", 55, '|', '_'))
 
-            cv.imshow(self._window_handle, self.curr_frame)
-
             self._file_handle.write(self.curr_frame)
 
             return RUNNING_MODE_MESSAGE
 
         if message.mode_arg == END_MODE_MESSAGE:
-            if self._window_handle == "video-recording-window":
-                cv.destroyWindow(self._window_handle)
-                self._window_handle = ""
-            self._file_name = None
             try:
                 self._file_handle.release()
                 self._file_handle = None
@@ -458,18 +457,33 @@ class CameraCV(Device):
             self._window_handle = "show-video-window"
             cv.namedWindow(self._window_handle, cv.WINDOW_NORMAL)
             return RUNNING_MODE_MESSAGE
-
+        frame = None
         if message.mode_arg == RUNNING_MODE_MESSAGE:
             if len(self._camera_matrix) > 0:
-                cv.imshow(self._window_handle, self.undistorted_frame)
+                frame = self.undistorted_frame
             else:
-                cv.imshow(self._window_handle, self.curr_frame)
+                frame = self.curr_frame
+            while True:
+                if self.mode_active(CALIBRATION_MODE):
+                    frame = cv.putText(frame, "Calibration mode...", (10, 20), cv.FONT_HERSHEY_SIMPLEX, 1, (50, 45, 240), 2,
+                                       cv.LINE_AA)
+                    break
+                if self.mode_active(RECORD_VIDEO_MODE):
+                    frame = cv.putText(frame, "Recording mode...", (10, 20), cv.FONT_HERSHEY_SIMPLEX, 1, (250, 45, 40), 2,
+                                           cv.LINE_AA)
+                    break
+                if self.mode_active(SHOW_VIDEO_MODE):
+                    frame = cv.putText(frame, "Video mode...", (10, 20), cv.FONT_HERSHEY_SIMPLEX, 1, (50, 245, 40), 2,
+                                           cv.LINE_AA)
+                    break
+                break
+            cv.imshow(self._window_handle, frame)
             return RUNNING_MODE_MESSAGE
 
         if message.mode_arg == END_MODE_MESSAGE:
-            if self._window_handle == "show-video-window":
-                cv.destroyWindow(self._window_handle)
-                self._window_handle = ""
+            # if self._window_handle == "show-video-window":
+            #     cv.destroyWindow(self._window_handle)
+            #     self._window_handle = ""
             return DISCARD_MODE_MESSAGE
         return DISCARD_MODE_MESSAGE
 

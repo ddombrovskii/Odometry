@@ -5,8 +5,6 @@ class LoopTimer:
     """
     Интервальный таймер, который можно использоваться в контексте with
     """
-    # __slots__ = "__timeout", "__time_start", "__total_time", "__loop_done", "__delta_time"
-
     def __init__(self, timeout: float = 1.0, init_state: bool = False):
         if timeout <= 0.001:
             self.__timeout = 0.001
@@ -41,6 +39,7 @@ class LoopTimer:
         self._total_time += dt
         self._loop_done = self._total_time >= self.__timeout
         if self._loop_done:
+            # print(f"self._total_time {self._total_time}")
             self._total_time = 0.0  # self.__timeout
         self._time_exit = time.perf_counter()
         return dt
@@ -74,7 +73,7 @@ class LoopTimer:
 
 
 if __name__ == "__main__":
-    lt = LoopTimer(0.0333)
+    lt = LoopTimer(0.1)
 
     t = 0.0
     while not lt.is_loop:

@@ -2,7 +2,7 @@ import threading
 from typing import List, Callable, Dict
 from collections import namedtuple
 from Utilities import LoopTimer
-# import cv2 as cv
+import cv2 as cv
 
 
 START_MODE = 1

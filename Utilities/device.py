@@ -1,3 +1,4 @@
+import threading
 from typing import List, Callable, Dict
 from collections import namedtuple
 from Utilities import LoopTimer
@@ -40,7 +41,11 @@ class DeviceMessage(namedtuple('DeviceMessage', 'mode, mode_arg')):
         return f"{{\"mode_info\": {self.mode}, \"mode_arg\": {self.mode_arg}}}"
 
 
+Callback = Callable[[DeviceMessage], None]
+
+
 class Device:
+
     class DeviceCallback(namedtuple('DeviceCallback', 'service_callback, user_callback')):
         def __new__(cls, service_callback, user_callback):
             return super().__new__(cls, service_callback, user_callback)
@@ -58,8 +63,9 @@ class Device:
         self._timer: LoopTimer = LoopTimer(0.01, init_state=True)  # синхронизирующий таймер
         self._log_messages: List[str] = []
         self._messages: Dict[int, DeviceMessage] = {}  # список сообщений для переключения режимов
-        self._callbacks: Dict[int, Callable[[DeviceMessage], None]] = {}  # список служебных функций
+        self._callbacks: Dict[int, Callback] = {}  # список служебных функций
         self._user_callbacks: Dict[int, Device.DeviceCallback] = {}  # список пользовательских функций
+        self._lock = threading.Lock()
         # Служебных функции
         self._callbacks.update({START_MODE:  self._start })
         self._callbacks.update({PAUSE_MODE:  self._pause })
@@ -67,7 +73,7 @@ class Device:
         self._callbacks.update({RESET_MODE:  self._reset })
         self._callbacks.update({REBOOT_MODE: self._reboot})
         # Сообщение о запуске
-        self.send_message(START_MODE, BEGIN_MODE_MESSAGE)
+        self._send_message(START_MODE, BEGIN_MODE_MESSAGE)
 
     def __on_mode_register(self, message: DeviceMessage):
         """
@@ -134,28 +140,28 @@ class Device:
         if message.mode_arg == BEGIN_MODE_MESSAGE:
             self.stop_all_except(message.mode)
         self.__on_mode_common_behavior(message)
-        self.send_message(message.mode, self.on_reset(message.mode_arg))
+        self._send_message(message.mode, self.on_reset(message.mode_arg))
 
     def _reboot(self, message: DeviceMessage) -> None:
         if message.mode_arg == BEGIN_MODE_MESSAGE:
             self.stop_all_except(message.mode)
         self.__on_mode_common_behavior(message)
-        self.send_message(message.mode, self.on_reboot(message.mode_arg))
+        self._send_message(message.mode, self.on_reboot(message.mode_arg))
 
     def _start(self, message: DeviceMessage) -> None:
         self.__on_mode_common_behavior(message)
-        self.send_message(message.mode, self.on_start(message.mode_arg))
+        self._send_message(message.mode, self.on_start(message.mode_arg))
 
     def _exit(self, message: DeviceMessage) -> None:
         if message.mode_arg == BEGIN_MODE_MESSAGE:
             self.stop_all_except(message.mode_arg)
         self.__on_mode_common_behavior(message)
-        self.send_message(message.mode, self.on_exit(message.mode_arg))
+        self._send_message(message.mode, self.on_exit(message.mode_arg))
 
     def _pause(self, message: DeviceMessage) -> None:
 
         self.__on_mode_common_behavior(message)
-        self.send_message(message.mode, self.on_pause(message.mode_arg))
+        self._send_message(message.mode, self.on_pause(message.mode_arg))
 
         if message.mode_arg == END_MODE_MESSAGE:
             for mode, mode_arg in self._curr_modes.items():
@@ -163,7 +169,7 @@ class Device:
                 if message.mode in self._callbacks:
                     self._callbacks[message.mode].__call__(message)
                 if message.mode in self._user_callbacks:
-                    self.send_message(message.mode, self._user_callbacks[message.mode].__call__(message))
+                    self._send_message(message.mode, self._user_callbacks[message.mode].__call__(message))
 
     def _wait_for_messages(self, wait_time_in_milliseconds: int = 5) -> None:
         key_code = cv.waitKey(wait_time_in_milliseconds)
@@ -262,6 +268,18 @@ class Device:
             self.print_log_messages()
 
     @property
+    def is_complete(self) -> bool:
+        """
+        Время между соседними запусками функции Update.
+        :return:
+        """
+        if len(self._curr_modes) != 0:
+            return False
+        if len(self._messages) != 0:
+            return False
+        return True
+
+    @property
     def update_time(self) -> float:
         """
         Время между соседними запусками функции Update.
@@ -277,7 +295,7 @@ class Device:
         """
         self._timer.timeout = value
 
-    def send_message(self, mode, mode_state) -> None:
+    def _send_message(self, mode, mode_state) -> None:
         if mode in self._curr_modes:
             message = DeviceMessage(mode, max(self._curr_modes[mode], mode_state))
             self._messages[mode] = message
@@ -285,6 +303,10 @@ class Device:
 
         if mode_state == BEGIN_MODE_MESSAGE:
             self._messages.update({mode: DeviceMessage(mode, mode_state)})
+
+    def send_message(self, mode, mode_state) -> None:
+        with self._lock:
+            self._send_message(mode, mode_state)
 
     def pause(self) -> None:
         """
@@ -378,17 +400,14 @@ class Device:
                 return
 
             for mode, message in messages.items():
-
                 if message.mode in self._callbacks:
                     self._callbacks[message.mode].__call__(message)
                 if message.mode in self._user_callbacks:
-                    self.send_message(message.mode, self._user_callbacks[message.mode].__call__(message))
+                    self._send_message(message.mode, self._user_callbacks[message.mode].__call__(message))
 
     def run(self):
-        while True:
+        while not self.is_complete:
             self.update()
-            if len(self._curr_modes) == 0 and len(self._messages) == 0:
-                break
 
 
 class DeviceTest(Device):

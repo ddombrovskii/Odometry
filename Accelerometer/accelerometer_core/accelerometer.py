@@ -578,7 +578,7 @@ class Accelerometer:
     ##########################################
     """
 
-    def reset(self, reset_calib_info: bool = True, reset_ranges: bool = False) -> None:
+    def reset(self, reset_ranges: bool = False) -> None:
         for filter_list in self._filters:
             for f in filter_list:
                 f.clean_up()

@@ -69,10 +69,10 @@ class CameraCV(Device):
         # modes callbacks e.t.c...
         self._start_up_time: float = 1.0  # время до начала оперирования
         # инициализация новых режимов работы
-        self.register_callback(CALIBRATION_MODE, self._calibrate)
-        self.register_callback(SHOW_VIDEO_MODE, self._show_video)
+        self.register_callback(CALIBRATION_MODE,  self._calibrate)
+        self.register_callback(SHOW_VIDEO_MODE,   self._show_video)
         self.register_callback(RECORD_VIDEO_MODE, self._record_video)
-        self.register_callback(READ_FRAME_MODE, self._grab_frame)
+        self.register_callback(READ_FRAME_MODE,   self._grab_frame)
         # self.register_callback(SLAM_MODE, self._slam)
         self.fps = 30
         self.width = 1000
@@ -109,10 +109,18 @@ class CameraCV(Device):
 
     @property
     def camera_cv(self) -> cv.VideoCapture:
+        """
+        Cv камера
+        :return: cv.VideoCapture
+        """
         return self._camera_stream
 
     @property
     def is_open(self) -> bool:
+        """
+        Открыта ли камера?
+        :return:
+        """
         return self.camera_cv.isOpened()
 
     @property
@@ -258,7 +266,6 @@ class CameraCV(Device):
     def show_video(self):
         if self.mode_active(SHOW_VIDEO_MODE):
             return
-        # self.stop_all_except(READ_FRAME_MODE)
         self.send_message(SHOW_VIDEO_MODE, BEGIN_MODE_MESSAGE)
 
     def slam(self, slam_results_save_path: str = None) -> bool:
@@ -481,9 +488,6 @@ class CameraCV(Device):
             return RUNNING_MODE_MESSAGE
 
         if message.mode_arg == END_MODE_MESSAGE:
-            # if self._window_handle == "show-video-window":
-            #     cv.destroyWindow(self._window_handle)
-            #     self._window_handle = ""
             return DISCARD_MODE_MESSAGE
         return DISCARD_MODE_MESSAGE
 
@@ -505,12 +509,9 @@ class CameraCV(Device):
         ...
 
 
-
 def camera_cv_test():
     cam = CameraCV()
     cam.run()
-
-    # cam.record_frames()
 
 
 if __name__ == "__main__":

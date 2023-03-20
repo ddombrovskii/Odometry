@@ -153,6 +153,10 @@ class Accelerometer:
                f"\t\"gyroscope_range\":            {self.gyroscope_range},\n" \
                f"\t\"gyroscope_scale\":            {self.gyroscope_scale},\n" \
                f"\t\"hardware_filter_range_raw\":  {self.hardware_filter_range_raw},\n" \
+               f"\t\"acceleration_calib\":         {self.acceleration_calib},\n" \
+               f"\t\"omega_calib\":                {self.omega_calib},\n" \
+               f"\t\"k_accel\":                    {self.k_accel},\n" \
+               f"\t\"acceleration_noize_level\":   {self.acceleration_noize_level},\n" \
                f"\t\"use_filtering\":              {'true' if self.use_filtering else 'false'},\n" \
                f"\t\"ax_filters\":[\n{separator.join(str(f) for f in self._filters[FILTER_AX])}\n\t],\n" \
                f"\t\"ay_filters\":[\n{separator.join(str(f) for f in self._filters[FILTER_AY])}\n\t],\n" \
@@ -486,6 +490,20 @@ class Accelerometer:
         """
         return self._omega_calib
 
+    @acceleration_calib.setter
+    def acceleration_calib(self, value: Vector3) -> None:
+        """
+        Задана в мировой системе координат
+        """
+        self._accel_calib = value
+
+    @omega_calib.setter
+    def omega_calib(self, value: Vector3) -> None:
+        """
+        Задана в системе координат акселерометра
+        """
+        self._omega_calib = value
+
     """
     #########################################################
     #####  Local space to world space transform values  #####
@@ -568,13 +586,14 @@ class Accelerometer:
         self._accel_prev  = Vector3(0.0, 0.0, 0.0)
         self._omega_curr  = Vector3(0.0, 0.0, 0.0)
         self._omega_prev  = Vector3(0.0, 0.0, 0.0)
-        self._accel_calib = Vector3(0.0, 0.0, 0.0)
-        self._omega_calib = Vector3(0.0, 0.0, 0.0)
         self._basis_curr  = Matrix3.identity()
         self._basis_prev  = Matrix3.identity()
         self._t_start     = time.perf_counter()
         self._t_curr      = 0.0
         self._t_prev      = 0.0
+        # if reset_calib_info:
+        self._accel_calib = Vector3(0.0, 0.0, 0.0)
+        self._omega_calib = Vector3(0.0, 0.0, 0.0)
         if reset_ranges:
             self.acceleration_range_raw = 2
             self.gyroscope_range_raw = 250

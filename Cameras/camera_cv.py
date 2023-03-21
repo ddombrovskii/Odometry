@@ -345,26 +345,26 @@ class CameraCV(Device):
 
         if message.mode_arg == RUNNING_MODE_MESSAGE:
             # чтение текущего кадра
-            frame_curr = self.curr_frame
             self.send_log_message(device_progres_bar((self._mode_times[CALIBRATION_MODE] / 2.0)  % 1.0))
             ###############################################
             # Добавляет новый калибровочный кадр по клику #
             ###############################################
+            if self._mode_times[CALIBRATION_MODE] % 1.0 <= 0.9:
+                return RUNNING_MODE_MESSAGE
             # перевод текущего кадра в серый цвет
-            frame_gray = cv.cvtColor(frame_curr, cv.COLOR_BGR2GRAY)
+            frame_gray = cv.cvtColor(self.curr_frame, cv.COLOR_BGR2GRAY)
+
             # поиск углов шахматной доски
             ret, corners = cv.findChessboardCorners(frame_gray, self._ches_board_size, None)
             if ret:
                 # TODO obj_points - а нужно ли их вообще в лист помещать???
                 # ответ: нужно, но можно каждый раз не создавать obj_points заново
-                if self._mode_times[CALIBRATION_MODE] > 2.0:
-                    self._objects_points.append(self.obj_p)
-                    self._image_points.append(corners)
-                    self.send_log_message("\radded new calibration image")
-
+                self._objects_points.append(self.obj_p)
+                self._image_points.append(corners)
+                self.send_log_message("\radded new calibration image")
                 corners_2 = cv.cornerSubPix(frame_gray, corners, (11, 11), (-1, -1), self._criteria)
-                self._curr_frame = cv.drawChessboardCorners(frame_curr, self._ches_board_size, corners_2, ret)
-            cv.imshow(self._window_handle, frame_curr)
+                curr_frame = cv.drawChessboardCorners(self.curr_frame, self._ches_board_size, corners_2, ret)
+                cv.imshow(self._window_handle, curr_frame)
             return RUNNING_MODE_MESSAGE
 
         if message.mode_arg == END_MODE_MESSAGE:
@@ -429,9 +429,7 @@ class CameraCV(Device):
 
         if message.mode_arg == RUNNING_MODE_MESSAGE:
             self.send_log_message(device_progres_bar((self._mode_times[RECORD_VIDEO_MODE] / 10.0) % 1.0, "", 55, '|', '_'))
-
             self._file_handle.write(self.curr_frame)
-
             return RUNNING_MODE_MESSAGE
 
         if message.mode_arg == END_MODE_MESSAGE:
@@ -470,20 +468,20 @@ class CameraCV(Device):
                 frame = self.undistorted_frame
             else:
                 frame = self.curr_frame
-            while True:
-                if self.mode_active(CALIBRATION_MODE):
-                    frame = cv.putText(frame, "Calibration mode...", (10, 20), cv.FONT_HERSHEY_SIMPLEX, 1, (50, 45, 240), 2,
-                                       cv.LINE_AA)
-                    break
-                if self.mode_active(RECORD_VIDEO_MODE):
-                    frame = cv.putText(frame, "Recording mode...", (10, 20), cv.FONT_HERSHEY_SIMPLEX, 1, (250, 45, 40), 2,
-                                           cv.LINE_AA)
-                    break
-                if self.mode_active(SHOW_VIDEO_MODE):
-                    frame = cv.putText(frame, "Video mode...", (10, 20), cv.FONT_HERSHEY_SIMPLEX, 1, (50, 245, 40), 2,
-                                           cv.LINE_AA)
-                    break
-                break
+            # while True:
+            #     if self.mode_active(CALIBRATION_MODE):
+            #         frame = cv.putText(frame, "Calibration mode...", (10, 20), cv.FONT_HERSHEY_SIMPLEX, 1, (50, 45, 240), 2,
+            #                            cv.LINE_AA)
+            #         break
+            #     if self.mode_active(RECORD_VIDEO_MODE):
+            #         frame = cv.putText(frame, "Recording mode...", (10, 20), cv.FONT_HERSHEY_SIMPLEX, 1, (250, 45, 40), 2,
+            #                                cv.LINE_AA)
+            #         break
+            #     if self.mode_active(SHOW_VIDEO_MODE):
+            #         frame = cv.putText(frame, "Video mode...", (10, 20), cv.FONT_HERSHEY_SIMPLEX, 1, (50, 245, 40), 2,
+            #                                cv.LINE_AA)
+            #         break
+            #     break
             cv.imshow(self._window_handle, frame)
             return RUNNING_MODE_MESSAGE
 

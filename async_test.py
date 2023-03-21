@@ -14,6 +14,7 @@ async def command_reader():
             print("read command:", commands_list[0])
             print("sleep 2 sec")
             commands_list.pop(0)
+            commandContext.set(commands_list)
 
 
 async def command_writer():

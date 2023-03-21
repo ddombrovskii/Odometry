@@ -56,7 +56,6 @@ class SceneViewerWidget(QtOpenGL.QGLWidget):
         self._material  = MaterialGL()
         self._transform = Transform()
         self._model     = MeshGL(create_plane(0.9, 0.9))
-        # self.glWidget.render_call(self._transform.transform_matrix, self._material, self._model)
 
     def mousePressEvent(self, event):
         self._mouse.update_position(event.pos().x(), event.pos().y(), self.width(), self.height())

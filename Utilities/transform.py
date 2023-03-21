@@ -206,8 +206,7 @@ class Transform:
 
     @property
     def angles(self) -> Vector3:
-        # TODO check rot_m_to_euler_angles
-        return Matrix4.rot_m_to_euler_angles(self.rotation_mat())
+        return Matrix4.to_euler_angles(self.rotation_mat())
 
     @angles.setter
     def angles(self, xyz: Vector3) -> None:
@@ -220,15 +219,15 @@ class Transform:
 
     @property
     def ax(self) -> float:
-        return Matrix4.rot_m_to_euler_angles(self.rotation_mat()).x
+        return Matrix4.to_euler_angles(self.rotation_mat()).x
 
     @property
     def ay(self) -> float:
-        return Matrix4.rot_m_to_euler_angles(self.rotation_mat()).y
+        return Matrix4.to_euler_angles(self.rotation_mat()).y
 
     @property
     def az(self) -> float:
-        return Matrix4.rot_m_to_euler_angles(self.rotation_mat()).z
+        return Matrix4.to_euler_angles(self.rotation_mat()).z
 
     @ax.setter
     def ax(self, x: float) -> None:
@@ -246,10 +245,7 @@ class Transform:
         self.angles = Vector3(_angles.x, _angles.y, deg_to_rad(z))
 
     def rotation_mat(self) -> Matrix4:
-        scl = self.scale
-        scl.x = 1.0 / scl.x
-        scl.y = 1.0 / scl.y
-        scl.z = 1.0 / scl.z
+        scl = 1.0 / self.scale
         return Matrix4(self.__transform_m.m00 * scl.x, self.__transform_m.m01 * scl.y, self.__transform_m.m02 * scl.z, 0,
                        self.__transform_m.m10 * scl.x, self.__transform_m.m11 * scl.y, self.__transform_m.m12 * scl.z, 0,
                        self.__transform_m.m20 * scl.x, self.__transform_m.m21 * scl.y, self.__transform_m.m22 * scl.z, 0,
@@ -283,9 +279,7 @@ class Transform:
         :return:
         """
         scl: Vector3 = self.scale
-        scl.x = 1.0 / (scl.x * scl.x)
-        scl.y = 1.0 / (scl.y * scl.y)
-        scl.z = 1.0 / (scl.z * scl.z)
+        scl = Vector3(1.0 / (scl.x * scl.x), 1.0 / (scl.y * scl.y), 1.0 / (scl.z * scl.z))
         if w == 0:
             return Vector3((self.__transform_m.m00 * vec.x + self.__transform_m.m10 * vec.y + self.__transform_m.m20 * vec.z) * scl.x,
                            (self.__transform_m.m01 * vec.x + self.__transform_m.m11 * vec.y + self.__transform_m.m21 * vec.z) * scl.y,

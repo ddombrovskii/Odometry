@@ -202,7 +202,7 @@ class CameraCV(Device):
     def fps(self, fps: int) -> None:
         if not self.camera_cv.set(cv.CAP_PROP_FPS, min(max(1, fps), 60)):
             self.send_log_message(f"incorrect devices fps {fps}\n")
-        self._timer.timeout = 1.0 / self.camera_cv.get(cv.CAP_PROP_FPS)
+        self.update_time = 1.0 / self.camera_cv.get(cv.CAP_PROP_FPS)
 
     @property
     def curr_frame(self) -> np.ndarray:

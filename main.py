@@ -1,25 +1,123 @@
-# This is a sample Python script.
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
-
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
-
-
 # Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    import time
-    print_hi('PyCharm')
-    t = time.perf_counter()
-    time.sleep(1)
-    t = time.perf_counter() - t
-    print(f"perf_counter  {t}")
-    with open('vmath\core\camera.py', 'rt') as file:
-        print('#' * 10)
-        print(file.name)
-        print('#' * 10)
-        for line in file:
-            print(line)
+import threading
+from typing import List
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+from Accelerometer.accelerometer_core.inertial_measurement_unit import IMU
+from Cameras.camera_cv import CameraCV
+
+
+camera: CameraCV    = None
+imu: IMU            = None
+commands: List[str] = []
+lock = threading.Lock()
+
+
+def tokenize_camera_command(command: List[str]):
+    global camera
+    if len(command) == 0:
+        return
+    if command[0] == "start":
+        if camera is None:
+            camera = CameraCV()
+            camera.run()
+        return
+    if camera is None:
+        print(f"Command \"camera {' '.join(v for v in command)}\" thrown. Camera is none...")
+        return
+    if command[0] == "exit":
+        camera.exit()
+    if command[0] == "pause":
+        camera.pause()
+    if command[0] == "reset":
+        camera.reset()
+    if command[0] == "reboot":
+        camera.reboot()
+    if command[0] == "video":
+        camera.show_video()
+    if command[0] == "record":
+        if len(command) == 1:
+            camera.record_video()
+        else:
+            camera.record_video(command[1]) if command[1] != "stop" else camera.show_video()
+    if command[0] == "calibrate":
+        if len(command) == 1:
+            camera.calibrate()
+        else:
+            camera.calibrate(command[1])
+    print(f"Unknown command \"{command[0]}\"")
+
+
+def tokenize_imu_command(command: List[str]):
+    global imu
+    if len(command) == 0:
+        return
+    if command[0] == "start":
+        if imu is None:
+            imu = IMU()
+            imu.run()
+        return
+    if imu is None:
+        print(f"Command \"camera {' '.join(v for v in command)}\" thrown. Camera is none...")
+        return
+    if command[0] == "exit":
+        imu.exit()
+    if command[0] == "pause":
+        imu.pause()
+    if command[0] == "reset":
+        imu.reset()
+    if command[0] == "reboot":
+        imu.reboot()
+    if command[0] == "integrate":
+        imu.integrate()
+    if command[0] == "record":
+        if len(command) == 1:
+            imu.begin_record()
+        else:
+            imu.begin_record(command[1]) if command[1] != "stop" else imu.end_record()
+    if command[0] == "calibrate":
+        if len(command) == 1:
+            imu.calibrate()
+        else:
+            try:
+                imu.calibrate(float(command[1]))
+            except ValueError as ex:
+                print("Second argument of imu calibration call has to be float value of time")
+
+    print(f"Unknown command \"{command[0]}\"")
+
+
+def tokenize_command(command: str):
+    print(f"command {command}")
+
+    command = command.split(' ')
+
+    if command[0] == 'camera':
+        tokenize_camera_command(command[1:])
+        return
+
+    if command[0] == 'imu':
+        tokenize_imu_command(command[1:])
+        return
+
+
+class CommandsInput(threading.Thread):
+
+    def __init__(self, input_cbk=None, name='keyboard-input-thread'):
+        self.input_cbk = input_cbk
+        super(CommandsInput, self).__init__(name=name)
+        self.start()
+
+    def run(self):
+        while True:
+            value = input()
+            if value == "exit":
+                break
+            self.input_cbk(value)  # waits to get input + Return
+
+        self.input_cbk("exit")
+
+
+if __name__ == '__main__':
+    command_input = CommandsInput(tokenize_command)
+
+

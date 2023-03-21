@@ -1,7 +1,8 @@
+import asyncio
 import threading
+import time
 from typing import List, Callable, Dict
 from collections import namedtuple
-from Utilities import LoopTimer
 import cv2 as cv
 
 
@@ -57,10 +58,14 @@ class Device:
     Базовое поведение для устройства, которое может работать в одном нескольких режимах единовременно
     """
     def __init__(self):
+        # self._parent = None
+        # self._children = []
+        # self._key_code: int = -1
         self._curr_modes: Dict[int, int]   = {}  # текущие режимы и их состояния
         self._mode_times: Dict[int, float] = {}  # время существования в режимах
         self._d_time: float = 0.0  # время между текущим и предыдущим вызовом метода self.update()
-        self._timer: LoopTimer = LoopTimer(0.01, init_state=True)  # синхронизирующий таймер
+        # self._timer: LoopTimer = LoopTimer(0.01, init_state=True)  # синхронизирующий таймер
+        self._update_time: float = 1.0
         self._log_messages: List[str] = []
         self._messages: Dict[int, DeviceMessage] = {}  # список сообщений для переключения режимов
         self._callbacks: Dict[int, Callback] = {}  # список служебных функций
@@ -285,7 +290,7 @@ class Device:
         Время между соседними запусками функции Update.
         :return:
         """
-        return self._timer.timeout
+        return self._update_time  # _timer.timeout
 
     @update_time.setter
     def update_time(self, value: float) -> None:
@@ -293,7 +298,8 @@ class Device:
         Время между соседними запусками функции Update.
         :return:
         """
-        self._timer.timeout = value
+        # self._timer.timeout = value
+        self._update_time = value if value > 0.0 else self._update_time
 
     def _send_message(self, mode, mode_state) -> None:
         if mode in self._curr_modes:
@@ -382,32 +388,35 @@ class Device:
         """
         return self._mode_times[mode] if self.mode_active(mode) else 0.0
 
-    def update(self) -> None:
-        with self._timer:
-            if not self._timer.is_loop:
-                return
+    async def update(self) -> None:
+        elapsed_time = time.perf_counter()
+        self.print_log_messages()
+        self._wait_for_messages()
+        messages, self._messages = self._messages, {}
+        if PAUSE_MODE in messages:
+            self._callbacks[PAUSE_MODE].__call__(messages[PAUSE_MODE])
+            return
+        for mode, message in messages.items():
+            if message.mode in self._callbacks:
+                self._callbacks[message.mode].__call__(message)
+            if message.mode in self._user_callbacks:
+                self._send_message(message.mode, self._user_callbacks[message.mode].__call__(message))
 
-            self.print_log_messages()
+        elapsed_time = time.perf_counter() - elapsed_time
 
-            self._d_time = max(self._timer.last_loop_time, self._timer.timeout)
+        if elapsed_time > self.update_time:
+            self._d_time = elapsed_time
+            await asyncio.sleep(0.0001)
+        else:
+            self._d_time = self.update_time
+            await asyncio.sleep(self.update_time - elapsed_time)
 
-            self._wait_for_messages()
-
-            messages, self._messages = self._messages, {}
-
-            if PAUSE_MODE in messages:
-                self._callbacks[PAUSE_MODE].__call__(messages[PAUSE_MODE])
-                return
-
-            for mode, message in messages.items():
-                if message.mode in self._callbacks:
-                    self._callbacks[message.mode].__call__(message)
-                if message.mode in self._user_callbacks:
-                    self._send_message(message.mode, self._user_callbacks[message.mode].__call__(message))
+    async def _run(self):
+        while not self.is_complete:
+            await self.update()
 
     def run(self):
-        while not self.is_complete:
-            self.update()
+        asyncio.run(self._run())
 
 
 class DeviceTest(Device):

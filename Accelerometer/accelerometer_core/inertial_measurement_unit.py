@@ -63,6 +63,7 @@ class IMU(Device):
         self._acc_check_time: float = 0.0
         self._vel: Vector3   = Vector3(0.0, 0.0, 0.0)
         self._pos: Vector3   = Vector3(0.0, 0.0, 0.0)
+        self.update_time = 1.0/60.0
         self.register_callback(RECORDING_MODE, self._record)
         self.register_callback(CALIBRATION_MODE, self._calibrate)
         self.register_callback(INTEGRATE_MODE, self._integrate)
@@ -304,7 +305,7 @@ class IMU(Device):
 
         if message.mode_arg == RUNNING_MODE_MESSAGE:
 
-            self.send_log_message(device_progres_bar((self._mode_times[INTEGRATE_MODE] / 3.0) % 1.0, "", 55, '|', '_'))
+            #  self.send_log_message(device_progres_bar((self._mode_times[INTEGRATE_MODE] / 3.0) % 1.0, "", 55, '|', '_'))
 
             if not self._accelerometer.read_measurements():
                 return RUNNING_MODE_MESSAGE

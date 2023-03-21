@@ -8,8 +8,6 @@ class TexturizedCubeWidget(QOpenGLWidget):
     xRotationChanged = pyqtSignal(int)
     yRotationChanged = pyqtSignal(int)
     zRotationChanged = pyqtSignal(int)
-
-
     PROGRAM_VERTEX_ATTRIBUTE, PROGRAM_TEXCOORD_ATTRIBUTE = range(2)
 
     vsrc = """
@@ -147,8 +145,7 @@ void main(void)
 
     def resizeGL(self, width, height):
         side = min(width, height)
-        self.gl.glViewport((width - side) // 2, (height - side) // 2, side,
-                           side)
+        self.gl.glViewport((width - side) // 2, (height - side) // 2, side, side)
 
     def mousePressEvent(self, event):
         self.lastPos = event.pos()

@@ -41,6 +41,46 @@ class Matrix4(namedtuple('Matrix4', 'm00, m01, m02, m03,'
                    0.0, 0.0, 0.0, 0.0)
 
     @classmethod
+    def look_at(cls, target: Vector3, eye: Vector3, up: Vector3 = Vector3(0, 1, 0)):
+        """
+        :param target: цель на которую смотрим
+        :param eye: положение глаза в пространстве
+        :param up: вектор вверх
+        :return: матрица взгляда
+        """
+        zaxis = target - eye  # The "forward" vector.
+        zaxis.normalize()
+        xaxis = Vector3.cross(up, zaxis)  # The "right" vector.
+        xaxis.normalize()
+        yaxis = Vector3.cross(zaxis, xaxis)  # The "up" vector.
+
+        return cls(xaxis.x, -yaxis.x, zaxis.x, eye.x,
+                   -xaxis.y, -yaxis.y, zaxis.y, eye.y,
+                   xaxis.z, -yaxis.z, zaxis.z, eye.z,
+                   0.0, 0.0, 0.0, 1.0)
+
+    @classmethod
+    def build_projection_matrix(cls, fov: float = 70, aspect: float = 1, z_near: float = 0.01, z_far: float = 1000):
+        """
+        :param fov: угол обзора
+        :param aspect: соотношение сторон
+        :param z_near: ближняя плоскость отсечения
+        :param z_far: дальняя плоскость отсечения
+        :return: матрица перспективной проекции
+        """
+        scale = 1.0 / math.tan(fov * 0.5 * math.pi / 180)
+        #  scale * aspect  # scale the x coordinates of the projected point
+        #  scale  # scale the y coordinates of the projected point
+        #  z_far / (z_near - z_far)  # used to remap z to [0,1]
+        #  z_far * z_near / (z_near - z_far)  # used to remap z [0,1]
+        #  -1  # set w = -z
+        #  0
+        return cls(scale * aspect, 0.0,   0.0,                               0.0,
+                   0.0,            scale, 0.0,                               0.0,
+                   0.0, 0.0,              z_far / (z_near - z_far),         -1.0,
+                   0.0, 0.0,              z_far * z_near / (z_near - z_far), 0.0)
+
+    @classmethod
     def rotate_x(cls, angle: float, angle_in_rad: bool = True):
         cos_a = math.cos(angle)
         sin_a = math.sin(angle)

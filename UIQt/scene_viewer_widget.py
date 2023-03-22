@@ -83,7 +83,6 @@ class SceneViewerWidget(QtOpenGL.QGLWidget):
         # Что делать?
         if not self.isValid():
             return
-        self.glInit()
         TextureGL.delete_all_textures()
         Shader.delete_all_shaders()
         MeshGL.delete_all_meshes()

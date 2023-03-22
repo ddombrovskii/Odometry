@@ -8,7 +8,7 @@ from PyQt5 import QtCore, QtWidgets
 from Utilities import Transform, Matrix4
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QApplication
 import sys
-from PyQt5.QtGui import QColor, QSurfaceFormat
+from PyQt5.QtGui import QColor, QSurfaceFormat, QCloseEvent
 
 
 class MainWindow(QWidget):
@@ -25,6 +25,7 @@ class MainWindow(QWidget):
         timer.setInterval(20)  # period, in milliseconds
         timer.timeout.connect(self.glWidget.updateGL)
         timer.start()
+        self.closeEvent(QCloseEvent())
 
 
 if __name__ == '__main__':

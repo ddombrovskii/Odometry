@@ -118,8 +118,8 @@ class Shader(object):
     @staticmethod
     def init_globals():
         Shader.SAMPLE_SHADER = Shader()
-        Shader.SAMPLE_SHADER.vert_shader("E:/GitHub/Odometry/Odometry/UIQt/GLUtilities/Shaders/sample_shader.vert")
-        Shader.SAMPLE_SHADER.frag_shader("E:/GitHub/Odometry/Odometry/UIQt/GLUtilities/Shaders/sample_shader.frag")
+        Shader.SAMPLE_SHADER.vert_shader("./GLUtilities/Shaders/sample_shader.vert")
+        Shader.SAMPLE_SHADER.frag_shader("./GLUtilities/Shaders/sample_shader.frag")
         Shader.SAMPLE_SHADER.load_defaults_settings()
 
         #  Shader.FRAME_BUFFER_BLIT_SHADER = Shader()

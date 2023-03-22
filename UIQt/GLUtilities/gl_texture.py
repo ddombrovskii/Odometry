@@ -80,7 +80,7 @@ class TextureGL:
                f"\t\"filter_mode\": [{int(self.__filtering_mode[0])},{int(self.__filtering_mode[1])}]\n}}"
 
     def __del__(self):
-        self.delete_texture()
+        pass # self.delete_texture()
 
     def __enter__(self):
         self.bind()

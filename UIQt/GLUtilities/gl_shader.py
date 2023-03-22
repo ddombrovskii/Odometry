@@ -239,7 +239,7 @@ class Shader(object):
         return res
 
     def __del__(self):
-        self.delete_shader()
+        pass # self.delete_shader()
 
     def __enter__(self):
         self.bind()

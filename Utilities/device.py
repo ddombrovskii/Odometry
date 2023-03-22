@@ -392,15 +392,17 @@ class Device:
         elapsed_time = time.perf_counter()
         self.print_log_messages()
         self._wait_for_messages()
+
         messages, self._messages = self._messages, {}
+
         if PAUSE_MODE in messages:
             self._callbacks[PAUSE_MODE].__call__(messages[PAUSE_MODE])
-            return
-        for mode, message in messages.items():
-            if message.mode in self._callbacks:
-                self._callbacks[message.mode].__call__(message)
-            if message.mode in self._user_callbacks:
-                self._send_message(message.mode, self._user_callbacks[message.mode].__call__(message))
+        else:
+            for mode, message in messages.items():
+                if message.mode in self._callbacks:
+                    self._callbacks[message.mode].__call__(message)
+                if message.mode in self._user_callbacks:
+                    self._send_message(message.mode, self._user_callbacks[message.mode].__call__(message))
 
         elapsed_time = time.perf_counter() - elapsed_time
 

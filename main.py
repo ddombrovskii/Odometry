@@ -1,9 +1,7 @@
-# Press the green button in the gutter to run the script.
-import threading
-from typing import List
-
 from Accelerometer.accelerometer_core.inertial_measurement_unit import IMU
 from Cameras.camera_cv import CameraCV
+from typing import List
+import threading
 
 
 camera: CameraCV    = None
@@ -101,11 +99,9 @@ def tokenize_command(command: str):
 
 
 class CommandsInput(threading.Thread):
-
     def __init__(self, input_cbk=None, name='keyboard-input-thread'):
         self.input_cbk = input_cbk
         super(CommandsInput, self).__init__(name=name)
-        self.start()
 
     def run(self):
         while True:
@@ -113,11 +109,11 @@ class CommandsInput(threading.Thread):
             if value == "exit":
                 break
             self.input_cbk(value)  # waits to get input + Return
-
         self.input_cbk("exit")
 
 
 if __name__ == '__main__':
     command_input = CommandsInput(tokenize_command)
+    command_input.start()
 
 

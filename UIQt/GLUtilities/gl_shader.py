@@ -239,7 +239,7 @@ class Shader(object):
         return res
 
     def __del__(self):
-        pass # self.delete_shader()
+        self.delete_shader()
 
     def __enter__(self):
         self.bind()
@@ -248,6 +248,8 @@ class Shader(object):
         self.unbind()
 
     def delete_shader(self):
+        if self.__program_id == 0:
+            return
         glDeleteShader(self.__vert_id)
         glDeleteShader(self.__frag_id)
         glDeleteProgram(self.__program_id)

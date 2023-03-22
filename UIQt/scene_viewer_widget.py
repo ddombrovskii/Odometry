@@ -56,6 +56,10 @@ class SceneViewerWidget(QtOpenGL.QGLWidget):
         self.fmt = QOpenGLVersionProfile()
         self.fmt.setVersion(3, 3)
         self.fmt.setProfile(QSurfaceFormat.OpenGLContextProfile.CoreProfile)
+        # self.connectNotify()
+        # self.fmt.setDepthBufferSize(24)
+        # self.fmt.setStencilBufferSize(8)
+
         TextureGL.init_globals()
         Shader.init_globals()
         MeshGL.init_globals()
@@ -77,15 +81,12 @@ class SceneViewerWidget(QtOpenGL.QGLWidget):
         except:
             pass
 
-    def __del__(self):
-        # НЕ РАБОТАЕТ.
-        # Причина: GL контекст освобождается раньше функции __del__
-        # Что делать?
-        if not self.isValid():
-            return
+    def clean_up(self) -> None:
+        self.makeCurrent()
         TextureGL.delete_all_textures()
         Shader.delete_all_shaders()
         MeshGL.delete_all_meshes()
+        self.doneCurrent()
 
     def mousePressEvent(self, event):
         self._mouse.update_position(event.pos().x(), event.pos().y(), self.width(), self.height())

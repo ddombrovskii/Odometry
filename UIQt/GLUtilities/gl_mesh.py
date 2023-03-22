@@ -75,7 +75,7 @@ class MeshGL:
             self.__create_gpu_buffers(mesh)
 
     def __del__(self):
-        pass  # self.delete_mesh()
+        self.delete_mesh()
 
     def __enter__(self):
         self.bind()

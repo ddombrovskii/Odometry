@@ -1,3 +1,5 @@
+from PyQt5.uic.properties import QtGui
+
 from UIQt.GLUtilities.gl_shader import Shader
 from UIQt.GLUtilities.gl_texture import TextureGL
 from UIQt.scene_viewer_widget import SceneViewerWidget
@@ -17,7 +19,6 @@ class MainWindow(QWidget):
         self.resize(300, 300)
         self.setWindowTitle('Hello OpenGL App')
         self.glWidget: SceneViewerWidget = SceneViewerWidget(self)
-        # self.initGUI()
         mainLayout = QHBoxLayout()
         mainLayout.addWidget(self.glWidget)
         self.setLayout(mainLayout)
@@ -26,6 +27,9 @@ class MainWindow(QWidget):
         timer.timeout.connect(self.glWidget.updateGL)
         timer.start()
         self.closeEvent(QCloseEvent())
+
+    def closeEvent(self, a0) -> None:
+        self.glWidget.clean_up()
 
 
 if __name__ == '__main__':

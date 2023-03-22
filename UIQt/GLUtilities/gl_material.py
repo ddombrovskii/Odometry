@@ -4,6 +4,12 @@ from Utilities import Vector3
 
 
 class MaterialGL:
+    DEFAULT_MATERIAL = None
+
+    @staticmethod
+    def init_globals():
+        MaterialGL.DEFAULT_MATERIAL = MaterialGL()
+
     # based on *.mtl file definition
     def __init__(self, shader: Shader = None):
         self._shader: Shader = Shader.SAMPLE_SHADER if shader is None else shader

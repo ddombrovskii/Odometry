@@ -19,6 +19,7 @@ uniform float ni;
 uniform float ns;
 
 uniform mat4  transform;
+uniform mat4  projection;
 uniform mat4  view;
 
 void main()
@@ -30,5 +31,5 @@ void main()
 	v_ni	         = ni	         ;
 	v_ns	         = ns	         ;
     v_texture        = a_texture;
-    gl_Position      = vec4(vec3(a_position.x, a_position.z, 0.0), 1.0f);
+    gl_Position      = transform * vec4(vec3(a_position.x, a_position.z, 0.0), 1.0f);
 }

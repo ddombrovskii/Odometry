@@ -5,7 +5,7 @@ from UIQt.GLUtilities.triangle_mesh import create_plane
 from UIQt.GLUtilities.gl_material import MaterialGL
 from UIQt.GLUtilities.gl_mesh import MeshGL
 from PyQt5 import QtCore, QtWidgets
-from Utilities import Transform
+from Utilities import Transform, Matrix4
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QApplication
 import sys
 from PyQt5.QtGui import QColor, QSurfaceFormat

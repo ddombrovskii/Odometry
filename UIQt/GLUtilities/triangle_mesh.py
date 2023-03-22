@@ -8,18 +8,18 @@ import re
 class Face:
     __slots__ = "__p_1", "__p_2", "__p_3", "__uv1", "__uv2", "__uv3", "__n_1", "__n_2", "__n_3"
 
-    def __init__(self):
-        self.__p_1: int = -1
-        self.__uv1: int = -1
-        self.__n_1: int = -1
+    def __init__(self, p1=None, uv1=None, n1=None, p2=None, uv2=None, n2=None, p3=None, uv3=None, n3=None):
+        self.__p_1: int = -1 if p1 is None else p1
+        self.__uv1: int = -1 if uv1 is None else uv1
+        self.__n_1: int = -1 if n1 is None else n1
 
-        self.__p_2: int = -1
-        self.__uv2: int = -1
-        self.__n_2: int = -1
+        self.__p_2: int = -1 if p2 is None else p2
+        self.__uv2: int = -1 if uv2 is None else uv2
+        self.__n_2: int = -1 if n2 is None else n2
 
-        self.__p_3: int = -1
-        self.__uv3: int = -1
-        self.__n_3: int = -1
+        self.__p_3: int = -1 if p3 is None else p3
+        self.__uv3: int = -1 if uv3 is None else uv3
+        self.__n_3: int = -1 if n3 is None else n3
 
     def __str__(self):
         return f"{{" \
@@ -501,6 +501,48 @@ def create_plane(height: float = 1.0, width: float = 1.0, rows: int = 10,
         f.index2(index + 1)
         f.index3(index + cols + 1)
         mesh.append_face(f)
+    if transform is not None:
+        mesh.transform_mesh(transform)
+    return mesh
+
+
+def create_box(side: float = 1.0, transform: Transform = None) -> TrisMesh:
+    mesh: TrisMesh = TrisMesh()
+
+    mesh.append_vertex(side * Vector3(-0.5000, 0.5000, -0.5000))
+    mesh.append_vertex(side * Vector3(-0.5000, 0.5000, 0.5000))
+    mesh.append_vertex(side * Vector3(0.5000, 0.5000, 0.5000))
+    mesh.append_vertex(side * Vector3(0.5000, 0.5000, -0.5000))
+    mesh.append_vertex(side * Vector3(-0.5000, -0.5000, -0.5000))
+    mesh.append_vertex(side * Vector3(0.5000, -0.5000, -0.5000))
+    mesh.append_vertex(side * Vector3(0.5000, -0.5000, 0.5000))
+    mesh.append_vertex(side * Vector3(-0.5000, -0.5000, 0.5000))
+
+    mesh.append_normal(Vector3(0.0000, 1.0000, 0.0000))
+    mesh.append_normal(Vector3(0.0000, -1.0000, -0.0000))
+    mesh.append_normal(Vector3(0.0000, 0.0000, -1.0000))
+    mesh.append_normal(Vector3(1.0000, 0.0000, 0.0000))
+    mesh.append_normal(Vector3(0.0000, -0.0000, 1.0000))
+    mesh.append_normal(Vector3(-1.0000, 0.0000, 0.0000))
+
+    mesh.append_uv(Vector2(1.0000, 0.0000))
+    mesh.append_uv(Vector2(1.0000, 1.0000))
+    mesh.append_uv(Vector2(0.0000, 1.0000))
+    mesh.append_uv(Vector2(0.0000, 0.0000))
+
+    mesh.append_face(Face(0, 0, 0, 1, 1, 0, 2, 2, 0))
+    mesh.append_face(Face(2, 2, 0, 3, 3, 0, 0, 0, 0))
+    mesh.append_face(Face(4, 3, 1, 5, 0, 1, 6, 1, 1))
+    mesh.append_face(Face(6, 1, 1, 7, 2, 1, 4, 3, 1))
+    mesh.append_face(Face(0, 3, 2, 3, 0, 2, 5, 1, 2))
+    mesh.append_face(Face(5, 1, 2, 4, 2, 2, 0, 3, 2))
+    mesh.append_face(Face(3, 3, 3, 2, 0, 3, 6, 1, 3))
+    mesh.append_face(Face(6, 1, 3, 5, 2, 3, 3, 3, 3))
+    mesh.append_face(Face(2, 3, 4, 1, 0, 4, 7, 1, 4))
+    mesh.append_face(Face(7, 1, 4, 6, 2, 4, 2, 3, 4))
+    mesh.append_face(Face(1, 3, 5, 0, 0, 5, 4, 1, 5))
+    mesh.append_face(Face(4, 1, 5, 7, 2, 5, 1, 3, 5))
+
     if transform is not None:
         mesh.transform_mesh(transform)
     return mesh

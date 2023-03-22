@@ -2,8 +2,8 @@ from UIQt.GLUtilities.gl_buffer import BufferGL
 from OpenGL.GL import *
 import numpy as np
 
-from UIQt.GLUtilities.triangle_mesh import TrisMesh, create_plane
-from Utilities import Transform, BitSet32
+from UIQt.GLUtilities.triangle_mesh import TrisMesh, create_plane, create_box
+from Utilities import Transform, BitSet32, BoundingBox
 
 
 class MeshGL:
@@ -18,16 +18,22 @@ class MeshGL:
 
     __vao_instances = {}
 
-    UI_MESH_PLANE = None
+    PLANE_MESH = None
+    BOX_MESH = None
 
     @staticmethod
     def init_globals():
-        MeshGL.UI_MESH_PLANE = MeshGL.create_plane_gl(2.0, 2.0, 2, 2)
+        MeshGL.PLANE_MESH = MeshGL.create_plane_gl(2.0, 2.0, 2, 2)
+        MeshGL.BOX_MESH = MeshGL.create_box_gl()
 
-    @staticmethod
-    def create_plane_gl(height: float = 1.0, width: float = 1.0, rows: int = 10, cols: int = 10,
+    @classmethod
+    def create_box_gl(cls, side: float = 1.0, transform: Transform = None):
+        return cls(create_box(side, transform))
+
+    @classmethod
+    def create_plane_gl(cls, height: float = 1.0, width: float = 1.0, rows: int = 10, cols: int = 10,
                         transform: Transform = None):
-        return MeshGL(create_plane(height, width, rows, cols, transform))
+        return cls(create_plane(height, width, rows, cols, transform))
 
     @staticmethod
     def vao_enumerate():
@@ -58,6 +64,7 @@ class MeshGL:
 
     def __init__(self, mesh: TrisMesh = None):
         self.__unique_id = id(self)
+        self.__bounds: BoundingBox = BoundingBox()
         self.__vao: int = 0
         self.__vbo = None
         self.__ibo = None
@@ -79,6 +86,10 @@ class MeshGL:
     def __call__(self, *args, **kwargs):
         with self:
             self.draw()
+
+    @property
+    def bounds(self) -> BoundingBox:
+        return self.__bounds
 
     @property
     def vbo(self) -> BufferGL:
@@ -141,6 +152,12 @@ class MeshGL:
         self.__vertex_attributes.set_bit(MeshGL.TrianglesAttribute)
 
         self.__gen_vao()
+
+        self.__bounds.reset()
+
+        self.__bounds.encapsulate(mesh.bbox.max)
+
+        self.__bounds.encapsulate(mesh.bbox.min)
 
         self.vertices_array = mesh.vertex_array_data
 

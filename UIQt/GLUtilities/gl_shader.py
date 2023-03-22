@@ -373,24 +373,21 @@ class Shader(object):
         if loc == -1:
             return
         self.bind()
-        data = mat.as_list
-        glUniformMatrix3fv(loc, 1, transpose, (GLfloat * len(data))(*data))
+        glUniformMatrix3fv(loc, 1, transpose, (GLfloat * 9)(*mat))
 
     def send_mat_4(self, mat_name: str, mat: Matrix4, transpose=GL_FALSE):
         loc = self.get_uniform_location(mat_name)
         if loc == -1:
             return
         self.bind()
-        data = mat.as_list
-        glUniformMatrix4fv(loc, 1, transpose, (GLfloat * len(data))(*data))
+        glUniformMatrix4fv(loc, 1, transpose, (GLfloat * 16)(*mat))
 
     def send_vec_2(self, vec_name: str, vec: Vector2):
         loc = self.get_uniform_location(vec_name)
         if loc == -1:
             return
         self.bind()
-        data = vec.as_list
-        glUniform2fv(loc, 1, (GLfloat * len(data))(*data))
+        glUniform2fv(loc, 1, (GLfloat * 2)(*vec))
 
     def send_vec_3(self, vec_name: str, vec: Vector3):
         loc = self.get_uniform_location(vec_name)
@@ -398,7 +395,7 @@ class Shader(object):
             return
         self.bind()
         data = vec.as_list
-        glUniform3fv(loc, 1, (GLfloat * len(data))(*data))
+        glUniform3fv(loc, 1, (GLfloat * 3)(*vec))
 
     def send_float(self, param_name: str, val: float):
         loc = self.get_uniform_location(param_name)

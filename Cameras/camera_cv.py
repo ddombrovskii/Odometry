@@ -1,4 +1,4 @@
-from Cameras.utils import get_screen_resolution
+from Cameras.utils import get_screen_resolution, CameraCalibrationInfo
 from Utilities import Device, START_MODE, BEGIN_MODE_MESSAGE, RUNNING_MODE_MESSAGE, \
     END_MODE_MESSAGE, DeviceMessage, device_progres_bar
 from Utilities.device import DISCARD_MODE_MESSAGE
@@ -53,8 +53,7 @@ class CameraCV(Device):
         super().__init__()
         # TODO Calibration info...
         # calibration info:
-        self._camera_matrix: np.ndarray = None
-        self._distortion:    np.ndarray = None  # np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+        self._camera_calibration_info: CameraCalibrationInfo = None
         # common camera info
         self._window_handle: str = ""  # имя текущего окна
         self._file_name:     str = ""  # имя текущего файла
@@ -71,7 +70,7 @@ class CameraCV(Device):
         # self.register_callback(SLAM_MODE, self._slam)
         self.fps = 30
         self.set_yuyv()
-        self.set_resolution("minimal")
+        self.set_resolution("FHD")
         # self.width = 500
         # self.height = 500
         # print(self)
@@ -272,12 +271,16 @@ class CameraCV(Device):
 
     @property
     def undistorted_frame(self) -> np.ndarray:
-        if self._camera_matrix is None:
+        if self._camera_calibration_info is None:
             return self.curr_frame
         h, w = self.height, self.width
-        new_camera_matrix, roi = cv.getOptimalNewCameraMatrix(self._camera_matrix, self._distortion, (w, h), 1, (w, h))
+        new_camera_matrix, roi = cv.getOptimalNewCameraMatrix(self._camera_calibration_info.camera_matrix,
+                                                              self._camera_calibration_info.distortion_coefficients,
+                                                              (w, h), 1, (w, h))
         # undistorted image
-        undistorted_image = cv.undistort(self.curr_frame, self._camera_matrix, self._distortion, None, new_camera_matrix)
+        undistorted_image = cv.undistort(self.curr_frame, self._camera_calibration_info.camera_matrix,
+                                         self._camera_calibration_info.distortion_coefficients,
+                                         None, new_camera_matrix)
         # crop the image
         x, y, w, h = roi
         undistorted_image = undistorted_image[y: y + h, x: x + w]
@@ -326,7 +329,10 @@ class CameraCV(Device):
             return
         self.send_message(SHOW_VIDEO_MODE, BEGIN_MODE_MESSAGE)
 
-    def slam(self, slam_results_save_path: str = None) -> bool:
+    def begin_slam(self, slam_results_save_path: str = None) -> bool:
+        return False
+
+    def end_slam(self) -> bool:
         return False
 
     def on_start(self, message: int) -> int:
@@ -430,8 +436,8 @@ class CameraCV(Device):
             self._criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 0.001)
             self._objects_points: List[np.ndarray] = []  # калибровочные точки в мировом пространстве
             self._image_points: List[np.ndarray] = []  # калибровочные точки в пространстве изображения
-            self._rotation_vectors: Tuple[np.ndarray] = None
-            self._translation_vectors: Tuple[np.ndarray] = None
+            # self._rotation_vectors: Tuple[np.ndarray] = None
+            # self._translation_vectors: Tuple[np.ndarray] = None
             self._obj_p: np.ndarray = np.zeros((self._ches_board_size[0] * self._ches_board_size[1], 3), np.float32)
             self._obj_p[:, :2] = np.mgrid[0:self._ches_board_size[0], 0:self._ches_board_size[1]].T.reshape(-1, 2)
             return RUNNING_MODE_MESSAGE
@@ -466,37 +472,16 @@ class CameraCV(Device):
                 status, camera_matrix, distortion, r_vectors, t_vectors = \
                     cv.calibrateCamera(self._objects_points, self._image_points, (self.width, self.height), None, None)
                 if status:
-                    self._camera_matrix = camera_matrix
-                    self._distortion    = distortion
+                    self._camera_calibration_info = CameraCalibrationInfo(camera_matrix, distortion, t_vectors, r_vectors)
                     with open(self._file_name, 'wt') as calib_info:
-                        print("{\n\t\"camera_matrix\": \n\t{", file=calib_info, end="\n\t")
-                        for index, value in enumerate(camera_matrix.flat):
-                            row, col = divmod(index, 3)
-                            if index == 8:
-                                print(f"\"m{row}{col}\": {value:20}", file=calib_info, end="\n\t},")
-                                continue
-                            end = "\n\t" if col == 2 else ""
-                            print(f"\"m{row}{col}\": {value:20}, ", file=calib_info, end=end)
-
-                        print("\n\t\"distortion\": \n\t[\n\t", file=calib_info, end="")
-                        print(', '.join(f"{value:20}"for value in distortion.flat), file=calib_info, end="\n\t],")
-
-                        print("\n\t\"rotation_vectors\": \n\t[\n\t", file=calib_info, end="")
-                        print(',\n\t'.join(f"\t{{\"x\": {v[0][0]:20}, \"y\": {v[1][0]:20}, \"z\": {v[2][0]:20}}}"
-                                           for v in r_vectors), file=calib_info, end="")
-                        print("\n\t],", file=calib_info, end="")
-
-                        print("\n\t\"translation_vectors\": \n\t[\n\t", file=calib_info, end="")
-                        print(',\n\t'.join(f"\t{{\"x\": {v[0][0]:20}, \"y\": {v[1][0]:20}, \"z\": {v[2][0]:20}}}"
-                                           for v in t_vectors), file=calib_info, end="")
-                        print("\n\t]\n}", file=calib_info, end="")
+                        print(self._camera_calibration_info, file=calib_info)
                     self._file_name, self._file_handle = "", None
             del self._ches_board_size
             del self._criteria
             del self._objects_points
             del self._image_points
-            del self._rotation_vectors
-            del self._translation_vectors
+            # del self._rotation_vectors
+            # del self._translation_vectors
             del self._obj_p
             return DISCARD_MODE_MESSAGE
         return DISCARD_MODE_MESSAGE

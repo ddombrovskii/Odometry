@@ -4,10 +4,23 @@ from typing import List
 import threading
 
 
+# TODO через ssh вызвать, например вот этот мейн.
+#  скармливать ему команды по управлению камерой или IMU из отдельного потока
+
 camera: CameraCV    = None
 imu: IMU            = None
 commands: List[str] = []
 lock = threading.Lock()
+
+
+def execute_command() -> bool:
+    if len(commands) == 0:
+        return True
+    command = commands.pop()
+    tokenize_command(command)
+    if command == "exit":
+        return False
+    return True
 
 
 def tokenize_camera_command(command: List[str]):
@@ -112,8 +125,24 @@ class CommandsInput(threading.Thread):
         self.input_cbk("exit")
 
 
+class DeviceRunner(threading.Thread):
+    def __init__(self, input_cbk=None, name='device-runner-thread'):
+        self.input_cbk = input_cbk
+        super(DeviceRunner, self).__init__(name=name)
+
+    def run(self):
+        while execute_command():
+            pass
+            # self.input_cbk(value)  # waits to get input + Return
+        # self.input_cbk("exit")
+
+
 if __name__ == '__main__':
     command_input = CommandsInput(tokenize_command)
+    command_exec  = DeviceRunner()
     command_input.start()
+    command_exec.start()
+    command_input.join()
+    command_exec.join()
 
 

@@ -407,14 +407,11 @@ class CameraCV(Device):
                         # load_accelerometer_settings(self._accelerometer, file)
                         self._file_name = ""
                         self.send_log_message(f"|------------------Loaded from file...------------------|\n")
+                        # TODO надо так-то загрузить что-то
                         return END_MODE_MESSAGE
                     except Exception as _ex:
                         self.send_log_message(f"Loading error camera_cv calib info from file\n:{self._file_name}...\n")
                         self.send_log_message(f"{_ex.args}")
-                        # return RUNNING_MODE_MESSAGE
-
-            # self._camera_matrix.clear()
-            # self._distortion   .clear()
 
             self._ches_board_size: Tuple[int, int] = (7, 5)
             self._criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 0.001)
@@ -481,13 +478,13 @@ class CameraCV(Device):
                                            for v in t_vectors), file=calib_info, end="")
                         print("\n\t]\n}", file=calib_info, end="")
                     self._file_name, self._file_handle = "", None
-                del self._ches_board_size
-                del self._criteria
-                del self._objects_points
-                del self._image_points
-                del self._rotation_vectors
-                del self._translation_vectors
-                del self._obj_p
+            del self._ches_board_size
+            del self._criteria
+            del self._objects_points
+            del self._image_points
+            del self._rotation_vectors
+            del self._translation_vectors
+            del self._obj_p
             return DISCARD_MODE_MESSAGE
         return DISCARD_MODE_MESSAGE
 

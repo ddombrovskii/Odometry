@@ -1,3 +1,4 @@
+from Cameras.utils import get_screen_resolution
 from Utilities import Device, START_MODE, BEGIN_MODE_MESSAGE, RUNNING_MODE_MESSAGE, \
     END_MODE_MESSAGE, DeviceMessage, device_progres_bar
 from Utilities.device import DISCARD_MODE_MESSAGE
@@ -61,7 +62,7 @@ class CameraCV(Device):
         self._curr_frame: np.ndarray = np.zeros((self.width, self.height, 3), dtype=np.uint8)  # текущий кадр
         self._prev_frame: np.ndarray = np.zeros((self.width, self.height, 3), dtype=np.uint8)  # предыдущий кадр
         # modes callbacks e.t.c...
-        self._start_up_time: float = 1.0  # время до начала оперирования
+        self._start_up_time: float = 0.10  # время до начала оперирования
         # инициализация новых режимов работы
         self.register_callback(CALIBRATION_MODE,  self._calibrate)
         self.register_callback(SHOW_VIDEO_MODE,   self._show_video)
@@ -70,10 +71,20 @@ class CameraCV(Device):
         # self.register_callback(SLAM_MODE, self._slam)
         self.fps = 30
         self.set_yuyv()
-        self.set_resolution("FHD")
+        self.set_resolution("minimal")
         # self.width = 500
         # self.height = 500
         # print(self)
+
+    def _resize_window(self):
+        if self._window_handle is None:
+            return
+        if self._window_handle == "":
+            return
+        cv.namedWindow(self._window_handle, cv.WINDOW_NORMAL)
+        cv.resizeWindow(self._window_handle, self.width, self.height)
+        sw, sh = get_screen_resolution()
+        cv.moveWindow(self._window_handle, (sw - self.width) >> 1, (sh - self.height) >> 1)
 
     def __del__(self):
         try:
@@ -185,6 +196,7 @@ class CameraCV(Device):
         if not self.camera_cv.set(constants.CAP_PROP_FRAME_WIDTH, w):
             self.send_log_message(f"incorrect devices width {w}\n")
             return
+        self._resize_window()
 
     @property
     def height(self) -> int:
@@ -195,6 +207,7 @@ class CameraCV(Device):
         if not self.camera_cv.set(constants.CAP_PROP_FRAME_HEIGHT, h):
             self.send_log_message(f"incorrect devices height {h}\n")
             return
+        self._resize_window()
 
     @property
     def offset_x(self) -> int:
@@ -527,6 +540,7 @@ class CameraCV(Device):
                 cv.destroyWindow(self._window_handle)
             self._window_handle = "show-video-window"
             cv.namedWindow(self._window_handle, cv.WINDOW_NORMAL)
+            self._resize_window()
             return RUNNING_MODE_MESSAGE
         frame = None
         if message.mode_arg == RUNNING_MODE_MESSAGE:

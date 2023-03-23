@@ -87,6 +87,17 @@ class CameraGL:
         self._aspect = aspect_
         self.__build_projection()
 
+    @property
+    def look_at_matrix(self) -> Matrix4:
+        xaxis = self.transform.right
+        yaxis = self.transform.up
+        zaxis = self.transform.front
+        eye   = self.transform.origin
+        return Matrix4(xaxis.x, yaxis.x, zaxis.x, 0.0,
+                       xaxis.y, yaxis.y, zaxis.y, 0.0,
+                       xaxis.z, yaxis.z, zaxis.z, 0.0,
+                       Vector3.dot(xaxis, -eye), Vector3.dot(yaxis, -eye), Vector3.dot(zaxis, -eye), 1.0)
+
     def look_at(self, target: Vector3, eye: Vector3, up: Vector3 = Vector3(0, 1, 0)) -> None:
         """
         Cтроит матрицу вида

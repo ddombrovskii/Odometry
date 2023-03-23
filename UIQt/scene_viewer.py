@@ -22,10 +22,15 @@ class MainWindow(QWidget):
         mainLayout = QHBoxLayout()
         mainLayout.addWidget(self.glWidget)
         self.setLayout(mainLayout)
-        timer = QtCore.QTimer(self)
-        timer.setInterval(20)  # period, in milliseconds
-        timer.timeout.connect(self.glWidget.updateGL)
-        timer.start()
+        timer_update = QtCore.QTimer(self)
+        timer_update.setInterval(20)  # period, in milliseconds
+        timer_update.timeout.connect(self.glWidget.updateGL)
+        timer_update.start()
+        timer_paint = QtCore.QTimer(self)
+        timer_paint.setInterval(33)  # period, in milliseconds
+        timer_paint.timeout.connect(self.glWidget.paintGL)
+        timer_paint.start()
+
         self.closeEvent(QCloseEvent())
 
     def closeEvent(self, a0) -> None:

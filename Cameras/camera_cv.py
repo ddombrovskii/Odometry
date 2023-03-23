@@ -15,12 +15,13 @@ SHOW_VIDEO_MODE = 8
 RECORD_VIDEO_MODE = 9
 READ_FRAME_MODE = 10
 SLAM_MODE = 11
+FRAME_SAVE_MODE = 11
 
 
 # TODO Подумать как можно организовать ввод с клавиатуры без cv2.waitKey(timeout)
 #  вроде Keyboard либа может решить эту проблему(если она кроссплатформенная)
-# TODO исправить запись камеры в рапиде (self._record_video)
-# TODO доделать и калибровку (все ли параметры нужны, которые тут используются)
+# TODO исправить запись камеры в рапиде (self._record_video) DONE
+# TODO доделать и калибровку (все ли параметры нужны, которые тут используются) DONE
 # TODO проверить адекватность работы LoopTimer DONE
 # TODO что не так с цветом? почему постоянно серый?
 # TODO что сделать с синхронизацией, если например камера работает в одном потоке,
@@ -67,6 +68,7 @@ class CameraCV(Device):
         self.register_callback(SHOW_VIDEO_MODE,   self._show_video)
         self.register_callback(RECORD_VIDEO_MODE, self._record_video)
         self.register_callback(READ_FRAME_MODE,   self._grab_frame)
+        self.register_callback(FRAME_SAVE_MODE,   self._save_frame)
         # self.register_callback(SLAM_MODE, self._slam)
         self.fps = 30
         self.set_yuyv()
@@ -74,16 +76,6 @@ class CameraCV(Device):
         # self.width = 500
         # self.height = 500
         # print(self)
-
-    def _resize_window(self):
-        if self._window_handle is None:
-            return
-        if self._window_handle == "":
-            return
-        cv.namedWindow(self._window_handle, cv.WINDOW_NORMAL)
-        cv.resizeWindow(self._window_handle, self.width, self.height)
-        sw, sh = get_screen_resolution()
-        cv.moveWindow(self._window_handle, (sw - self.width) >> 1, (sh - self.height) >> 1)
 
     def __del__(self):
         try:
@@ -298,36 +290,28 @@ class CameraCV(Device):
         self._curr_frame = cam_frame
         return True
 
+    def save_frame(self):
+        self.begin_mode(FRAME_SAVE_MODE)
+
     def calibrate(self, calib_results_save_path: str = "calibration_results.json"):
-        if self.mode_active(CALIBRATION_MODE):
+        if not self.begin_mode(CALIBRATION_MODE):
             return
-
-        if self.mode_active(RECORD_VIDEO_MODE):
-            self.send_message(RECORD_VIDEO_MODE, END_MODE_MESSAGE)
-
-        if self.mode_active(SLAM_MODE):
-            self.send_message(SLAM_MODE, END_MODE_MESSAGE)
-
-        self.send_message(CALIBRATION_MODE, BEGIN_MODE_MESSAGE)
+        self.stop_mode(RECORD_VIDEO_MODE)
+        self.stop_mode(SLAM_MODE)
         self._file_name = self._file_name if calib_results_save_path is None else calib_results_save_path
 
     def record_video(self, recorded_video_save_path: str = None):
-        if self.mode_active(RECORD_VIDEO_MODE):
+        if not self.begin_mode(RECORD_VIDEO_MODE):
             return
-
-        if self.mode_active(CALIBRATION_MODE):
-            self.send_message(CALIBRATION_MODE, END_MODE_MESSAGE)
-
-        if self.mode_active(SLAM_MODE):
-            self.send_message(SLAM_MODE, END_MODE_MESSAGE)
-
-        self.send_message(RECORD_VIDEO_MODE, BEGIN_MODE_MESSAGE)
+        self.stop_mode(SLAM_MODE)
+        self.stop_mode(CALIBRATION_MODE)
         self._file_name = self._file_name if recorded_video_save_path is None else recorded_video_save_path
 
+    def save_frame(self):
+        self.begin_mode(FRAME_SAVE_MODE)
+
     def show_video(self):
-        if self.mode_active(SHOW_VIDEO_MODE):
-            return
-        self.send_message(SHOW_VIDEO_MODE, BEGIN_MODE_MESSAGE)
+        self.begin_mode(SHOW_VIDEO_MODE)
 
     def begin_slam(self, slam_results_save_path: str = None) -> bool:
         return False
@@ -344,8 +328,8 @@ class CameraCV(Device):
             t = self.mode_active_time(START_MODE)
             self.send_log_message(device_progres_bar(t / self._start_up_time, "", 55, '|', '_'))
             if t >= self._start_up_time:
-                self.send_message(READ_FRAME_MODE, BEGIN_MODE_MESSAGE)
-                self.send_message(SHOW_VIDEO_MODE, BEGIN_MODE_MESSAGE)
+                self.begin_mode(READ_FRAME_MODE)
+                self.begin_mode(SHOW_VIDEO_MODE)
                 return END_MODE_MESSAGE
             return RUNNING_MODE_MESSAGE
         return DISCARD_MODE_MESSAGE
@@ -353,15 +337,15 @@ class CameraCV(Device):
     def on_reset(self, message: int) -> int:
         if message == BEGIN_MODE_MESSAGE:
             self.stop_all()
-            self.send_message(START_MODE, BEGIN_MODE_MESSAGE)
+            self.begin_mode(START_MODE)
             return RUNNING_MODE_MESSAGE
         return DISCARD_MODE_MESSAGE
 
     def on_reboot(self, message: int) -> int:
         if message == BEGIN_MODE_MESSAGE:
             self.stop_all()
-            self.send_message(READ_FRAME_MODE, BEGIN_MODE_MESSAGE)
-            self.send_message(SHOW_VIDEO_MODE, BEGIN_MODE_MESSAGE)
+            self.begin_mode(READ_FRAME_MODE)
+            self.begin_mode(SHOW_VIDEO_MODE)
             return RUNNING_MODE_MESSAGE
         return DISCARD_MODE_MESSAGE
 
@@ -388,12 +372,9 @@ class CameraCV(Device):
     def on_messages_wait(self, key_code: int) -> None:
         # Завершение работы режима
         if key_code == ord('q') or key_code == ord('v'):
-            if self.mode_active(CALIBRATION_MODE):
-                self.send_message(CALIBRATION_MODE, END_MODE_MESSAGE)
-            if self.mode_active(RECORD_VIDEO_MODE):
-                self.send_message(RECORD_VIDEO_MODE, END_MODE_MESSAGE)
-            if self.mode_active(SLAM_MODE):
-                self.send_message(SLAM_MODE, END_MODE_MESSAGE)
+            self.stop_mode(CALIBRATION_MODE)
+            self.stop_mode(RECORD_VIDEO_MODE)
+            self.stop_mode(SLAM_MODE)
             return
         # Включение режима калибровки
         if key_code == ord('c'):
@@ -407,6 +388,20 @@ class CameraCV(Device):
         if key_code == ord('s'):
             self.show_video()  # <- затычка
             return
+
+        if key_code == ord('f'):
+            self.save_frame()
+            return
+
+    def _resize_window(self):
+        if self._window_handle is None:
+            return
+        if self._window_handle == "":
+            return
+        cv.namedWindow(self._window_handle, cv.WINDOW_NORMAL)
+        cv.resizeWindow(self._window_handle, self.width, self.height)
+        sw, sh = get_screen_resolution()
+        cv.moveWindow(self._window_handle, (sw - self.width) >> 1, (sh - self.height) >> 1)
 
     def _calibrate(self, message: DeviceMessage) -> int:
         """
@@ -436,8 +431,6 @@ class CameraCV(Device):
             self._criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 0.001)
             self._objects_points: List[np.ndarray] = []  # калибровочные точки в мировом пространстве
             self._image_points: List[np.ndarray] = []  # калибровочные точки в пространстве изображения
-            # self._rotation_vectors: Tuple[np.ndarray] = None
-            # self._translation_vectors: Tuple[np.ndarray] = None
             self._obj_p: np.ndarray = np.zeros((self._ches_board_size[0] * self._ches_board_size[1], 3), np.float32)
             self._obj_p[:, :2] = np.mgrid[0:self._ches_board_size[0], 0:self._ches_board_size[1]].T.reshape(-1, 2)
             return RUNNING_MODE_MESSAGE
@@ -480,8 +473,6 @@ class CameraCV(Device):
             del self._criteria
             del self._objects_points
             del self._image_points
-            # del self._rotation_vectors
-            # del self._translation_vectors
             del self._obj_p
             return DISCARD_MODE_MESSAGE
         return DISCARD_MODE_MESSAGE
@@ -549,6 +540,19 @@ class CameraCV(Device):
 
         if message.mode_arg == END_MODE_MESSAGE:
             return DISCARD_MODE_MESSAGE
+        return DISCARD_MODE_MESSAGE
+
+    def _save_frame(self, message: DeviceMessage) -> int:
+        if message.mode_arg == BEGIN_MODE_MESSAGE:
+            if not self.is_open:
+                return END_MODE_MESSAGE
+            return RUNNING_MODE_MESSAGE
+        if message.mode_arg == RUNNING_MODE_MESSAGE:
+            now = datetime.datetime.now()
+            cv.imwrite(f'frame_at_time_{now.hour:2}_{now.minute:2}_{now.second:2}_{now.microsecond:3}.png',
+                       self.curr_frame)
+            return END_MODE_MESSAGE
+
         return DISCARD_MODE_MESSAGE
 
     def _grab_frame(self, message: DeviceMessage) -> int:

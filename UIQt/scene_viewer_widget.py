@@ -1,4 +1,4 @@
-from PyQt5.QtGui import QOpenGLVersionProfile, QSurfaceFormat
+from PyQt5.QtGui import QOpenGLVersionProfile, QSurfaceFormat, QMouseEvent
 
 from UIQt.GLUtilities.gl_camera import CameraGL
 from UIQt.GLUtilities.gl_material import MaterialGL
@@ -47,6 +47,7 @@ class SceneViewerWidget(QtOpenGL.QGLWidget):
         self._scene_models: List[ModelGL] = []
         self.fmt: QOpenGLVersionProfile = None
 
+
     def render_call(self, cam: CameraGL, model: ModelGL):
         # if cam.cast_object(model.mesh.bounds):
         #     self._render_queue.append(DrawCall(cam, model))
@@ -64,9 +65,13 @@ class SceneViewerWidget(QtOpenGL.QGLWidget):
         MeshGL.init_globals()
         MaterialGL.init_globals()
         print(f"GL version {GL.glGetString(GL.GL_VERSION)}")
-        model_gl = ModelGL()
-        model_gl.mesh = MeshGL(create_box(0.9))
         self._main_camera.look_at(Vector3(0, 0, 0), Vector3(1, 1, 1))
+        model_gl = ModelGL()
+        model_gl.mesh = MeshGL.BOX_MESH  # (create_box(0.9))
+        self._scene_models.append(model_gl)
+        #model_gl = ModelGL()
+        #model_gl.mesh = MeshGL.SPHERE_MESH  # (create_plane(2., 2.))
+        #model_gl.transform.x = 1
         self._scene_models.append(model_gl)
 
     def _load_model(self, src: str):
@@ -87,11 +92,11 @@ class SceneViewerWidget(QtOpenGL.QGLWidget):
         MeshGL.delete_all_meshes()
         self.doneCurrent()
 
-    def mousePressEvent(self, event):
+    def mousePressEvent(self, event: QMouseEvent):
         self._mouse.update_position(event.pos().x(), event.pos().y(), self.width(), self.height())
         self._mouse.update_state(event.buttons())
 
-    def mouseMoveEvent(self, event):
+    def mouseMoveEvent(self, event: QMouseEvent):
         self._mouse.update_position(event.pos().x(), event.pos().y(), self.width(), self.height())
         if self._mouse.is_left_button:
             self._main_camera.transform.angles += Vector3(self._mouse.y_delta, -self._mouse.x_delta, 0)
@@ -104,7 +109,7 @@ class SceneViewerWidget(QtOpenGL.QGLWidget):
     def updateGL(self) -> None:
         # self._main_camera.transform.angles += Vector3(0.005, 0.005, 0.005)
         for m in self._scene_models:
-            m.transform.angles += Vector3(0.005, 0.005, 0.005)
+            # m.transform.angles += Vector3(0.005, 0.005, 0.005)
             self.render_call(self._main_camera, m)
 
     def paintGL(self):

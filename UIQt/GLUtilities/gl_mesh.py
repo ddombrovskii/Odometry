@@ -1,9 +1,8 @@
+from UIQt.GLUtilities.triangle_mesh import TrisMesh, create_plane, create_box, read_obj_mesh
+from Utilities import Transform, BitSet32, BoundingBox
 from UIQt.GLUtilities.gl_buffer import BufferGL
 from OpenGL.GL import *
 import numpy as np
-
-from UIQt.GLUtilities.triangle_mesh import TrisMesh, create_plane, create_box
-from Utilities import Transform, BitSet32, BoundingBox
 
 
 class MeshGL:
@@ -20,11 +19,13 @@ class MeshGL:
 
     PLANE_MESH = None
     BOX_MESH = None
+    SPHERE_MESH = None
 
     @staticmethod
     def init_globals():
         MeshGL.PLANE_MESH = MeshGL.create_plane_gl(2.0, 2.0, 2, 2)
-        MeshGL.BOX_MESH = MeshGL.create_box_gl()
+        MeshGL.BOX_MESH =  MeshGL(read_obj_mesh("./GLUtilities/Resources/box.obj")[0])  # MeshGL.create_box_gl()
+        MeshGL.SPHERE_MESH =  MeshGL(read_obj_mesh("./GLUtilities/Resources/sphere.obj")[0])  # MeshGL.create_box_gl()
 
     @classmethod
     def create_box_gl(cls, side: float = 1.0, transform: Transform = None):

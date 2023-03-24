@@ -1,12 +1,12 @@
-from PyQt5 import uic
+from PyQt5 import uic  # если пайчарм подсвечивает ошибку, то это ОК, просто баг пайчарма
 from PyQt5.QtWidgets import QWidget, QGroupBox, QLineEdit, QLabel, QSizePolicy
 
 
-class CoordWidget(QWidget):
+class PointWidget(QWidget):
     def __init__(self, number: int):
-        super(CoordWidget, self).__init__()
-        uic.loadUi("./UI/CoordWidget.ui", self)
-        self.coordBox: QGroupBox = self.findChild(QGroupBox ,"coordGroupBox")
+        super(PointWidget, self).__init__()
+        uic.loadUi("./UI/PointWidget.ui", self)
+        self.coordBox: QGroupBox = self.findChild(QGroupBox ,"coordinatesBox")
         self.number = number
         self.coordBox.setTitle(f"Point {number}")
         self.xLine: QLineEdit = self.findChild(QLineEdit, "xLineEdit")
@@ -17,7 +17,7 @@ class CoordWidget(QWidget):
         self.yLabel: QLineEdit = self.findChild(QLabel, "yLabel")
         self.zLabel: QLineEdit = self.findChild(QLabel, "zLabel")
 
-    def setCoordinates(self, x: float, y: float, z: float):
-        self.xLine.setText(str(x))
-        self.yLine.setText(str(y))
-        self.zLine.setText(str(z))
+    def setCoordinates(self, x, y, z=0.):
+        self.xLine.setText(str(float(x)))
+        self.yLine.setText(str(float(y)))
+        self.zLine.setText(str(float(z)))

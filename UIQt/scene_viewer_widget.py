@@ -55,17 +55,31 @@ class SceneViewerWidget(QtOpenGL.QGLWidget):
         # print("cast")
         self._render_queue.append(DrawCall(cam, model))
 
+    def _get_opengl_info(self):
+        return """
+            Vendor: {0}
+            Renderer: {1}
+            OpenGL Version: {2}
+            Shader Version: {3}
+        """.format(
+            GL.glGetString(GL.GL_VENDOR),
+            GL.glGetString(GL.GL_RENDERER),
+            GL.glGetString(GL.GL_VERSION),
+            GL.glGetString(GL.GL_SHADING_LANGUAGE_VERSION)
+        )
+
     def initializeGL(self):
         self.fmt = QOpenGLVersionProfile()
         self.fmt.setVersion(3, 3)
         self.fmt.setProfile(QSurfaceFormat.OpenGLContextProfile.CoreProfile)
-        TextureGL.init_globals()
+        print(f"GL version {GL.glGetString(GL.GL_VERSION)}")
+        print(self._get_opengl_info())
         Shader.init_globals()
+        TextureGL.init_globals()
         MeshGL.init_globals()
         MaterialGL.init_globals()
-        print(f"GL version {GL.glGetString(GL.GL_VERSION)}")
-        self._main_camera.look_at(Vector3(0, 0, 0), Vector3(1, 1, 1))
         model_gl = ModelGL()
+        self._main_camera.look_at(Vector3(0, 0, 0), Vector3(1, 1, 1))
         model_gl.mesh = MeshGL.BOX_MESH  # (create_box(0.9))
         self._scene_models.append(model_gl)
         #model_gl = ModelGL()

@@ -399,14 +399,14 @@ class Shader(object):
         if loc == -1:
             return
         self.bind()
-        glUniform1f(loc, val)
+        glUniform1f(loc, GLfloat(val))
 
     def send_int(self, param_name: str, val: int):
         loc = self.get_uniform_location(param_name)
         if loc == -1:
             return
         self.bind()
-        glUniform1i(loc, val)
+        glUniform1i(loc, GLint(val))
 
     def bind(self):
         glUseProgram(self.__program_id)

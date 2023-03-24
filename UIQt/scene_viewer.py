@@ -8,7 +8,7 @@ import sys
 class MainWindow(QWidget):
     def __init__(self):
         super(MainWindow, self).__init__()  # call the init for the parent class
-        self.resize(300, 300)
+        self.resize(1000, 1000)
         self.setWindowTitle('Hello OpenGL App')
         self.glWidget: SceneViewerWidget = SceneViewerWidget(self)
         mainLayout = QHBoxLayout()

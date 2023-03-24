@@ -1,10 +1,12 @@
 from PyQt5 import uic  # если пайчарм подсвечивает ошибку, то это ОК, просто баг пайчарма
 from PyQt5.QtWidgets import QMainWindow, QApplication, QLabel, QPushButton, QListWidget, QGroupBox, QVBoxLayout, \
-    QFileDialog
-from PyQt5.QtCore import Qt
+    QFileDialog, QOpenGLWidget
+from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QPixmap, QMouseEvent, QPainter, QPen, QColor, QImage, QPaintEngine
 import sys
+from PyQt5.QtGui import QCloseEvent
 
+from UIQt.scene_viewer_widget import SceneViewerWidget
 from point_widget import PointWidget
 
 
@@ -47,11 +49,25 @@ class MainWindowUI(QMainWindow):
         self.deleteMapBtn.clicked.connect(self.deleteMap)
 
         # right tab (3D)
-        self.d3Label: QLabel = self.findChild(QLabel, "d3Label")
+        self.d3Layout = self.findChild(QVBoxLayout, "d3TabVLayout")
+        self.glWidget: SceneViewerWidget = SceneViewerWidget(self)
+        self.d3Layout.insertWidget(0, self.glWidget)
 
         self.addModelBtn: QPushButton = self.findChild(QPushButton, "addModelBtn")
         self.deleteModelBtn: QPushButton = self.findChild(QPushButton, "deleteModelBtn")
 
+        timer_update = QTimer(self)
+        timer_update.setInterval(20)  # period, in milliseconds
+        timer_update.timeout.connect(self.glWidget.updateGL)
+        timer_update.start()
+        timer_paint = QTimer(self)
+        timer_paint.setInterval(33)  # period, in milliseconds
+        timer_paint.timeout.connect(self.glWidget.paintGL)
+        timer_paint.start()
+        self.closeEvent(QCloseEvent())
+
+    def closeEvent(self, a0) -> None:
+        self.glWidget.clean_up()
 
     def singleMapClick(self, event: QMouseEvent):
         if self.mapPixmap is None:

@@ -187,7 +187,7 @@
        </size>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="mapTab">
        <attribute name="title">
@@ -243,16 +243,6 @@
         <string>3D</string>
        </attribute>
        <layout class="QVBoxLayout" name="d3TabVLayout">
-        <item>
-         <widget class="QLabel" name="d3Label">
-          <property name="text">
-           <string/>
-          </property>
-          <property name="scaledContents">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
         <item>
          <widget class="QGroupBox" name="d3GroupBox">
           <property name="sizePolicy">

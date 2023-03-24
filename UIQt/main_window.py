@@ -15,18 +15,19 @@ class MainWindowUI(QMainWindow):
         super(MainWindowUI, self).__init__()
         uic.loadUi("./UI/MainWindow.ui", self)
 
-        self.points_count = 0
-        self.start_point = None
-        self.finish_point = None
+        self.points_count: int = 0
+        self.start_point: PointWidget = None
+        self.finish_point: PointWidget = None
 
-        # right tab
+        # left tab
         self.leftTabWidget: QTabWidget = self.findChild(QTabWidget, "leftTabWidget")
-        self.leftTabWidget.setCurrentIndex(0)
+        self.leftTabWidget.setCurrentIndex(0)  # делает вкладку "точки" активным
 
         # left tab (точки)
         self.points_layout: QVBoxLayout = self.findChild(QVBoxLayout, "pointsVLayout")
-        self.points_layout.setAlignment(Qt.AlignTop)
+        self.points_layout.setAlignment(Qt.AlignTop)  # устанавливаю добавление точек на верх списка
 
+        # объявление кнопок в табе "карта"
         self.addStartPointBtn: QPushButton = self.findChild(QPushButton, "addStartPointBtn")
         self.addStartPointBtn.clicked.connect(self.addStartPoint)
         self.addFinishPointBtn: QPushButton = self.findChild(QPushButton, "addFinishPointBtn")
@@ -41,11 +42,10 @@ class MainWindowUI(QMainWindow):
         self.addAngleBtn: QPushButton = self.findChild(QPushButton, "addAngleBtn")
         self.deleteAngleBtn: QPushButton = self.findChild(QPushButton, "deleteAngleBtn")
 
-
         # right tab
-        # если раскомментировать, то приложуха будет вылетать сразу :)
-        # self.rightTabWidget: QTabWidget = self.findChild(QTabWidget, "rightTabWidget")
-        # self.rightTabWidget.setCurrentIndex(0)
+        # если сделать "карта" открытым табом по умолчанию, то приложуха вылетит
+        self.rightTabWidget: QTabWidget = self.findChild(QTabWidget, "rightTabWidget")
+        self.rightTabWidget.setCurrentIndex(1)
 
         # right tab (карта)
         self.mapLabel: QLabel = self.findChild(QLabel, "mapLabel")

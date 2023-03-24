@@ -4,7 +4,7 @@
 import os
 
 from Utilities.device import Device, START_MODE, BEGIN_MODE_MESSAGE, RUNNING_MODE_MESSAGE, END_MODE_MESSAGE, \
-    DeviceMessage, device_progres_bar, RESET_MODE, REBOOT_MODE, DISCARD_MODE_MESSAGE
+    DeviceMessage, device_progres_bar, DISCARD_MODE_MESSAGE
 from .accelerometer_settings import load_accelerometer_settings
 from .accelerometer import Accelerometer
 from Utilities.vector3 import Vector3

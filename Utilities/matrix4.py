@@ -48,15 +48,30 @@ class Matrix4(namedtuple('Matrix4', 'm00, m01, m02, m03,'
         :param up: вектор вверх
         :return: матрица взгляда
         """
-        zaxis = target - eye  # The "forward" vector.
-        zaxis.normalize()
-        xaxis = Vector3.cross(up, zaxis)  # The "right" vector.
-        xaxis.normalize()
+        zaxis = (target - eye).normalized()  # The "forward" vector.
+        xaxis = Vector3.cross(up, zaxis).normalized()  # The "right" vector.
         yaxis = Vector3.cross(zaxis, xaxis)  # The "up" vector.
 
-        return cls(xaxis.x, -yaxis.x, zaxis.x, eye.x,
-                   -xaxis.y, -yaxis.y, zaxis.y, eye.y,
-                   xaxis.z, -yaxis.z, zaxis.z, eye.z,
+        return cls(xaxis.x, yaxis.x, zaxis.x, 0.0,
+                   xaxis.y, yaxis.y, zaxis.y, 0.0,
+                   xaxis.z, yaxis.z, zaxis.z, 0.0,
+                   Vector3.dot(xaxis, -eye), Vector3.dot(yaxis, -eye), Vector3.dot(zaxis, -eye), 1.0)
+
+    @classmethod
+    def transform_look_at(cls, target: Vector3, eye: Vector3, up: Vector3 = Vector3(0, 1, 0)):
+        """
+        :param target: цель на которую смотрим
+        :param eye: положение глаза в пространстве
+        :param up: вектор вверх
+        :return: матрица взгляда
+        """
+        zaxis = (target - eye).normalized()  # The "forward" vector.
+        xaxis = Vector3.cross(up, zaxis).normalized()  # The "right" vector.
+        yaxis = Vector3.cross(xaxis, zaxis)  # The "up" vector.
+
+        return cls(xaxis.x,  yaxis.x, zaxis.x, eye.x,
+                   xaxis.y,  yaxis.y, zaxis.y, eye.y,
+                   xaxis.z,  yaxis.z, zaxis.z, eye.z,
                    0.0, 0.0, 0.0, 1.0)
 
     @classmethod

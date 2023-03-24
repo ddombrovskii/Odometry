@@ -1,3 +1,5 @@
+import asyncio
+
 from Accelerometer.accelerometer_core.inertial_measurement_unit import IMU
 from Cameras.camera_cv import CameraCV
 from Utilities import Device, BEGIN_MODE_MESSAGE, END_MODE_MESSAGE, DeviceMessage, RUNNING_MODE_MESSAGE
@@ -52,46 +54,63 @@ class Odometer(Device):
 
         return DISCARD_MODE_MESSAGE
 
-    def run(self):
+    async def _run(self):
         while not self.is_complete:
             # обновление состояния камеры
             if not self._camera.is_complete:
-                self._camera.update()
+                await self._camera.update()
             # обновление инерциальной системы
             if not self._imu.is_complete:
-                self._imu.update()
+                await self._imu.update()
             # обновление работы одометра
-            self.update()
+            await self.update()
+
+    def run(self):
+        asyncio.run(self._run())
 
     def _optical_odometer(self, message: DeviceMessage) -> int:
         if message.mode_arg == BEGIN_MODE_MESSAGE:
+            self._camera.begin_slam()
+            self._imu.pause()
             return RUNNING_MODE_MESSAGE
 
         if message.mode_arg == RUNNING_MODE_MESSAGE:
+            # TODO read value and analyze
             return RUNNING_MODE_MESSAGE
 
         if message.mode_arg == END_MODE_MESSAGE:
+            self._camera.end_slam()
+            self._imu.resume()
             return DISCARD_MODE_MESSAGE
         return DISCARD_MODE_MESSAGE
 
     def _inertial_odometer(self, message: DeviceMessage) -> int:
         if message.mode_arg == BEGIN_MODE_MESSAGE:
+            self._camera.end_slam()
+            self._camera.pause()
+            self._imu.begin_record()
             return RUNNING_MODE_MESSAGE
 
         if message.mode_arg == RUNNING_MODE_MESSAGE:
             return RUNNING_MODE_MESSAGE
 
         if message.mode_arg == END_MODE_MESSAGE:
+            self._camera.resume()
+            self._imu.end_record()
             return DISCARD_MODE_MESSAGE
         return DISCARD_MODE_MESSAGE
 
     def _composite_odometer(self, message: DeviceMessage) -> int:
         if message.mode_arg == BEGIN_MODE_MESSAGE:
+            self._camera.begin_slam()
+            self._imu.begin_record()
             return RUNNING_MODE_MESSAGE
 
         if message.mode_arg == RUNNING_MODE_MESSAGE:
             return RUNNING_MODE_MESSAGE
 
         if message.mode_arg == END_MODE_MESSAGE:
+            self._camera.end_slam()
+            self._imu.end_record()
             return DISCARD_MODE_MESSAGE
         return DISCARD_MODE_MESSAGE

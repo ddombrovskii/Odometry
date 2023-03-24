@@ -13,9 +13,10 @@ def deg_to_rad(deg: float) -> float:
 
 class Transform:
 
-    __slots__ = "__transform_m"
+    __slots__ = "__transform_m", "__angles"
 
     def __init__(self):
+        self.__angles: Vector3 = Vector3(0.0, 0.0, 0.0)
         self.__transform_m = Matrix4(1.0, 0.0, 0.0, 0.0,
                                      0.0, 1.0, 0.0, 0.0,
                                      0.0, 0.0, 1.0, 0.0,
@@ -57,7 +58,7 @@ class Transform:
     def front(self) -> Vector3:
         return Vector3(self.__transform_m.m02,
                        self.__transform_m.m12,
-                       self.__transform_m.m22).normalize()
+                       self.__transform_m.m22).normalized()
 
     @front.setter
     def front(self, front_: Vector3) -> None:
@@ -73,7 +74,7 @@ class Transform:
     def up(self) -> Vector3:
         return Vector3(self.__transform_m.m01,
                        self.__transform_m.m11,
-                       self.__transform_m.m21).normalize()
+                       self.__transform_m.m21).normalized()
 
     @up.setter
     def up(self, up_: Vector3) -> None:
@@ -89,7 +90,7 @@ class Transform:
     def right(self) -> Vector3:
         return Vector3(self.__transform_m.m00,
                        self.__transform_m.m10,
-                       self.__transform_m.m20).normalize()
+                       self.__transform_m.m20).normalized()
 
     @right.setter
     def right(self, right_: Vector3) -> None:
@@ -206,28 +207,29 @@ class Transform:
 
     @property
     def angles(self) -> Vector3:
-        return Matrix4.to_euler_angles(self.rotation_mat())
+        return self.__angles  # Matrix4.to_euler_angles(self.rotation_mat())
 
     @angles.setter
     def angles(self, xyz: Vector3) -> None:
+        self.__angles = xyz
         i: Matrix4 = Matrix4.rotate_x(xyz.x)
         i = Matrix4.rotate_y(xyz.y) * i
         i = Matrix4.rotate_z(xyz.z) * i
-        scl = self.scale
+        scl  = self.scale
         orig = self.origin
         self.__transform_m = Matrix4.build_transform(i.right * scl.x, i.up * scl.y, i.front * scl.z, orig)
 
     @property
     def ax(self) -> float:
-        return Matrix4.to_euler_angles(self.rotation_mat()).x
+        return self.angles.x  # Matrix4.to_euler_angles(self.rotation_mat()).x
 
     @property
     def ay(self) -> float:
-        return Matrix4.to_euler_angles(self.rotation_mat()).y
+        return self.angles.y  # Matrix4.to_euler_angles(self.rotation_mat()).y
 
     @property
     def az(self) -> float:
-        return Matrix4.to_euler_angles(self.rotation_mat()).z
+        return self.angles.z  # Matrix4.to_euler_angles(self.rotation_mat()).z
 
     @ax.setter
     def ax(self, x: float) -> None:
@@ -252,7 +254,8 @@ class Transform:
                        0, 0, 0, 1)
 
     def look_at(self, target: Vector3, eye: Vector3, up: Vector3 = Vector3(0, 1, 0)) -> None:
-        self.__transform_m = Matrix4.look_at(target, eye, up)
+        self.__transform_m = Matrix4.transform_look_at(target, eye, up)
+        self.__angles = Matrix4.to_euler_angles(self.__transform_m)
 
     def transform_vect(self, vec: Vector3, w=1.0) -> Vector3:
         """

@@ -1,16 +1,8 @@
-from PyQt5.uic.properties import QtGui
-
-from UIQt.GLUtilities.gl_shader import Shader
-from UIQt.GLUtilities.gl_texture import TextureGL
-from UIQt.scene_viewer_widget import SceneViewerWidget
-from UIQt.GLUtilities.triangle_mesh import create_plane
-from UIQt.GLUtilities.gl_material import MaterialGL
-from UIQt.GLUtilities.gl_mesh import MeshGL
-from PyQt5 import QtCore, QtWidgets
-from Utilities import Transform, Matrix4
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QApplication
+from UIQt.scene_viewer_widget import SceneViewerWidget
+from PyQt5.QtGui import QCloseEvent
+from PyQt5 import QtCore
 import sys
-from PyQt5.QtGui import QColor, QSurfaceFormat, QCloseEvent
 
 
 class MainWindow(QWidget):
@@ -30,7 +22,6 @@ class MainWindow(QWidget):
         timer_paint.setInterval(33)  # period, in milliseconds
         timer_paint.timeout.connect(self.glWidget.paintGL)
         timer_paint.start()
-
         self.closeEvent(QCloseEvent())
 
     def closeEvent(self, a0) -> None:

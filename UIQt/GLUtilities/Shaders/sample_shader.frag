@@ -20,5 +20,10 @@ in float v_ns;
 void main()
 {
 	float c = dot(vec3(0.333, 0.333, 0.333), v_normal.xyz);
-    outColor = vec4(c, c, c, 0);
+	float v  = v_illum   *
+	           v_dissolve*
+	           v_ni      *
+	           v_ns      ;
+	
+    outColor = vec4(c * v_texture.x, c* v_texture.y, v, 0);
 }

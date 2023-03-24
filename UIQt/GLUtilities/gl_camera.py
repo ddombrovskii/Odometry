@@ -133,14 +133,13 @@ class CameraGL:
             self._projection.m12 + v.z * self._projection.m22 + self._projection.m32)
         w = v.x * self._projection.m03 + v.y *\
             self._projection.m13 + v.z * self._projection.m23 + self._projection.m33
-        if w != 1:  # normalize if w is different from 1 (convert from homogeneous to Cartesian coordinates)
-            out.x /= w
-            out.y /= w
-            out.z /= w
+        if w != 1 and abs(w) > 1e-6:  # normalize if w is different from 1 (convert from homogeneous to Cartesian coordinates)
+            return out / w
+
         return out
 
     def cast_object(self, b_box: BoundingBox) -> bool:
-        for pt in b_box.points():
+        for pt in b_box.points:
             pt = self.to_clip_space(pt)
             if pt.x < -1.0:
                 continue

@@ -21,7 +21,6 @@ uniform float illum;
 uniform float dissolve;
 uniform float ni;
 uniform float ns;
-
 uniform mat4  model;
 uniform mat4  view;
 uniform mat4  projection;

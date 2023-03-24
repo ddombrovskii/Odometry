@@ -272,14 +272,10 @@ class Shader(object):
         return self.__program_id
 
     def get_uniform_location(self, uniform_name: str):
-        if uniform_name in self.__shader_uniforms:
-            return self.__shader_uniforms[uniform_name][0]
-        return -1
+        return self.__shader_uniforms[uniform_name][0] if uniform_name in self.__shader_uniforms else -1
 
     def get_attrib_location(self, attrib_name: str):
-        if attrib_name in self.__shader_attributes:
-            return self.__shader_attributes[attrib_name][0]
-        return -1
+        return self.__shader_attributes[attrib_name][0] if attrib_name in self.__shader_attributes else -1
 
     # def __get_all_uniform_blocks(self):
     #     count = glGetProgramiv(self.__program_id, GL_ACTIVE_UNIFORM_BLOCKS)
@@ -396,7 +392,6 @@ class Shader(object):
         if loc == -1:
             return
         self.bind()
-        data = vec.as_list
         glUniform3fv(loc, 1, (GLfloat * 3)(*vec))
 
     def send_float(self, param_name: str, val: float):

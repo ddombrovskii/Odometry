@@ -47,19 +47,18 @@ class SceneViewerWidget(QtOpenGL.QGLWidget):
         self._scene_models: List[ModelGL] = []
         self.fmt: QOpenGLVersionProfile = None
 
-
     def render_call(self, cam: CameraGL, model: ModelGL):
         # if cam.cast_object(model.mesh.bounds):
+        #     print("non-cast")
         #     self._render_queue.append(DrawCall(cam, model))
+        #     return
+        # print("cast")
         self._render_queue.append(DrawCall(cam, model))
 
     def initializeGL(self):
         self.fmt = QOpenGLVersionProfile()
         self.fmt.setVersion(3, 3)
         self.fmt.setProfile(QSurfaceFormat.OpenGLContextProfile.CoreProfile)
-        # self.connectNotify()
-        # self.fmt.setDepthBufferSize(24)
-        # self.fmt.setStencilBufferSize(8)
         TextureGL.init_globals()
         Shader.init_globals()
         MeshGL.init_globals()

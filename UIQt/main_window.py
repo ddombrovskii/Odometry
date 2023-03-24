@@ -1,6 +1,6 @@
 from PyQt5 import uic  # если пайчарм подсвечивает ошибку, то это ОК, просто баг пайчарма
-from PyQt5.QtWidgets import QMainWindow, QApplication, QLabel, QPushButton, QListWidget, QGroupBox, QVBoxLayout, \
-    QFileDialog, QOpenGLWidget
+from PyQt5.QtWidgets import QMainWindow, QApplication, QLabel, QPushButton, QVBoxLayout, \
+    QFileDialog, QTabWidget
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QPixmap, QMouseEvent, QPainter, QPen, QColor, QImage, QPaintEngine
 import sys
@@ -19,6 +19,10 @@ class MainWindowUI(QMainWindow):
         self.start_point = None
         self.finish_point = None
 
+        # right tab
+        self.leftTabWidget: QTabWidget = self.findChild(QTabWidget, "leftTabWidget")
+        self.leftTabWidget.setCurrentIndex(0)
+
         # left tab (точки)
         self.points_layout: QVBoxLayout = self.findChild(QVBoxLayout, "pointsVLayout")
         self.points_layout.setAlignment(Qt.AlignTop)
@@ -36,6 +40,12 @@ class MainWindowUI(QMainWindow):
 
         self.addAngleBtn: QPushButton = self.findChild(QPushButton, "addAngleBtn")
         self.deleteAngleBtn: QPushButton = self.findChild(QPushButton, "deleteAngleBtn")
+
+
+        # right tab
+        # если раскомментировать, то приложуха будет вылетать сразу :)
+        # self.rightTabWidget: QTabWidget = self.findChild(QTabWidget, "rightTabWidget")
+        # self.rightTabWidget.setCurrentIndex(0)
 
         # right tab (карта)
         self.mapLabel: QLabel = self.findChild(QLabel, "mapLabel")

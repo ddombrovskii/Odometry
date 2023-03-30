@@ -281,12 +281,12 @@ class AccelIntegrator:
 
         self._accel_basis.append(Matrix4.build_transform(r, u, f, a))
 
-        self._angles.append(self._accel_basis[-1].to_euler_angles())
+        # self._angles.append(self._accel_basis[-1].to_euler_angles())
 
         v = (self._velocities[-1] + (r * a.x + u * a.y + f * a.z) * dt) \
             if self._time <= self._trust_t else Vector3(0.0, 0.0, 0.0)
         # v = Vector3(0.1, 0.1, 0.1)  if self._time <= self._trust_t else Vector3(0.0, 0.0, 0.0)
-        # self._angles.append(self._angles[-1] + (point.angles_velocity - self._calib_omega) * dt)
+        self._angles.append(self._angles[-1] + (point.angles_velocity - self._calib_omega) * dt)
         self._velocities.append(v)
         self._positions.append(self._positions[-1] + (r * v.x + u * v.y + f * v.y) * dt)
         self._time_values.append(self._time_values[-1] + dt)
@@ -376,11 +376,11 @@ class AccelIntegrator:
 
     def show_path(self):
         fig, axes = plt.subplots(1)
-        axes[0].plot([p.x for p in self.positions], [p.z for p in self.positions], 'r')
-        axes[0].set_aspect('equal', 'box')
-        axes[0].set_xlabel("Sx, [m]")
-        axes[0].set_ylabel("Sz, [m]")
-        axes[0].set_title("positions - world space")
+        axes.plot([p.x for p in self.positions], [p.z for p in self.positions], 'r')
+        axes.set_aspect('equal', 'box')
+        axes.set_xlabel("Sx, [m]")
+        axes.set_ylabel("Sz, [m]")
+        axes.set_title("positions - world space")
         plt.show()
   
     def integrate(self):

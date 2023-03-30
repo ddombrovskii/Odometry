@@ -1,10 +1,10 @@
 # from accelerometer_core.accelerometer_constants import ACCEL_RANGE_2G, GYRO_RANGE_250DEG
 # from accelerometer_core.Utilities.real_time_filter import RealTimeFilter
 # from accelerometer_core.accelerometer import Accelerometer
-from Utilities import Vector3
 from .accelerometer_constants import ACCEL_RANGE_2G, GYRO_RANGE_250DEG
 from Utilities.real_time_filter import RealTimeFilter
 from .accelerometer import Accelerometer
+from Utilities import Vector3
 import os.path
 import json
 

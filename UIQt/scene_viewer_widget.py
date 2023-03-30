@@ -82,6 +82,10 @@ class SceneViewerWidget(QtOpenGL.QGLWidget):
         self._main_camera.look_at(Vector3(0, 0, 0), Vector3(1, 1, 1))
         model_gl.mesh = MeshGL.BOX_MESH  # (create_box(0.9))
         self._scene_models.append(model_gl)
+        print(self._main_camera.projection)
+        print(self._main_camera.projection.invert())
+        print(self._main_camera.projection*self._main_camera.projection.invert())
+
         #model_gl = ModelGL()
         #model_gl.mesh = MeshGL.SPHERE_MESH  # (create_plane(2., 2.))
         #model_gl.transform.x = 1

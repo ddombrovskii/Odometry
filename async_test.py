@@ -30,7 +30,6 @@ async def run_tasks():
         command_writer(),
         command_reader()
     ]
-
     await asyncio.gather(*tasks)
 
 

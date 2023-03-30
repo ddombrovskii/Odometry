@@ -88,9 +88,9 @@ class Vector2(namedtuple('Vector2', 'x, y')):
     def dot(a, b) -> float:
         return sum(ai * bi for ai, bi in zip(a, b))
 
-    # @classmethod
-    # def cross(cls, a, b):
-    #     return cls(a.z * b.y - a.y * b.z, a.x * b.z - a.z * b.x, a.y * b.x - a.x * b.y)
+    @staticmethod
+    def cross(a, b) -> float:
+        return a.x * b.y - a.y * b.x
 
     @classmethod
     def max(cls, a, b):

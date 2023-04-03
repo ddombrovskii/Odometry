@@ -47,7 +47,7 @@ class CameraCalibrationArgs(namedtuple('CameraCalibrationArgs',
     __slots__ = ()
 
     def __new__(cls, criteria=(cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 0.001),
-                ches_board_size=(9, 6), recalibrate=False):
+                ches_board_size=(6, 6), recalibrate=False):
         _obj_p: np.ndarray = np.zeros((ches_board_size[0] * ches_board_size[1], 3), dtype=np.float32)
         _obj_p[:, :2] = np.mgrid[0:ches_board_size[0], 0:ches_board_size[1]].T.reshape(-1, 2)
         return super().__new__(cls, criteria, [], [], ches_board_size, _obj_p, recalibrate)

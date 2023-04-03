@@ -9,14 +9,14 @@ SLAVE_MODE = 9
 
 
 class MotionController(Device):
-    def __init__(self, port_r: int = None, port_l: int = None, port_r_pwm: int = None, port_l_pwm: int = None,
+    def __init__(self, pin_r: int = None, pin_l: int = None, pin_r_pwm: int = None, pin_l_pwm: int = None,
                  pwm_f=400):
         super().__init__()
         self.softness: float = 0.01
-        self._r_motor: MotorController = MotorController(dir_pin=17 if port_r is None else port_r,
-                                                         pwm_pin=16 if port_r_pwm is None else port_r_pwm, freq=pwm_f)
-        self._l_motor: MotorController = MotorController(dir_pin=18 if port_l is None else port_l,
-                                                         pwm_pin=19 if port_l_pwm is None else port_l_pwm, freq=pwm_f)
+        self._r_motor: MotorController = MotorController(dir_pin=17 if pin_r is None else pin_r,
+                                                         pwm_pin=16 if pin_r_pwm is None else pin_r_pwm, freq=pwm_f)
+        self._l_motor: MotorController = MotorController(dir_pin=18 if pin_l is None else pin_l,
+                                                         pwm_pin=19 if pin_l_pwm is None else pin_l_pwm, freq=pwm_f)
         # print(self._r_motor)
         # print(self._l_motor)
         self._way_points: List[Vector2] = []
@@ -131,7 +131,7 @@ class MotionController(Device):
                     return message.end
                 self._p3 = self._way_points.pop()
                 self._angle = Vector2.cross((self._p2 - self._p1).normalized(),
-                                             (self._p3 - self._p2).normalized())
+                                            (self._p3 - self._p2).normalized())
                 self.l_motor.pwm_ff -= self._angle
                 self.r_motor.pwm_ff += self._angle
 

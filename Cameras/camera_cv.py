@@ -589,8 +589,17 @@ class CameraCV(Device):
 
         if message.is_running:
             now = datetime.datetime.now()
-            cv.imwrite(f'frame_at_time_{now.hour:2}_{now.minute:2}_{now.second:2}_{now.microsecond:3}.png',
-                       self.curr_frame)
+            _dir = 'saved_frames'
+            if not os.path.exists(_dir):
+                os.mkdir(_dir)
+
+            _curr_dir = f"{_dir}/{now.day}_{now.month}_{now.year}"
+            if not os.path.exists(_curr_dir):
+                os.mkdir(_curr_dir)
+
+            f_path = f'{_curr_dir}/frame_at_time_{now.hour:2}_{now.minute:2}_{now.second:2}_{now.microsecond:3}.png'
+            if not cv.imwrite(f_path, self.undistorted_frame):
+                self.send_log_message(f"failed to save frame at path: {f_path}")
             return message.end
 
         return message.discard

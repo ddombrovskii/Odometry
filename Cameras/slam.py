@@ -77,7 +77,6 @@ class SLAM:
             relative_scale = np.mean(np.linalg.norm(uhom_Q1.T[:-1] - uhom_Q1.T[1:], axis=-1)/
                                      np.linalg.norm(uhom_Q2.T[:-1] - uhom_Q2.T[1:], axis=-1))
             return sum_of_pos_z_Q1 + sum_of_pos_z_Q2, relative_scale
-
         # Decompose the essential matrix
         try:
             # print(f"e_mat {e_mat.shape}")
@@ -92,14 +91,14 @@ class SLAM:
         # Check which solution there is the right one
         z_sums = []
         relative_scales = []
+
         for rot, t in pairs:
             z_sum, scale = sum_z_cal_relative_scale(rot, t)
             z_sums.append(z_sum)
             relative_scales.append(scale)
-
         # Select the pair there has the most points with positive z coordinate
         right_pair_idx = np.argmax(z_sums)
-        right_pair = pairs[right_pair_idx]
+        right_pair     = pairs[right_pair_idx]
         relative_scale = relative_scales[right_pair_idx]
         rot_1, t = right_pair
         t = t * relative_scale

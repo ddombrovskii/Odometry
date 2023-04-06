@@ -56,7 +56,6 @@ class BusDummy:
 
 try:
     import smbus
-
     _import_success = True
 
 # TODO add board version check
@@ -204,6 +203,7 @@ class Accelerometer:
         self.gyroscope_range_raw = 250
 
     def __read_bus(self, addr: int) -> np.int16:
+        # TODO читать из буфера, а не по одному значению
         if not _import_success:
             return self.bus.read_byte_data(self.address, addr)
         # Accelerometer and Gyro value are 16-bit
@@ -222,6 +222,7 @@ class Accelerometer:
         return val
 
     def __read_acceleration_data(self) -> Tuple[bool, Vector3]:
+        # TODO читать из буфера, а не по одному значению
         scl = 1.0 / self.acceleration_scale * GRAVITY_CONSTANT
         try:
             if self._use_filtering:
@@ -236,6 +237,7 @@ class Accelerometer:
             return False, Vector3(0.0, 0.0, 0.0)
 
     def __read_gyro_data(self) -> Tuple[bool, Vector3]:
+        # TODO читать из буфера, а не по одному значению
         scl = 1.0 / self.gyroscope_scale / 180.0 * math.pi
         try:
             if self._use_filtering:
@@ -351,14 +353,14 @@ class Accelerometer:
     @property
     def acceleration_range(self) -> float:
         """
-        Диапазон измеряемых ускорений, выраженный в м/сек^2
+        Диапазон измеряемых ускорений, выраженный в м/сек^2.
         """
         return self._acceleration_range * GRAVITY_CONSTANT
 
     @property
     def acceleration_scale(self) -> float:
         """
-        Диапазон измеряемых ускорений, выраженный в м/сек^2
+        Диапазон измеряемых ускорений, выраженный в м/сек^2.
         """
         return Accelerometer._acc_scales[self.acceleration_range_raw]
 
@@ -392,14 +394,14 @@ class Accelerometer:
     @property
     def gyroscope_range(self) -> float:
         """
-        Диапазон измеряемых ускорений, выраженный в м/сек^2
+        Диапазон измеряемых ускорений, выраженный в м/сек^2.
         """
         return float(self._gyroscope_range)
 
     @property
     def gyroscope_scale(self) -> float:
         """
-        Диапазон измеряемых ускорений, выраженный в м/сек^2
+        Диапазон измеряемых ускорений, выраженный в м/сек^2.
         """
         return Accelerometer._gyro_scales[self.gyroscope_range_raw]
 
@@ -428,34 +430,58 @@ class Accelerometer:
     """
     @property
     def acceleration_noize_level(self) -> float:
+        """
+        Пороговый уровень отклонения значения модуля вектора G относительно которого определяется, движемся или нет.
+        """
         return self._accel_bias
 
     @acceleration_noize_level.setter
     def acceleration_noize_level(self, value: float) -> None:
+        """
+        Пороговый уровень отклонения значения модуля вектора G относительно которого определяется, движемся или нет.
+        """
         self._accel_bias = min(max(0.0, value), 10.0)
 
     @property
     def k_accel(self) -> float:
+        """
+        Параметр комплиментарного фильтра для определения углов поворота.
+        """
         return self._k_accel
 
     @k_accel.setter
     def k_accel(self, value: float) -> None:
+        """
+        Параметр комплиментарного фильтра для определения углов поворота.
+        """
         self._k_accel = min(max(0.0, value), 1.0)
 
     @property
     def omega(self) -> Vector3:
+        """
+        Угловые скорости.
+        """
         return self._omega_curr
 
     @property
     def omega_prev(self) -> Vector3:
+        """
+        Предыдущие угловые скорости.
+        """
         return self._omega_prev
 
     @property
     def angle(self) -> Vector3:
+        """
+        Углы поворота (Эйлера).
+        """
         return self._angle_curr
 
     @property
     def angle_prev(self) -> Vector3:
+        """
+        Предыдущие углы поворота (Эйлера).
+        """
         return self._angle_prev
 
     @property
@@ -465,42 +491,42 @@ class Accelerometer:
     @property
     def acceleration(self) -> Vector3:
         """
-        Задана в системе координат акселерометра
+        Задана в системе координат акселерометра.
         """
         return self._accel_curr
 
     @property
     def acceleration_prev(self) -> Vector3:
         """
-        Задана в системе координат акселерометра
+        Задана в системе координат акселерометра.
         """
         return self._accel_prev
 
     @property
     def acceleration_calib(self) -> Vector3:
         """
-        Задана в мировой системе координат
+        Задана в мировой системе координат.
         """
         return self._accel_calib
 
     @property
     def omega_calib(self) -> Vector3:
         """
-        Задана в системе координат акселерометра
+        Задана в системе координат акселерометра.
         """
         return self._omega_calib
 
     @acceleration_calib.setter
     def acceleration_calib(self, value: Vector3) -> None:
         """
-        Задана в мировой системе координат
+        Задана в мировой системе координат.
         """
         self._accel_calib = value
 
     @omega_calib.setter
     def omega_calib(self, value: Vector3) -> None:
         """
-        Задана в системе координат акселерометра
+        Задана в системе координат акселерометра.
         """
         self._omega_calib = value
 
@@ -511,10 +537,16 @@ class Accelerometer:
     """
     @property
     def basis(self) -> Matrix3:
+        """
+        Собственная система координат акселерометра.
+        """
         return self._basis_curr
 
     @property
     def basis_prev(self) -> Matrix3:
+        """
+        Предыдущая собственная система координат акселерометра.
+        """
         return self._basis_prev
 
     @property
@@ -579,6 +611,10 @@ class Accelerometer:
     """
 
     def reset(self, reset_ranges: bool = False) -> None:
+        """
+        Сброс параметров к начальным
+        :param reset_ranges: сброс диапазонов измерения
+        """
         for filter_list in self._filters:
             for f in filter_list:
                 f.clean_up()
@@ -599,6 +635,12 @@ class Accelerometer:
             self.gyroscope_range_raw = 250
 
     def calibrate(self, stop_calib: bool = False, forward: Vector3 = None) -> bool:
+        """
+        Читает и аккумулирует калибровочные значения для углов и ускорений.
+        :param stop_calib: переход в режим завершения калибровки.
+        :param forward: направление вперёд. М.б. использованы показания магнетометра.
+        :return: успешно ли завершилась итерация калибровки
+        """
         if (self.acceleration - self.acceleration_prev).magnitude() > self.acceleration_noize_level:
             stop_calib = True
 

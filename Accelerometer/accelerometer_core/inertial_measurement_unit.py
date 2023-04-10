@@ -4,10 +4,10 @@
 import os
 
 from Utilities.device import Device, START_MODE, BEGIN_MODE_MESSAGE, RUNNING_MODE_MESSAGE, END_MODE_MESSAGE, \
-    DeviceMessage, device_progres_bar, RESET_MODE, REBOOT_MODE, DISCARD_MODE_MESSAGE
+    DeviceMessage, device_progres_bar, DISCARD_MODE_MESSAGE
 from .accelerometer_settings import load_accelerometer_settings
-from .accelerometer import Accelerometer
-from Utilities.vector3 import Vector3
+from .accelerometer_mpu6050 import Accelerometer
+from Utilities.Geometry.vector3 import Vector3
 import datetime as dt
 
 
@@ -63,6 +63,7 @@ class IMU(Device):
         self._acc_check_time: float = 0.0
         self._vel: Vector3   = Vector3(0.0, 0.0, 0.0)
         self._pos: Vector3   = Vector3(0.0, 0.0, 0.0)
+        self.update_time = 1.0 / 60.0
         self.register_callback(RECORDING_MODE, self._record)
         self.register_callback(CALIBRATION_MODE, self._calibrate)
         self.register_callback(INTEGRATE_MODE, self._integrate)
@@ -296,18 +297,16 @@ class IMU(Device):
         return END_MODE_MESSAGE
 
     def _integrate(self, message: DeviceMessage) -> int:
-        if message.mode_arg == BEGIN_MODE_MESSAGE:
+        if message.is_begin:
             self.send_log_message(f"\n|----------Accelerometer read and integrate...----------|\n"
                                   f"|-------------------Please stand by...------------------|\n")
             self._acc_check_time = 0.0
-            return RUNNING_MODE_MESSAGE
+            return message.run
 
-        if message.mode_arg == RUNNING_MODE_MESSAGE:
-
-            self.send_log_message(device_progres_bar((self._mode_times[INTEGRATE_MODE] / 3.0) % 1.0, "", 55, '|', '_'))
-
+        if message.is_running:
+            #  self.send_log_message(device_progres_bar((self._mode_times[INTEGRATE_MODE] / 3.0) % 1.0, "", 55, '|', '_'))
             if not self._accelerometer.read_measurements():
-                return RUNNING_MODE_MESSAGE
+                return message.run
 
             delta_t = self.delta_t
             # Оценка времени, когда изменение модуля вектора ускорения меньше acceleration_noize_level
@@ -325,12 +324,12 @@ class IMU(Device):
                 if self._acc_check_time >= self._trust_acc_time else Vector3(0.0, 0.0, 0.0)
             # интегрирование пути
             self._pos += (r * self._vel.x + u * self._vel.y + f * self._vel.z) * delta_t
-            return RUNNING_MODE_MESSAGE
+            return message.run
 
-        return DISCARD_MODE_MESSAGE
+        return message.discard
 
     def _calibrate(self, message: DeviceMessage) -> int:
-        if message.mode_arg == BEGIN_MODE_MESSAGE:
+        if message.is_begin:
             self.send_log_message(f"\n|--------------Accelerometer calibrating...-------------|\n"
                                   f"|-------------Please stand by and hold still...---------|\n")
             self._accelerometer.reset()
@@ -344,54 +343,53 @@ class IMU(Device):
                         load_accelerometer_settings(self._accelerometer, file)
                         self._file_name = ""
                         self.send_log_message(f"|------------------Loaded from file...------------------|\n")
-                        return END_MODE_MESSAGE
+                        return message.end
                     except Exception as _ex:
                         self.send_log_message(f"Loading error accelerometer calib info from file\n:{self._file_name}...\n")
                         self.send_log_message(f"{_ex.args}")
-                        return RUNNING_MODE_MESSAGE
+                        return message.run
 
-            return RUNNING_MODE_MESSAGE
+            return message.run
 
-        if message.mode_arg == RUNNING_MODE_MESSAGE:
+        if message.is_running:
             t = self.mode_active_time(message.mode)
 
             self.send_log_message(device_progres_bar(t / self._calib_time, "", 55, '|', '_'))
 
             if t >= self._calib_time:
-                return END_MODE_MESSAGE
+                return message.end
 
             if not self._accelerometer.calibrate(False, self._accelerometer.basis.front):
-                return END_MODE_MESSAGE
+                return message.end
 
-            return RUNNING_MODE_MESSAGE
+            return message.run
 
-        if message.mode_arg == END_MODE_MESSAGE:
+        if message.is_end:
             if self._file_name != "":
                 self._accelerometer.calibrate(True, self._accelerometer.basis.front)
                 with open(self._file_name, 'wt') as output_file:
                     print(self._accelerometer, file=output_file)
                     self._file_name = ""
             self.integrate()
-            # self.begin_record() <- тестирование записи
-            return DISCARD_MODE_MESSAGE
+            return message.discard
 
-        return DISCARD_MODE_MESSAGE
+        return message.discard
 
     def _record(self, message: DeviceMessage) -> int:
-        if message.mode_arg == BEGIN_MODE_MESSAGE:
+        if message.is_begin:
             try:
                 self._file_handle = open(self._file_name, 'wt')
             except IOError as ex:
                 self._file_handle = None
                 self.send_log_message(f"Unable to open accelerometer record file\n{ex.args}")
-                return END_MODE_MESSAGE
+                return message.end
 
             print(f"{{\n\"record_date\": \"{dt.datetime.now().strftime('%H; %M; %S')}\",\n", file=self._file_handle, end="")
             print("\"way_points\" :[\n", file=self._file_handle, end="")
 
-            return RUNNING_MODE_MESSAGE
+            return message.run
 
-        if message.mode_arg == RUNNING_MODE_MESSAGE:
+        if message.is_running:
 
             print(f"\t{{\n"
                   f"\t\t\"{DTIME}\"           : {self.delta_t},\n"
@@ -403,20 +401,22 @@ class IMU(Device):
                   f"\t\t\"{ANGLES}\"          : {self.angles}\n"
                   f"\t}},\n", file=self._file_handle, end="")
 
-            return RUNNING_MODE_MESSAGE
+            return message.run
 
-        if message.mode_arg == END_MODE_MESSAGE:
+        if message.is_end:
             if self._file_handle is None:
-                return DISCARD_MODE_MESSAGE
-            # self._file_handle.seek(-2, 1) TODO тут надо сделать сдвиг на два символа назад, что бы убрать ',\n'
+                return message.discard
+            self._file_handle.seek(self._file_handle.tell() - 3, 0)
             print("\n\t]\n}", file=self._file_handle, end="")
             try:
                 self._file_handle.close()
             except IOError as ex:
                 self.send_log_message(f"Unable to close accelerometer record file\n{ex.args}")
-                return DISCARD_MODE_MESSAGE
+                return message.discard
 
-            return DISCARD_MODE_MESSAGE
+            return message.discard
 
-        return DISCARD_MODE_MESSAGE
+        return message.discard
+
+
 

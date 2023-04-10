@@ -1,16 +1,4 @@
-typedef bool (callback*(const int& message));
-Device
-{
-private:
-	int   curr_mode;
-	int   prev_mode;
-	float mode_time;
-	float start_time;
-	std::vector<callback> callbacs;
-	std::stack <Message>  messages;
-public:
-	
-}
+
 
 1)Десктоп (Страница 1):
 1.0) Прием/передача по радиоканалу (SSH)
@@ -29,6 +17,7 @@ public:
 
 2) Удалённая платформа
 2.0) Прием/передача по радиоканалу (SSH)
+2.0.1) Неблокирующая обработка принятых команд
 2.1) Привязка к GPS координатам в начале марштура/по ориентиру/ перенос платформы ручками в наччальную точку
 2.2) Съёмка одной или двумя камерами
 2.3) Акселлерометрия.

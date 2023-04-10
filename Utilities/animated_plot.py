@@ -1,6 +1,6 @@
+from Utilities.loop_timer import LoopTimer
 from typing import Tuple, List, Callable
 from matplotlib import pyplot as plt
-from Utilities.loop_timer import LoopTimer
 import numpy as np
 import time
 
@@ -51,6 +51,7 @@ class AnimatedPlot:
         self._values_lines: List[List[float]] = [[]for _ in range(n_lines)]
         self._src: Callable[..., Tuple[float, ...]] = lambda: (-1.0, 0.0, 1.0)
         self._timer = LoopTimer()
+        self._time = 0.0
         self._timer.timeout = 12.5 / self._buffer_cap
 
     def __call__(self, src: Callable[..., Tuple[float, ...]] = None):
@@ -60,7 +61,8 @@ class AnimatedPlot:
 
         while plt.fignum_exists(self._figure.number):
             with self._timer:
-                self._read_src(self._timer.time)
+                self._time += self._timer.timeout
+                self._read_src(self._time)
                 self._update_plot()
 
     def _update_plot(self):

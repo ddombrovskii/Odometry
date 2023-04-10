@@ -5,24 +5,23 @@
 
 from Utilities.loop_timer import LoopTimer
 from .inertial_measurement_unit import IMU
-from .accelerometer import Accelerometer
-from Utilities.vector3 import Vector3
+from .accelerometer_mpu6050 import Accelerometer
+from Utilities.Geometry.vector3 import Vector3
 from collections import namedtuple
 from typing import List
 import datetime as dt
 import json
 
-
-TIME            = "time"
-DTIME           = "dtime"
-ACCELERATION    = "acceleration"
-VELOCITY        = "velocity"
-POSITION        = "position"
+TIME = "time"
+DTIME = "dtime"
+ACCELERATION = "acceleration"
+VELOCITY = "velocity"
+POSITION = "position"
 ANGLES_VELOCITY = "angles_velocity"
-ANGLES          = "angles"
-DEVICE_NAME     = "device_name"
-LOG_TIME_START  = "log_time_start"
-WAY_POINTS      = "way_points"
+ANGLES = "angles"
+DEVICE_NAME = "device_name"
+LOG_TIME_START = "log_time_start"
+WAY_POINTS = "way_points"
 
 
 class AccelMeasurement(namedtuple('AccelMeasurement', 'time, dtime, acceleration, angles_velocity')):
@@ -86,8 +85,8 @@ class WayPoint(namedtuple('WayPoint', 'time, dtime, acceleration, velocity, posi
 
 class IMULog:
     def __init__(self, n: str, t: str, wp: List[WayPoint]):
-        self.device_name: str           = n
-        self.log_time_start: str        = t
+        self.device_name: str = n
+        self.log_time_start: str = t
         self.way_points: List[WayPoint] = wp
 
     @property
@@ -166,17 +165,17 @@ def read_accel(accelerometer: Accelerometer) -> str:
 
 
 def read_imu(imu: IMU) -> str:
-        # if not imu.read():
-        #     raise RuntimeError("IMU read error")
-        return f"{{\n" \
-               f"\t\"{DTIME}\"           : {imu.delta_t},\n" \
-               f"\t\"{TIME}\"            : {imu.curr_t},\n" \
-               f"\t\"{ACCELERATION}\"    : {imu.acceleration},\n" \
-               f"\t\"{VELOCITY}\"        : {imu.velocity},\n" \
-               f"\t\"{POSITION}\"        : {imu.position},\n" \
-               f"\t\"{ANGLES_VELOCITY}\" : {imu.omega},\n" \
-               f"\t\"{ANGLES}\"          : {imu.angles}\n" \
-               f"\n}}"
+    # if not imu.read():
+    #     raise RuntimeError("IMU read error")
+    return f"{{\n" \
+           f"\t\"{DTIME}\"           : {imu.delta_t},\n" \
+           f"\t\"{TIME}\"            : {imu.curr_t},\n" \
+           f"\t\"{ACCELERATION}\"    : {imu.acceleration},\n" \
+           f"\t\"{VELOCITY}\"        : {imu.velocity},\n" \
+           f"\t\"{POSITION}\"        : {imu.position},\n" \
+           f"\t\"{ANGLES_VELOCITY}\" : {imu.omega},\n" \
+           f"\t\"{ANGLES}\"          : {imu.angles}\n" \
+           f"\n}}"
 
 
 def read_accel_data(accelerometer: Accelerometer, reading_time: float = 1.0, time_delta: float = 0.05) -> \
@@ -184,10 +183,12 @@ def read_accel_data(accelerometer: Accelerometer, reading_time: float = 1.0, tim
     lt = LoopTimer()
     lt.timeout = time_delta
     records: List[str] = []
+    t = 0.0
     while True:
         with lt:
             records.append(read_accel(accelerometer))
-            if lt.time >= reading_time:
+            t += lt.last_loop_time
+            if t >= reading_time:
                 break
     return records
 
@@ -199,10 +200,12 @@ def record_accel_log(file_path: str, accelerometer: Accelerometer,
         print("\"way_points\" :[", file=out_put)
         lt = LoopTimer()
         lt.timeout = time_delta
+        t = 0.0
         while True:
             with lt:
                 print(read_accel(accelerometer), file=out_put)
-                if lt.time >= reading_time:
+                t += lt.last_loop_time
+                if t >= reading_time:
                     break
                 print(',', file=out_put)
         print("\t]\n}", file=out_put)
@@ -215,10 +218,12 @@ def record_imu_log(file_path: str, imu: IMU,
         print("\"way_points\" :[", file=out_put)
         lt = LoopTimer()
         lt.timeout = time_delta
+        t = 0.0
         while True:
             with lt:
                 print(read_imu(imu), file=out_put)
-                if lt.time >= reading_time:
+                t += lt.last_loop_time
+                if t >= reading_time:
                     break
                 print(',', file=out_put)
         print("\t]\n}", file=out_put)
@@ -227,7 +232,7 @@ def record_imu_log(file_path: str, imu: IMU,
 def read_accel_log(record_path: str) -> AccelerometerLog:
     with open(record_path) as input_json:
         raw_json = json.load(input_json)
-        if not(WAY_POINTS in raw_json):
+        if not (WAY_POINTS in raw_json):
             return AccelerometerLog("error", "error", [])
         log_time_start = raw_json[LOG_TIME_START] if LOG_TIME_START in raw_json else "no-name"
         device_name = raw_json[DEVICE_NAME] if DEVICE_NAME in raw_json else "no-time"
@@ -265,7 +270,7 @@ def read_accel_log(record_path: str) -> AccelerometerLog:
 def read_imu_log(record_path: str) -> IMULog:
     with open(record_path) as input_json:
         raw_json = json.load(input_json)
-        if not(WAY_POINTS in raw_json):
+        if not (WAY_POINTS in raw_json):
             return IMULog("error", "error", [])
         log_time_start = raw_json[LOG_TIME_START] if LOG_TIME_START in raw_json else "no-name"
         device_name = raw_json[DEVICE_NAME] if DEVICE_NAME in raw_json else "no-time"
@@ -317,6 +322,6 @@ def read_imu_log(record_path: str) -> IMULog:
             else:
                 d_t = 0.0
 
-            way_points[item_index]  = WayPoint(t, d_t, accel, velocity, position, ang_vel, angle)
+            way_points[item_index] = WayPoint(t, d_t, accel, velocity, position, ang_vel, angle)
 
         return IMULog(device_name, log_time_start, way_points)

@@ -1,8 +1,9 @@
-import threading
 from typing import List, Callable, Dict
 from collections import namedtuple
-from Utilities import LoopTimer
 import cv2 as cv
+import threading
+import asyncio
+import time
 
 
 START_MODE = 1
@@ -20,7 +21,7 @@ DISCARD_MODE_MESSAGE = -1
 
 
 def device_progres_bar(val: float, label: str = "", max_chars: int = 55,
-                       char_progress: str = '#', char_stand_by: str = '.' ) -> str:
+                       char_progress: str = '#', char_stand_by: str = '.') -> str:
     filler_l = int(min(max(0.0, val), 1.0) * max_chars)  # max_chars - title chars count
     filler_r = max_chars - filler_l
     if len(label) == 0:
@@ -40,6 +41,39 @@ class DeviceMessage(namedtuple('DeviceMessage', 'mode, mode_arg')):
     def __str__(self):
         return f"{{\"mode_info\": {self.mode}, \"mode_arg\": {self.mode_arg}}}"
 
+    @property
+    def next(self) -> int:
+        if self.is_running:
+            return RUNNING_MODE_MESSAGE
+        if self.is_begin:
+            return self.mode_arg + 1
+        if self.is_end:
+            return -1
+
+    @property
+    def end(self) -> int:
+        return END_MODE_MESSAGE
+
+    @property
+    def run(self) -> int:
+        return RUNNING_MODE_MESSAGE
+
+    @property
+    def discard(self) -> int:
+        return DISCARD_MODE_MESSAGE
+
+    @property
+    def is_begin(self) -> bool:
+        return self.mode_arg == BEGIN_MODE_MESSAGE
+
+    @property
+    def is_running(self) -> bool:
+        return self.mode_arg == RUNNING_MODE_MESSAGE
+
+    @property
+    def is_end(self) -> bool:
+        return self.mode_arg == END_MODE_MESSAGE
+
 
 Callback = Callable[[DeviceMessage], None]
 
@@ -57,10 +91,15 @@ class Device:
     Базовое поведение для устройства, которое может работать в одном нескольких режимах единовременно
     """
     def __init__(self):
+        # self._parent = None
+        # self._children = []
+        # self._key_code: int = -1
         self._curr_modes: Dict[int, int]   = {}  # текущие режимы и их состояния
         self._mode_times: Dict[int, float] = {}  # время существования в режимах
         self._d_time: float = 0.0  # время между текущим и предыдущим вызовом метода self.update()
-        self._timer: LoopTimer = LoopTimer(0.01, init_state=True)  # синхронизирующий таймер
+        # self._timer: LoopTimer = LoopTimer(0.01, init_state=True)  # синхронизирующий таймер
+        self.enable_logging = True
+        self._update_time: float = 1.0
         self._log_messages: List[str] = []
         self._messages: Dict[int, DeviceMessage] = {}  # список сообщений для переключения режимов
         self._callbacks: Dict[int, Callback] = {}  # список служебных функций
@@ -125,6 +164,18 @@ class Device:
 
         self.__on_mode_run(message)
 
+    def begin_mode(self, mode) -> bool:
+        if self.mode_active(mode):
+            return False
+        self.send_message(mode, BEGIN_MODE_MESSAGE)
+        return True
+
+    def stop_mode(self, mode) -> bool:
+        if not self.mode_active(mode):
+            return False
+        self.send_message(mode, END_MODE_MESSAGE)
+        return True
+
     def stop_all_except(self, except_mode: int):
         """
         Генерирует сообщения завершающие все процессы, кроме указанного
@@ -137,13 +188,13 @@ class Device:
             self.send_message(mode, END_MODE_MESSAGE)
 
     def _reset(self, message: DeviceMessage) -> None:
-        if message.mode_arg == BEGIN_MODE_MESSAGE:
+        if message.is_begin:
             self.stop_all_except(message.mode)
         self.__on_mode_common_behavior(message)
         self._send_message(message.mode, self.on_reset(message.mode_arg))
 
     def _reboot(self, message: DeviceMessage) -> None:
-        if message.mode_arg == BEGIN_MODE_MESSAGE:
+        if message.is_begin:
             self.stop_all_except(message.mode)
         self.__on_mode_common_behavior(message)
         self._send_message(message.mode, self.on_reboot(message.mode_arg))
@@ -153,7 +204,7 @@ class Device:
         self._send_message(message.mode, self.on_start(message.mode_arg))
 
     def _exit(self, message: DeviceMessage) -> None:
-        if message.mode_arg == BEGIN_MODE_MESSAGE:
+        if message.is_begin:
             self.stop_all_except(message.mode_arg)
         self.__on_mode_common_behavior(message)
         self._send_message(message.mode, self.on_exit(message.mode_arg))
@@ -163,7 +214,7 @@ class Device:
         self.__on_mode_common_behavior(message)
         self._send_message(message.mode, self.on_pause(message.mode_arg))
 
-        if message.mode_arg == END_MODE_MESSAGE:
+        if message.is_end:
             for mode, mode_arg in self._curr_modes.items():
                 message = DeviceMessage(mode, mode_arg)
                 if message.mode in self._callbacks:
@@ -263,6 +314,8 @@ class Device:
             print(self._log_messages.pop(), file=print_stream, end="")
 
     def send_log_message(self, message: str):
+        if not self.enable_logging:
+            return
         self._log_messages.insert(0, message)
         if len(self._log_messages) == 1000:
             self.print_log_messages()
@@ -285,7 +338,7 @@ class Device:
         Время между соседними запусками функции Update.
         :return:
         """
-        return self._timer.timeout
+        return self._update_time  # _timer.timeout
 
     @update_time.setter
     def update_time(self, value: float) -> None:
@@ -293,7 +346,8 @@ class Device:
         Время между соседними запусками функции Update.
         :return:
         """
-        self._timer.timeout = value
+        # self._timer.timeout = value
+        self._update_time = value if value > 0.0 else self._update_time
 
     def _send_message(self, mode, mode_state) -> None:
         if mode in self._curr_modes:
@@ -315,7 +369,7 @@ class Device:
         """
         if PAUSE_MODE in self._curr_modes:
             return
-        self.send_message(PAUSE_MODE, BEGIN_MODE_MESSAGE)
+        self.begin_mode(PAUSE_MODE)
 
     def resume(self) -> None:
         """
@@ -323,28 +377,28 @@ class Device:
         :return:
         """
         if PAUSE_MODE in self._curr_modes:
-            self.send_message(PAUSE_MODE, END_MODE_MESSAGE)
+            self.stop_mode(PAUSE_MODE)
 
     def exit(self) -> None:
         """
         Завершает выполнение
         :return:
         """
-        self.send_message(EXIT_MODE, BEGIN_MODE_MESSAGE)
+        self.begin_mode(EXIT_MODE)
 
     def reset(self) -> None:
         """
         Сброс устройства
         :return:
         """
-        self.send_message(RESET_MODE, BEGIN_MODE_MESSAGE)
+        self.begin_mode(RESET_MODE)
 
     def reboot(self) -> None:
         """
         Перезапускает устройство
         :return:
         """
-        self.send_message(REBOOT_MODE, BEGIN_MODE_MESSAGE)
+        self.begin_mode(REBOOT_MODE)
 
     def register_callback(self, callback_id: int, callback: Callable[[DeviceMessage], int]) -> bool:
         """
@@ -364,7 +418,7 @@ class Device:
         :return:
         """
         for mode in self._curr_modes:
-            self.send_message(mode, END_MODE_MESSAGE)
+            self.stop_mode(mode)
 
     def mode_active(self, mode: int) -> bool:
         """
@@ -382,67 +436,78 @@ class Device:
         """
         return self._mode_times[mode] if self.mode_active(mode) else 0.0
 
-    def update(self) -> None:
-        with self._timer:
-            if not self._timer.is_loop:
-                return
+    async def update(self) -> None:
+        elapsed_time = time.perf_counter()
+        self.print_log_messages()
+        self._wait_for_messages()
 
-            self.print_log_messages()
+        messages, self._messages = self._messages, {}
 
-            self._d_time = max(self._timer.last_loop_time, self._timer.timeout)
-
-            self._wait_for_messages()
-
-            messages, self._messages = self._messages, {}
-
-            if PAUSE_MODE in messages:
-                self._callbacks[PAUSE_MODE].__call__(messages[PAUSE_MODE])
-                return
-
+        if PAUSE_MODE in messages:
+            self._callbacks[PAUSE_MODE].__call__(messages[PAUSE_MODE])
+        else:
             for mode, message in messages.items():
                 if message.mode in self._callbacks:
                     self._callbacks[message.mode].__call__(message)
                 if message.mode in self._user_callbacks:
                     self._send_message(message.mode, self._user_callbacks[message.mode].__call__(message))
 
-    def run(self):
+        elapsed_time = time.perf_counter() - elapsed_time
+
+        if elapsed_time > self.update_time:
+            self._d_time = elapsed_time
+            await asyncio.sleep(0.0001)
+        else:
+            self._d_time = self.update_time
+            await asyncio.sleep(self.update_time - elapsed_time)
+
+    async def run_async(self):
         while not self.is_complete:
-            self.update()
+            await self.update()
+
+    def run(self):
+        asyncio.run(self.run_async())
+
+    def run_in_separated_thread(self):
+        t = threading.Thread(target=self.run)
+        t.start()
+        t.join()
+        return t
 
 
-class DeviceTest(Device):
-    def __init__(self):
-        super().__init__()
-
-    def on_start(self, message: int) -> int:
-        if message == BEGIN_MODE_MESSAGE:
-            return RUNNING_MODE_MESSAGE
-        if message == RUNNING_MODE_MESSAGE:
-            t = self.mode_active_time(START_MODE)
-            self.send_log_message(device_progres_bar(t / 1.0, "start..."))
-            if t > 1.0:
-                self.exit()
-                return END_MODE_MESSAGE
-            return RUNNING_MODE_MESSAGE
-        return DISCARD_MODE_MESSAGE
-
-    def on_exit(self, message: int) -> int:
-        if message == BEGIN_MODE_MESSAGE:
-            return RUNNING_MODE_MESSAGE
-        if message == RUNNING_MODE_MESSAGE:
-            t = self.mode_active_time(EXIT_MODE)
-            self.send_log_message(device_progres_bar(t / 1.0, "exit..."))
-            if t > 1.0:
-                return END_MODE_MESSAGE
-            return RUNNING_MODE_MESSAGE
-        return DISCARD_MODE_MESSAGE
-
-
-if __name__ == "__main__":
-    # messages1 = [DeviceMessage(i, i) for i in range(3)]
-    # messages2 = [] # messages1.copy()
-    # while len(messages1) != 0:
-    #     message = messages1.pop()
-    #     print(f"{message} present in messages" if message in messages2 else f"{message} not present in messages")
-    d = DeviceTest()
-    d.run()
+# class DeviceTest(Device):
+#     def __init__(self):
+#         super().__init__()
+#
+#     def on_start(self, message: int) -> int:
+#         if message == BEGIN_MODE_MESSAGE:
+#             return RUNNING_MODE_MESSAGE
+#         if message == RUNNING_MODE_MESSAGE:
+#             t = self.mode_active_time(START_MODE)
+#             self.send_log_message(device_progres_bar(t / 1.0, "start..."))
+#             if t > 1.0:
+#                 self.exit()
+#                 return END_MODE_MESSAGE
+#             return RUNNING_MODE_MESSAGE
+#         return DISCARD_MODE_MESSAGE
+#
+#     def on_exit(self, message: int) -> int:
+#         if message == BEGIN_MODE_MESSAGE:
+#             return RUNNING_MODE_MESSAGE
+#         if message == RUNNING_MODE_MESSAGE:
+#             t = self.mode_active_time(EXIT_MODE)
+#             self.send_log_message(device_progres_bar(t / 1.0, "exit..."))
+#             if t > 1.0:
+#                 return END_MODE_MESSAGE
+#             return RUNNING_MODE_MESSAGE
+#         return DISCARD_MODE_MESSAGE
+#
+#
+# if __name__ == "__main__":
+#     # messages1 = [DeviceMessage(i, i) for i in range(3)]
+#     # messages2 = [] # messages1.copy()
+#     # while len(messages1) != 0:
+#     #     message = messages1.pop()
+#     #     print(f"{message} present in messages" if message in messages2 else f"{message} not present in messages")
+#     d = DeviceTest()
+#     d.run()

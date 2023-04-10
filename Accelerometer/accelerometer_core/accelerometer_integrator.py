@@ -3,8 +3,8 @@
 # from matplotlib import pyplot as plt
 from .accelerometer_recording import read_accel_log, AccelMeasurement
 from Utilities import Quaternion
-from Utilities.matrix4 import Matrix4
-from Utilities.vector3 import Vector3
+from Utilities.Geometry.matrix4 import Matrix4
+from Utilities.Geometry.vector3 import Vector3
 from matplotlib import pyplot as plt
 from typing import List
 
@@ -33,10 +33,10 @@ class AccelIntegrator:
         self._trust_t:      float = 0.1
         self._time:         float = 0.0
         self._warm_up_time: float = 1.0
-        self._calib_time:   float = 5.0
+        self._calib_time:   float = 1.0
         self._calib_cntr:   int = 0
         self._mode:         int = WARM_UP_MODE
-        self._accel_k:      float = 0.98  # значение параметра комплиментарного фильтра для ускорения
+        self._accel_k:      float = 0.05  # значение параметра комплиментарного фильтра для ускорения
         self._velocity_k:   float = 0.9995  # значение параметра комплиментарного фильтра для ускорения
 
     @property
@@ -259,14 +259,14 @@ class AccelIntegrator:
         basis = self._accel_basis[-1]
         self._omegas.append(omega)
         #  комплиментарная фильтрация и привязка u к направлению g
-        u: Vector3 = ((basis.up * Vector3.dot(basis.up, self._curr_accel) + Vector3.cross(omega, basis.up) * dt) *
-                      self._accel_k + (1.0 - self._accel_k) * self._curr_accel)
-        f: Vector3 = (basis.front + Vector3.cross(omega, basis.front) * dt)  # .normalized()
+        u: Vector3 = (basis.up + Vector3.cross(omega, basis.up) * dt).normalized()
+        u = (u * (1.0 - self._accel_k) + self._accel_k * self._curr_accel.normalized()).normalized()
+        f: Vector3 = (basis.front + Vector3.cross(omega, basis.front) * dt)
         r = Vector3.cross(f, u)  # .normalized()
         f = Vector3.cross(u, r)  # .normalized()
-        f = f.normalized()
-        u = u.normalized()
-        r = r.normalized()
+        # f = f.normalized()
+        # u = u.normalized()
+        # r = r.normalized()
         # получим ускорение в мировой системе координат за вычетом ускорения свободного падения
         a: Vector3 = Vector3(self._curr_accel.x - (r.x * self._calib_accel.x + u.x * self._calib_accel.y + f.x * self._calib_accel.z),
                              self._curr_accel.y - (r.y * self._calib_accel.x + u.y * self._calib_accel.y + f.y * self._calib_accel.z),
@@ -281,14 +281,14 @@ class AccelIntegrator:
 
         self._accel_basis.append(Matrix4.build_transform(r, u, f, a))
 
-        self._angles.append(self._accel_basis[-1].to_euler_angles())
-
         v = (self._velocities[-1] + (r * a.x + u * a.y + f * a.z) * dt) \
             if self._time <= self._trust_t else Vector3(0.0, 0.0, 0.0)
-        # v = Vector3(0.1, 0.1, 0.1)  if self._time <= self._trust_t else Vector3(0.0, 0.0, 0.0)
-        # self._angles.append(self._angles[-1] + (point.angles_velocity - self._calib_omega) * dt)
+        # v = Vector3(0.01, 0.01, 1.0) \
+        #     if self._time <= self._trust_t else Vector3(0.0, 0.0, 0.0)
+        self._angles.append(self._angles[-1] + (point.angles_velocity - self._calib_omega) * dt)
         self._velocities.append(v)
-        self._positions.append(self._positions[-1] + (r * v.x + u * v.y + f * v.y) * dt)
+        # self._positions.append(self._positions[-1] + (r * v.x + u * v.y + f * v.y) * dt)
+        self._positions.append(self._positions[-1] + (r * v.x + u * v.y + f * v.z) * dt)
         self._time_values.append(self._time_values[-1] + dt)
         return True
 
@@ -376,11 +376,11 @@ class AccelIntegrator:
 
     def show_path(self):
         fig, axes = plt.subplots(1)
-        axes[0].plot([p.x for p in self.positions], [p.z for p in self.positions], 'r')
-        axes[0].set_aspect('equal', 'box')
-        axes[0].set_xlabel("Sx, [m]")
-        axes[0].set_ylabel("Sz, [m]")
-        axes[0].set_title("positions - world space")
+        axes.plot([p.x for p in self.positions], [p.z for p in self.positions], 'r')
+        axes.set_aspect('equal', 'box')
+        axes.set_xlabel("Sx, [m]")
+        axes.set_ylabel("Sz, [m]")
+        axes.set_title("positions - world space")
         plt.show()
   
     def integrate(self):

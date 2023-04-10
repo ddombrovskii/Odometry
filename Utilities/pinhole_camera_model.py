@@ -1,4 +1,4 @@
-from .vector3 import Vector3
+from Utilities.Geometry.vector3 import Vector3
 import numpy as np
 
 

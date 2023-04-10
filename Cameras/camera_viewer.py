@@ -1,5 +1,5 @@
 from Cameras import CameraCV, get_screen_resolution
-from Utilities import Vector2
+from Utilities.Geometry import Vector2
 from typing import Tuple
 import cv2
 

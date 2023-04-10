@@ -2,20 +2,16 @@
 # from accelerometer_core.Utilities import Matrix3, Quaternion
 # from accelerometer_core.Utilities.vector3 import Vector3
 # from accelerometer_core.accelerometer_constants import *
-
-
 from Utilities.real_time_filter import RealTimeFilter
-from Utilities import Quaternion
-from Utilities.vector3 import Vector3
-from Utilities import Matrix3
-
+from Utilities.Geometry.vector3 import Vector3
+from Utilities.Geometry import Quaternion
+from Utilities.Geometry import Matrix3
 from .accelerometer_constants import *
 from typing import List, Tuple
-import numpy as np
 import random
+import struct
 import math
 import time
-
 
 _import_success = False
 
@@ -24,10 +20,10 @@ class BusDummy:
     @staticmethod
     def accel_x(t: float, step: float = 10, width: float = .5) -> float:
         amp = 10.0
-        val =  math.exp(-(t - 20 - 1.0 * step) ** 2 / width ** 2) * amp + \
+        val = math.exp(-(t - 20 - 1.0 * step) ** 2 / width ** 2) * amp + \
               -math.exp(-(t - 20 - 2.0 * step) ** 2 / width ** 2) * amp + \
               -math.exp(-(t - 20 - 3.0 * step) ** 2 / width ** 2) * amp + \
-               math.exp(-(t - 20 - 4.0 * step) ** 2 / width ** 2) * amp
+              math.exp(-(t - 20 - 4.0 * step) ** 2 / width ** 2) * amp
 
         if abs(val) < 1e-12:
             return 0.0 + random.uniform(-0.1, 0.1)
@@ -38,9 +34,9 @@ class BusDummy:
         return BusDummy.accel_x(t + 10, step, width)
 
     def __init__(self):
-        self.__registers = {ACCEL_X_OUT_H: lambda x: 0.3333 * GRAVITY_CONSTANT,  # BusDummy.accel_x(1.25 * x),
-                            ACCEL_Y_OUT_H: lambda x: 0.3333 * GRAVITY_CONSTANT,
-                            ACCEL_Z_OUT_H: lambda x: 0.3333 * GRAVITY_CONSTANT} # BusDummy.accel_z(1.25 * x)}
+        self.__registers = {MPU6050_ACCEL_X_OUT_H: lambda x: 0.3333 * GRAVITY_CONSTANT,  # BusDummy.accel_x(1.25 * x),
+                            MPU6050_ACCEL_Y_OUT_H: lambda x: 0.3333 * GRAVITY_CONSTANT,
+                            MPU6050_ACCEL_Z_OUT_H: lambda x: 0.3333 * GRAVITY_CONSTANT}  # BusDummy.accel_z(1.25 * x)}
         self._t_start = time.perf_counter()
 
     def SMBus(self, a: int):
@@ -54,8 +50,10 @@ class BusDummy:
             return self.__registers[register](time.perf_counter() - self._t_start)
         return 0
 
+
 try:
     import smbus
+
     _import_success = True
 
 # TODO add board version check
@@ -68,59 +66,62 @@ except ImportError as ex:
 # Based on mpu 6050
 class Accelerometer:
     """
-    Диапазоны измеряемых ускорений
+        Акселерометр основанный на чипе mpu6050. Читает ускорения, угловые скорости, углы.
     """
-    _filter_ranges = {256: FILTER_BW_256,
-                      188: FILTER_BW_188,
-                      98: FILTER_BW_98,
-                      42: FILTER_BW_42,
-                      20: FILTER_BW_20,
-                      10: FILTER_BW_10,
-                      5: FILTER_BW_5}
     """
     Диапазоны измеряемых ускорений
     """
-    _acc_ranges = {2: ACCEL_RANGE_2G,
-                   4: ACCEL_RANGE_4G,
-                   8: ACCEL_RANGE_8G,
-                   16: ACCEL_RANGE_16G}
+    _filter_ranges = {256: MPU6050_FILTER_BW_256,
+                      188: MPU6050_FILTER_BW_188,
+                      98:  MPU6050_FILTER_BW_98,
+                      42:  MPU6050_FILTER_BW_42,
+                      20:  MPU6050_FILTER_BW_20,
+                      10:  MPU6050_FILTER_BW_10,
+                      5:   MPU6050_FILTER_BW_5}
+    """
+    Диапазоны измеряемых ускорений
+    """
+    _acc_ranges = {2:  MPU6050_ACCEL_RANGE_2G,
+                   4:  MPU6050_ACCEL_RANGE_4G,
+                   8:  MPU6050_ACCEL_RANGE_8G,
+                   16: MPU6050_ACCEL_RANGE_16G}
     """
     Модификаторы масштаба для ускорений
     """
-    _acc_scales = {ACCEL_RANGE_2G: ACCEL_SCALE_MODIFIER_2G,
-                   ACCEL_RANGE_4G: ACCEL_SCALE_MODIFIER_4G,
-                   ACCEL_RANGE_8G: ACCEL_SCALE_MODIFIER_8G,
-                   ACCEL_RANGE_16G: ACCEL_SCALE_MODIFIER_16G}
+    _acc_scales = {MPU6050_ACCEL_RANGE_2G:  MPU6050_ACCEL_SCALE_MODIFIER_2G,
+                   MPU6050_ACCEL_RANGE_4G:  MPU6050_ACCEL_SCALE_MODIFIER_4G,
+                   MPU6050_ACCEL_RANGE_8G:  MPU6050_ACCEL_SCALE_MODIFIER_8G,
+                   MPU6050_ACCEL_RANGE_16G: MPU6050_ACCEL_SCALE_MODIFIER_16G}
     """
     Диапазоны измеряемых угловых скоростей
     """
-    _gyro_ranges = {250: ACCEL_RANGE_2G,
-                    500: ACCEL_RANGE_4G,
-                    1000: ACCEL_RANGE_8G,
-                    2000: ACCEL_RANGE_16G}
+    _gyro_ranges = {250:  MPU6050_ACCEL_RANGE_2G,
+                    500:  MPU6050_ACCEL_RANGE_4G,
+                    1000: MPU6050_ACCEL_RANGE_8G,
+                    2000: MPU6050_ACCEL_RANGE_16G}
     """
     Модификаторы масштаба для угловых скоростей
     """
-    _gyro_scales = {GYRO_RANGE_250DEG: GYRO_SCALE_MODIFIER_250DEG,
-                    GYRO_RANGE_500DEG: GYRO_SCALE_MODIFIER_500DEG,
-                    GYRO_RANGE_1000DEG: GYRO_SCALE_MODIFIER_1000DEG,
-                    GYRO_RANGE_2000DEG: GYRO_SCALE_MODIFIER_2000DEG}
+    _gyro_scales = {MPU6050_GYRO_RANGE_250DEG:  MPU6050_GYRO_SCALE_MODIFIER_250DEG,
+                    MPU6050_GYRO_RANGE_500DEG:  MPU6050_GYRO_SCALE_MODIFIER_500DEG,
+                    MPU6050_GYRO_RANGE_1000DEG: MPU6050_GYRO_SCALE_MODIFIER_1000DEG,
+                    MPU6050_GYRO_RANGE_2000DEG: MPU6050_GYRO_SCALE_MODIFIER_2000DEG}
 
     def __init__(self, address: int = 0x68):
-        self.__i2c_bus = None
-        self.__address: int = address  # mpu 6050
-        if not self.__init_bus():
+        self._i2c_bus = None
+        self._address: int = address  # mpu 6050
+        if not self._init_bus():
             raise RuntimeError("Accelerometer bus init failed...")
         self._filters: List[List[RealTimeFilter]] = []
-        self._acceleration_range:        int = -1  # 2
-        self._acceleration_range_raw:    int = -1
-        self._gyroscope_range:           int = -1  # 250
-        self._gyroscope_range_raw:       int = -1
+        self._acceleration_range: int = -1  # 2
+        self._acceleration_range_raw: int = -1
+        self._gyroscope_range: int = -1  # 250
+        self._gyroscope_range_raw: int = -1
         self._hardware_filter_range_raw: int = -1
-        self._use_filtering:             bool = False
+        self._use_filtering: bool = False
         # Время: текущее измеренное, предыдущее измеренное, время начала движения
-        self._t_curr:  float = 0.0
-        self._t_prev:  float = 0.0
+        self._t_curr: float = 0.0
+        self._t_prev: float = 0.0
         self._t_start: float = time.perf_counter()
         # текущее значение ускорения
         self._accel_curr: Vector3 = Vector3(0.0, 0.0, 0.0)
@@ -129,8 +130,8 @@ class Accelerometer:
         self._omega_curr: Vector3 = Vector3(0.0, 0.0, 0.0)
         self._omega_prev: Vector3 = Vector3(0.0, 0.0, 0.0)
         # калибровочные значения
-        self._accel_bias:  float = 0.5  # допустимый уровень шума между значениями при калибровке
-        self._calib_cntr:  int = 0
+        self._accel_bias: float = 0.5  # допустимый уровень шума между значениями при калибровке
+        self._calib_cntr: int = 0
         self._accel_calib: Vector3 = Vector3(0.0, 0.0, 0.0)
         self._omega_calib: Vector3 = Vector3(0.0, 0.0, 0.0)
         # угол поворота
@@ -139,7 +140,7 @@ class Accelerometer:
         self._basis_curr: Matrix3 = Matrix3.identity()
         self._basis_prev: Matrix3 = Matrix3.identity()
         self._k_accel: float = 0.999
-        self.__default_settings()
+        self._default_settings()
 
     def __str__(self):
         separator = ",\n"
@@ -168,30 +169,30 @@ class Accelerometer:
     def __enter__(self):
         return self
 
-    def __init_bus(self) -> bool:
+    def _init_bus(self) -> bool:
         try:
-            self.__i2c_bus = smbus.SMBus(1)
+            self._i2c_bus = smbus.SMBus(1)
             # or bus = smbus.SMBus(0) for older version boards
         except NameError as _ex:
             print(f"SM Bus init error!!!\n{_ex.args}")
             return False
         try:
             # Write to power management register
-            self.bus.write_byte_data(self.address, PWR_MGMT_1, 1)
+            self.bus.write_byte_data(self.address, MPU6050_PWR_MGMT_1, 1)
             # write to sample rate register
-            self.bus.write_byte_data(self.address, SAMPLE_RATE_DIV, 7)
+            self.bus.write_byte_data(self.address, MPU6050_SAMPLE_RATE_DIV, 7)
             # Write to Configuration register
-            self.bus.write_byte_data(self.address, MPU_CONFIG, 0)
+            self.bus.write_byte_data(self.address, MPU6050_MPU_CONFIG, 0)
             # Write to Gyro configuration register
-            self.bus.write_byte_data(self.address, GYRO_CONFIG, 24)
+            self.bus.write_byte_data(self.address, MPU6050_GYRO_CONFIG, 24)
             # Write to interrupt enable register
-            self.bus.write_byte_data(self.address, INT_ENABLE, 1)
+            self.bus.write_byte_data(self.address, MPU6050_INT_ENABLE, 1)
         except AttributeError as ex_:
             print(f"Accelerometer init error {ex_.args}")
             return False
         return True
 
-    def __default_settings(self) -> None:
+    def _default_settings(self) -> None:
         self._filters.clear()
         for _ in range(6):
             _filter = RealTimeFilter()
@@ -202,76 +203,65 @@ class Accelerometer:
         self.acceleration_range_raw = 2
         self.gyroscope_range_raw = 250
 
-    def __read_bus(self, addr: int) -> np.int16:
-        # TODO читать из буфера, а не по одному значению
-        if not _import_success:
-            return self.bus.read_byte_data(self.address, addr)
-        # Accelerometer and Gyro value are 16-bit
-        high = self.bus.read_byte_data(self.address, addr)
-        low = self.bus.read_byte_data(self.address, addr + 1)
-        # concatenate higher and lower value
-        value = (high << 8) | low
-        # to get signed value from Accelerometer
-        if value >= 0x8000:
-            value -= 65536
-        return value
-
-    def __filter_value(self, val: float, filter_id: int) -> float:
+    def _filter_value(self, val: float, filter_id: int) -> float:
         for _filter in self._filters[filter_id]:
             val = _filter.filter(val)
         return val
 
-    def __read_acceleration_data(self) -> Tuple[bool, Vector3]:
-        # TODO читать из буфера, а не по одному значению
-        scl = 1.0 / self.acceleration_scale * GRAVITY_CONSTANT
+    def _read_i2c_raw(self) -> Tuple[bool, int, int, int, int, int, int]:
         try:
-            if self._use_filtering:
-                return True, Vector3(self.__filter_value(float(self.__read_bus(ACCEL_X_OUT_H)) * scl, FILTER_AX),
-                                     self.__filter_value(float(self.__read_bus(ACCEL_Y_OUT_H)) * scl, FILTER_AY),
-                                     self.__filter_value(float(self.__read_bus(ACCEL_Z_OUT_H)) * scl, FILTER_AZ))
-            return True, Vector3(float(self.__read_bus(ACCEL_X_OUT_H)) * scl,
-                                 float(self.__read_bus(ACCEL_Y_OUT_H)) * scl,
-                                 float(self.__read_bus(ACCEL_Z_OUT_H)) * scl)
-        except Exception as _ex:
-            print(f"acceleration data read error\n{_ex.args}")
-            return False, Vector3(0.0, 0.0, 0.0)
+            raw_data = self.bus.read_i2c_block_data(self.address, MPU6050_ACCEL_X_OUT_H, 14)
+            gx, gy, gz, t, ax, ay, az = struct.unpack('>hhhhhhh', raw_data)
+        except RuntimeError:
+            return False, 0, 0, 0, 0, 0, 0
+        return False, gx, gy, gz, ax, ay, az
 
-    def __read_gyro_data(self) -> Tuple[bool, Vector3]:
-        # TODO читать из буфера, а не по одному значению
-        scl = 1.0 / self.gyroscope_scale / 180.0 * math.pi
+    def _read_data_i2c(self) -> Tuple[bool, Vector3, Vector3]:
         try:
-            if self._use_filtering:
-                return True, Vector3(self.__filter_value(float(self.__read_bus(GYRO_X_OUT_H)) * scl, FILTER_GX),
-                                     self.__filter_value(float(self.__read_bus(GYRO_Y_OUT_H)) * scl, FILTER_GY),
-                                     self.__filter_value(float(self.__read_bus(GYRO_Z_OUT_H)) * scl, FILTER_GZ))
-            return True, Vector3(float(self.__read_bus(GYRO_X_OUT_H)) * scl,
-                                 float(self.__read_bus(GYRO_Y_OUT_H)) * scl,
-                                 float(self.__read_bus(GYRO_Z_OUT_H)) * scl)
-        except Exception as _ex:
-            print(f"gyroscope data read error\n{_ex.args}")
-            return False, Vector3(0.0, 0.0, 0.0)
+            raw_data = self.bus.read_i2c_block_data(self.address, MPU6050_ACCEL_X_OUT_H, 14)
+            gx, gy, gz, t, ax, ay, az = \
+                tuple(map(lambda a: a if a < 0x8000 else a - 65536, struct.unpack('>hhhhhhh', raw_data)))
+        except RuntimeError:
+            return False, Vector3(0.0, 0.0, 0.0), Vector3(0.0, 0.0, 0.0)
+
+        g_scl = 1.0 / self.acceleration_scale * GRAVITY_CONSTANT
+        a_scl = 1.0 / self.gyroscope_scale / 180.0 * math.pi
+
+        if not self._use_filtering:
+            return True, \
+                   Vector3(float(ax) * a_scl, float(ay) * a_scl, float(az) * a_scl), \
+                   Vector3(float(gx) * g_scl, float(gy) * g_scl, float(gz) * g_scl)
+
+        return True, \
+               Vector3(self._filter_value(float(ax) * a_scl, FILTER_AX),
+                       self._filter_value(float(ay) * a_scl, FILTER_AY),
+                       self._filter_value(float(az) * a_scl, FILTER_AZ)), \
+               Vector3(self._filter_value(float(gx) * g_scl, FILTER_GX),
+                       self._filter_value(float(gy) * g_scl, FILTER_GY),
+                       self._filter_value(float(gz) * g_scl, FILTER_GZ))
 
     """
     ###############################################
     #####  I2C parameters setter and getters  #####
     ###############################################
     """
+
     @property
     def bus(self):
-        return self.__i2c_bus
+        return self._i2c_bus
 
     @property
     def address(self) -> int:
-        return self.__address
+        return self._address
 
     @address.setter
     def address(self, address: int) -> None:
         prev_address: int = self.address
-        self.__address = address
-        if not self.__init_bus():
+        self._address = address
+        if not self._init_bus():
             print("incorrect device address in HardwareAccelerometerSettings")
-            self.__address = prev_address
-            self.__init_bus()
+            self._address = prev_address
+            self._init_bus()
 
     """
     #####################################################
@@ -327,9 +317,9 @@ class Accelerometer:
     def acceleration_range_raw(self) -> int:
         """
         Диапазон измеряемых ускорений
-        ACCEL_SCALE_MODIFIER_2G = 16384.0
-        ACCEL_SCALE_MODIFIER_4G = 8192.0
-        ACCEL_SCALE_MODIFIER_8G = 4096.0
+        ACCEL_SCALE_MODIFIER_2G  = 16384.0
+        ACCEL_SCALE_MODIFIER_4G  = 8192.0
+        ACCEL_SCALE_MODIFIER_8G  = 4096.0
         ACCEL_SCALE_MODIFIER_16G = 2048.0
         """
         return self._acceleration_range_raw
@@ -338,17 +328,17 @@ class Accelerometer:
     def acceleration_range_raw(self, accel_range: int) -> None:
         """
         Диапазон измеряемых ускорений
-        ACCEL_SCALE_MODIFIER_2G = 16384.0
-        ACCEL_SCALE_MODIFIER_4G = 8192.0
-        ACCEL_SCALE_MODIFIER_8G = 4096.0
+        ACCEL_SCALE_MODIFIER_2G  = 16384.0
+        ACCEL_SCALE_MODIFIER_4G  = 8192.0
+        ACCEL_SCALE_MODIFIER_8G  = 4096.0
         ACCEL_SCALE_MODIFIER_16G = 2048.0
         """
         if accel_range not in Accelerometer._acc_ranges:
             return
         self._acceleration_range = accel_range
         self._acceleration_range_raw = Accelerometer._acc_ranges[self._acceleration_range]
-        self.bus.write_byte_data(self.address, ACCEL_CONFIG, 0x00)
-        self.bus.write_byte_data(self.address, ACCEL_CONFIG, self._acceleration_range_raw)
+        self.bus.write_byte_data(self.address, MPU6050_ACCEL_CONFIG, 0x00)
+        self.bus.write_byte_data(self.address, MPU6050_ACCEL_CONFIG, self._acceleration_range_raw)
 
     @property
     def acceleration_range(self) -> float:
@@ -368,8 +358,8 @@ class Accelerometer:
     def gyroscope_range_raw(self) -> int:
         """
         Диапазон измеряемых значений угловых скоростей гироскопа
-        GYRO_RANGE_250DEG = 0x00
-        GYRO_RANGE_500DEG = 0x08
+        GYRO_RANGE_250DEG  = 0x00
+        GYRO_RANGE_500DEG  = 0x08
         GYRO_RANGE_1000DEG = 0x10
         GYRO_RANGE_2000DEG = 0x18
         """
@@ -379,8 +369,8 @@ class Accelerometer:
     def gyroscope_range_raw(self, gyro_range: int) -> None:
         """
         Диапазон измеряемых значений угловых скоростей гироскопа
-        GYRO_RANGE_250DEG = 0x00
-        GYRO_RANGE_500DEG = 0x08
+        GYRO_RANGE_250DEG  = 0x00
+        GYRO_RANGE_500DEG  = 0x08
         GYRO_RANGE_1000DEG = 0x10
         GYRO_RANGE_2000DEG = 0x18
         """
@@ -388,8 +378,8 @@ class Accelerometer:
             return
         self._gyroscope_range = gyro_range
         self._gyroscope_range_raw = Accelerometer._gyro_ranges[self._gyroscope_range]
-        self.bus.write_byte_data(self.address, GYRO_CONFIG, 0x00)
-        self.bus.write_byte_data(self.address, GYRO_CONFIG, self._gyroscope_range_raw)
+        self.bus.write_byte_data(self.address, MPU6050_GYRO_CONFIG, 0x00)
+        self.bus.write_byte_data(self.address, MPU6050_GYRO_CONFIG, self._gyroscope_range_raw)
 
     @property
     def gyroscope_range(self) -> float:
@@ -420,14 +410,15 @@ class Accelerometer:
         if filter_range not in Accelerometer._filter_ranges:
             return
         self._hardware_filter_range_raw = filter_range
-        ext_sync_set = self.bus.read_byte_data(self.__address, MPU_CONFIG) & 0b00111000
-        self.bus.write_byte_data(self.__address, MPU_CONFIG, ext_sync_set | self._hardware_filter_range_raw)
+        ext_sync_set = self.bus.read_byte_data(self.address, MPU6050_MPU_CONFIG) & 0b00111000
+        self.bus.write_byte_data(self.address, MPU6050_MPU_CONFIG, ext_sync_set | self._hardware_filter_range_raw)
 
     """
     ###############################################################
     #####  Local space acceleration, omega and angle getters  #####
     ###############################################################
     """
+
     @property
     def acceleration_noize_level(self) -> float:
         """
@@ -535,6 +526,7 @@ class Accelerometer:
     #####  Local space to world space transform values  #####
     #########################################################
     """
+
     @property
     def basis(self) -> Matrix3:
         """
@@ -563,7 +555,7 @@ class Accelerometer:
                        self.basis.m02 * self.acceleration.x +
                        self.basis.m12 * self.acceleration.y +
                        self.basis.m22 * self.acceleration.z - self._accel_calib.z)
-                       
+
     @property
     def acceleration_local_space(self) -> Vector3:
         """
@@ -583,6 +575,7 @@ class Accelerometer:
     #####  Time values getters  #####
     #################################
     """
+
     @property
     def delta_t(self) -> float:
         """
@@ -618,15 +611,15 @@ class Accelerometer:
         for filter_list in self._filters:
             for f in filter_list:
                 f.clean_up()
-        self._accel_curr  = Vector3(0.0, 0.0, 0.0)
-        self._accel_prev  = Vector3(0.0, 0.0, 0.0)
-        self._omega_curr  = Vector3(0.0, 0.0, 0.0)
-        self._omega_prev  = Vector3(0.0, 0.0, 0.0)
-        self._basis_curr  = Matrix3.identity()
-        self._basis_prev  = Matrix3.identity()
-        self._t_start     = time.perf_counter()
-        self._t_curr      = 0.0
-        self._t_prev      = 0.0
+        self._accel_curr = Vector3(0.0, 0.0, 0.0)
+        self._accel_prev = Vector3(0.0, 0.0, 0.0)
+        self._omega_curr = Vector3(0.0, 0.0, 0.0)
+        self._omega_prev = Vector3(0.0, 0.0, 0.0)
+        self._basis_curr = Matrix3.identity()
+        self._basis_prev = Matrix3.identity()
+        self._t_start = time.perf_counter()
+        self._t_curr = 0.0
+        self._t_prev = 0.0
         # if reset_calib_info:
         self._accel_calib = Vector3(0.0, 0.0, 0.0)
         self._omega_calib = Vector3(0.0, 0.0, 0.0)
@@ -651,7 +644,7 @@ class Accelerometer:
             self._omega_calib /= self._calib_cntr
             self._calib_cntr = 0
             self._basis_curr = Matrix3.build_basis(self._accel_calib, forward)
-            self._basis_prev =  self._basis_curr
+            self._basis_prev = self._basis_curr
             self._accel_calib = Vector3(self.basis.m00 * self._accel_calib.x +
                                         self.basis.m10 * self._accel_calib.y +
                                         self.basis.m20 * self._accel_calib.z,
@@ -681,29 +674,28 @@ class Accelerometer:
         self._t_prev = self._t_curr
         self._t_curr = time.perf_counter() - self._t_start
 
-        flag1, val = self.__read_acceleration_data()
+        flag, accel, gyro = self._read_data_i2c()
 
-        if flag1:
+        if flag:
             self._accel_prev = self._accel_curr
-            self._accel_curr = val
-
-        flag2, val = self.__read_gyro_data()
-        if flag2:
+            self._accel_curr = accel
             self._omega_prev = self._omega_curr
-            self._omega_curr = val - self._omega_calib
+            self._omega_curr = gyro - self._omega_calib
 
-        u: Vector3 = ((self.basis.up * Vector3.dot(self.basis.up, self.acceleration) +
-                       Vector3.cross(self.omega, self.basis.up) * self.delta_t) * self._k_accel +
-                       self.acceleration * (1.0 - self._k_accel))
+        u: Vector3 = (self.basis.up + Vector3.cross(self.omega, self.basis.up) * self.delta_t).normalized()
+        u = (u * (1.0 - self.k_accel) + self.k_accel * self.acceleration.normalized()).normalized()
+        # u: Vector3 = ((self.basis.up * Vector3.dot(self.basis.up, self.acceleration) +
+        #                Vector3.cross(self.omega, self.basis.up) * self.delta_t) * self._k_accel +
+        #               self.acceleration * (1.0 - self._k_accel))
 
         f: Vector3 = (self.basis.front + Vector3.cross(self.omega, self.basis.front) * self.delta_t)
         r = Vector3.cross(f, u)
         f = Vector3.cross(u, r)
-        f = f.normalized()
-        u = u.normalized()
-        r = r.normalized()
+        # f = f.normalized()
+        # u = u.normalized()
+        # r = r.normalized()
         self._basis_prev = self._basis_curr
         self._basis_curr = Matrix3.build_transform(r, u, f)
-        self._angle_prev  = self._angle_curr
+        self._angle_prev = self._angle_curr
         self._angle_curr = self.basis.to_euler_angles()
-        return flag2 or flag1
+        return flag  # flag2 or flag1

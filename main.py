@@ -11,7 +11,7 @@ import cv2 as cv
 # https://github.com/niconielsen32/ComputerVision/blob/master/VisualOdometry/visual_odometry.py
 # https://github.com/niconielsen32/ComputerVision/blob/master/LiveCameraTrajectory/liveCameraPoseEstimation.py
 # KITTI Camera
-from Utilities import Matrix4
+from Utilities.Geometry import Matrix4
 
 camera_k = np.array([[7.070912000000e+02, 0.000000000000e+00, 6.018873000000e+02],
                      [0.000000000000e+00, 7.070912000000e+02, 1.831104000000e+02],

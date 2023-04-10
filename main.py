@@ -179,45 +179,52 @@ class CameraTrack:
         self.display: bool = True
 
     def compute(self):
-        for index in range(len(self._images) - 1):
+        with open('log.txt', 'wt') as output:  # открываем файл для записи триангуляционных данных
+            for index in range(len(self._images) - 1):
 
-            kp1, des1 = self._orb.detectAndCompute(self._images[index][1], None)
-            kp2, des2 = self._orb.detectAndCompute(self._images[index + 1][1], None)
+                kp1, des1 = self._orb.detectAndCompute(self._images[index][1], None)
+                kp2, des2 = self._orb.detectAndCompute(self._images[index + 1][1], None)
 
-            self._img_prev = self._img_curr
-
-            if des1 is None:
-                continue
-            if des2 is None:
-                continue
-            if len(kp1) < 10:
-                continue
-            if len(kp2) < 10:
-                continue
-
-            matches = self._flann.knnMatch(des1, des2, k=2)
-            matches_mask = [(0, 0) for _ in range(len(matches))]
-            matches_good = []
-
-            for i, match in enumerate(matches):
-                if len(match) != 2:
+                if des1 is None:
+                    self._img_prev = self._img_curr
                     continue
-                m, n = match
-                if m.distance < 0.5 * n.distance:
-                    matches_mask[i] = (1, 0)
-                    matches_good.append(m)
-            # Sort them in the order of their distance.
-            if self.display:
-                draw_params = dict(matchColor=(0, 255, 0), singlePointColor=(255, 0, 0),
-                                   matchesMask=matches_mask, flags=2)
-                img3 = cv.drawMatchesKnn(self._images[index][1], kp1, self._images[index+1][1], kp2, matches, None, **draw_params)
-                cv.imshow('SIFT-odometry', img3)
-                cv.waitKey(100)
-            self._img_prev = self._img_curr
-            q1 = np.float32([kp1[m.queryIdx].pt for m in matches_good])
-            q2 = np.float32([kp2[m.trainIdx].pt for m in matches_good])
-            t = get_pose(q1, q2, self._camera_k, self._camera_p)
-            self._transforms.append(np.matmul(self._transforms[-1], np.linalg.inv(t)) )
+                if des2 is None:
+                    self._img_prev = self._img_curr
+                    continue
+                if len(kp1) < 10:
+                    self._img_prev = self._img_curr
+                    continue
+                if len(kp2) < 10:
+                    self._img_prev = self._img_curr
+                    continue
+
+                matches = self._flann.knnMatch(des1, des2, k=2)
+                matches_mask = [(0, 0) for _ in range(len(matches))]
+                matches_good = []
+
+                for i, match in enumerate(matches):
+                    if len(match) != 2:
+                        continue
+                    m, n = match
+                    if m.distance < 0.5 * n.distance:
+                        matches_mask[i] = (1, 0)
+                        matches_good.append(m)
+                # Sort them in the order of their distance.
+                if self.display:
+                    draw_params = dict(matchColor=(0, 255, 0), singlePointColor=(255, 0, 0),
+                                       matchesMask=matches_mask, flags=2)
+                    img3 = cv.drawMatchesKnn(self._images[index][1], kp1, self._images[index+1][1], kp2, matches, None, **draw_params)
+                    cv.imshow('SIFT-odometry', img3)
+                    cv.waitKey(100)
+                self._img_prev = self._img_curr
+                q1 = np.float32([kp1[m.queryIdx].pt for m in matches_good])
+                q2 = np.float32([kp2[m.trainIdx].pt for m in matches_good])
+                # по результатам q1 и q2 получаем цвета из _img_prev и _img_curr соответсвенно
+                t = get_pose(q1, q2, self._camera_k, self._camera_p) # дополнительно рассчитывает пространственное полежние  q1, q2
+                self._transforms.append(np.matmul(self._transforms[-1], np.linalg.inv(t)))
+                # тут перевод в мировую систему координтат q1, q2
+                # запись в файл output
+                self._img_prev = self._img_curr
 
     def draw_path(self):
         fig, ax = plt.subplots()  # (subplot_kw={"projection": "3d"})

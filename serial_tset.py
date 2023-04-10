@@ -1,11 +1,9 @@
-import struct
-import time
-from typing import Tuple, Any
-
-from Utilities import search_serial_ports
 from serial.tools import list_ports
+from typing import Tuple, Any
+import struct
 import serial
-
+import time
+from Utilities import search_serial_ports
 
 UART_START_MESSAGE = b'$'
 UART_END_MESSAGE = b'#'
@@ -13,11 +11,11 @@ UART_EMPTY_MESSAGE = b'$#'
 
 
 def read_package(serial_port: serial.Serial) -> bytes:
-        if serial_port.in_waiting == 0:
-            return UART_END_MESSAGE
-        while serial_port.read() != UART_START_MESSAGE:
-            pass
-        return serial_port.read_until(UART_END_MESSAGE)[:-1]
+    if serial_port.in_waiting == 0:
+        return UART_END_MESSAGE
+    while serial_port.read() != UART_START_MESSAGE:
+        pass
+    return serial_port.read_until(UART_END_MESSAGE)[:-1]
 
 
 def _template_read_package(serial_port: serial.Serial, value_type: str = 'i',
@@ -29,11 +27,11 @@ def _template_read_package(serial_port: serial.Serial, value_type: str = 'i',
     return struct.unpack(f'{endian}{len(raw_data) // size_of}{value_type}', raw_data)
 
 
-def read_int_package(serial_port)  -> Tuple[int, ...]:
+def read_int_package(serial_port) -> Tuple[int, ...]:
     return _template_read_package(serial_port, 'i', size_of=4)
 
 
-def read_float_package(serial_port)  -> Tuple[float, ...]:
+def read_float_package(serial_port) -> Tuple[float, ...]:
     return _template_read_package(serial_port, 'f', size_of=4)
 
 
@@ -54,7 +52,7 @@ def write_float_package(serial_port, message: Tuple[float, ...]) -> None:
 if __name__ == '__main__':
     ports = list_ports.comports()
     [print(p) for p in ports]
-    sender = serial.Serial (ports[0].device, baudrate=9600, timeout=1, bytesize=8, stopbits=serial.STOPBITS_ONE)
+    sender = serial.Serial(ports[0].device, baudrate=9600, timeout=1, bytesize=8, stopbits=serial.STOPBITS_ONE)
     receiver = serial.Serial(ports[1].device, baudrate=9600, timeout=1, bytesize=8, stopbits=serial.STOPBITS_ONE)
 
     data_int = tuple((i for i in range(10)))

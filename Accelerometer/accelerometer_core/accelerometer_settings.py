@@ -1,7 +1,7 @@
 # from accelerometer_core.accelerometer_constants import ACCEL_RANGE_2G, GYRO_RANGE_250DEG
 # from accelerometer_core.Utilities.real_time_filter import RealTimeFilter
 # from accelerometer_core.accelerometer import Accelerometer
-from .accelerometer_constants import ACCEL_RANGE_2G, GYRO_RANGE_250DEG
+from .accelerometer_constants import MPU6050_ACCEL_RANGE_2G, MPU6050_GYRO_RANGE_250DEG
 from Utilities.real_time_filter import RealTimeFilter
 from .accelerometer_mpu6050 import Accelerometer
 from Utilities.Geometry import Vector3
@@ -34,7 +34,7 @@ def load_accelerometer_settings(acc: Accelerometer, settings_file: str) -> bool:
             flag |= True
     except RuntimeWarning as _ex:
         print("acceleration_range_raw read error")
-        acc.acceleration_range_raw = ACCEL_RANGE_2G
+        acc.acceleration_range_raw = MPU6050_ACCEL_RANGE_2G
 
     try:
         if "gyroscope_range_raw" in json_file:
@@ -42,7 +42,7 @@ def load_accelerometer_settings(acc: Accelerometer, settings_file: str) -> bool:
             flag |= True
     except RuntimeWarning as _ex:
         print("gyroscope_range_raw read error")
-        acc.acceleration_range_raw = GYRO_RANGE_250DEG
+        acc.acceleration_range_raw = MPU6050_GYRO_RANGE_250DEG
 
     try:
         if "hardware_filter_range_raw" in json_file:

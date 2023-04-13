@@ -2,7 +2,7 @@
 # from accelerometer_core import read_accel_log, AccelMeasurement
 # from matplotlib import pyplot as plt
 from .accelerometer_recording import read_accel_log, AccelMeasurement
-from Utilities import Quaternion
+from Utilities.Geometry.quaternion import Quaternion
 from Utilities.Geometry.matrix4 import Matrix4
 from Utilities.Geometry.vector3 import Vector3
 from matplotlib import pyplot as plt
@@ -18,7 +18,7 @@ WARM_UP_MODE = 4
 
 class AccelIntegrator:
     def __init__(self, log_src: str):
-        self._log_file = read_accel_log(log_src)
+        self._log_file = read_accel_log(log_src, order=1)
         self._time_values:  List[float] = []
         self._omegas:       List[Vector3] = [Vector3(0.0, 0.0, 0.0)]
         self._angles:       List[Vector3] = []
@@ -29,7 +29,7 @@ class AccelIntegrator:
         self._prev_accel:   Vector3 = Vector3(0.0, 0.0, 0.0)
         self._calib_accel:  Vector3 = Vector3(0.0, 0.0, 0.0)
         self._calib_omega:  Vector3 = Vector3(0.0, 0.0, 0.0)
-        self._accel_bias:   float = 0.01
+        self._accel_bias:   float = 0.3
         self._trust_t:      float = 0.1
         self._time:         float = 0.0
         self._warm_up_time: float = 1.0
@@ -214,6 +214,7 @@ class AccelIntegrator:
         self._mode = INTEGRATE_MODE
         self._calib_accel /= self._calib_cntr
         self._calib_omega /= self._calib_cntr
+        # g || Oy
         basis: Matrix4 = Matrix4.build_basis(self._calib_accel)
         self._accel_basis.append(Matrix4.build_transform(basis.right, basis.up, basis.front, self._calib_accel))
         """
@@ -259,9 +260,9 @@ class AccelIntegrator:
         basis = self._accel_basis[-1]
         self._omegas.append(omega)
         #  комплиментарная фильтрация и привязка u к направлению g
-        u: Vector3 = (basis.up + Vector3.cross(omega, basis.up) * dt).normalized()
+        u: Vector3 = (basis.up + 0.83 * Vector3.cross(omega, basis.up) * dt).normalized()
         u = (u * (1.0 - self._accel_k) + self._accel_k * self._curr_accel.normalized()).normalized()
-        f: Vector3 = (basis.front + Vector3.cross(omega, basis.front) * dt)
+        f: Vector3 = (basis.front + 0.83 * Vector3.cross(omega, basis.front) * dt)
         r = Vector3.cross(f, u)  # .normalized()
         f = Vector3.cross(u, r)  # .normalized()
         # f = f.normalized()
@@ -281,10 +282,10 @@ class AccelIntegrator:
 
         self._accel_basis.append(Matrix4.build_transform(r, u, f, a))
 
-        v = (self._velocities[-1] + (r * a.x + u * a.y + f * a.z) * dt) \
-            if self._time <= self._trust_t else Vector3(0.0, 0.0, 0.0)
-        # v = Vector3(0.01, 0.01, 1.0) \
+        # v = (self._velocities[-1] + (r * a.x + u * a.y + f * a.z) * dt) \
         #     if self._time <= self._trust_t else Vector3(0.0, 0.0, 0.0)
+        v = 0.50 * Vector3(0.0, 0.0, 1.0) \
+            if self._time <= self._trust_t else Vector3(0.0, 0.0, 0.0)
         self._angles.append(self._angles[-1] + (point.angles_velocity - self._calib_omega) * dt)
         self._velocities.append(v)
         # self._positions.append(self._positions[-1] + (r * v.x + u * v.y + f * v.y) * dt)

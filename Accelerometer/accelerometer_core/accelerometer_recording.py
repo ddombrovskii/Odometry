@@ -229,7 +229,13 @@ def record_imu_log(file_path: str, imu: IMU,
         print("\t]\n}", file=out_put)
 
 
-def read_accel_log(record_path: str) -> AccelerometerLog:
+_read_order = \
+    {0: 'xyz',
+     1: 'xzy',
+     2: 'zxy'}
+
+
+def read_accel_log(record_path: str, order: int = 0) -> AccelerometerLog:
     with open(record_path) as input_json:
         raw_json = json.load(input_json)
         if not (WAY_POINTS in raw_json):
@@ -237,18 +243,19 @@ def read_accel_log(record_path: str) -> AccelerometerLog:
         log_time_start = raw_json[LOG_TIME_START] if LOG_TIME_START in raw_json else "no-name"
         device_name = raw_json[DEVICE_NAME] if DEVICE_NAME in raw_json else "no-time"
         way_points = [None] * len(raw_json[WAY_POINTS])
+        order = _read_order[order] if order in _read_order else _read_order[0]
         for item_index, item in enumerate(raw_json[WAY_POINTS]):
             if ACCELERATION in item:
-                accel = Vector3(float(item[ACCELERATION]["x"]),
-                                float(item[ACCELERATION]["y"]),
-                                float(item[ACCELERATION]["z"]))
+                accel = Vector3(float(item[ACCELERATION][order[0]]),  # FOR BNO055 XZY
+                                float(item[ACCELERATION][order[1]]),  # FOR BNO055 XZY
+                                float(item[ACCELERATION][order[2]]))  # FOR BNO055 XZY
             else:
                 accel = Vector3(0.0, 0.0, 0.0)
 
             if ANGLES_VELOCITY in item:
-                ang_vel = Vector3(float(item[ANGLES_VELOCITY]["x"]),
-                                  float(item[ANGLES_VELOCITY]["y"]),
-                                  float(item[ANGLES_VELOCITY]["z"]))
+                ang_vel = Vector3(float(item[ANGLES_VELOCITY][order[0]]),  # FOR BNO055 XZY
+                                  float(item[ANGLES_VELOCITY][order[1]]),  # FOR BNO055 XZY
+                                  float(item[ANGLES_VELOCITY][order[2]]))  # FOR BNO055 XZY
             else:
                 ang_vel = Vector3(0.0, 0.0, 0.0)
 
@@ -267,7 +274,7 @@ def read_accel_log(record_path: str) -> AccelerometerLog:
         return AccelerometerLog(device_name, log_time_start, way_points)
 
 
-def read_imu_log(record_path: str) -> IMULog:
+def read_imu_log(record_path: str, order: int = 0) -> IMULog:
     with open(record_path) as input_json:
         raw_json = json.load(input_json)
         if not (WAY_POINTS in raw_json):
@@ -275,40 +282,41 @@ def read_imu_log(record_path: str) -> IMULog:
         log_time_start = raw_json[LOG_TIME_START] if LOG_TIME_START in raw_json else "no-name"
         device_name = raw_json[DEVICE_NAME] if DEVICE_NAME in raw_json else "no-time"
         way_points = [None] * len(raw_json[WAY_POINTS])
+        order = _read_order[order] if order in _read_order else _read_order[0]
 
         for item_index, item in enumerate(raw_json[WAY_POINTS]):
             if ACCELERATION in item:
-                accel = Vector3(float(item[ACCELERATION]["x"]),
-                                float(item[ACCELERATION]["y"]),
-                                float(item[ACCELERATION]["z"]))
+                accel = Vector3(float(item[ACCELERATION][order[0]]),
+                                float(item[ACCELERATION][order[1]]),
+                                float(item[ACCELERATION][order[2]]))
             else:
                 accel = Vector3(0.0, 0.0, 0.0)
 
             if ANGLES_VELOCITY in item:
-                ang_vel = Vector3(float(item[ANGLES_VELOCITY]["x"]),
-                                  float(item[ANGLES_VELOCITY]["y"]),
-                                  float(item[ANGLES_VELOCITY]["z"]))
+                ang_vel = Vector3(float(item[ANGLES_VELOCITY][order[0]]),
+                                  float(item[ANGLES_VELOCITY][order[1]]),
+                                  float(item[ANGLES_VELOCITY][order[2]]))
             else:
                 ang_vel = Vector3(0.0, 0.0, 0.0)
 
             if ANGLES in item:
-                angle = Vector3(float(item[ANGLES]["x"]),
-                                float(item[ANGLES]["y"]),
-                                float(item[ANGLES]["z"]))
+                angle = Vector3(float(item[ANGLES][order[0]]),
+                                float(item[ANGLES][order[1]]),
+                                float(item[ANGLES][order[2]]))
             else:
                 angle = Vector3(0.0, 0.0, 0.0)
 
             if VELOCITY in item:
-                velocity = Vector3(float(item[VELOCITY]["x"]),
-                                   float(item[VELOCITY]["y"]),
-                                   float(item[VELOCITY]["z"]))
+                velocity = Vector3(float(item[VELOCITY][order[0]]),
+                                   float(item[VELOCITY][order[1]]),
+                                   float(item[VELOCITY][order[2]]))
             else:
                 velocity = Vector3(0.0, 0.0, 0.0)
 
             if POSITION in item:
-                position = Vector3(float(item[POSITION]["x"]),
-                                   float(item[POSITION]["y"]),
-                                   float(item[POSITION]["z"]))
+                position = Vector3(float(item[POSITION][order[0]]),
+                                   float(item[POSITION][order[1]]),
+                                   float(item[POSITION][order[2]]))
             else:
                 position = Vector3(0.0, 0.0, 0.0)
 

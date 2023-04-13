@@ -6,10 +6,10 @@ from Accelerometer.accelerometer_core.accelerometer_integrator import AccelInteg
 
 if __name__ == "__main__":
     # integrator = AccelIntegrator("accelerometer_core/accelerometer_records/the newest/building_way_2.json")
-    integrator = AccelIntegrator("accelerometer_core/accelerometer_records/the newest/building_walk_straight.json")
+    integrator = AccelIntegrator("accelerometer_core/accelerometer_records/record_bno_test.json")
     integrator.integrate()
     integrator.show_results_xz()
-    # integrator.show_path()
+    integrator.show_path()
 # from Accelerometer.accelerometer_core.inertial_measurement_unit import IMU
 #
 #if __name__ == "__main__":

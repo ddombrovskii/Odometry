@@ -154,11 +154,11 @@ class Device:
         :param message: состояние режима (старт режима, рабочий режим, завершение режима).
         :return:
         """
-        if message.mode_arg == BEGIN_MODE_MESSAGE:
+        if message.is_begin:
             self.__on_mode_register(message)
             return
 
-        if message.mode_arg == END_MODE_MESSAGE:
+        if message.is_end:
             self.__on_mode_unregister(message)
             return
 

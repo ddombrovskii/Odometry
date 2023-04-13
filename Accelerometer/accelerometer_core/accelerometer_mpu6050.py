@@ -42,6 +42,10 @@ class BusDummy:
     def SMBus(self, a: int):
         return self
 
+    def read_i2c_block_data(self, a, b, c):
+        # TODO семь 2ух байтных чисел
+        return b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+
     def write_byte_data(self, a: int, b: int, c: int):
         pass
 
@@ -211,7 +215,7 @@ class Accelerometer:
     def _read_i2c_raw(self) -> Tuple[bool, int, int, int, int, int, int]:
         try:
             raw_data = self.bus.read_i2c_block_data(self.address, MPU6050_ACCEL_X_OUT_H, 14)
-            gx, gy, gz, t, ax, ay, az = struct.unpack('>hhhhhhh', raw_data)
+            gx, gy, gz, t, ax, ay, az = struct.unpack('>7h', raw_data)
         except RuntimeError:
             return False, 0, 0, 0, 0, 0, 0
         return False, gx, gy, gz, ax, ay, az
@@ -220,7 +224,7 @@ class Accelerometer:
         try:
             raw_data = self.bus.read_i2c_block_data(self.address, MPU6050_ACCEL_X_OUT_H, 14)
             gx, gy, gz, t, ax, ay, az = \
-                tuple(map(lambda a: a if a < 0x8000 else a - 65536, struct.unpack('>hhhhhhh', raw_data)))
+                tuple(map(lambda a: a if a < 0x8000 else a - 65536, struct.unpack('>7h', raw_data)))
         except RuntimeError:
             return False, Vector3(0.0, 0.0, 0.0), Vector3(0.0, 0.0, 0.0)
 

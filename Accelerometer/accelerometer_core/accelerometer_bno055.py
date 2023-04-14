@@ -11,7 +11,11 @@ UART_EMPTY_MESSAGE = b'$##$'
 
 
 def read_package(serial_port: serial.Serial) -> bytes:
-    # print(serial_port.read_all())
+    """
+    Читает пакет данных по UART с признаками начала и конца b'$#', b'#$' соответственно
+    :param serial_port: UART порт
+    :return: b'$#...Данные...#$' или пустой пакет b'$##$'
+    """
     if serial_port.in_waiting == 0:
         return UART_EMPTY_MESSAGE
     while serial_port.read(2) != UART_START_MESSAGE:
@@ -32,14 +36,32 @@ def _template_read_package(serial_port: serial.Serial, value_type: str = 'i',
 
 
 def read_int_package(serial_port) -> Tuple[int, ...]:
+    """
+    Читает пакет данных по UART с признаками начала и конца b'$#', b'#$' соответственно и приводит их к кортежу из
+     целочисленных значений.
+    :param serial_port: UART порт.
+    :return: кортеж из целочисленных значений.
+    """
     return _template_read_package(serial_port, 'i', size_of=4)
 
 
 def read_float_package(serial_port) -> Tuple[float, ...]:
+    """
+    Читает пакет данных по UART с признаками начала и конца b'$#', b'#$' соответственно и приводит их к кортежу из
+     значений с плавающей точкой.
+    :param serial_port: UART порт.
+    :return: кортеж из значений с плавающей точкой.
+    """
     return _template_read_package(serial_port, 'f', size_of=4)
 
 
 def write_package(serial_port, message: bytes):
+    """
+    Пишет в UART порт сообщение в виде массива из HEX значений.  Признаками начала и конца b'$#', b'#$'
+     выставляются автоматически.
+    :param serial_port:
+    :param message:
+    """
     serial_port.write(UART_START_MESSAGE)
     serial_port.write(message)
     serial_port.write(UART_END_MESSAGE)
@@ -50,10 +72,22 @@ def _template_write_package(serial_port, message: Tuple[Any, ...], value_type: s
 
 
 def write_int_package(serial_port, message: Tuple[int, ...]) -> None:
+    """
+    Пишет в UART порт сообщение в виде массива из целочисленных значений.  Признаками начала и конца b'$#', b'#$'
+     выставляются автоматически.
+    :param serial_port:
+    :param message:
+    """
     _template_write_package(serial_port, message, 'i')
 
 
 def write_float_package(serial_port, message: Tuple[float, ...]) -> None:
+    """
+    Пишет в UART порт сообщение в виде массива значений с плавающей точкой.  Признаками начала и конца b'$#', b'#$'
+     выставляются автоматически.
+    :param serial_port:
+    :param message:
+    """
     _template_write_package(serial_port, message, 'f')
 
 
@@ -71,7 +105,7 @@ def _clear_bit(bytes_: int, bit_: int) -> int:
     return bytes_
 
 
-def device_progres_bar(val: float, label: str = "", max_chars: int = 55,
+def _device_progres_bar(val: float, label: str = "", max_chars: int = 55,
                        char_progress: str = '#', char_stand_by: str = '.') -> str:
     filler_l = int(min(max(0.0, val), 1.0) * max_chars)  # max_chars - title chars count
     filler_r = max_chars - filler_l
@@ -99,6 +133,58 @@ WAY_POINTS = "\"way_points\""
 
 
 class AccelerometerBNO055:
+    """
+                     Протокол управления акселерометром BNO055.
+    Параметры пакета:
+        1. Начало пакета: b'$#'.
+        2. Конец пакета: b'#$'.
+
+    Форма пакета запроса состоит из начала пакета, байта запроса к акселерометру,
+    двух байт сообщения системе управления и конца пакета.
+
+    # Запросы к акселерометру:                  # не используется
+    #	Префикс устройства:                     # не используется
+    #	b'x\00' (не используется, но желателен) # не используется
+
+    Запрос к акселерометру:
+        |++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++|
+        |      bin      |   hex   |              Описание                    |
+        |++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++|
+        | 0xb 0000 0001 | b'x\01' | Ускорение.                               |
+        | 0xb 0000 0010 | b'x\02' | Угловые скорости.                        |
+        | 0xb 0000 0100 | b'x\04' | Углы эйлера.                             |
+        | 0xb 0000 1000 | b'x\08' | Кватернион.                              |
+        | 0xb 0001 0000 | b'x\10' | Данные магнетометра.                     |
+        | 0xb 0010 0000 | b'x\20' | Линейное ускорение(без вектора g).       |
+        | 0xb 0100 0000 | b'x\40' | Запрос на калибровку.                    |
+        | 0xb 1000 0000 | b'x\80' | Запрос на статус.                        |
+        |++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++|
+
+    Пример запроса на ускорение, углы эйлера и линейное ускорение:
+        |++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++|
+        |      bin      |   hex   |                 Описание                 |
+        |++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++|
+        | 0xb 0010 0101 | b'x\25' | Ускорение | Углы эйлера | Лин. ускорение |
+        |++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++|
+
+    Пример возвращаемых данных:
+        b'$#01&*JH*(K ... (*HKJNL#$'
+        В случае запроса ускорение | углы эйлера | лин. ускорение пакет будет
+        состоять из 1(байт статуса) + 3(вектора) * 3(координаты вектора) *
+        * 8(байт на число) байт, плюс 2 байта на символы начала и 2 байта на
+        символы конца.
+
+    Байты статуса:
+        |++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++|
+        |      bin      |   hex   |              Описание                    |
+        |++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++|
+        | 0xb 0000 0000 | b'x\00' | Готов к чтению измерений.                |
+        | 0xb 0000 0001 | b'x\01' | Данные успешно прочитаны.                |
+        | 0xb 0000 0010 | b'x\02' | Акселерометр в процессе калибровки,      |
+        |			    |		  | чтение недоступно.                       |
+        | 0xb 0000 0011 | b'x\03' | Ошибка чтения.                           |
+        |++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++|
+    """
     ACCELERATION_BIT = 0
     OMEGA_BIT = 1
     ANGLES_BIT = 2
@@ -165,11 +251,7 @@ class AccelerometerBNO055:
 
     def __str__(self):
 
-        data = []
-
-        # data.append(f"\t{TIME:22}: {str(self.current_time if self.current_time>0 else 0.0)}")
-
-        data.append(f"\t{DTIME:22}: {str(self.delta_t)}")
+        data = [f"\t{DTIME:22}: {str(self.delta_t)}"]
 
         if _is_bit_set(self._read_config, AccelerometerBNO055.ACCELERATION_BIT):
             data.append(f"\t{ACCELERATION:22}: {str(self.acceleration)}")
@@ -188,7 +270,9 @@ class AccelerometerBNO055:
 
         if _is_bit_set(self._read_config, AccelerometerBNO055.ACCELERATION_LINEAR_BIT):
             data.append(f"\t{ACCELERATION_LIN:22}: {str(self.acceleration_linear)}")
+
         sep = ',\n'
+
         return f" {{\n{sep.join(val for val in data)}\n }}"
 
     def __del__(self):
@@ -206,10 +290,6 @@ class AccelerometerBNO055:
     @property
     def read_config(self) -> int:
         return self._read_config
-
-    # @read_config.setter
-    # def read_config(self, value: int) -> None:
-    #    self._read_config = min(max(value, 1), 255)
 
     @property
     def is_accel_read(self) -> bool:
@@ -289,6 +369,43 @@ class AccelerometerBNO055:
     def magnetometer(self) -> Vector3:
         return self._magneto_curr
 
+    @property
+    def config_info(self) -> str:
+        config = []
+        if _is_bit_set(self.read_config, AccelerometerBNO055.ACCELERATION_BIT):
+            config.append('\t\"Accelerations\": true')
+        else:
+            config.append('\t\"Accelerations\": false')
+
+        if _is_bit_set(self.read_config, AccelerometerBNO055.OMEGA_BIT):
+            config.append('\t\"Omegas\": true')
+        else:
+            config.append('\t\"Omegas\": false')
+
+        if _is_bit_set(self.read_config, AccelerometerBNO055.ANGLES_BIT):
+            config.append('\t\"Angles\": true')
+        else:
+            config.append('\t\"Angles\": false')
+
+        if _is_bit_set(self.read_config, AccelerometerBNO055.QUATERNION_BIT):
+            config.append('\t\"Quaternion\": true')
+        else:
+            config.append('\t\"Quaternion\": false')
+
+        if _is_bit_set(self.read_config, AccelerometerBNO055.MAGNETOMETER_BIT):
+            config.append('\t\"Magnetometer\": true')
+        else:
+            config.append('\t\"Magnetometer\": false')
+
+        if _is_bit_set(self.read_config, AccelerometerBNO055.ACCELERATION_LINEAR_BIT):
+            config.append('\t\"LinearAccelerations\": true')
+        else:
+            config.append('\t\"LinearAccelerations\": false')
+
+        sep = ',\n'
+
+        return f" {{\n{sep.join(val for val in config)}\n }}"
+
     def _set_accel(self, x: float, y: float, z: float):
         self._accel_prev = self._accel_curr
         self._accel_curr = Vector3(x, y, z)
@@ -314,6 +431,8 @@ class AccelerometerBNO055:
         self._quat_curr = Quaternion(w, x, y, z)
 
     def _read_request(self):
+        # TODO сделать асинхронным, добавить ожидание результата со стороны BNO в течении какого-то, по истечении
+        #  которого ничего не возвращать.
         message = self.read_config.to_bytes(1, 'big')
         write_package(self._bno_port, message)
         # time.sleep(0.01)
@@ -388,6 +507,12 @@ class AccelerometerBNO055:
         self._read_request()
 
     def record(self, file_path: str, time_out: float = 0.016, record_time: float = 180.0):
+        """
+        Пишет измерения акселерометра в файл с интервалом time_out на протяжении времени record_time.
+        :param file_path: куда пишем
+        :param time_out: время между записями
+        :param record_time: общее время записи
+        """
         import datetime as dt
         with open(file_path, 'wt') as record:
             t_elapsed = 0.0
@@ -402,10 +527,10 @@ class AccelerometerBNO055:
                 print(' ,', file=record)
                 if d_t > time_out:
                     t_elapsed += d_t
-                    print(device_progres_bar(t_elapsed / record_time, label='RECORDING...'), end='')
+                    print(_device_progres_bar(t_elapsed / record_time, label='RECORDING...'), end='')
                     continue
                 t_elapsed += time_out
-                print(device_progres_bar(t_elapsed / record_time, label='RECORDING...'), end='')
+                print(_device_progres_bar(t_elapsed / record_time, label='RECORDING...'), end='')
                 time.sleep(time_out - d_t)
             record.seek(record.tell() - 3, 0)
             print("]\n}", file=record)
@@ -413,32 +538,9 @@ class AccelerometerBNO055:
 
 if __name__ == '__main__':
     acc = AccelerometerBNO055()
-    # acc.record('record_bno_test.json')
+    # acc.record('record_bno_test.json')  # запись в файл
     # acc.calibrate_request()
     for _ in range(10):
         acc.update()
         print(acc)
         time.sleep(.50)
-
-    # bno_test()
-    # self_response()
-    # ports = list_ports.comports()
-    # [print(p) for p in ports]
-    # sender = serial.Serial(ports[0].device, baudrate=115200, timeout=1, bytesize=8, stopbits=serial.STOPBITS_ONE)
-    # receiver = serial.Serial(ports[1].device, baudrate=115200, timeout=1, bytesize=8, stopbits=serial.STOPBITS_ONE)
-#
-# data_int = tuple((i for i in range(10)))
-# data_flt = tuple((i * 1.5 for i in range(10)))
-# write_int_package(sender, data_int)
-# time.sleep(0.01)
-# data = read_int_package(receiver)
-# print(data)
-# write_float_package(sender, data_flt)
-# time.sleep(0.01)
-# data = read_float_package(receiver)
-# print(data)
-# sender.close()
-# receiver.close()
-# # data = s.read(4 * 5 )
-
-# print(struct.unpack('>iiiii', data))

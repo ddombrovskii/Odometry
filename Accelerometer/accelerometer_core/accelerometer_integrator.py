@@ -1,6 +1,9 @@
 # from accelerometer_core.Utilities import Matrix4, Vector3, Quaternion
 # from accelerometer_core import read_accel_log, AccelMeasurement
 # from matplotlib import pyplot as plt
+import math
+
+from Utilities.Geometry import Matrix3
 from .accelerometer_recording import read_accel_log, AccelMeasurement
 from Utilities.Geometry.quaternion import Quaternion
 from Utilities.Geometry.matrix4 import Matrix4
@@ -18,7 +21,7 @@ WARM_UP_MODE = 4
 
 class AccelIntegrator:
     def __init__(self, log_src: str):
-        self._log_file = read_accel_log(log_src, order=1)
+        self._log_file = read_accel_log(log_src, order=0)
         self._time_values:  List[float] = []
         self._omegas:       List[Vector3] = [Vector3(0.0, 0.0, 0.0)]
         self._angles:       List[Vector3] = []
@@ -29,7 +32,7 @@ class AccelIntegrator:
         self._prev_accel:   Vector3 = Vector3(0.0, 0.0, 0.0)
         self._calib_accel:  Vector3 = Vector3(0.0, 0.0, 0.0)
         self._calib_omega:  Vector3 = Vector3(0.0, 0.0, 0.0)
-        self._accel_bias:   float = 0.3
+        self._accel_bias:   float = 0.095
         self._trust_t:      float = 0.1
         self._time:         float = 0.0
         self._warm_up_time: float = 1.0
@@ -38,6 +41,10 @@ class AccelIntegrator:
         self._mode:         int = WARM_UP_MODE
         self._accel_k:      float = 0.05  # значение параметра комплиментарного фильтра для ускорения
         self._velocity_k:   float = 0.9995  # значение параметра комплиментарного фильтра для ускорения
+        # self._window_vx: List[float] = []
+        # self._window_vy: List[float] = []
+        # self._window_vz: List[float] = []
+        # self._window_size = 3
 
     @property
     def accel_k(self) -> float:
@@ -257,17 +264,15 @@ class AccelIntegrator:
             return False
         dt    = point.dtime
         omega = point.angles_velocity
-        basis = self._accel_basis[-1]
         self._omegas.append(omega)
+        self._angles.append(self._angles[-1] + (point.angles_velocity - self._calib_omega) * dt)
+        basis = self._accel_basis[-1]
+        f = (basis.front + Vector3.cross(omega, basis.front) * dt).normalized()
+        u = (basis.up    + Vector3.cross(omega, basis.up)    * dt).normalized()
         #  комплиментарная фильтрация и привязка u к направлению g
-        u: Vector3 = (basis.up + 0.83 * Vector3.cross(omega, basis.up) * dt).normalized()
         u = (u * (1.0 - self._accel_k) + self._accel_k * self._curr_accel.normalized()).normalized()
-        f: Vector3 = (basis.front + 0.83 * Vector3.cross(omega, basis.front) * dt)
-        r = Vector3.cross(f, u)  # .normalized()
-        f = Vector3.cross(u, r)  # .normalized()
-        # f = f.normalized()
-        # u = u.normalized()
-        # r = r.normalized()
+        r = Vector3.cross(f, u).normalized()
+        f = Vector3.cross(u, r).normalized()
         # получим ускорение в мировой системе координат за вычетом ускорения свободного падения
         a: Vector3 = Vector3(self._curr_accel.x - (r.x * self._calib_accel.x + u.x * self._calib_accel.y + f.x * self._calib_accel.z),
                              self._curr_accel.y - (r.y * self._calib_accel.x + u.y * self._calib_accel.y + f.y * self._calib_accel.z),
@@ -281,14 +286,29 @@ class AccelIntegrator:
             self._time = 0
 
         self._accel_basis.append(Matrix4.build_transform(r, u, f, a))
-
-        # v = (self._velocities[-1] + (r * a.x + u * a.y + f * a.z) * dt) \
-        #     if self._time <= self._trust_t else Vector3(0.0, 0.0, 0.0)
-        v = 0.50 * Vector3(0.0, 0.0, 1.0) \
+        v = self._velocities[-1] + ((r * a.x + u * a.y + f * a.z) * dt) \
             if self._time <= self._trust_t else Vector3(0.0, 0.0, 0.0)
-        self._angles.append(self._angles[-1] + (point.angles_velocity - self._calib_omega) * dt)
+
+        # self._window_vx.append(v.x)
+        # self._window_vy.append(v.y)
+        # self._window_vz.append(v.z)
+#
+        # if len(self._window_vx) <= self._window_size:
+        #     v = Vector3(0.0, 0.0, 0.0)
+        # else:
+        #     del self._window_vx[0]
+        #     del self._window_vy[0]
+        #     del self._window_vz[0]
+#
+        #     self._window_vx = sorted(self._window_vx)
+        #     self._window_vy = sorted(self._window_vy)
+        #     self._window_vz = sorted(self._window_vz)
+#
+        #     v = Vector3(self._window_vx[self._window_size // 2],
+        #                 self._window_vy[self._window_size // 2],
+        #                 self._window_vz[self._window_size // 2])
+#
         self._velocities.append(v)
-        # self._positions.append(self._positions[-1] + (r * v.x + u * v.y + f * v.y) * dt)
         self._positions.append(self._positions[-1] + (r * v.x + u * v.y + f * v.z) * dt)
         self._time_values.append(self._time_values[-1] + dt)
         return True

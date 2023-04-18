@@ -71,7 +71,7 @@ class BufferGL:
         self.bind()
 
         try:
-            print(f"buffer cap {self.__capacity}, item size {self.__item_byte_size}")
+            # print(f"buffer cap {self.__capacity}, item size {self.__item_byte_size}")
             glBufferData(self.__bind_target, self.__capacity * self.__item_byte_size,
                          None, self.__usage_target)
         except Exception as ex:

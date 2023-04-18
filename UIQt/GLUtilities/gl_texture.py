@@ -1,6 +1,6 @@
 from typing import Union, List
 from Utilities import Color
-from PIL.Image import Image
+from PIL import Image
 from OpenGL.GL import *
 import numpy as np
 # TODO texture_cube
@@ -22,6 +22,8 @@ class TextureGL:
 
     GRAY_TEXTURE = None
 
+    CARBON_TEXTURE = None
+
     @staticmethod
     def init_globals():
         TextureGL.WHITE_TEXTURE = TextureGL(100, 100, Color(np.uint8(255), np.uint8(255), np.uint8(255)))
@@ -35,6 +37,10 @@ class TextureGL:
         TextureGL.PINK_TEXTURE = TextureGL(100, 100, Color(np.uint8(255), np.uint8(0), np.uint8(255)))
 
         TextureGL.GRAY_TEXTURE = TextureGL(100, 100, Color(np.uint8(125), np.uint8(125), np.uint8(125)))
+
+        TextureGL.CARBON_TEXTURE = TextureGL()
+
+        TextureGL.CARBON_TEXTURE.load(r'./GLUtilities/Resources/carbon.jpg')
 
     @staticmethod
     def textures_enumerate():

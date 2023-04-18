@@ -1,5 +1,6 @@
 from UIQt.GLUtilities.triangle_mesh import TrisMesh, create_plane, create_box, read_obj_mesh
-from Utilities import Transform, BitSet32, BoundingBox
+from Utilities.Geometry import Transform, BoundingBox
+from Utilities import BitSet32
 from UIQt.GLUtilities.gl_buffer import BufferGL
 from OpenGL.GL import *
 import numpy as np
@@ -7,11 +8,11 @@ import numpy as np
 
 class MeshGL:
 
-    VerticesAttribute = 0  # 1
-    NormalsAttribute = 1   # 2
-    TangentsAttribute = 2  # 3
-    UVsAttribute = 3       # 8
-    TrianglesAttribute = 4 # 16
+    VerticesAttribute = 0   # 1
+    NormalsAttribute = 1    # 2
+    TangentsAttribute = 2   # 3
+    UVsAttribute = 3        # 8
+    TrianglesAttribute = 4  # 16
 
     __mesh_bounded: int = -1
 
@@ -128,9 +129,6 @@ class MeshGL:
         if self.__vao != 0:
             self.delete_mesh()
         self.__create_gpu_buffers(m)
-
-    def __del__(self):
-        self.delete_mesh()
 
     def __gen_vao(self):
         if self.__vao == 0:

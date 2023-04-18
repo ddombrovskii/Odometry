@@ -1,27 +1,12 @@
-# from ctypes import addressof, cast, POINTER, c_float, c_ubyte, Structure
+from ctypes import addressof, POINTER, cast, c_float, c_ubyte, Structure
+from Utilities.Geometry import Matrix4, Matrix3, Vector3, Vector2
 from OpenGL.GL.shaders import compileProgram, compileShader
-from Utilities import Matrix4, Matrix3, Vector3, Vector2
 from OpenGL.GL import *
-from enum import Enum
 import re
 
 
-class ShaderDataTypes(Enum):
-    Matrix_4: int = 35676
-    Matrix_3: int = 35675
-    Vector_3: int = 35665
-    Vector_2: int = 35664
-    Float: int = 5126
-    Int: int = 5124
-    Texture: int = 35678
-    TextureCube: int = 35680
-    TextureArray: int = 36289
+class UniformBuffer:
 
-
-"""
-class UniformBlock:
-
-    # THIS CODE IS UNUSED FOR NOW!!!
     def __init__(self, program_id, block_name, index, size):
         self.program_id = program_id
         self.block_name = block_name
@@ -68,9 +53,9 @@ class UniformBlock:
         # Utility function to print ctypes Structure as python dict
         repr_fn = lambda self: repr({n: v for n, v in [(n[0], getattr(self, n[0])) for n in self._fields_]})
 
-        args = []            # List of the view arguments
-        count = 1            # For naming padding fields
-        last_offset = -1     # Used to detect places where padding is necessary
+        args = []  # List of the view arguments
+        count = 1  # For naming padding fields
+        last_offset = -1  # Used to detect places where padding is necessary
         last_type_size = -1  # Used to detect places where padding is necessary
 
         for offset, gl_type, name in zip(self._uniforms[0], self._uniforms[1], self._uniforms[2]):
@@ -81,10 +66,11 @@ class UniformBlock:
             sizeof_ctypes_type = sizeof(ctypes_type)
 
             # Check if padding bytes must be added between fields.
-            local_offset = last_offset+last_type_size
+            local_offset = last_offset + last_type_size
             if last_offset != -1 and local_offset != offset:
                 padding_bytes_count = offset - last_offset - last_type_size
-                args.append(('padding'+str(count), c_ubyte*padding_bytes_count))    # Add the padding field to the ctype struct
+                args.append(('padding' + str(count), c_ubyte * padding_bytes_count))
+                # Add the padding field to the ctype struct
                 count += 1
 
             # Add the new field to the ctype struct
@@ -93,26 +79,59 @@ class UniformBlock:
             last_offset = offset
             last_type_size = sizeof_ctypes_type
 
-        view = type(self.name+'View', (Structure,), {'_fields_': args, '__repr__': repr_fn})
+        view = type(self.name + 'View', (Structure,), {'_fields_': args, '__repr__': repr_fn})
 
         return view
 
     def __repr__(self):
         return "{0}(name={1})".format(self.__class__.__name__, self.name)
 
-"""
 
+class Shader:
+    Matrix_4: int = 35676
+    Matrix_3: int = 35675
+    Vector_3: int = 35665
+    Vector_2: int = 35664
+    Float: int = 5126
+    Int: int = 5124
+    Texture: int = 35678
+    TextureCube: int = 35680
+    TextureArray: int = 36289
 
-class Shader(object):
+    UniformTypes = \
+        {
+            Matrix_4: Matrix_4,
+            Matrix_3: Matrix_3,
+            Vector_3: Vector_3,
+            Vector_2: Vector_2,
+            Float: Float,
+            Int: Int,
+            Texture: Texture,
+            TextureCube: TextureCube,
+            TextureArray: TextureArray
+        }
+
+    UniformTypesNames = \
+        {
+            Matrix_4: '\"Matrix_4\"',
+            Matrix_3: '\"Matrix_3\"',
+            Vector_3: '\"Vector_3\"',
+            Vector_2: '\"Vector_2\"',
+            Float: '\"Float\"',
+            Int: '\"Int\"',
+            Texture: '\"Texture\"',
+            TextureCube: '\"TextureCube\"',
+            TextureArray: '\"TextureArray\"'
+        }
 
     __shader_instances = {}
 
     SAMPLE_SHADER = None
 
     # UI_TEXT_SHADER = None
-#
+    #
     # UI_CLEAR_FB_SHADER = None
-#
+    #
     # FRAME_BUFFER_BLIT_SHADER = None
 
     @staticmethod
@@ -166,7 +185,7 @@ class Shader(object):
         code: str = ""
         with open(code_src, mode='r') as file:
             for str_ in file:
-                line = (re.sub(r"[\t]*", "", str_))
+                line = (re.sub(r"\t*", "", str_))
                 code += line
             if len(code) == 0:
                 raise Exception("Vertex shader creation error::empty src-code...")
@@ -195,18 +214,19 @@ class Shader(object):
         attrib_name = attrib_name[:length[0]].decode('utf-8')
         return attrib_name, size[0], attrib_type[0]
 
-    # @staticmethod
-    # def gl_get_active_uniform_block(program, index):
-    #     buf_size = 256
-    #     length = (ctypes.c_int * 1)()
-    #     size = (ctypes.c_int * 1)()
-    #     block_type = (ctypes.c_uint * 1)()
-    #     block_name = ctypes.create_string_buffer(buf_size)
-    #     try:
-    #         glGetActiveUniformBlockName(program, index, buf_size, size, block_name)
-    #         block_name = block_name[:length[0]].decode('utf-8')
-    #     except Exception:
-    #         return None
+    @staticmethod
+    def gl_get_active_uniform_block(program, index):
+        buf_size = 256
+        length = (ctypes.c_int * 1)()
+        size = (ctypes.c_int * 1)()
+        block_type = (ctypes.c_uint * 1)()
+        block_name = ctypes.create_string_buffer(buf_size)
+        glGetActiveUniformBlockName(program, index, buf_size, size, block_name)
+        block_name = block_name[:length[0]].decode('utf-8')
+        return block_name, size[0], block_type[0]
+        # try:
+        # except Exception:
+        #     return None
 
     def __init__(self):
         self.name: str = "default"
@@ -218,25 +238,27 @@ class Shader(object):
         self.__shader_attributes: dict = {}
 
     def __str__(self):
-        # TODO refactor
-        res = f"Shader      : 0x{id(self)},\n"
-        res += f"name        : {self.name},\n"
-        res += f"program_id  : {self.__program_id:4},\n"
-        res += f"vert_id     : {self.__vert_id:4},\n"
-        res += f"frag_id     : {self.__frag_id:4},\n"
-        res += "Attributes__________________________________________________________\n"
-        res += f"|{'id':4}|{'name':30}|{'type':30}|\n"
-        for key in self.__shader_attributes.keys():
-            info = self.__shader_attributes[key]
-            res += f"|{info[0]:4}|{key:30}|{ShaderDataTypes(info[2]):30}|\n"
+        def comas(_name):
+            return f"\"{_name}\""
 
-        res += "Uniforms___________________________________________________________|\n"
-        res += f"|{'id':4}|{'name':30}|{'type':30}|\n"
-        for key in self.__shader_uniforms.keys():
-            info = self.__shader_uniforms[key]
-            res += f"|{info[0]:4}|{key:30}|{ShaderDataTypes(info[2]):30}|\n"
-        res += "____________________________________________________________________\n"
-        return res
+        def parce(_name, _id, _type, _size):
+            return f"{{ \"name\": {comas(_name):20}, \"id\": {_id:3}," \
+                   f" \"size\": {_size:3}, \"type\": {Shader.UniformTypesNames[_type]:12}}}"
+
+        separator = ',\n\t\t'
+        return f"{{\n" \
+               f"\t//Shader       : 0x{id(self)}\n" \
+               f"\t\"name\"       : \"{comas(self.name)}\",\n" \
+               f"\t\"program_id\" : {self.program_id},\n" \
+               f"\t\"vert_id\"    : {self.__vert_id},\n" \
+               f"\t\"frag_id\"    : {self.__frag_id},\n" \
+               f"\t\"attributes\" : [\n\t\t" \
+               f"{separator.join(parce(_name, _id, _type, _size) for _name, (_id, _size, _type) in self.attribytes.items())}" \
+               f"\n\t],\n" \
+               f"\t\"uniforms\" : [\n\t\t" \
+               f"{separator.join(parce(_name, _id, _type, _size) for _name, (_id, _size, _type) in self.uniforms.items())}" \
+               f"\n\t]\n" \
+               f"}}"
 
     def __del__(self):
         self.delete_shader()
@@ -277,52 +299,57 @@ class Shader(object):
     def get_attrib_location(self, attrib_name: str):
         return self.__shader_attributes[attrib_name][0] if attrib_name in self.__shader_attributes else -1
 
-    # def __get_all_uniform_blocks(self):
-    #     count = glGetProgramiv(self.__program_id, GL_ACTIVE_UNIFORM_BLOCKS)
-    #     print(f"Active Uniform Blocks: {count}\n", )
-    #     if len(self.__shader_uniform_blocks) != 0:
-    #         self.__shader_uniform_blocks.clear()
-    #     for i in range(count):
-    #         name_, size_, type_ = Shader.gl_get_active_uniform_block(self.__program_id, i)
-    #         self.__shader_uniform_blocks[name_] = (i, size_, type_)
+    def __get_all_uniform_blocks(self):
+        count = glGetProgramiv(self.__program_id, GL_ACTIVE_UNIFORM_BLOCKS)
+        print(f"Active Uniform Blocks: {count}\n", )
+        if len(self.__shader_uniform_blocks) != 0:
+            self.__shader_uniform_blocks.clear()
+        for i in range(count):
+            name_, size_, type_ = Shader.gl_get_active_uniform_block(self.__program_id, i)
+            self.__shader_uniform_blocks[name_] = (i, size_, type_)
+            print(f"name: {name_:15}, id: {i:3}, size: {size_:3}, type: {type_:5}")
 
     def __get_all_attrib_locations(self):
         count = glGetProgramiv(self.__program_id, GL_ACTIVE_ATTRIBUTES)
-        print(f"Active Attributes: {count}\n", )
+        print(f"\nActive Attributes: {count}\n", )
         if len(self.__shader_attributes) != 0:
             self.__shader_attributes.clear()
         for i in range(count):
             name_, size_, type_ = Shader.gl_get_active_attrib(self.__program_id, i)
             self.__shader_attributes[name_] = (i, size_, type_)
+            print(f"name: {name_:15}, id: {i:3}, size: {size_:3}, type: {type_:5}")
 
     def __get_all_uniform_locations(self):
         count = glGetProgramiv(self.__program_id, GL_ACTIVE_UNIFORMS)
-        print(f"Active Uniforms: {count}\n")
+        print(f"\nActive Uniforms: {count}\n")
         if len(self.__shader_uniforms) != 0:
             self.__shader_uniforms.clear()
         for i in range(count):
             name_, size_, type_ = Shader.gl_get_active_uniform(self.__program_id, i)
             self.__shader_uniforms[name_] = (i, size_, type_)
+            print(f"name: {name_:15}, id: {i:3}, size: {size_:3}, type: {type_:5}")
 
     def load_defaults_settings(self):
         for name_ in self.__shader_uniforms:
-            type_ = ShaderDataTypes(self.__shader_uniforms[name_][2])
-            if ShaderDataTypes.Matrix_4 == type_:
+            type_ = self.__shader_uniforms[name_][2]
+            if type_ not in Shader.UniformTypes:
+                continue
+            if Shader.Matrix_4 == type_:
                 self.send_mat_4(name_, Matrix4.identity())
                 continue
-            if ShaderDataTypes.Matrix_3 == type_:
+            if Shader.Matrix_3 == type_:
                 self.send_mat_3(name_, Matrix3.identity())
                 continue
-            if ShaderDataTypes.Vector_3 == type_:
+            if Shader.Vector_3 == type_:
                 self.send_vec_3(name_, Vector3(1, 1, 1))
                 continue
-            if ShaderDataTypes.Vector_2 == type_:
+            if Shader.Vector_2 == type_:
                 self.send_vec_2(name_, Vector2(1, 1))
                 continue
-            if ShaderDataTypes.Float == type_:
+            if Shader.Float == type_:
                 self.send_float(name_, 0.0)
                 continue
-            if ShaderDataTypes.Int == type_:
+            if Shader.Int == type_:
                 self.send_int(name_, 0)
                 continue
 
@@ -364,7 +391,8 @@ class Shader(object):
         self.bind()
         self.__get_all_attrib_locations()
         self.__get_all_uniform_locations()
-        # self.__get_all_uniform_blocks()
+        self.__get_all_uniform_blocks()
+        print(self)
 
     def send_mat_3(self, mat_name: str, mat: Matrix3, transpose=GL_FALSE):
         loc = self.get_uniform_location(mat_name)
@@ -399,6 +427,7 @@ class Shader(object):
         if loc == -1:
             return
         self.bind()
+        # print(param_name)
         glUniform1f(loc, GLfloat(val))
 
     def send_int(self, param_name: str, val: int):

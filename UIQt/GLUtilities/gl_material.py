@@ -1,6 +1,6 @@
 from UIQt.GLUtilities.gl_texture import TextureGL
 from UIQt.GLUtilities.gl_shader import Shader
-from Utilities import Vector3
+from Utilities.Geometry import Vector3
 
 
 class MaterialGL:
@@ -21,9 +21,9 @@ class MaterialGL:
         self._dissolve: float = 1.0  # d or Tr: specifies a factor for dissolve, how much this material dissolves into the background.
         # A factor of 1.0 is fully opaque. A factor of 0.0 is completely transparent.
         self._illum: float = 2.0  # illum: specifies an illumination model, using a numeric value
-        self._diffuse: TextureGL = TextureGL.PINK_TEXTURE
+        self._diffuse:  TextureGL = TextureGL.CARBON_TEXTURE
         self._specular: TextureGL = TextureGL.PINK_TEXTURE
-        self._normals: TextureGL = TextureGL.PINK_TEXTURE
+        self._normals:  TextureGL = TextureGL.PINK_TEXTURE
 
     @property
     def shader(self) -> Shader:
@@ -134,9 +134,9 @@ class MaterialGL:
         self._shader.send_float("illum", self.illum)
         self._shader.send_vec_3("specular_color", self.specular_color)
         self._shader.send_vec_3("diffuse_color", self.diffuse_color)
-        self._diffuse.bind_to_channel(0)
+        self._diffuse. bind_to_channel(0)
         self._specular.bind_to_channel(1)
-        self._normals.bind_to_channel(2)
+        self._normals. bind_to_channel(2)
 
     def bind(self, update_shader_uniforms: bool = False ):
         self._shader.bind()

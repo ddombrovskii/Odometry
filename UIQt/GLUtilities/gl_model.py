@@ -1,6 +1,6 @@
 from UIQt.GLUtilities.gl_material import MaterialGL
 from UIQt.GLUtilities.gl_mesh import MeshGL
-from Utilities import Transform
+from Utilities.Geometry import Transform
 
 
 class ModelGL:

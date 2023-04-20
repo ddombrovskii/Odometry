@@ -9,15 +9,15 @@ layout(location = 2)in vec2 a_texture;
 //////////////////////////////
 /// MATERIAL PROPERTIES IN ///
 //////////////////////////////
-layout(std140, binding = 0) uniform MaterialSettings
-{
-  float _illum;
-  float _dissolve;
-  float _ni;
-  float _ns;
-  vec3  _diffuse_color;
-  vec3  _specular_color;
-};
+// layout(std140) uniform MatInfo
+// {
+//   float _illum;
+//   float _dissolve;
+//   float _ni;
+//   float _ns;
+//   vec3  _diffuse_color;
+//   vec3  _specular_color;
+// };
 
 uniform vec3  diffuse_color;
 uniform vec3  specular_color;
@@ -33,6 +33,7 @@ uniform mat4  view;
 uniform mat4  projection;
 uniform vec3  cam_position;
 uniform mat4  model;
+
 ///////////////////////////////
 //// VERTEX PROPERTIES OUT ////
 ///////////////////////////////
@@ -53,7 +54,6 @@ out VS_CAMERA_OUT
     mat4  view;
 } vs_cam_out;
 
-
 ///////////////////////////////
 /// MATERIAL PROPERTIES OUT ///
 ///////////////////////////////
@@ -66,7 +66,6 @@ out VS_MATERIAL_OUT
     float ni;
     float ns;
 } vs_mat_out;
-
 
 void main()
 {

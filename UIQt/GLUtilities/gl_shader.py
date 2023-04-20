@@ -224,9 +224,6 @@ class Shader:
         glGetActiveUniformBlockName(program, index, buf_size, size, block_name)
         block_name = block_name[:length[0]].decode('utf-8')
         return block_name, size[0], block_type[0]
-        # try:
-        # except Exception:
-        #     return None
 
     def __init__(self):
         self.name: str = "default"
@@ -247,8 +244,8 @@ class Shader:
 
         separator = ',\n\t\t'
         return f"{{\n" \
-               f"\t//Shader       : 0x{id(self)}\n" \
-               f"\t\"name\"       : \"{comas(self.name)}\",\n" \
+               f"\t//Shader     : 0x{id(self)}\n" \
+               f"\t\"name\"       : {comas(self.name)},\n" \
                f"\t\"program_id\" : {self.program_id},\n" \
                f"\t\"vert_id\"    : {self.__vert_id},\n" \
                f"\t\"frag_id\"    : {self.__frag_id},\n" \
@@ -299,16 +296,6 @@ class Shader:
     def get_attrib_location(self, attrib_name: str):
         return self.__shader_attributes[attrib_name][0] if attrib_name in self.__shader_attributes else -1
 
-    def __get_all_uniform_blocks(self):
-        count = glGetProgramiv(self.__program_id, GL_ACTIVE_UNIFORM_BLOCKS)
-        print(f"Active Uniform Blocks: {count}\n", )
-        if len(self.__shader_uniform_blocks) != 0:
-            self.__shader_uniform_blocks.clear()
-        for i in range(count):
-            name_, size_, type_ = Shader.gl_get_active_uniform_block(self.__program_id, i)
-            self.__shader_uniform_blocks[name_] = (i, size_, type_)
-            print(f"name: {name_:15}, id: {i:3}, size: {size_:3}, type: {type_:5}")
-
     def __get_all_attrib_locations(self):
         count = glGetProgramiv(self.__program_id, GL_ACTIVE_ATTRIBUTES)
         print(f"\nActive Attributes: {count}\n", )
@@ -317,6 +304,16 @@ class Shader:
         for i in range(count):
             name_, size_, type_ = Shader.gl_get_active_attrib(self.__program_id, i)
             self.__shader_attributes[name_] = (i, size_, type_)
+            print(f"name: {name_:15}, id: {i:3}, size: {size_:3}, type: {type_:5}")
+
+    def __get_all_uniform_blocks(self):
+        count = glGetProgramiv(self.__program_id, GL_ACTIVE_UNIFORM_BLOCKS)
+        print(f"Active Uniform Blocks: {count}\n", )
+        if len(self.__shader_uniform_blocks) != 0:
+            self.__shader_uniform_blocks.clear()
+        for i in range(count):
+            name_, size_, type_ = Shader.gl_get_active_uniform_block(self.__program_id, i)
+            self.__shader_uniform_blocks[name_] = (i, size_, type_)
             print(f"name: {name_:15}, id: {i:3}, size: {size_:3}, type: {type_:5}")
 
     def __get_all_uniform_locations(self):
@@ -389,9 +386,9 @@ class Shader:
             raise Exception("Shader program compilation error...")
         Shader.__shader_instances[self.__program_id] = self
         self.bind()
+        self.__get_all_uniform_blocks()
         self.__get_all_attrib_locations()
         self.__get_all_uniform_locations()
-        self.__get_all_uniform_blocks()
         print(self)
 
     def send_mat_3(self, mat_name: str, mat: Matrix3, transpose=GL_FALSE):
@@ -427,7 +424,6 @@ class Shader:
         if loc == -1:
             return
         self.bind()
-        # print(param_name)
         glUniform1f(loc, GLfloat(val))
 
     def send_int(self, param_name: str, val: int):

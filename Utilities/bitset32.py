@@ -1,35 +1,31 @@
-import ctypes
-
-
-def set_bit(bytes_: ctypes.c_uint32, bit_: int) -> ctypes.c_uint32:
-    bytes_.value |= (1 << bit_)
+def set_bit(bytes_: int, bit_: int) -> int:
+    bytes_ |= (1 << bit_)
     return bytes_
 
 
-def is_bit_set(bytes_: ctypes.c_uint32, bit_: int) -> bool:
-    return (bytes_.value & (1 << bit_)) != 0
+def is_bit_set(bytes_: int, bit_: int) -> bool:
+    return (bytes_ & (1 << bit_)) != 0
 
 
-def inverse_bit(bytes_: ctypes.c_uint32, bit_: int) -> ctypes.c_uint32:
-    bytes_.value ^= (1 << bit_)
+def inverse_bit(bytes_: int, bit_: int) -> int:
+    bytes_ ^= (1 << bit_)
     return bytes_
 
 
-def clear_bit(bytes_: ctypes.c_uint32, bit_: int) -> ctypes.c_uint32:
-    bytes_.value &= ~(1 << bit_)
+def clear_bit(bytes_: int, bit_: int) -> int:
+    bytes_ &= ~(1 << bit_)
     return bytes_
 
 
 class BitSet32:
 
-    __empty_state = ctypes.c_uint32(0)
-
-    __full_state = ctypes.c_uint32(4294967295)
+    __empty_state: int = 0
+    __full_state:  int  = 4294967295
 
     __slots__ = "__state"
 
     def __init__(self, value: int = 0):
-        self.__state: ctypes.c_uint32 = ctypes.c_uint32(value)
+        self.__state: int = value
 
     def __str__(self):
         return "".join(str(bit) for bit in self.bits)
@@ -44,7 +40,7 @@ class BitSet32:
 
     @property
     def state(self) -> int:
-        return self.__state.value
+        return self.__state
 
     @property
     def is_empty(self) -> bool:
@@ -58,15 +54,15 @@ class BitSet32:
         return is_bit_set(self.__state, bit_)
 
     def set_bit(self, bit_: int):
-        set_bit(self.__state, bit_)
+        self.__state = set_bit(self.__state, bit_)
         return self
 
     def inverse_bit(self, bit_: int):
-        inverse_bit(self.__state, bit_)
+        self.__state = inverse_bit(self.__state, bit_)
         return self
 
     def clear_bit(self, bit_: int):
-        clear_bit(self.__state, bit_)
+        self.__state = clear_bit(self.__state, bit_)
         return self
 
     def clear(self):
@@ -75,7 +71,7 @@ class BitSet32:
 
     def inverse(self):
         for i in range(32):
-            inverse_bit(self.__state, i)
+            self.__state = inverse_bit(self.__state, i)
         return self
 
 

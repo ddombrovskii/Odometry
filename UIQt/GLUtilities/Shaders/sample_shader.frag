@@ -62,5 +62,5 @@ void main()
    //            v_ni      *
    //            v_ns      ;
    //
-   outColor = vec4(spec, spec, spec,  1.0) * texture(diffTex, vs_vert_in.uv);
+   outColor = vec4(spec, spec, spec,  1.0) * (texture(diffTex, vs_vert_in.uv) * 0.1 + 0.9);
 }

@@ -57,17 +57,11 @@ class SceneViewerWidget(QtOpenGL.QGLWidget):
         self._render_queue.append(DrawCall(cam, model))
 
     def _get_opengl_info(self):
-        return """
-            Vendor: {0}
-            Renderer: {1}
-            OpenGL Version: {2}
-            Shader Version: {3}
-        """.format(
-            GL.glGetString(GL.GL_VENDOR),
-            GL.glGetString(GL.GL_RENDERER),
-            GL.glGetString(GL.GL_VERSION),
-            GL.glGetString(GL.GL_SHADING_LANGUAGE_VERSION)
-        )
+        return f"{{\n" \
+               f"\t\"Vendor\":         \"{GL.glGetString(GL.GL_VENDOR).decode('utf-8')}\",\n" \
+               f"\t\"Renderer\":       \"{GL.glGetString(GL.GL_RENDERER).decode('utf-8')}\",\n" \
+               f"\t\"OpenGL Version\": \"{GL.glGetString(GL.GL_VERSION).decode('utf-8')}\",\n" \
+               f"\t\"Shader Version\": \"{GL.glGetString(GL.GL_SHADING_LANGUAGE_VERSION).decode('utf-8')}\"\n}}"
 
     def initializeGL(self):
         self.fmt = QOpenGLVersionProfile()

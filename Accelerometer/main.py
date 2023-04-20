@@ -1,12 +1,24 @@
 import math
+import queue
+import random
 
 import numpy as np
 
 from Accelerometer.accelerometer_core.accelerometer_integrator import AccelIntegrator
 
 if __name__ == "__main__":
-    # integrator = AccelIntegrator("accelerometer_core/accelerometer_records/the newest/building_way_2.json")
-    integrator = AccelIntegrator("accelerometer_core/accelerometer_records/record_bno_test.json")
+    # q = queue.PriorityQueue(maxsize=5)
+    # for i in range(5):
+    #     v = random.uniform(-5, 5)
+    #     q.put(v)
+    #     print(f"{i} | {v}")
+#
+    # for i in range(5):
+    #     print(f"{i} | {q.queue.pop()}")
+    # print(q)
+
+    integrator = AccelIntegrator("accelerometer_core/accelerometer_records/the newest/building_way_2.json")
+    # integrator = AccelIntegrator("accelerometer_core/accelerometer_records/record_bno_test.json")
     integrator.integrate()
     integrator.show_results_xz()
     integrator.show_path()

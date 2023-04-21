@@ -11,6 +11,7 @@ import cv2 as cv
 # https://github.com/niconielsen32/ComputerVision/blob/master/VisualOdometry/visual_odometry.py
 # https://github.com/niconielsen32/ComputerVision/blob/master/LiveCameraTrajectory/liveCameraPoseEstimation.py
 # KITTI Camera
+from UIQt.GLUtilities.triangle_mesh import create_box, write_obj_mesh, TrisMesh
 from Utilities.Geometry import Matrix4, Vector3
 from Utilities.Geometry.voxel import Voxel
 
@@ -183,14 +184,15 @@ class CameraTrack:
         self._img_curr = None
         self._img_prev = None
         FLANN_INDEX_LSH = 6
-        index_params = {"algorithm": FLANN_INDEX_LSH, "table_number": 6, "key_size": 12, "multi_probe_level": 1}
-        search_params = {"checks": 50}
+        index_params = {"algorithm": FLANN_INDEX_LSH, "table_number": 6, "key_size": 12, "multi_probe_level": 2}
+        search_params = {"checks": 10}
         self._flann = cv.FlannBasedMatcher(indexParams=index_params, searchParams=search_params)
         self.display: bool = True
         self._voxel_size = 0.5
         self._voxels = set()
 
     def compute(self):
+        mesh = TrisMesh()
         with open('voxels_info.json', 'wt') as output:  # открываем файл для записи триангуляционных данных
             print(f"{{\n\t\"voxel_size\": {self._voxel_size},\n\t\"voxels\": [", file=output)
             for index in range(len(self._images) - 1):
@@ -235,8 +237,8 @@ class CameraTrack:
 
                 self._transforms.append(np.matmul(self._transforms[-1], np.linalg.inv(t)))
 
-                points = t @ u_hom_pnts
-
+                points = self._transforms[-1] @ u_hom_pnts
+                # points = u_hom_pnts
                 for x, y, z, _ in points.T:
                     # x, y, z = t[:3, :3] @ u_hom_pnts[:, i] + t[:3, 3]
                     ijk = (int(x/self._voxel_size), int(y/self._voxel_size), int(z/self._voxel_size))
@@ -244,6 +246,13 @@ class CameraTrack:
                         center = Vector3((ijk[0] + 0.5) * self._voxel_size,
                                          (ijk[1] + 0.5) * self._voxel_size,
                                          (ijk[2] + 0.5) * self._voxel_size)
+                        voxel = Voxel(center, self._voxel_size)
+                        mesh.merge(create_box(Vector3(center.x - self._voxel_size * 0.5,
+                                                      center.y - self._voxel_size * 0.5,
+                                                      center.z - self._voxel_size * 0.5),
+                                              Vector3(center.x + self._voxel_size * 0.5,
+                                                      center.y + self._voxel_size * 0.5,
+                                                      center.z + self._voxel_size * 0.5)))
                         print(Voxel(center, self._voxel_size), file=output, end=',\n')
                         self._voxels.update(ijk)
 
@@ -252,6 +261,7 @@ class CameraTrack:
                 # self._img_prev = self._img_curr
             output.seek(output.tell() - 3, 0)
             print('\n\t]\n}', file=output)
+            write_obj_mesh(mesh, 'voxels.obj')
 
     def draw_path(self):
         fig, ax = plt.subplots()  # (subplot_kw={"projection": "3d"})
@@ -309,6 +319,8 @@ def speed_test():
 
 
 if __name__ == "__main__":
+    # box = create_box()
+    # write_obj_mesh(box, 'box.obj')
     # 'E:/GitHub/Odometry/Odometry/Cameras/saved_frames/2_4_2023')
     #
     # speed_test()
@@ -317,4 +329,4 @@ if __name__ == "__main__":
                      gt_poses_src='E:/GitHub/Odometry/Odometry/Cameras/image_l/poses.txt')
     ct.compute()
     ct.draw_path()
-
+#

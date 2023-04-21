@@ -5,6 +5,8 @@ from collections import namedtuple
 import numpy as np
 import re
 
+from Utilities.Geometry.voxel import Voxel
+
 
 class Face(namedtuple('Face', 'p_1, uv1, n_1,'
                               'p_2, uv2, n_2,'
@@ -400,17 +402,26 @@ def create_plane(height: float = 1.0, width: float = 1.0, rows: int = 10,
     return mesh
 
 
-def create_box(side: float = 1.0, transform: Transform = None) -> TrisMesh:
+def create_box(min_b: Vector3, max_b: Vector3, transform: Transform = None) -> TrisMesh:
     mesh: TrisMesh = TrisMesh()
 
-    mesh.append_vertex(side * Vector3(-0.5000, 0.5000, -0.5000))
-    mesh.append_vertex(side * Vector3(-0.5000, 0.5000, 0.5000))
-    mesh.append_vertex(side * Vector3(0.5000, 0.5000, 0.5000))
-    mesh.append_vertex(side * Vector3(0.5000, 0.5000, -0.5000))
-    mesh.append_vertex(side * Vector3(-0.5000, -0.5000, -0.5000))
-    mesh.append_vertex(side * Vector3(0.5000, -0.5000, -0.5000))
-    mesh.append_vertex(side * Vector3(0.5000, -0.5000, 0.5000))
-    mesh.append_vertex(side * Vector3(-0.5000, -0.5000, 0.5000))
+    mesh.append_vertex(Vector3(min_b.x, max_b.y, min_b.z))
+    mesh.append_vertex(Vector3(min_b.x, max_b.y, max_b.z))
+    mesh.append_vertex(Vector3(max_b.x, max_b.y, max_b.z))
+    mesh.append_vertex(Vector3(max_b.x, max_b.y, min_b.z))
+    mesh.append_vertex(Vector3(min_b.x, min_b.y, min_b.z))
+    mesh.append_vertex(Vector3(max_b.x, min_b.y, min_b.z))
+    mesh.append_vertex(Vector3(max_b.x, min_b.y, max_b.z))
+    mesh.append_vertex(Vector3(min_b.x, min_b.y, max_b.z))
+
+    # mesh.append_vertex(side * Vector3(-0.5000,  0.5000, -0.5000))
+    # mesh.append_vertex(side * Vector3(-0.5000,  0.5000,  0.5000))
+    # mesh.append_vertex(side * Vector3( 0.5000,  0.5000,  0.5000))
+    # mesh.append_vertex(side * Vector3( 0.5000,  0.5000, -0.5000))
+    # mesh.append_vertex(side * Vector3(-0.5000, -0.5000, -0.5000))
+    # mesh.append_vertex(side * Vector3( 0.5000, -0.5000, -0.5000))
+    # mesh.append_vertex(side * Vector3( 0.5000, -0.5000,  0.5000))
+    # mesh.append_vertex(side * Vector3(-0.5000, -0.5000,  0.5000))
 
     mesh.append_normal(Vector3(0.0000, 1.0000, 0.0000))
     mesh.append_normal(Vector3(0.0000, -1.0000, -0.0000))
@@ -440,3 +451,14 @@ def create_box(side: float = 1.0, transform: Transform = None) -> TrisMesh:
     if transform is not None:
         mesh.transform_mesh(transform)
     return mesh
+
+
+def voxels_mesh(voxels: List[Voxel]):
+    mesh = None
+    for voxel in voxels:
+        if mesh is None:
+            mesh = create_box(voxel.size)
+            continue
+        mesh.merge(create_box(voxel.size))
+    return mesh
+

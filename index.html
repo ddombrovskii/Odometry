@@ -18,7 +18,7 @@
       width: calc(100vw - 24px);
       height: calc(100vh - 24px);
       border-radius: 5px;
-      background-color: #e1e1e1;
+      background-color: #a0a0a0;
       overflow: hidden;
       margin: 6px;
       padding: 6px;
@@ -64,8 +64,8 @@
     .tab.selected {
       border-left-width: 4px;
       border-left-color: rgb(36 116 214);
-      border-right-color: hsl(220deg 43% 99%);
-      background: hsl(220deg 43% 99%);
+      border-right-color: hsl(220deg 20% 94%);
+      background: #eee;
       padding-left: 0;
       padding-right: 12px;
     }
@@ -76,7 +76,7 @@
     }
 
     .list-wrapper {
-      background-color: #fff;
+      background-color: #eee;
       border-radius: 5px;
       width: 325px;
       border: 1px solid hsl(219deg 1% 72%);
@@ -95,7 +95,7 @@
       margin-top: -20px;
       display: flex;
       flex-direction: row-reverse;
-      background-color: #fff;
+      background-color: #eee;
     }
 
     .close {
@@ -135,7 +135,7 @@
 
     .param-divider {
       flex-grow: 1;
-      border-bottom: 2px dotted #ccc;
+      border-bottom: 2px dotted #eee;
     }
 
     .content {
@@ -147,13 +147,13 @@
   <section class="page">
     <nav class="tabs">
       <button type="button" class="tab selected" role="tab">
-        Tab one
+        Camera settings
       </button>
       <button type="button" class="tab" role="tab">
-        Tab two
+        IMU settings
       </button>
       <button type="button" class="tab" role="tab">
-        Tab three
+        Odometer settings
       </button>
     </nav>
     <aside class="list-wrapper">
@@ -163,12 +163,12 @@
       <ul class="list">
         <li class="list-item">
           <div class="param">
-            <span>Param name</span>
+            <span>Resolution</span>
           </div>
           <select class="select">
-            <option>Option 1</option>
-            <option>Option 2</option>
-            <option>Option 3</option>
+            <option>HDTW</option>
+            <option>1050p</option>
+            <option>720p</option>
           </select>
         </li>
         <li class="list-item">

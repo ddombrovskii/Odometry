@@ -4,16 +4,26 @@ from Utilities import BitSet32
 
 
 class MouseInfo(BitSet32):
+    # for Qt
+    PressedEvent = 3
+    ReleaseEvent = 5
+    DragEvent = 6
+    MoveEvent = 0
 
-    PressedEvent = 0
-    ReleaseEvent = 1
-    DragEvent = 2
-    MoveEvent = 3
-
-    LeftButtonEvent = 4
-    RightButtonEvent = 5
-    WheelButtonEvent = 6
+    LeftButtonEvent = 1
+    RightButtonEvent = 2
+    WheelButtonEvent = 4
     WheelRotationEvent = 7
+
+    #  PressedEvent = 0
+    #  ReleaseEvent = 1
+    #  DragEvent = 2
+    #  MoveEvent = 3
+
+    #  LeftButtonEvent = 4
+    #  RightButtonEvent = 5
+    #  WheelButtonEvent = 6
+    #  WheelRotationEvent = 7
 
     def __init__(self):
         super().__init__()

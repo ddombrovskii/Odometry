@@ -1,4 +1,4 @@
-from PyQt5.QtGui import QOpenGLVersionProfile, QSurfaceFormat, QMouseEvent
+from PyQt5.QtGui import QOpenGLVersionProfile, QSurfaceFormat, QMouseEvent, QWheelEvent
 
 from UIQt.GLUtilities.gl_camera import CameraGL
 from UIQt.GLUtilities.gl_material import MaterialGL
@@ -110,14 +110,26 @@ class SceneViewerWidget(QtOpenGL.QGLWidget):
         MeshGL.delete_all_meshes()
         self.doneCurrent()
 
-    def mousePressEvent(self, event: QMouseEvent):
+    def mouseReleaseEvent(self, event: QMouseEvent) -> None:
         self._mouse.update_position(event.pos().x(), event.pos().y(), self.width(), self.height())
-        self._mouse.update_state(event.buttons())
+        self._mouse.update_state(-1)
 
-    def mouseMoveEvent(self, event: QMouseEvent):
+    def mousePressEvent(self, event: QMouseEvent) -> None:
+        self._mouse.update_position(event.pos().x(), event.pos().y(), self.width(), self.height())
+        self._mouse.update_state(event.button())
+
+    def mouseMoveEvent(self, event: QMouseEvent) -> None:
         self._mouse.update_position(event.pos().x(), event.pos().y(), self.width(), self.height())
         if self._mouse.is_left_button:
             self._main_camera.transform.angles += Vector3(self._mouse.y_delta, -self._mouse.x_delta, 0)
+        if self._mouse.is_right_button:
+            self._main_camera.transform.origin += \
+                (self._main_camera.transform.up * -self._mouse.y_delta +
+                 self._main_camera.transform.right * self._mouse.x_delta )
+
+    def wheelEvent(self, event: QWheelEvent) -> None:
+        # print(event.angleDelta())
+        self._main_camera.transform.origin += self._main_camera.transform.front * event.angleDelta().y() / 120.0
 
     def resizeGL(self, width, height):
         GL.glViewport(0, 0, width, height)

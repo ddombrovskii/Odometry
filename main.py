@@ -7,7 +7,6 @@ from os import listdir
 import numpy as np
 import cv2 as cv
 
-
 # https://github.com/niconielsen32/ComputerVision/blob/master/VisualOdometry/visual_odometry.py
 # https://github.com/niconielsen32/ComputerVision/blob/master/LiveCameraTrajectory/liveCameraPoseEstimation.py
 # KITTI Camera
@@ -20,6 +19,7 @@ camera_k = np.array([[7.070912000000e+02, 0.000000000000e+00, 6.018873000000e+02
                      [0.000000000000e+00, 0.000000000000e+00, 1.000000000000e+00]])
 
 camera_p = camera_k @ np.array(((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0)), dtype=np.float32)
+
 
 # Microsoft Camera
 # camera_k = np.array([[890.9132532946423, 0.0, 304.91274981959896],
@@ -44,7 +44,7 @@ def build_transform(r: np.ndarray, t: np.ndarray) -> np.ndarray:
 
 def load_images(path: str):
     files = [f"{path}/{p}" for p in listdir(path) if isfile(join(path, p))]
-    imgs  = [cv.imread(f, cv.IMREAD_GRAYSCALE) for f in files]
+    imgs = [cv.imread(f, cv.IMREAD_GRAYSCALE) for f in files]
     return [(f, i) for f, i in zip(files, imgs)]
 
 
@@ -134,11 +134,11 @@ def decompose_essential_mat(essential_matrix: np.ndarray, q_1: np.ndarray, q_2: 
     # camera = np.concatenate((camera_k, np.zeros((3, 1))), axis=1) equal to camera_p
     projections = (camera_p @ transformations[0], camera_p @ transformations[1],
                    camera_p @ transformations[2], camera_p @ transformations[3])
-    z_sums  = -1e32  # []
+    z_sums = -1e32  # []
     z_scale = -1.0  # []
     z_sums_curr = 0
     transformation = None
-    target_points  = None
+    target_points = None
     for T, P in zip(transformations, projections):
         hom_q1 = cv.triangulatePoints(camera_p, P, q_1.T, q_2.T)  # Camera Tracking System
         hom_q2 = np.matmul(T, hom_q1)
@@ -162,7 +162,7 @@ def decompose_essential_mat(essential_matrix: np.ndarray, q_1: np.ndarray, q_2: 
 
 
 def get_pose(q_1: np.ndarray, q_2: np.ndarray, camera_k: np.ndarray, camera_p: np.ndarray):
-    e_m, e_m_mask = cv.findEssentialMat(q_1, q_2, camera_k)   # , threshold=2.)
+    e_m, e_m_mask = cv.findEssentialMat(q_1, q_2, camera_k)  # , threshold=2.)
     return decompose_essential_mat(e_m, q_1, q_2, camera_p)
 
 
@@ -179,7 +179,8 @@ class CameraTrack:
         else:
             self._camera_k, self._camera_p = load_calib(calib_info_src)
         self._transforms: List[np.ndarray] = []
-        self._transforms.append(np.eye(4, dtype=np.float32) if len(self._transforms_gt) == 0 else self._transforms_gt[0])
+        self._transforms.append(
+            np.eye(4, dtype=np.float32) if len(self._transforms_gt) == 0 else self._transforms_gt[0])
         self._orb = cv.ORB_create(3000)
         self._img_curr = None
         self._img_prev = None
@@ -224,14 +225,16 @@ class CameraTrack:
                 if self.display:
                     draw_params = dict(matchColor=(0, 255, 0), singlePointColor=(255, 0, 0),
                                        matchesMask=matches_mask, flags=2)
-                    img3 = cv.drawMatchesKnn(self._images[index][1], kp1, self._images[index+1][1], kp2, matches, None, **draw_params)
+                    img3 = cv.drawMatchesKnn(self._images[index][1], kp1, self._images[index + 1][1], kp2, matches,
+                                             None, **draw_params)
                     cv.imshow('SIFT-odometry', img3)
                     cv.waitKey(10)
                 self._img_prev = self._img_curr
                 q1 = np.float32([kp1[m.queryIdx].pt for m in matches_good])
                 q2 = np.float32([kp2[m.trainIdx].pt for m in matches_good])
                 # по результатам q1 и q2 получаем цвета из _img_prev и _img_curr соответсвенно
-                t, u_hom_pnts = get_pose(q1, q2, self._camera_k, self._camera_p) # дополнительно рассчитывает пространственное полежние  q1, q2
+                t, u_hom_pnts = get_pose(q1, q2, self._camera_k,
+                                         self._camera_p)  # дополнительно рассчитывает пространственное полежние  q1, q2
                 if t is None:
                     continue
 
@@ -241,7 +244,7 @@ class CameraTrack:
                 # points = u_hom_pnts
                 for x, y, z, _ in points.T:
                     # x, y, z = t[:3, :3] @ u_hom_pnts[:, i] + t[:3, 3]
-                    ijk = (int(x/self._voxel_size), int(y/self._voxel_size), int(z/self._voxel_size))
+                    ijk = (int(x / self._voxel_size), int(y / self._voxel_size), int(z / self._voxel_size))
                     if ijk not in self._voxels:
                         center = Vector3((ijk[0] + 0.5) * self._voxel_size,
                                          (ijk[1] + 0.5) * self._voxel_size,
@@ -279,42 +282,43 @@ def speed_test():
     # my 4x4 matrix multiplication time:  5.52913630718831   sec for 1000000 iterations
     t_start = 0.0
     t_total = 0.0
-    n = 1000000
+    n = 100000
+
     for _ in range(n):
         t_start = time.perf_counter()
         a = np.eye(4, dtype=float)
-        t_total +=  time.perf_counter() - t_start
+        t_total += time.perf_counter() - t_start
     print(f"np 4x4 matrix identity create time: {t_total}")
     t_total = 0.0
     for _ in range(n):
         t_start = time.perf_counter()
         a = Matrix4.identity()
-        t_total +=  time.perf_counter() - t_start
+        t_total += time.perf_counter() - t_start
     print(f"my 4x4 matrix identity create time: {t_total}")
     np_m = np.array([[1, 2, 0, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 0, 15, 16]], dtype=float)
     my_m = Matrix4(1, 2, 0, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 0, 15, 16)
     for _ in range(n):
         t_start = time.perf_counter()
         a = np.linalg.inv(np_m)
-        t_total +=  time.perf_counter() - t_start
+        t_total += time.perf_counter() - t_start
     print(f"np 4x4 matrix inversion time: {t_total}")
     t_total = 0.0
     for _ in range(n):
         t_start = time.perf_counter()
         a = my_m.invert()
-        t_total +=  time.perf_counter() - t_start
+        t_total += time.perf_counter() - t_start
     print(f"my 4x4 matrix inversion time: {t_total}")
     t_total = 0.0
     for _ in range(n):
         t_start = time.perf_counter()
         a = np_m @ np_m
-        t_total +=  time.perf_counter() - t_start
+        t_total += time.perf_counter() - t_start
     print(f"np 4x4 matrix multiplication time: {t_total}")
     t_total = 0.0
     for _ in range(n):
         t_start = time.perf_counter()
         a = my_m * my_m
-        t_total +=  time.perf_counter() - t_start
+        t_total += time.perf_counter() - t_start
     print(f"my 4x4 matrix multiplication time: {t_total}")
 
 
@@ -323,10 +327,36 @@ if __name__ == "__main__":
     # write_obj_mesh(box, 'box.obj')
     # 'E:/GitHub/Odometry/Odometry/Cameras/saved_frames/2_4_2023')
     #
-    # speed_test()
-    # exit()
+    speed_test()
+    exit()
     ct = CameraTrack(images_src="E:/GitHub/Odometry/Odometry/Cameras/image_l",
                      gt_poses_src='E:/GitHub/Odometry/Odometry/Cameras/image_l/poses.txt')
     ct.compute()
     ct.draw_path()
-#
+
+# if __name__ == "__main__":
+#     code = \
+#         """
+#                    Matrix3(self[0] * other[0] + self[1] * other[3] + self[2] * other[6],
+#                            self[0] * other[1] + self[1] * other[4] + self[2] * other[7],
+#                            self[0] * other[2] + self[1] * other[5] + self[2] * other[8],
+#                            self[3] * other[0] + self[4] * other[3] + self[5] * other[6],
+#                            self[3] * other[1] + self[4] * other[4] + self[5] * other[7],
+#                            self[3] * other[2] + self[4] * other[5] + self[5] * other[8],
+#                            self[6] * other[0] + self[7] * other[3] + self[8] * other[6],
+#                            self[6] * other[1] + self[7] * other[4] + self[8] * other[7],
+#                            self[6] * other[2] + self[7] * other[5] + self[8] * other[8])
+#     """
+#     open_brackets =  [i for i, ch in enumerate(code) if ch == '[']
+#     close_brackets = [i for i, ch in enumerate(code) if ch == ']']
+#     # print(open_brackets)
+#     # print(close_brackets)
+#     new_code = ''
+#     prev_start, prev_end = 0, 0
+#     for start, end in zip(open_brackets, close_brackets):
+#         value = int(code[start + 1: end])
+#         # print(value)
+#         new_code += code[prev_end: start]
+#         new_code += f".m{value // 3}{value % 3}"
+#         prev_start, prev_end = end, end + 1
+#     print(new_code)

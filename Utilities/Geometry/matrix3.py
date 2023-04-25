@@ -201,15 +201,15 @@ class Matrix3(namedtuple('Matrix3', 'm00, m01, m02,'
 
     def __mul__(self, other):
         if isinstance(other, Matrix3):
-            return Matrix3(self[0] * other[0] + self[1] * other[3] + self[2] * other[6],
-                           self[0] * other[1] + self[1] * other[4] + self[2] * other[7],
-                           self[0] * other[2] + self[1] * other[5] + self[2] * other[8],
-                           self[3] * other[0] + self[4] * other[3] + self[5] * other[6],
-                           self[3] * other[1] + self[4] * other[4] + self[5] * other[7],
-                           self[3] * other[2] + self[4] * other[5] + self[5] * other[8],
-                           self[6] * other[0] + self[7] * other[3] + self[8] * other[6],
-                           self[6] * other[1] + self[7] * other[4] + self[8] * other[7],
-                           self[6] * other[2] + self[7] * other[5] + self[8] * other[8])
+            return Matrix3(self.m00 * other.m00 + self.m01 * other.m10 + self.m02 * other.m20,
+                           self.m00 * other.m01 + self.m01 * other.m11 + self.m02 * other.m21,
+                           self.m00 * other.m02 + self.m01 * other.m12 + self.m02 * other.m22,
+                           self.m10 * other.m00 + self.m11 * other.m10 + self.m12 * other.m20,
+                           self.m10 * other.m01 + self.m11 * other.m11 + self.m12 * other.m21,
+                           self.m10 * other.m02 + self.m11 * other.m12 + self.m12 * other.m22,
+                           self.m20 * other.m00 + self.m21 * other.m10 + self.m22 * other.m20,
+                           self.m20 * other.m01 + self.m21 * other.m11 + self.m22 * other.m21,
+                           self.m20 * other.m02 + self.m21 * other.m12 + self.m22 * other.m22)
         if isinstance(other, Vector3):
             return Vector3(self.m00 * other.x + self.m01 * other.y + self.m02 * other.z,
                            self.m10 * other.x + self.m11 * other.y + self.m12 * other.z,
@@ -220,15 +220,15 @@ class Matrix3(namedtuple('Matrix3', 'm00, m01, m02,'
 
     def __rmul__(self, other):
         if isinstance(other, Matrix3):
-            return Matrix3(other[0] * self[0] + other[1] * self[3] + other[2] * self[6],
-                           other[0] * self[1] + other[1] * self[4] + other[2] * self[7],
-                           other[0] * self[2] + other[1] * self[5] + other[2] * self[8],
-                           other[3] * self[0] + other[4] * self[3] + other[5] * self[6],
-                           other[3] * self[1] + other[4] * self[4] + other[5] * self[7],
-                           other[3] * self[2] + other[4] * self[5] + other[5] * self[8],
-                           other[6] * self[0] + other[7] * self[3] + other[8] * self[6],
-                           other[6] * self[1] + other[7] * self[4] + other[8] * self[7],
-                           other[6] * self[2] + other[7] * self[5] + other[8] * self[8])
+            return Matrix3(other.m00 * self.m00 + other.m01 * self.m10 + other.m02 * self.m20,
+                           other.m00 * self.m01 + other.m01 * self.m11 + other.m02 * self.m21,
+                           other.m00 * self.m02 + other.m01 * self.m12 + other.m02 * self.m22,
+                           other.m10 * self.m00 + other.m11 * self.m10 + other.m12 * self.m20,
+                           other.m10 * self.m01 + other.m11 * self.m11 + other.m12 * self.m21,
+                           other.m10 * self.m02 + other.m11 * self.m12 + other.m12 * self.m22,
+                           other.m20 * self.m00 + other.m21 * self.m10 + other.m22 * self.m20,
+                           other.m20 * self.m01 + other.m21 * self.m11 + other.m22 * self.m21,
+                           other.m20 * self.m02 + other.m21 * self.m12 + other.m22 * self.m22)
         if isinstance(other, Vector3):
             return Vector3(self.m00 * other.x + self.m01 * other.x + self.m02 * other.x,
                            self.m10 * other.y + self.m11 * other.y + self.m12 * other.y,

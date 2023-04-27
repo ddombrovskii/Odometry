@@ -1,11 +1,10 @@
 from Utilities.Geometry import Vector3, BoundingBox, Transform
+from Utilities.Geometry.voxel import Voxel
 from Utilities.Geometry import Vector2
 from typing import Tuple, List, Union
 from collections import namedtuple
 import numpy as np
 import re
-
-from Utilities.Geometry.voxel import Voxel
 
 
 class Face(namedtuple('Face', 'p_1, uv1, n_1,'
@@ -341,17 +340,17 @@ def read_obj_mesh(path: str) -> List[TrisMesh]:
                 if tmp[0] == "f":
                     raw_indices = (tmp[1].strip().split("/"), tmp[2].strip().split("/"), tmp[3].strip().split("/"))
                     face_ = Face(
-                        int(raw_indices[0][0]) - 1 - v__shift,
-                        int(raw_indices[0][1]) - 1 - uv_shift,
-                        int(raw_indices[0][2]) - 1 - n__shift,
+                        int(raw_indices[0][0]) - 1 - v__shift if raw_indices[0][0] != '' else 0,
+                        int(raw_indices[0][1]) - 1 - uv_shift if raw_indices[0][1] != '' else 0,
+                        int(raw_indices[0][2]) - 1 - n__shift if raw_indices[0][2] != '' else 0,
 
-                        int(raw_indices[1][0]) - 1 - v__shift,
-                        int(raw_indices[1][1]) - 1 - uv_shift,
-                        int(raw_indices[1][2]) - 1 - n__shift,
+                        int(raw_indices[1][0]) - 1 - v__shift if raw_indices[1][0] != '' else 0,
+                        int(raw_indices[1][1]) - 1 - uv_shift if raw_indices[1][1] != '' else 0,
+                        int(raw_indices[1][2]) - 1 - n__shift if raw_indices[1][2] != '' else 0,
 
-                        int(raw_indices[2][0]) - 1 - v__shift,
-                        int(raw_indices[2][1]) - 1 - uv_shift,
-                        int(raw_indices[2][2]) - 1 - n__shift)
+                        int(raw_indices[2][0]) - 1 - v__shift if raw_indices[2][0] != '' else 0,
+                        int(raw_indices[2][1]) - 1 - uv_shift if raw_indices[2][1] != '' else 0,
+                        int(raw_indices[2][2]) - 1 - n__shift if raw_indices[2][2] != '' else 0)
 
                     meshes[-1].append_face(face_)
                     continue
@@ -363,6 +362,7 @@ def read_obj_mesh(path: str) -> List[TrisMesh]:
 
 def write_obj_mesh(mesh: TrisMesh, path: str) -> None:
     with open(path, "wt") as obj_file:
+        print('# object 1')
         print('\n'.join("v {:.5f} {:.5f} {:.5f}".format(v.x, v.y, v.z) for v in mesh.vertices), file=obj_file)
         print('\n'.join("vt {:.5f} {:.5f}".format(v.x, v.y) for v in mesh.uvs), file=obj_file)
         print('\n'.join("vn {:.5f} {:.5f} {:.5f}".format(v.x, v.y, v.z) for v in mesh.normals), file=obj_file)
@@ -414,21 +414,12 @@ def create_box(min_b: Vector3, max_b: Vector3, transform: Transform = None) -> T
     mesh.append_vertex(Vector3(max_b.x, min_b.y, max_b.z))
     mesh.append_vertex(Vector3(min_b.x, min_b.y, max_b.z))
 
-    # mesh.append_vertex(side * Vector3(-0.5000,  0.5000, -0.5000))
-    # mesh.append_vertex(side * Vector3(-0.5000,  0.5000,  0.5000))
-    # mesh.append_vertex(side * Vector3( 0.5000,  0.5000,  0.5000))
-    # mesh.append_vertex(side * Vector3( 0.5000,  0.5000, -0.5000))
-    # mesh.append_vertex(side * Vector3(-0.5000, -0.5000, -0.5000))
-    # mesh.append_vertex(side * Vector3( 0.5000, -0.5000, -0.5000))
-    # mesh.append_vertex(side * Vector3( 0.5000, -0.5000,  0.5000))
-    # mesh.append_vertex(side * Vector3(-0.5000, -0.5000,  0.5000))
-
-    mesh.append_normal(Vector3(0.0000, 1.0000, 0.0000))
-    mesh.append_normal(Vector3(0.0000, -1.0000, -0.0000))
-    mesh.append_normal(Vector3(0.0000, 0.0000, -1.0000))
-    mesh.append_normal(Vector3(1.0000, 0.0000, 0.0000))
-    mesh.append_normal(Vector3(0.0000, -0.0000, 1.0000))
-    mesh.append_normal(Vector3(-1.0000, 0.0000, 0.0000))
+    mesh.append_normal(Vector3( 0.0000,  1.0000,  0.0000))
+    mesh.append_normal(Vector3( 0.0000, -1.0000, -0.0000))
+    mesh.append_normal(Vector3( 0.0000,  0.0000, -1.0000))
+    mesh.append_normal(Vector3( 1.0000,  0.0000,  0.0000))
+    mesh.append_normal(Vector3( 0.0000, -0.0000,  1.0000))
+    mesh.append_normal(Vector3(-1.0000,  0.0000,  0.0000))
 
     mesh.append_uv(Vector2(1.0000, 0.0000))
     mesh.append_uv(Vector2(1.0000, 1.0000))
@@ -457,8 +448,8 @@ def voxels_mesh(voxels: List[Voxel]):
     mesh = None
     for voxel in voxels:
         if mesh is None:
-            mesh = create_box(voxel.size)
+            mesh = create_box(voxel.min, voxel.max)
             continue
-        mesh.merge(create_box(voxel.size))
+        mesh.merge(create_box(voxel.min, voxel.max))
     return mesh
 

@@ -1,5 +1,5 @@
 
-
+/// https://github.com/TrashRobotics/CVbot/blob/main/python_app/app.py
 1)Десктоп (Страница 1):
 1.0) Прием/передача по радиоканалу (SSH)
 1.1) Поиск устройства к которому можно подключиться

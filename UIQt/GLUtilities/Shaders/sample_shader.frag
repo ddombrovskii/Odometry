@@ -1,8 +1,9 @@
 #version 440
 out vec4 outColor;
-layout(binding = 0)uniform sampler2D diffuse;
-layout(binding = 1)uniform sampler2D specular;
-layout(binding = 2)uniform sampler2D normals;
+
+layout(binding = 0) uniform sampler2D diffTex;
+layout(binding = 1) uniform sampler2D specTex;
+layout(binding = 2) uniform sampler2D normTex;
 
 ///////////////////////////////
 //// VERTEX PROPERTIES OUT ////
@@ -39,11 +40,6 @@ in VS_MATERIAL_OUT
 } vs_mat_in;
 
 
-layout(binding = 0) uniform sampler2D diffTex;
-layout(binding = 1) uniform sampler2D specTex;
-layout(binding = 2) uniform sampler2D normTex;
-
-
 float illuminationBlinnPhong(vec3 lightPosition, float shininess)
 {
     vec3 lightDir   = normalize(lightPosition      - vs_vert_in.position);
@@ -54,7 +50,8 @@ float illuminationBlinnPhong(vec3 lightPosition, float shininess)
 
 void main()
 {
-   float spec   = illuminationBlinnPhong(vec3(10, 10, 10), 6.75);
+   float spec   = illuminationBlinnPhong(vec3(10, 10, 10), 6.75) + 
+   max(dot(vs_vert_in.normal, vec3(-0.333, -0.333, -0.333)), 0.1);
    // outColor = vec4(spec, spec, spec,  1.0);
    // float spec = min(max(0.125, dot(-vec3( 0.33333, 0.33333,  0.33333), vs_vert_in.normal)), 1.0);
    // float v  = v_illum   *
@@ -62,5 +59,6 @@ void main()
    //            v_ni      *
    //            v_ns      ;
    //
-   outColor = vec4(spec, spec, spec,  1.0) * (texture(diffTex, vs_vert_in.uv) * 0.1 + 0.9);
+   outColor = vec4(spec, spec, spec,  1.0) * texture(diffTex, vs_vert_in.uv);
+   //   outColor = vec4(spec, spec, spec,  1.0);
 }

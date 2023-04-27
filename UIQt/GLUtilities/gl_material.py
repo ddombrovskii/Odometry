@@ -21,7 +21,7 @@ class MaterialGL:
         self._dissolve: float = 1.0  # d or Tr: specifies a factor for dissolve, how much this material dissolves into the background.
         # A factor of 1.0 is fully opaque. A factor of 0.0 is completely transparent.
         self._illum: float = 2.0  # illum: specifies an illumination model, using a numeric value
-        self._diffuse:  TextureGL = TextureGL.CARBON_TEXTURE
+        self._diffuse:  TextureGL = TextureGL.WHITE_TEXTURE
         self._specular: TextureGL = TextureGL.PINK_TEXTURE
         self._normals:  TextureGL = TextureGL.PINK_TEXTURE
 

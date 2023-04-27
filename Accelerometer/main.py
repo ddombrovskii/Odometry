@@ -17,7 +17,7 @@ if __name__ == "__main__":
     #     print(f"{i} | {q.queue.pop()}")
     # print(q)
 
-    integrator = AccelIntegrator("accelerometer_core/accelerometer_records/the newest/building_way_2.json")
+    integrator = AccelIntegrator("accelerometer_core/accelerometer_records/the newest/building_way.json")
     # integrator = AccelIntegrator("accelerometer_core/accelerometer_records/record_bno_test.json")
     integrator.integrate()
     integrator.show_results_xz()

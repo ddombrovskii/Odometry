@@ -94,6 +94,7 @@ class Shader:
     Vector_2: int = 35664
     Float: int = 5126
     Int: int = 5124
+    Bool: bool = 35670
     Texture: int = 35678
     TextureCube: int = 35680
     TextureArray: int = 36289
@@ -106,6 +107,7 @@ class Shader:
             Vector_2: Vector_2,
             Float: Float,
             Int: Int,
+            Bool: Bool,
             Texture: Texture,
             TextureCube: TextureCube,
             TextureArray: TextureArray
@@ -119,6 +121,7 @@ class Shader:
             Vector_2: '\"Vector_2\"',
             Float: '\"Float\"',
             Int: '\"Int\"',
+            Bool: '\"Bool\"',
             Texture: '\"Texture\"',
             TextureCube: '\"TextureCube\"',
             TextureArray: '\"TextureArray\"'
@@ -127,6 +130,7 @@ class Shader:
     __shader_instances = {}
 
     SAMPLE_SHADER = None
+    MAP_SHADER = None
 
     # UI_TEXT_SHADER = None
     #
@@ -140,6 +144,11 @@ class Shader:
         Shader.SAMPLE_SHADER.vert_shader("./GLUtilities/Shaders/sample_shader.vert")
         Shader.SAMPLE_SHADER.frag_shader("./GLUtilities/Shaders/sample_shader.frag")
         Shader.SAMPLE_SHADER.load_defaults_settings()
+
+        Shader.MAP_SHADER = Shader()
+        Shader.MAP_SHADER.vert_shader("./GLUtilities/Shaders/map_shader.vert")
+        Shader.MAP_SHADER.frag_shader("./GLUtilities/Shaders/map_shader.frag")
+        Shader.MAP_SHADER.load_defaults_settings()
 
         #  Shader.FRAME_BUFFER_BLIT_SHADER = Shader()
         #  Shader.FRAME_BUFFER_BLIT_SHADER.vert_shader("E:/GitHub/VisualOdometry/UI/gl/shaders/ui_render_shader.vert")

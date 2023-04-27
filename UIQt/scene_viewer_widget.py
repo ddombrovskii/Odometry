@@ -8,7 +8,7 @@ from UIQt.GLUtilities.gl_shader import Shader
 from UIQt.GLUtilities.gl_texture import TextureGL
 from UIQt.GLUtilities.triangle_mesh import create_plane, TrisMesh, read_obj_mesh, create_box
 from UIQt.Input.mouse_info import MouseInfo
-from Utilities.Geometry import Matrix4, Vector3, Transform
+from Utilities.Geometry import Matrix4, Vector3, Transform, BoundingBox
 from collections import namedtuple
 from PyQt5 import QtOpenGL
 from typing import List
@@ -63,6 +63,24 @@ class SceneViewerWidget(QtOpenGL.QGLWidget):
                f"\t\"OpenGL Version\": \"{GL.glGetString(GL.GL_VERSION).decode('utf-8')}\",\n" \
                f"\t\"Shader Version\": \"{GL.glGetString(GL.GL_SHADING_LANGUAGE_VERSION).decode('utf-8')}\"\n}}"
 
+    def load_model(self, file_path: str = None, t: Transform = None):
+        if file_path is None:
+            model_gl = ModelGL()
+            model_gl.mesh = MeshGL.BOX_MESH
+            self._scene_models.append(model_gl)
+            if t is not None:
+                model_gl.transform.transform_matrix *= t.transform_matrix
+            return
+        try:
+            for m in read_obj_mesh(file_path):
+                model_gl = ModelGL()
+                model_gl.mesh = MeshGL(m)
+                if t is not None:
+                    model_gl.transform.transform_matrix *= t.transform_matrix
+                self._scene_models.append(model_gl)
+        except RuntimeError as err:
+            pass
+
     def initializeGL(self):
         self.fmt = QOpenGLVersionProfile()
         self.fmt.setVersion(3, 3)
@@ -78,11 +96,20 @@ class SceneViewerWidget(QtOpenGL.QGLWidget):
         TextureGL.init_globals()
         MeshGL.init_globals()
         MaterialGL.init_globals()
-        model_gl = ModelGL()
         self._main_camera.look_at(Vector3(0, 0, 0), Vector3(1, 1, 1))
-        model_gl.mesh = MeshGL.SPHERE_MESH     # (create_box(0.9))
-        model_gl.transform.scale = Vector3(2, 2, 2)
-        self._scene_models.append(model_gl)
+        self.load_model()
+        self.load_model('../big_map.obj')
+        #model_gl = ModelGL()
+        # model_gl.mesh = MeshGL(read_obj_mesh('../voxels.obj')[0])
+        # model_gl.mesh = MeshGL(read_obj_mesh('../big_map.obj')[0])
+        #model_gl.mesh = MeshGL(read_obj_mesh('../teapot.obj')[0])
+        #self._scene_models.append(model_gl)
+        #model_gl.transform.scale = Vector3(1, 1, 1)
+        #print(model_gl.mesh.bounds)
+
+
+        # self._scene_models.append()
+
         # print(self._main_camera.projection)
         # print(self._main_camera.projection.invert())
         # print(self._main_camera.projection*self._main_camera.projection.invert())
@@ -90,7 +117,7 @@ class SceneViewerWidget(QtOpenGL.QGLWidget):
         #model_gl = ModelGL()
         #model_gl.mesh = MeshGL.SPHERE_MESH  # (create_plane(2., 2.))
         #model_gl.transform.x = 1
-        self._scene_models.append(model_gl)
+        # self._scene_models.append(model_gl)
 
     def _load_model(self, src: str):
         # вызов по нажатию на кнопку или чего ещё
@@ -122,10 +149,21 @@ class SceneViewerWidget(QtOpenGL.QGLWidget):
         self._mouse.update_position(event.pos().x(), event.pos().y(), self.width(), self.height())
         if self._mouse.is_left_button:
             self._main_camera.transform.angles += Vector3(self._mouse.y_delta, -self._mouse.x_delta, 0)
+
         if self._mouse.is_right_button:
+            bbox = BoundingBox()
+            for m in self._scene_models:
+                bbox.encapsulate(m.mesh.bounds.max)
+                bbox.encapsulate(m.mesh.bounds.min)
+            size = bbox.size
+            cntr = bbox.center
+            self._main_camera.look_at(cntr, cntr + size)
+
+        if self._mouse.is_wheel_button:
+            scale = self._main_camera.transform.origin.magnitude()
             self._main_camera.transform.origin += \
-                (self._main_camera.transform.up * -self._mouse.y_delta +
-                 self._main_camera.transform.right * self._mouse.x_delta )
+                (self._main_camera.transform.up * -self._mouse.y_delta * scale +
+                 self._main_camera.transform.right * self._mouse.x_delta * scale )
 
     def wheelEvent(self, event: QWheelEvent) -> None:
         # print(event.angleDelta())

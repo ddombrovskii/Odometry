@@ -1,6 +1,3 @@
-# from accelerometer_core.Utilities.vector4 import Vector4
-# from accelerometer_core.Utilities.vector3 import Vector3
-
 from collections import namedtuple
 from .vector4 import Vector4
 from .vector3 import Vector3
@@ -69,9 +66,9 @@ class Matrix4(namedtuple('Matrix4', 'm00, m01, m02, m03,'
         xaxis = Vector3.cross(up, zaxis).normalized()  # The "right" vector.
         yaxis = Vector3.cross(xaxis, zaxis)  # The "up" vector.
 
-        return cls(xaxis.x,  yaxis.x, zaxis.x, eye.x,
-                   xaxis.y,  yaxis.y, zaxis.y, eye.y,
-                   xaxis.z,  yaxis.z, zaxis.z, eye.z,
+        return cls(xaxis.x, yaxis.x, zaxis.x, eye.x,
+                   xaxis.y, yaxis.y, zaxis.y, eye.y,
+                   xaxis.z, yaxis.z, zaxis.z, eye.z,
                    0.0, 0.0, 0.0, 1.0)
 
     @classmethod
@@ -90,10 +87,10 @@ class Matrix4(namedtuple('Matrix4', 'm00, m01, m02, m03,'
         #  z_far * z_near / (z_near - z_far)  # used to remap z [0,1]
         #  -1  # set w = -z
         #  0
-        return cls(scale * aspect, 0.0,   0.0,                               0.0,
-                   0.0,            scale, 0.0,                               0.0,
-                   0.0, 0.0,              z_far / (z_near - z_far),         -1.0,
-                   0.0, 0.0,              z_far * z_near / (z_near - z_far), 0.0)
+        return cls(scale * aspect, 0.0, 0.0, 0.0,
+                   0.0, scale, 0.0, 0.0,
+                   0.0, 0.0, z_far / (z_near - z_far), -1.0,
+                   0.0, 0.0, z_far * z_near / (z_near - z_far), 0.0)
 
     @classmethod
     def rotate_x(cls, angle: float, angle_in_rad: bool = True):
@@ -124,7 +121,7 @@ class Matrix4(namedtuple('Matrix4', 'm00, m01, m02, m03,'
         cos_a = math.cos(angle)
         sin_a = math.sin(angle)
         return cls(cos_a, -sin_a, 0.0, 0.0,
-                   sin_a,  cos_a, 0.0, 0.0,
+                   sin_a, cos_a, 0.0, 0.0,
                    0.0, 0.0, 1.0, 0.0,
                    0.0, 0.0, 0.0, 1.0)
 
@@ -170,7 +167,7 @@ class Matrix4(namedtuple('Matrix4', 'm00, m01, m02, m03,'
                        right[1], up[1], front[1], 0.0,
                        right[2], up[2], front[2], 0.0,
                        0.0, 0.0, 0.0, 1.0)
-  
+
         return cls(right[0], up[0], front[0], origin[0],
                    right[1], up[1], front[1], origin[1],
                    right[2], up[2], front[2], origin[2],
@@ -311,22 +308,22 @@ class Matrix4(namedtuple('Matrix4', 'm00, m01, m02, m03,'
 
     def __mul__(self, other):
         if isinstance(other, Matrix4):
-            return Matrix4(self[0] * other[0] + self[1] * other[4] + self[2] * other[8] + self[3] * other[12],
-                           self[0] * other[1] + self[1] * other[5] + self[2] * other[9] + self[3] * other[13],
-                           self[0] * other[2] + self[1] * other[6] + self[2] * other[10] + self[3] * other[14],
-                           self[0] * other[3] + self[1] * other[7] + self[2] * other[11] + self[3] * other[15],
-                           self[4] * other[0] + self[5] * other[4] + self[6] * other[8] + self[7] * other[12],
-                           self[4] * other[1] + self[5] * other[5] + self[6] * other[9] + self[7] * other[13],
-                           self[4] * other[2] + self[5] * other[6] + self[6] * other[10] + self[7] * other[14],
-                           self[4] * other[3] + self[5] * other[7] + self[6] * other[11] + self[7] * other[15],
-                           self[8] * other[0] + self[9] * other[4] + self[10] * other[8] + self[11] * other[12],
-                           self[8] * other[1] + self[9] * other[5] + self[10] * other[9] + self[11] * other[13],
-                           self[8] * other[2] + self[9] * other[6] + self[10] * other[10] + self[11] * other[14],
-                           self[8] * other[3] + self[9] * other[7] + self[10] * other[11] + self[11] * other[15],
-                           self[12] * other[0] + self[13] * other[4] + self[14] * other[8] + self[15] * other[12],
-                           self[12] * other[1] + self[13] * other[5] + self[14] * other[9] + self[15] * other[13],
-                           self[12] * other[2] + self[13] * other[6] + self[14] * other[10] + self[15] * other[14],
-                           self[12] * other[3] + self[13] * other[7] + self[14] * other[11] + self[15] * other[15])
+            return Matrix4(self.m00 * other.m00 + self.m01 * other.m10 + self.m02 * other.m20 + self.m03 * other.m30,
+                           self.m00 * other.m01 + self.m01 * other.m11 + self.m02 * other.m21 + self.m03 * other.m31,
+                           self.m00 * other.m02 + self.m01 * other.m12 + self.m02 * other.m22 + self.m03 * other.m32,
+                           self.m00 * other.m03 + self.m01 * other.m13 + self.m02 * other.m23 + self.m03 * other.m33,
+                           self.m10 * other.m00 + self.m11 * other.m10 + self.m12 * other.m20 + self.m13 * other.m30,
+                           self.m10 * other.m01 + self.m11 * other.m11 + self.m12 * other.m21 + self.m13 * other.m31,
+                           self.m10 * other.m02 + self.m11 * other.m12 + self.m12 * other.m22 + self.m13 * other.m32,
+                           self.m10 * other.m03 + self.m11 * other.m13 + self.m12 * other.m23 + self.m13 * other.m33,
+                           self.m20 * other.m00 + self.m21 * other.m10 + self.m22 * other.m20 + self.m23 * other.m30,
+                           self.m20 * other.m01 + self.m21 * other.m11 + self.m22 * other.m21 + self.m23 * other.m31,
+                           self.m20 * other.m02 + self.m21 * other.m12 + self.m22 * other.m22 + self.m23 * other.m32,
+                           self.m20 * other.m03 + self.m21 * other.m13 + self.m22 * other.m23 + self.m23 * other.m33,
+                           self.m30 * other.m00 + self.m31 * other.m10 + self.m32 * other.m20 + self.m33 * other.m30,
+                           self.m30 * other.m01 + self.m31 * other.m11 + self.m32 * other.m21 + self.m33 * other.m31,
+                           self.m30 * other.m02 + self.m31 * other.m12 + self.m32 * other.m22 + self.m33 * other.m32,
+                           self.m30 * other.m03 + self.m31 * other.m13 + self.m32 * other.m23 + self.m33 * other.m33)
         if isinstance(other, Vector4):
             return Vector4(self.m00 * other.x + self.m01 * other.y + self.m02 * other.z + self.m03 * other.w,
                            self.m10 * other.x + self.m11 * other.y + self.m12 * other.z + self.m13 * other.w,
@@ -338,22 +335,22 @@ class Matrix4(namedtuple('Matrix4', 'm00, m01, m02, m03,'
 
     def __rmul__(self, other):
         if isinstance(other, Matrix4):
-            return Matrix4(other[0] * self[0] + other[1] * self[4] + other[2] * self[8] + other[3] * self[12],
-                           other[0] * self[1] + other[1] * self[5] + other[2] * self[9] + other[3] * self[13],
-                           other[0] * self[2] + other[1] * self[6] + other[2] * self[10] + other[3] * self[14],
-                           other[0] * self[3] + other[1] * self[7] + other[2] * self[11] + other[3] * self[15],
-                           other[4] * self[0] + other[5] * self[4] + other[6] * self[8] + other[7] * self[12],
-                           other[4] * self[1] + other[5] * self[5] + other[6] * self[9] + other[7] * self[13],
-                           other[4] * self[2] + other[5] * self[6] + other[6] * self[10] + other[7] * self[14],
-                           other[4] * self[3] + other[5] * self[7] + other[6] * self[11] + other[7] * self[15],
-                           other[8] * self[0] + other[9] * self[4] + other[10] * self[8] + other[11] * self[12],
-                           other[8] * self[1] + other[9] * self[5] + other[10] * self[9] + other[11] * self[13],
-                           other[8] * self[2] + other[9] * self[6] + other[10] * self[10] + other[11] * self[14],
-                           other[8] * self[3] + other[9] * self[7] + other[10] * self[11] + other[11] * self[15],
-                           other[12] * self[0] + other[13] * self[4] + other[14] * self[8] + other[15] * self[12],
-                           other[12] * self[1] + other[13] * self[5] + other[14] * self[9] + other[15] * self[13],
-                           other[12] * self[2] + other[13] * self[6] + other[14] * self[10] + other[15] * self[14],
-                           other[12] * self[3] + other[13] * self[7] + other[14] * self[11] + other[15] * self[15])
+            return Matrix4(other.m00 * self.m00 + other.m01 * self.m10 + other.m02 * self.m20 + other.m03 * self.m30,
+                           other.m00 * self.m01 + other.m01 * self.m11 + other.m02 * self.m21 + other.m03 * self.m31,
+                           other.m00 * self.m02 + other.m01 * self.m12 + other.m02 * self.m22 + other.m03 * self.m32,
+                           other.m00 * self.m03 + other.m01 * self.m13 + other.m02 * self.m23 + other.m03 * self.m33,
+                           other.m10 * self.m00 + other.m11 * self.m10 + other.m12 * self.m20 + other.m13 * self.m30,
+                           other.m10 * self.m01 + other.m11 * self.m11 + other.m12 * self.m21 + other.m13 * self.m31,
+                           other.m10 * self.m02 + other.m11 * self.m12 + other.m12 * self.m22 + other.m13 * self.m32,
+                           other.m10 * self.m03 + other.m11 * self.m13 + other.m12 * self.m23 + other.m13 * self.m33,
+                           other.m20 * self.m00 + other.m21 * self.m10 + other.m22 * self.m20 + other.m23 * self.m30,
+                           other.m20 * self.m01 + other.m21 * self.m11 + other.m22 * self.m21 + other.m23 * self.m31,
+                           other.m20 * self.m02 + other.m21 * self.m12 + other.m22 * self.m22 + other.m23 * self.m32,
+                           other.m20 * self.m03 + other.m21 * self.m13 + other.m22 * self.m23 + other.m23 * self.m33,
+                           other.m30 * self.m00 + other.m31 * self.m10 + other.m32 * self.m20 + other.m33 * self.m30,
+                           other.m30 * self.m01 + other.m31 * self.m11 + other.m32 * self.m21 + other.m33 * self.m31,
+                           other.m30 * self.m02 + other.m31 * self.m12 + other.m32 * self.m22 + other.m33 * self.m32,
+                           other.m30 * self.m03 + other.m31 * self.m13 + other.m32 * self.m23 + other.m33 * self.m33)
         if isinstance(other, Vector4):
             return Vector4(self.m00 * other.x + self.m01 * other.x + self.m02 * other.x + self.m03 * other.x,
                            self.m10 * other.y + self.m11 * other.y + self.m12 * other.y + self.m13 * other.y,
@@ -379,3 +376,4 @@ class Matrix4(namedtuple('Matrix4', 'm00, m01, m02, m03,'
         if isinstance(other, int) or isinstance(other, float):
             return Matrix4(*(other / s for s in self))
         raise RuntimeError(f"Matrix4::TrueDiv::wrong argument type {type(other)}")
+

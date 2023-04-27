@@ -150,3 +150,5 @@ class SceneViewerWidget(QtOpenGL.QGLWidget):
         while len(self._render_queue) != 0:
             self._render_queue.pop()()
         self.swapBuffers()
+
+

@@ -128,54 +128,19 @@ class Shader:
         }
 
     __shader_instances = {}
-
-    SAMPLE_SHADER = None
-    MAP_SHADER = None
-
-    # UI_TEXT_SHADER = None
-    #
-    # UI_CLEAR_FB_SHADER = None
-    #
-    # FRAME_BUFFER_BLIT_SHADER = None
+    __bounded_id: int = 0
 
     @staticmethod
-    def init_globals():
-        Shader.SAMPLE_SHADER = Shader()
-        Shader.SAMPLE_SHADER.vert_shader("./GLUtilities/Shaders/sample_shader.vert")
-        Shader.SAMPLE_SHADER.frag_shader("./GLUtilities/Shaders/sample_shader.frag")
-        Shader.SAMPLE_SHADER.load_defaults_settings()
-
-        Shader.MAP_SHADER = Shader()
-        Shader.MAP_SHADER.vert_shader("./GLUtilities/Shaders/map_shader.vert")
-        Shader.MAP_SHADER.frag_shader("./GLUtilities/Shaders/map_shader.frag")
-        Shader.MAP_SHADER.load_defaults_settings()
-
-        #  Shader.FRAME_BUFFER_BLIT_SHADER = Shader()
-        #  Shader.FRAME_BUFFER_BLIT_SHADER.vert_shader("E:/GitHub/VisualOdometry/UI/gl/shaders/ui_render_shader.vert")
-        #  Shader.FRAME_BUFFER_BLIT_SHADER.frag_shader("E:/GitHub/VisualOdometry/UI/gl/shaders/ui_render_shader.frag")
-        #  Shader.FRAME_BUFFER_BLIT_SHADER.load_defaults_settings()
-
-        #  Shader.UI_TEXT_SHADER = Shader()
-        #  Shader.UI_TEXT_SHADER.vert_shader("E:/GitHub/VisualOdometry/UI/gl/shaders/ui_text_shaders/ui_text_shader.vert")
-        #  Shader.UI_TEXT_SHADER.frag_shader("E:/GitHub/VisualOdometry/UI/gl/shaders/ui_text_shaders/ui_text_shader.frag")
-        #  Shader.UI_TEXT_SHADER.load_defaults_settings()
-
-        #  Shader.UI_CLEAR_FB_SHADER = Shader()
-        #  Shader.UI_CLEAR_FB_SHADER.vert_shader\
-        #      ("E:/GitHub/VisualOdometry/UI/gl/shaders/ui_renderer_region_clean_up_shader.vert")
-        #  Shader.UI_CLEAR_FB_SHADER.frag_shader\
-        #      ("E:/GitHub/VisualOdometry/UI/gl/shaders/ui_renderer_region_clean_up_shader.frag")
-        #  Shader.UI_CLEAR_FB_SHADER.load_defaults_settings()
+    def bounded_id():
+        return Shader.__bounded_id
 
     @staticmethod
-    def shaders_enumerate():
-        print(Shader.__shader_instances.items())
+    def enumerate():
         for buffer in Shader.__shader_instances.items():
             yield buffer[1]
 
     @staticmethod
-    def delete_all_shaders():
-        # print(GPUBuffer.__buffer_instances)
+    def delete_all():
         while len(Shader.__shader_instances) != 0:
             item = Shader.__shader_instances.popitem()
             item[1].delete_shader()
@@ -254,14 +219,14 @@ class Shader:
         separator = ',\n\t\t'
         return f"{{\n" \
                f"\t//Shader     : 0x{id(self)}\n" \
-               f"\t\"name\"       : {comas(self.name)},\n" \
-               f"\t\"program_id\" : {self.program_id},\n" \
+               f"\t\"name\"       : \"{self.name}\",\n" \
+               f"\t\"program_id\" : {self.bound_id},\n" \
                f"\t\"vert_id\"    : {self.__vert_id},\n" \
                f"\t\"frag_id\"    : {self.__frag_id},\n" \
-               f"\t\"attributes\" : [\n\t\t" \
+               f"\t\"attributes\" : \n\t[\n\t\t" \
                f"{separator.join(parce(_name, _id, _type, _size) for _name, (_id, _size, _type) in self.attribytes.items())}" \
                f"\n\t],\n" \
-               f"\t\"uniforms\" : [\n\t\t" \
+               f"\t\"uniforms\" : \n\t[\n\t\t" \
                f"{separator.join(parce(_name, _id, _type, _size) for _name, (_id, _size, _type) in self.uniforms.items())}" \
                f"\n\t]\n" \
                f"}}"
@@ -296,7 +261,7 @@ class Shader:
         return self.__shader_uniforms
 
     @property
-    def program_id(self):
+    def bound_id(self):
         return self.__program_id
 
     def get_uniform_location(self, uniform_name: str):
@@ -393,7 +358,7 @@ class Shader:
         self.__program_id = compileProgram(self.__vert_id, self.__frag_id)
         if self.__program_id == 0:
             raise Exception("Shader program compilation error...")
-        Shader.__shader_instances[self.__program_id] = self
+        Shader.__shader_instances[self.bound_id] = self
         self.bind()
         self.__get_all_uniform_blocks()
         self.__get_all_attrib_locations()
@@ -443,7 +408,10 @@ class Shader:
         glUniform1i(loc, GLint(val))
 
     def bind(self):
-        glUseProgram(self.__program_id)
+        if Shader.bounded_id() != self.bound_id:
+            glUseProgram(self.bound_id)
+            Shader.__bounded_id = self.bound_id
 
     def unbind(self):
         glUseProgram(0)
+        Shader.__bounded_id = 0

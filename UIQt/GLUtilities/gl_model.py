@@ -1,3 +1,4 @@
+from UIQt.GLUtilities import gl_globals
 from UIQt.GLUtilities.gl_material import MaterialGL
 from UIQt.GLUtilities.gl_mesh import MeshGL
 from Utilities.Geometry import Transform
@@ -5,8 +6,8 @@ from Utilities.Geometry import Transform
 
 class ModelGL:
     def __init__(self):
-        self._mesh: MeshGL         = MeshGL.BOX_MESH
-        self._material: MaterialGL = MaterialGL.DEFAULT_MATERIAL
+        self._mesh: MeshGL         = gl_globals.BOX_MESH
+        self._material: MaterialGL = gl_globals.DEFAULT_MATERIAL
         self._transform: Transform = Transform()
 
     @property
@@ -15,7 +16,7 @@ class ModelGL:
 
     @mesh.setter
     def mesh(self, m: MeshGL) -> None:
-        self._mesh = MeshGL.BOX_MESH if m is None else m
+        self._mesh = gl_globals.BOX_MESH if m is None else m
 
     @property
     def material(self) -> MaterialGL:

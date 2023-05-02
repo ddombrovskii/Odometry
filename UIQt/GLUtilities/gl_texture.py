@@ -10,51 +10,25 @@ class TextureGL:
 
     __textures_instances = {}
 
-    WHITE_TEXTURE = None
-
-    RED_TEXTURE = None
-
-    GREEN_TEXTURE = None
-
-    BLUE_TEXTURE = None
-
-    PINK_TEXTURE = None
-
-    GRAY_TEXTURE = None
-
-    CARBON_TEXTURE = None
+    __bounded_id = 0
 
     @staticmethod
-    def init_globals():
-        TextureGL.WHITE_TEXTURE = TextureGL(100, 100, Color(np.uint8(255), np.uint8(255), np.uint8(255)))
-
-        TextureGL.RED_TEXTURE = TextureGL(100, 100, Color(np.uint8(255), np.uint8(0), np.uint8(0)))
-
-        TextureGL.GREEN_TEXTURE = TextureGL(100, 100, Color(np.uint8(0), np.uint8(255), np.uint8(0)))
-
-        TextureGL.BLUE_TEXTURE = TextureGL(100, 100, Color(np.uint8(0), np.uint8(0), np.uint8(255)))
-
-        TextureGL.PINK_TEXTURE = TextureGL(100, 100, Color(np.uint8(255), np.uint8(0), np.uint8(255)))
-
-        TextureGL.GRAY_TEXTURE = TextureGL(100, 100, Color(np.uint8(125), np.uint8(125), np.uint8(125)))
-
-        TextureGL.CARBON_TEXTURE = TextureGL()
-
-        TextureGL.CARBON_TEXTURE.load(r'./GLUtilities/Resources/carbon.jpg')
+    def bounded_id() -> int:
+        return TextureGL.__bounded_id
 
     @staticmethod
-    def textures_enumerate():
+    def enumerate():
         for texture in TextureGL.__textures_instances.items():
             yield texture[1]
 
     @staticmethod
-    def textures_write(file, start="", end=""):
+    def write(file, start="", end=""):
         file.write(f"{start}\"textures\":[\n")
         file.write(',\n'.join(str(m) for m in TextureGL.__textures_instances.values()))
         file.write(f"]\n{end}")
 
     @staticmethod
-    def delete_all_textures():
+    def delete_all():
         while len(TextureGL.__textures_instances) != 0:
             item = TextureGL.__textures_instances.popitem()
             item[1].delete_texture()
@@ -62,28 +36,28 @@ class TextureGL:
     def __init__(self, w: int = 16, h: int = 16, col: Color = Color(np.uint8(255), np.uint8(0), np.uint8(0)),
                  alpha=False):
 
-        self.__source_file = "no-name"
-        self.__width  = w
-        self.__height = h
-        self.__bpp = 4 if alpha else 3
-        self.__id: int = 0
-        self.__filtering_mode = (GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR)
-        self.__bind_target: GLenum = GL_TEXTURE_2D
-        self.__warp_mode = GL_REPEAT
-        self.__load_data(col)
+        self._source_file = "no-name"
+        self._width  = w
+        self._height = h
+        self._bpp = 4 if alpha else 3
+        self._id: int = 0
+        self._filtering_mode = (GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR)
+        self._bind_target: GLenum = GL_TEXTURE_2D
+        self._warp_mode = GL_REPEAT
+        self._load_data(col)
         self.repeat()
         self.bi_linear()
-        TextureGL.__textures_instances[self.__id] = self
+        TextureGL.__textures_instances[self._id] = self
 
     def __str__(self):
-        return f"{{\n\t\"unique_id\":   {self.__id},\n" \
+        return f"{{\n\t\"unique_id\":   {self.bind_id},\n" \
                f"\t\"asset_src\":   \"{self.source_file_path}\",\n" \
                f"\t\"width\":       {self.width},\n" \
                f"\t\"height\":      {self.height},\n" \
                f"\t\"bpp\":         {self.bpp},\n" \
                f"\t\"use_mip_map\": False,\n" \
-               f"\t\"wrap_mode\":   {int(self.__warp_mode)},\n" \
-               f"\t\"filter_mode\": [{int(self.__filtering_mode[0])},{int(self.__filtering_mode[1])}]\n}}"
+               f"\t\"wrap_mode\":   {int(self._warp_mode)},\n" \
+               f"\t\"filter_mode\": [{int(self._filtering_mode[0])},{int(self._filtering_mode[1])}]\n}}"
 
     def __del__(self):
         self.delete_texture()
@@ -93,37 +67,38 @@ class TextureGL:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         glBindTexture(self.bind_target, 0)
+        TextureGL.__bounded_id = 0
 
-    def __create(self):
-        self.__id = glGenTextures(1)
+    def _create(self):
+        self._id = glGenTextures(1)
         self.bind()
         self.repeat()
         self.bi_linear()
 
-    def __load_data(self, resource: Union[Color, str]):
+    def _load_data(self, resource: Union[Color, str]):
 
-        if self.__id == 0:
-            self.__create()
+        if self._id == 0:
+            self._create()
         else:
             self.delete_texture()
-            self.__create()
+            self._create()
 
         if self.texture_byte_size == 0:
             self.delete_texture()
             return
 
-        TextureGL.__textures_instances[self.__id] = self
+        TextureGL.__textures_instances[self.bind_id] = self
 
         if isinstance(resource, str):
             im = Image.open(resource)
-            self.__width, self.__height = im.size
+            self._width, self._height = im.size
             pixel_data: List[np.uint8] = (np.asarray(im, dtype=np.uint8)).ravel()
-            self.__bpp = int(len(pixel_data) / self.__width / self.__height)
+            self._bpp = int(len(pixel_data) / self.width / self.height)
         elif isinstance(resource, Color):
-            pixel_data =  [resource[i % self.__bpp] for i in range(self.__width * self.__height * self.__bpp)]
+            pixel_data = [resource[i % self.bpp] for i in range(self.width * self.height * self.bpp)]
         else:
             resource = (255, 0, 0, 0)
-            pixel_data =  [resource[i % self.__bpp] for i in range(self.__width * self.__height * self.__bpp)]
+            pixel_data = [resource[i % self.bpp] for i in range(self.width * self.height * self.bpp)]
 
         if self.bpp == 1:
             glTexImage2D(self.bind_target, 0, GL_R, self.width, self.height, 0,
@@ -148,9 +123,9 @@ class TextureGL:
 
     @property
     def name(self) -> str:
-        if len(self.__source_file) == 0:
+        if len(self._source_file) == 0:
             return ""
-        name: List[str] = self.__source_file.split("\\")
+        name: List[str] = self._source_file.split("\\")
 
         if len(name) == 0:
             return ""
@@ -166,107 +141,109 @@ class TextureGL:
 
     @property
     def source_file_path(self) -> str:
-        return self.__source_file
+        return self._source_file
 
     @source_file_path.setter
     def source_file_path(self, path: str) -> None:
-        if path == self.__source_file:
+        if path == self.source_file_path:
             return
         self.load(path)
 
     @property
     def width(self) -> int:
-        return self.__width
+        return self._width
 
     @property
     def height(self) -> int:
-        return self.__height
+        return self._height
 
     @property
     def bpp(self) -> int:
-        return self.__bpp
+        return self._bpp
 
     @property
     def texture_pixel_size(self) -> int:
-        return self.__height * self.__width
+        return self._height * self._width
 
     @property
     def texture_byte_size(self) -> int:
-        return self.__bpp * self.__height * self.__width
+        return self._bpp * self.texture_pixel_size
 
     @property
     def bind_id(self) -> int:
-        return self.__id
+        return self._id
 
     @property
     def bind_target(self) -> GLenum:
-        return self.__bind_target
+        return self._bind_target
 
     def repeat(self):
         self.bind()
         glTexParameteri(self.bind_target, GL_TEXTURE_WRAP_S, GL_REPEAT)
         glTexParameteri(self.bind_target, GL_TEXTURE_WRAP_T, GL_REPEAT)
-        self.__warp_mode = GL_REPEAT
+        self._warp_mode = GL_REPEAT
 
     def mirrored_repeat(self):
         self.bind()
         glTexParameteri(self.bind_target, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT)
         glTexParameteri(self.bind_target, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT)
-        self.__warp_mode = GL_MIRRORED_REPEAT
+        self._warp_mode = GL_MIRRORED_REPEAT
 
     def clamp_to_edge(self):
         self.bind()
         glTexParameteri(self.bind_target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
         glTexParameteri(self.bind_target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
-        self.__warp_mode = GL_CLAMP_TO_EDGE
+        self._warp_mode = GL_CLAMP_TO_EDGE
 
     def clamp_to_border(self):
         self.bind()
         glTexParameteri(self.bind_target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER)
         glTexParameteri(self.bind_target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER)
-        self.__warp_mode = GL_CLAMP_TO_BORDER
+        self._warp_mode = GL_CLAMP_TO_BORDER
 
     def nearest(self):
         self.bind()
         glTexParameteri(self.bind_target, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
         glTexParameteri(self.bind_target, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
-        self.__filtering_mode = (GL_NEAREST, GL_LINEAR)
+        self._filtering_mode = (GL_NEAREST, GL_LINEAR)
 
     def bi_linear(self):
         self.bind()
         glTexParameteri(self.bind_target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)
         glTexParameteri(self.bind_target, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
-        self.__filtering_mode = (GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR)
+        self._filtering_mode = (GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR)
 
     def tri_linear(self):
         self.bind()
         glTexParameteri(self.bind_target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)
         glTexParameteri(self.bind_target, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR)
-        self.__filtering_mode = (GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR_MIPMAP_LINEAR)
+        self._filtering_mode = (GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR_MIPMAP_LINEAR)
 
     def bind(self):
-        glBindTexture(self.bind_target, self.__id)
+        if self._id != TextureGL.bounded_id():
+            glBindTexture(self.bind_target, self.bind_id)
+            TextureGL.__bounded_id = self.bind_id
 
     def bind_to_channel(self, channel: int):
         glActiveTexture(GL_TEXTURE0 + channel)
-        glBindTexture(self.bind_target, self.__id)
+        glBindTexture(self.bind_target, self.bind_id)
 
     def delete_texture(self):
-        if self.__id == 0:
+        if self._id == 0:
             return
-        glDeleteTextures(1, (self.__id,))
-        if self.__id in TextureGL.__textures_instances:
-            del TextureGL.__textures_instances[self.__id]
-        self.__id = 0
+        glDeleteTextures(1, (self.bind_id,))
+        if self.bind_id in TextureGL.__textures_instances:
+            del TextureGL.__textures_instances[self.bind_id]
+        self._id = 0
 
     def load(self, origin: str):
-        self.__load_data(origin)
+        self._load_data(origin)
 
     def read_back_texture_data(self) -> np.ndarray:
         # todo check!
         self.bind()
         # b_data = np.zeros((1, elements_number), dtype=np.float32)
-        b_data = glGetBufferSubData(self.__bind_target, 0, self.texture_byte_size)
+        b_data = glGetBufferSubData(self._bind_target, 0, self.texture_byte_size)
         # print(b_data.astype('<f4'))
         if self.bind_target == GL_ELEMENT_ARRAY_BUFFER:
             return b_data.view('<i4')

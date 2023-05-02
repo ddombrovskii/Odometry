@@ -1,7 +1,7 @@
-from UIQt.GLUtilities.triangle_mesh import TrisMesh, create_plane, create_box, read_obj_mesh
-from Utilities.Geometry import Transform, BoundingBox
-from Utilities import BitSet32
+from UIQt.GLUtilities.triangle_mesh import TrisMesh, create_plane, create_box
+from Utilities.Geometry import Transform, BoundingBox, Vector3
 from UIQt.GLUtilities.gl_buffer import BufferGL
+from Utilities import BitSet32
 from OpenGL.GL import *
 import numpy as np
 
@@ -14,23 +14,17 @@ class MeshGL:
     UVsAttribute = 3        # 8
     TrianglesAttribute = 4  # 16
 
-    __mesh_bounded: int = -1
-
+    __bounded_id: int = 0
     __vao_instances = {}
 
-    PLANE_MESH = None
-    BOX_MESH = None
-    SPHERE_MESH = None
-
     @staticmethod
-    def init_globals():
-        MeshGL.PLANE_MESH = MeshGL.create_plane_gl(2.0, 2.0, 2, 2)
-        MeshGL.BOX_MESH =  MeshGL(read_obj_mesh("./GLUtilities/Resources/box.obj")[0])  # MeshGL.create_box_gl()
-        MeshGL.SPHERE_MESH =  MeshGL(read_obj_mesh("./GLUtilities/Resources/sphere.obj")[0])  # MeshGL.create_box_gl()
+    def bounded_id():
+        return MeshGL.__bounded_id
 
     @classmethod
     def create_box_gl(cls, side: float = 1.0, transform: Transform = None):
-        return cls(create_box(side, transform))
+        return cls(create_box(Vector3(-side * 0.5, -side * 0.5, -side * 0.5),
+                   Vector3(side * 0.5, side * 0.5, side * 0.5), transform))
 
     @classmethod
     def create_plane_gl(cls, height: float = 1.0, width: float = 1.0, rows: int = 10, cols: int = 10,
@@ -38,19 +32,19 @@ class MeshGL:
         return cls(create_plane(height, width, rows, cols, transform))
 
     @staticmethod
-    def vao_enumerate():
+    def enumerate():
         print(MeshGL.__vao_instances.items())
         for buffer in MeshGL.__vao_instances.items():
             yield buffer[1]
 
     @staticmethod
-    def meshes_write(file, start="", end=""):
+    def write(file, start="", end=""):
         file.write(f"{start}\"meshes\":[\n")
         file.write(',\n'.join(str(m) for m in MeshGL.__vao_instances.values()))
         file.write(f"]\n{end}")
 
     @staticmethod
-    def delete_all_meshes():
+    def delete_all():
         while len(MeshGL.__vao_instances) != 0:
             item = MeshGL.__vao_instances.popitem()
             item[1].delete_mesh()
@@ -106,6 +100,10 @@ class MeshGL:
         return self.__unique_id
 
     @property
+    def bind_id(self) -> int:
+        return self.__unique_id
+
+    @property
     def has_vertices(self):
         return self.__vertex_attributes.is_bit_set(MeshGL.VerticesAttribute)
 
@@ -135,7 +133,6 @@ class MeshGL:
             self.__vao = glGenVertexArrays(1)
             MeshGL.__vao_instances[self.__vao] = self
             self.__vertex_byte_size = 0
-
         self.bind()
 
     def __create_gpu_buffers(self, mesh: TrisMesh) -> bool:
@@ -228,9 +225,9 @@ class MeshGL:
 
         attr_i = 0
 
-        d_ptr = int(self.__vbo.filling / self.__vertex_byte_size)
+        d_ptr = int(self.vbo.filling / self.__vertex_byte_size)
 
-        self.__vbo.bind()
+        self.vbo.bind()
 
         if self.has_vertices:
             glEnableVertexAttribArray(attr_i)
@@ -255,18 +252,22 @@ class MeshGL:
             glVertexAttribPointer(attr_i, 2, GL_FLOAT, GL_FALSE, 8, ctypes.c_void_p(ptr))
 
     def clean_up(self):
-        self.__vbo.delete_buffer()
-        self.__ibo.delete_buffer()
+        self.vbo.delete_buffer()
+        self.ibo.delete_buffer()
 
     def bind(self):
+        if self.bind_id != MeshGL.bounded_id():
+            glBindVertexArray(self.__vao)
+            MeshGL.__bounded_id = self.bind_id
+
         #if self.unique_id == MeshGL.__mesh_bounded:
         #    return
         #MeshGL.__mesh_bounded = self.unique_id
-        glBindVertexArray(self.__vao)
 
     def unbind(self):
         glBindVertexArray(0)
+        MeshGL.__bounded_id = 0
 
     def draw(self):
         self.bind()
-        glDrawElements(GL_TRIANGLES, self.__ibo.filling, GL_UNSIGNED_INT, None)
+        glDrawElements(GL_TRIANGLES, self.ibo.filling, GL_UNSIGNED_INT, None)

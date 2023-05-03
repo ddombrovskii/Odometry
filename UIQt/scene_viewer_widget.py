@@ -83,7 +83,7 @@ class SceneViewerWidget(QtOpenGL.QGLWidget):
         print(SceneViewerWidget._get_opengl_info())
         gl_globals.init()
         self._main_camera.look_at(Vector3(0, 0, 0), Vector3(1, 1, 1))
-        self.load_model()
+        # self.load_model()
         self.load_model('../big_map.obj')
 
     def _load_model(self, src: str):

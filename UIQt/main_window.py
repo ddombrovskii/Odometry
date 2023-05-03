@@ -95,6 +95,7 @@ class MainWindowUI(QMainWindow):
             self.draw_something(x, y, width=15, color='green')
 
     def addStartPoint(self):
+
         print("add button clicked")
 
     def addFinishPoint(self):

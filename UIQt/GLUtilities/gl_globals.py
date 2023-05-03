@@ -111,7 +111,7 @@ MAP_MATERIAL = None
 def _init_materials():
     global DEFAULT_MATERIAL
     global MAP_MATERIAL
-    DEFAULT_MATERIAL = ObjMaterial()
+    DEFAULT_MATERIAL = MapMaterial(MAP_SHADER)  # ObjMaterial()
     MAP_MATERIAL = MapMaterial(MAP_SHADER)
 
 

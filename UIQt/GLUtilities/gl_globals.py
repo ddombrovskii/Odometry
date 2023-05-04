@@ -15,6 +15,7 @@ import numpy as np
 ####################################
 SAMPLE_SHADER = None
 MAP_SHADER = None
+GRID_SHADER = None
 # UI_TEXT_SHADER = None
 # UI_CLEAR_FB_SHADER = None
 # FRAME_BUFFER_BLIT_SHADER = None
@@ -23,6 +24,7 @@ MAP_SHADER = None
 def _init_shaders():
     global SAMPLE_SHADER
     global MAP_SHADER
+    global GRID_SHADER
 
     SAMPLE_SHADER = Shader()
     SAMPLE_SHADER.vert_shader("./GLUtilities/Shaders/sample_shader.vert")
@@ -34,6 +36,10 @@ def _init_shaders():
     MAP_SHADER.frag_shader("./GLUtilities/Shaders/map_shader.frag")
     MAP_SHADER.load_defaults_settings()
 
+    GRID_SHADER = Shader()
+    GRID_SHADER.vert_shader("./GLUtilities/Shaders/grid_shader.vert")
+    GRID_SHADER.frag_shader("./GLUtilities/Shaders/grid_shader.frag")
+    GRID_SHADER.load_defaults_settings()
     #  Shader.FRAME_BUFFER_BLIT_SHADER = Shader()
     #  Shader.FRAME_BUFFER_BLIT_SHADER.vert_shader("E:/GitHub/VisualOdometry/UI/gl/shaders/ui_render_shader.vert")
     #  Shader.FRAME_BUFFER_BLIT_SHADER.frag_shader("E:/GitHub/VisualOdometry/UI/gl/shaders/ui_render_shader.frag")
@@ -106,13 +112,16 @@ def _init_meshes():
 ####################################
 DEFAULT_MATERIAL = None
 MAP_MATERIAL = None
+GRID_MATERIAL = None
 
 
 def _init_materials():
     global DEFAULT_MATERIAL
     global MAP_MATERIAL
-    DEFAULT_MATERIAL = MapMaterial(MAP_SHADER)  # ObjMaterial()
+    global GRID_MATERIAL
+    DEFAULT_MATERIAL = ObjMaterial(MAP_SHADER)  # ObjMaterial()
     MAP_MATERIAL = MapMaterial(MAP_SHADER)
+    GRID_MATERIAL = GridMaterial(GRID_SHADER)
 
 
 def init():

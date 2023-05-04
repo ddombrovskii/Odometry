@@ -12,15 +12,15 @@ class GridMaterial(MaterialGL):
         self._x_axis_color: Vector3 = Vector3(1, 0, 0)
         self._y_axis_color: Vector3 = Vector3(0, 1, 0)
         self._z_axis_color: Vector3 = Vector3(0, 0, 1)
-        self._grid_color: Vector3 = Vector3(0.5, 0.5, 0.5)
+        self._grid_color: Vector3 = Vector3(0.9, 0.9, 0.9)
 
         self._grid_fade: float = 1.5
-        self._grid_fade_radius: float = 1.5
+        self._grid_fade_radius: float = 4.5
 
-        self._grid_x_step: float = 1.0
-        self._grid_y_step: float = 1.0
+        self._grid_x_step: float = 10.
+        self._grid_y_step: float = 10.
 
-        self._grid_line_width: float = 0.05
+        self._grid_line_width: float = 0.01
 
     @property
     def grid_fade(self) -> float:

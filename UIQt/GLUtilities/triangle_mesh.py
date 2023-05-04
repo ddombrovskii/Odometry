@@ -1,3 +1,6 @@
+import math
+import time
+
 from Utilities.Geometry import Vector3, BoundingBox, Transform
 from Utilities.Geometry.voxel import Voxel
 from Utilities.Geometry import Vector2
@@ -444,7 +447,7 @@ def create_box(min_b: Vector3, max_b: Vector3, transform: Transform = None) -> T
     return mesh
 
 
-def voxels_mesh(voxels: List[Voxel]):
+def voxels_mesh(voxels: List[Voxel]) -> TrisMesh:
     mesh = None
     for voxel in voxels:
         if mesh is None:
@@ -452,4 +455,93 @@ def voxels_mesh(voxels: List[Voxel]):
             continue
         mesh.merge(create_box(voxel.min, voxel.max))
     return mesh
+
+
+def poly_strip(points: List[Vector2], strip_width: float = 0.5) -> TrisMesh:
+    n_pts = len(points)
+
+    if n_pts == 0:
+        return create_plane(strip_width, strip_width, 1, 1)
+
+    u_length = 0.0
+    for i in range(len(points)-1):
+        u_length += (points[i] -  points[i+1]).magnitude()
+
+    if n_pts == 1:
+        t = Transform()
+        t.origin = Vector3(points[0].x, 0.0, points[0].z)
+        return create_plane(strip_width, strip_width, 1, 1, t)
+
+    mesh = TrisMesh()
+    u_coord = 0.0
+    p0   = points[0]
+    dp10 = points[1] - points[0]
+    n_1  = Vector2.normal(dp10) * strip_width * 0.5
+    mesh.append_vertex(Vector3(p0.x + n_1.x, 0.0, p0.y + n_1.y))
+    mesh.append_vertex(Vector3(p0.x - n_1.x, 0.0, p0.y - n_1.y))
+    mesh.append_uv(Vector2(0.0, 1.0))
+    mesh.append_uv(Vector2(0.0, 0.0))
+    mesh.append_normal(Vector3(0.0, 1.0, 0.0))
+
+    f_index = 2
+    for p1, p2 in zip(points[:-1], points[1:]):
+        dp10 = p1 - p0
+        du = dp10.magnitude()
+        if du < 1e-6:
+            p0 = p1
+            continue
+        dp20 = p2 - p1
+        u_coord += du
+        n_2 = Vector2.normal(dp20) * strip_width * 0.5
+        int_1 = Vector2.intersect_lines(p0 + n_1, p1 + n_1, p1 + n_2, p2 + n_2)
+        if int_1 is None:
+            p0 = p1
+            n_1 = n_2
+            continue
+        int_2 = Vector2.intersect_lines(p0 - n_1, p1 - n_1, p1 - n_2, p2 - n_2)
+        if int_2 is None:
+            p0 = p1
+            n_1 = n_2
+            continue
+        f_index += 2
+        p0 = p1
+        n_1 = n_2
+        mesh.append_vertex(Vector3(int_1.x, 0.0, int_1.y))
+        mesh.append_vertex(Vector3(int_2.x, 0.0, int_2.y))
+        mesh.append_uv(Vector2(u_coord / u_length, 1.0))
+        mesh.append_uv(Vector2(u_coord / u_length, 0.0))
+        mesh.append_face(Face(f_index - 4, f_index - 4, 0, f_index - 3, f_index - 3, 0, f_index - 2, f_index - 2, 0))
+        mesh.append_face(Face(f_index - 3, f_index - 3, 0, f_index - 1, f_index - 1, 0, f_index - 2, f_index - 2, 0))
+
+    p0   = points[-1]
+    f_index += 2
+    mesh.append_vertex(Vector3(p0.x + n_1.x, 0.0, p0.y + n_1.y))
+    mesh.append_vertex(Vector3(p0.x - n_1.x, 0.0, p0.y - n_1.y))
+    mesh.append_uv(Vector2(1.0, 1.0))
+    mesh.append_uv(Vector2(1.0, 0.0))
+    mesh.append_face(Face(f_index - 4, f_index - 4, 0, f_index - 3, f_index - 3, 0, f_index - 2, f_index - 2, 0))
+    mesh.append_face(Face(f_index - 3, f_index - 3, 0, f_index - 1, f_index - 1, 0, f_index - 2, f_index - 2, 0))
+    return mesh
+
+
+if __name__ == "__main__":
+    n = 257
+    dt = 1.0 / (n - 1)
+    dpi = dt * math.pi * 2.0
+    r = 2.5
+    line = [Vector2(math.sin(i * dpi) * r * (1.0 + 0.25 * math.cos(i * dpi * 4)),
+                    math.cos(i * dpi) * r * (1.0 + 0.25 * math.cos(i * dpi * 4))) for i in range(n)]
+    pl = poly_strip(line)
+    write_obj_mesh(pl, "strip.obj")
+    t = time.perf_counter()
+    mesh = read_obj_mesh('../../big_map.obj')
+    print(f"obj file read elapsed : {time.perf_counter() - t}")
+
+    t = time.perf_counter()
+    v = mesh[-1].vertex_array_data
+    print(f"vertex_array_data elapsed : {time.perf_counter() - t}")
+
+    t = time.perf_counter()
+    i = mesh[-1].index_array_data
+    print(f"index_array_data elapsed : {time.perf_counter() - t}")
 

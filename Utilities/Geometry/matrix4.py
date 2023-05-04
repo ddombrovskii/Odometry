@@ -72,7 +72,7 @@ class Matrix4(namedtuple('Matrix4', 'm00, m01, m02, m03,'
                    0.0, 0.0, 0.0, 1.0)
 
     @classmethod
-    def build_projection_matrix(cls, fov: float = 70, aspect: float = 1, z_near: float = 0.01, z_far: float = 1000):
+    def build_perspective_projection_matrix(cls, fov: float = 70, aspect: float = 1, z_near: float = 0.01, z_far: float = 1000):
         """
         :param fov: угол обзора
         :param aspect: соотношение сторон
@@ -91,6 +91,16 @@ class Matrix4(namedtuple('Matrix4', 'm00, m01, m02, m03,'
                    0.0, scale, 0.0, 0.0,
                    0.0, 0.0, z_far / (z_near - z_far), -1.0,
                    0.0, 0.0, z_far * z_near / (z_near - z_far), 0.0)
+
+    @classmethod
+    def build_ortho_projection_matrix(cls,
+                                      bottom: float, top: float,
+                                      left: float, right: float,
+                                      near: float, far: float):
+        return cls(2.0 / (right - left), 0.0,                  0.0,                0.0,
+                   0.0,                  2.0 / (top - bottom), 0.0,                0.0,
+                   0.0,                  0.0,                 -2.0 / (far - near), 0.0,
+                   (right + left) / (left - right), (top + bottom) / (bottom - top), (far + near) / (near - far), 1.0)
 
     @classmethod
     def rotate_x(cls, angle: float, angle_in_rad: bool = True):

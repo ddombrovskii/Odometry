@@ -99,3 +99,40 @@ class Vector2(namedtuple('Vector2', 'x, y')):
     @classmethod
     def min(cls, a, b):
         return cls(min(a.x, b.x), min(a.y, b.y))
+
+    @classmethod
+    def normal(cls, v):
+        """
+        :param v:
+        :return: возвращает единичный вектор перпендикулярный заданному.
+        """
+        if v.x == 0:
+            return cls(1.0 if v.y >= 0.0 else -1.0, 0)
+        if v.y == 0:
+            return cls(0, -1.0 if v.y >= 0.0 else 1.0)
+        sign: float = 1.0 if v.x / v.y >= 0.0 else -1.0
+        dx: float = 1.0 / v.x
+        dy: float = -1.0 / v.y
+        sign /= math.sqrt(dx * dx + dy * dy)
+        return cls(dx * sign, dy * sign)
+
+    @classmethod
+    def intersect_lines(cls, pt1, pt2, pt3, pt4):
+        """
+        Определяет точку пересечения двух линий, проходящих через точки pt1, pt2 и pt3, pt4 для первой и второй\n
+        соответственно.\n
+        :param pt1: вектор - пара (x, y), первая точка первой линии.
+        :param pt2: вектор - пара (x, y), вторая точка первой линии.
+        :param pt3: вектор - пара (x, y), первая точка второй линии.
+        :param pt4: вектор - пара (x, y), вторая точка второй линии.
+        :return: переселись или нет, вектор - пара (x, y).
+        """
+        da = cls(pt2.x - pt1.x, pt2.y - pt1.y)
+        db = cls(pt4.x - pt3.x, pt4.y - pt3.y)
+        det = Vector2.cross(da, db)
+        if abs(det) < 1e-9:
+            return None
+        det = 1.0 / det
+        x = Vector2.cross(pt1, da)
+        y = Vector2.cross(pt3, db)
+        return cls((y * da.x - x * db.x) * det, (y * da.y - x * db.y) * det)

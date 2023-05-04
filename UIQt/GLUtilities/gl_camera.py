@@ -1,10 +1,15 @@
 from Utilities.Geometry import Transform, Matrix4, Vector3, BoundingBox
+PERSPECTIVE_PROJECTION_MODE = 0
+ORTHOGRAPHIC_PROJECTION_MODE = 1
 
 
 class CameraGL:
+
     def __init__(self):
         self._transform: Transform = Transform()
         self._projection: Matrix4 = Matrix4.identity()
+        self._projection_mode = PERSPECTIVE_PROJECTION_MODE
+        self._ortho_size = 10.0
         self._z_far: float  = 1000
         self._z_near: float = 0.01
         self._fov: float    = 70.0
@@ -37,7 +42,14 @@ class CameraGL:
         Строит матрицу перспективного искажения
         :return:
         """
-        self._projection = Matrix4.build_projection_matrix(self.fov, self.aspect, self._z_near, self._z_far)
+        if self.perspective_mode:
+            self._projection = \
+                Matrix4.build_perspective_projection_matrix(self.fov, self.aspect, self._z_near, self._z_far)
+        else:
+            size = self._ortho_size * 0.5
+            self._projection = \
+                Matrix4.build_ortho_projection_matrix(-size * self.aspect, size * self.aspect,
+                                                      -size, size, self._z_near, self._z_far)
 
     @property
     def unique_id(self) -> int:
@@ -68,6 +80,23 @@ class CameraGL:
     def z_near(self, near_plane: float) -> None:
         self._z_near = near_plane
         self.__build_projection()
+
+    @property
+    def ortho_size(self) -> float:
+        return self._ortho_size
+
+    @ortho_size.setter
+    def ortho_size(self, value: float) -> None:
+        self._ortho_size = value
+        self.__build_projection()
+
+    @property
+    def perspective_mode(self) -> bool:
+        return self._projection_mode == PERSPECTIVE_PROJECTION_MODE
+
+    @perspective_mode.setter
+    def perspective_mode(self, value: bool) -> None:
+        self._projection_mode = PERSPECTIVE_PROJECTION_MODE if value else ORTHOGRAPHIC_PROJECTION_MODE
 
     @property
     def fov(self) -> float:

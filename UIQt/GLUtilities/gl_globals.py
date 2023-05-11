@@ -1,11 +1,14 @@
 from UIQt.GLUtilities.Materials.grid_material import GridMaterial
 from UIQt.GLUtilities.Materials.map_material import MapMaterial
 from UIQt.GLUtilities.Materials.obj_material import ObjMaterial
+from UIQt.GLUtilities.gl_camera import CameraGL
 from UIQt.GLUtilities.triangle_mesh import read_obj_mesh
 from UIQt.GLUtilities.gl_material import MaterialGL
 from UIQt.GLUtilities.gl_texture import TextureGL
-from UIQt.GLUtilities.gl_shader import Shader
+from UIQt.GLUtilities.gl_shader import ShaderGL
 from UIQt.GLUtilities.gl_mesh import MeshGL
+from UIQt.Input.keyboard_controller import KeyboardController
+from UIQt.Input.mouse_controller import MouseController
 from Utilities import Color
 import numpy as np
 
@@ -16,6 +19,8 @@ import numpy as np
 SAMPLE_SHADER = None
 MAP_SHADER = None
 GRID_SHADER = None
+FRAME_BUFFER_BLIT_SHADER = None
+
 # UI_TEXT_SHADER = None
 # UI_CLEAR_FB_SHADER = None
 # FRAME_BUFFER_BLIT_SHADER = None
@@ -25,24 +30,30 @@ def _init_shaders():
     global SAMPLE_SHADER
     global MAP_SHADER
     global GRID_SHADER
+    global FRAME_BUFFER_BLIT_SHADER
 
-    SAMPLE_SHADER = Shader()
+    SAMPLE_SHADER = ShaderGL()
     SAMPLE_SHADER.vert_shader("./GLUtilities/Shaders/sample_shader.vert")
     SAMPLE_SHADER.frag_shader("./GLUtilities/Shaders/sample_shader.frag")
     SAMPLE_SHADER.load_defaults_settings()
 
-    MAP_SHADER = Shader()
+    MAP_SHADER = ShaderGL()
     MAP_SHADER.vert_shader("./GLUtilities/Shaders/map_shader.vert")
     MAP_SHADER.frag_shader("./GLUtilities/Shaders/map_shader.frag")
     MAP_SHADER.load_defaults_settings()
 
-    GRID_SHADER = Shader()
+    GRID_SHADER = ShaderGL()
     GRID_SHADER.vert_shader("./GLUtilities/Shaders/grid_shader.vert")
     GRID_SHADER.frag_shader("./GLUtilities/Shaders/grid_shader.frag")
     GRID_SHADER.load_defaults_settings()
+
+    FRAME_BUFFER_BLIT_SHADER = ShaderGL()
+    FRAME_BUFFER_BLIT_SHADER.vert_shader("./GLUtilities/Shaders/frame_buffer_blit_shader.vert")
+    FRAME_BUFFER_BLIT_SHADER.frag_shader("./GLUtilities/Shaders/frame_buffer_blit_shader.frag")
+    FRAME_BUFFER_BLIT_SHADER.load_defaults_settings()
     #  Shader.FRAME_BUFFER_BLIT_SHADER = Shader()
-    #  Shader.FRAME_BUFFER_BLIT_SHADER.vert_shader("E:/GitHub/VisualOdometry/UI/gl/shaders/ui_render_shader.vert")
-    #  Shader.FRAME_BUFFER_BLIT_SHADER.frag_shader("E:/GitHub/VisualOdometry/UI/gl/shaders/ui_render_shader.frag")
+    #  Shader.FRAME_BUFFER_BLIT_SHADER.vert_shader("E:/GitHub/VisualOdometry/UI/gl/shaders/frame_buffer_blit_shader.vert")
+    #  Shader.FRAME_BUFFER_BLIT_SHADER.frag_shader("E:/GitHub/VisualOdometry/UI/gl/shaders/frame_buffer_blit_shader.frag")
     #  Shader.FRAME_BUFFER_BLIT_SHADER.load_defaults_settings()
 
     #  Shader.UI_TEXT_SHADER = Shader()
@@ -119,12 +130,34 @@ def _init_materials():
     global DEFAULT_MATERIAL
     global MAP_MATERIAL
     global GRID_MATERIAL
-    DEFAULT_MATERIAL = ObjMaterial(MAP_SHADER)  # ObjMaterial()
+    DEFAULT_MATERIAL = ObjMaterial(SAMPLE_SHADER)  # ObjMaterial()
     MAP_MATERIAL = MapMaterial(MAP_SHADER)
     GRID_MATERIAL = GridMaterial(GRID_SHADER)
 
 
+####################################
+#             CAMERAS              #
+####################################
+MAIN_CAMERA: CameraGL = None
+
+####################################
+#              MOUSE               #
+####################################
+MOUSE_CONTROLLER: MouseController = None
+
+####################################
+#             KEYBOARD             #
+####################################
+KEYBOARD_CONTROLLER: KeyboardController = None
+
+
 def init():
+    global MAIN_CAMERA
+    global MOUSE_CONTROLLER
+    global KEYBOARD_CONTROLLER
+    MOUSE_CONTROLLER = MouseController()
+    KEYBOARD_CONTROLLER = KeyboardController()
+    MAIN_CAMERA = CameraGL()
     _init_textures()
     _init_shaders()
     _init_meshes()
@@ -133,7 +166,7 @@ def init():
 
 def free():
     TextureGL.delete_all()
-    Shader.delete_all()
+    ShaderGL.delete_all()
     MeshGL.delete_all()
 
 

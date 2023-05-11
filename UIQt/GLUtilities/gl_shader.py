@@ -87,7 +87,7 @@ class UniformBuffer:
         return "{0}(name={1})".format(self.__class__.__name__, self.name)
 
 
-class Shader:
+class ShaderGL:
     Matrix_4: int = 35676
     Matrix_3: int = 35675
     Vector_3: int = 35665
@@ -132,17 +132,17 @@ class Shader:
 
     @staticmethod
     def bounded_id():
-        return Shader.__bounded_id
+        return ShaderGL.__bounded_id
 
     @staticmethod
     def enumerate():
-        for buffer in Shader.__shader_instances.items():
+        for buffer in ShaderGL.__shader_instances.items():
             yield buffer[1]
 
     @staticmethod
     def delete_all():
-        while len(Shader.__shader_instances) != 0:
-            item = Shader.__shader_instances.popitem()
+        while len(ShaderGL.__shader_instances) != 0:
+            item = ShaderGL.__shader_instances.popitem()
             item[1].delete_shader()
 
     # @staticmethod
@@ -214,7 +214,7 @@ class Shader:
 
         def parce(_name, _id, _type, _size):
             return f"{{ \"name\": {comas(_name):20}, \"id\": {_id:3}," \
-                   f" \"size\": {_size:3}, \"type\": {Shader.UniformTypesNames[_type]:12}}}"
+                   f" \"size\": {_size:3}, \"type\": {ShaderGL.UniformTypesNames[_type]:12}}}"
 
         separator = ',\n\t\t'
         return f"{{\n" \
@@ -246,8 +246,8 @@ class Shader:
         glDeleteShader(self.__vert_id)
         glDeleteShader(self.__frag_id)
         glDeleteProgram(self.__program_id)
-        if self.__program_id in Shader.__shader_instances:
-            del Shader.__shader_instances[self.__program_id]
+        if self.__program_id in ShaderGL.__shader_instances:
+            del ShaderGL.__shader_instances[self.__program_id]
         self.__program_id = 0
         self.__vert_id = 0
         self.__frag_id = 0
@@ -276,7 +276,7 @@ class Shader:
         if len(self.__shader_attributes) != 0:
             self.__shader_attributes.clear()
         for i in range(count):
-            name_, size_, type_ = Shader.gl_get_active_attrib(self.__program_id, i)
+            name_, size_, type_ = ShaderGL.gl_get_active_attrib(self.__program_id, i)
             self.__shader_attributes[name_] = (i, size_, type_)
             print(f"name: {name_:15}, id: {i:3}, size: {size_:3}, type: {type_:5}")
 
@@ -286,7 +286,7 @@ class Shader:
         if len(self.__shader_uniform_blocks) != 0:
             self.__shader_uniform_blocks.clear()
         for i in range(count):
-            name_, size_, type_ = Shader.gl_get_active_uniform_block(self.__program_id, i)
+            name_, size_, type_ = ShaderGL.gl_get_active_uniform_block(self.__program_id, i)
             self.__shader_uniform_blocks[name_] = (i, size_, type_)
             print(f"name: {name_:15}, id: {i:3}, size: {size_:3}, type: {type_:5}")
 
@@ -296,31 +296,31 @@ class Shader:
         if len(self.__shader_uniforms) != 0:
             self.__shader_uniforms.clear()
         for i in range(count):
-            name_, size_, type_ = Shader.gl_get_active_uniform(self.__program_id, i)
+            name_, size_, type_ = ShaderGL.gl_get_active_uniform(self.__program_id, i)
             self.__shader_uniforms[name_] = (i, size_, type_)
             print(f"name: {name_:15}, id: {i:3}, size: {size_:3}, type: {type_:5}")
 
     def load_defaults_settings(self):
         for name_ in self.__shader_uniforms:
             type_ = self.__shader_uniforms[name_][2]
-            if type_ not in Shader.UniformTypes:
+            if type_ not in ShaderGL.UniformTypes:
                 continue
-            if Shader.Matrix_4 == type_:
+            if ShaderGL.Matrix_4 == type_:
                 self.send_mat_4(name_, Matrix4.identity())
                 continue
-            if Shader.Matrix_3 == type_:
+            if ShaderGL.Matrix_3 == type_:
                 self.send_mat_3(name_, Matrix3.identity())
                 continue
-            if Shader.Vector_3 == type_:
+            if ShaderGL.Vector_3 == type_:
                 self.send_vec_3(name_, Vector3(1, 1, 1))
                 continue
-            if Shader.Vector_2 == type_:
+            if ShaderGL.Vector_2 == type_:
                 self.send_vec_2(name_, Vector2(1, 1))
                 continue
-            if Shader.Float == type_:
+            if ShaderGL.Float == type_:
                 self.send_float(name_, 0.0)
                 continue
-            if Shader.Int == type_:
+            if ShaderGL.Int == type_:
                 self.send_int(name_, 0)
                 continue
 
@@ -358,7 +358,7 @@ class Shader:
         self.__program_id = compileProgram(self.__vert_id, self.__frag_id)
         if self.__program_id == 0:
             raise Exception("Shader program compilation error...")
-        Shader.__shader_instances[self.bound_id] = self
+        ShaderGL.__shader_instances[self.bound_id] = self
         self.bind()
         self.__get_all_uniform_blocks()
         self.__get_all_attrib_locations()
@@ -408,10 +408,10 @@ class Shader:
         glUniform1i(loc, GLint(val))
 
     def bind(self):
-        if Shader.bounded_id() != self.bound_id:
+        if ShaderGL.bounded_id() != self.bound_id:
             glUseProgram(self.bound_id)
-            Shader.__bounded_id = self.bound_id
+            ShaderGL.__bounded_id = self.bound_id
 
     def unbind(self):
         glUseProgram(0)
-        Shader.__bounded_id = 0
+        ShaderGL.__bounded_id = 0

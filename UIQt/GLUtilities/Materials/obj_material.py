@@ -1,13 +1,13 @@
 import UIQt.GLUtilities.gl_globals as gl_globals
 from UIQt.GLUtilities.gl_texture import TextureGL
-from UIQt.GLUtilities.gl_shader import Shader
+from UIQt.GLUtilities.gl_shader import ShaderGL
 from Utilities.Geometry import Vector3
 from ..gl_material import MaterialGL
 
 
 class ObjMaterial(MaterialGL):
     # based on *.mtl file definition
-    def __init__(self, shader: Shader = None):
+    def __init__(self, shader: ShaderGL = None):
         super().__init__(shader)
         self._diffuse_color: Vector3 = Vector3(1, 1, 1)  # Kd: specifies diffuse color
         self._specular_color: Vector3 = Vector3(1, 1, 1)  # Ks: specifies specular color

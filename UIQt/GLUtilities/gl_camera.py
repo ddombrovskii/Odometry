@@ -1,10 +1,9 @@
-from Utilities.Geometry import Transform, Matrix4, Vector3, BoundingBox
+from Utilities.Geometry import Transform, Matrix4, Vector3, BoundingBox, Vector4
 PERSPECTIVE_PROJECTION_MODE = 0
 ORTHOGRAPHIC_PROJECTION_MODE = 1
 
 
 class CameraGL:
-
     def __init__(self):
         self._transform: Transform = Transform()
         self._projection: Matrix4 = Matrix4.identity()
@@ -168,6 +167,11 @@ class CameraGL:
             return out / w
 
         return out
+
+    def screen_coord_to_camera_ray(self, x: float, y: float):
+        ray_eye = self.projection.invert() * Vector4(x, y, -1.0, 1.0)
+        ray_eye = self.look_at_matrix.invert() * Vector4(ray_eye.x, ray_eye.y, -1.0, 0.0)
+        return Vector3(ray_eye.x, ray_eye.y, ray_eye.z).normalized()
 
     def cast_object(self, b_box: BoundingBox) -> bool:
         for pt in b_box.points:

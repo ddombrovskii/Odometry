@@ -1,13 +1,12 @@
 import UIQt.GLUtilities.gl_globals as gl_globals
 from UIQt.GLUtilities.gl_texture import TextureGL
-from UIQt.GLUtilities.gl_shader import Shader
+from UIQt.GLUtilities.gl_shader import ShaderGL
 from Utilities.Geometry import Vector3
 from ..gl_material import MaterialGL
 
 
 class MapMaterial(MaterialGL):
-    # based on *.mtl file definition
-    def __init__(self, shader: Shader = None):
+    def __init__(self, shader: ShaderGL = None):
         super().__init__(shader)
         self._bound_min: Vector3 = Vector3(-0.5, -0.5, -0.5)
         self._max_bound: Vector3 = Vector3(0.5, 0.5, 0.5)

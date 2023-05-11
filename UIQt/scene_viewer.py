@@ -15,11 +15,11 @@ class MainWindow(QWidget):
         mainLayout.addWidget(self.glWidget)
         self.setLayout(mainLayout)
         timer_update = QtCore.QTimer(self)
-        timer_update.setInterval(20)  # period, in milliseconds
+        timer_update.setInterval(30)  # period, in milliseconds
         timer_update.timeout.connect(self.glWidget.updateGL)
         timer_update.start()
         timer_paint = QtCore.QTimer(self)
-        timer_paint.setInterval(33)  # period, in milliseconds
+        timer_paint.setInterval(16)  # period, in milliseconds
         timer_paint.timeout.connect(self.glWidget.paintGL)
         timer_paint.start()
         self.closeEvent(QCloseEvent())

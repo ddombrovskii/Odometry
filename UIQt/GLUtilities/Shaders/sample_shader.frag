@@ -1,5 +1,6 @@
 #version 440
-out vec4 outColor;
+// out vec4 outColor;
+layout(location = 0) out vec4 outColor;
 
 layout(binding = 0) uniform sampler2D diffTex;
 layout(binding = 1) uniform sampler2D specTex;

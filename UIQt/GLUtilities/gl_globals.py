@@ -3,7 +3,6 @@ from UIQt.GLUtilities.Materials.map_material import MapMaterial
 from UIQt.GLUtilities.Materials.obj_material import ObjMaterial
 from UIQt.GLUtilities.gl_camera import CameraGL
 from UIQt.GLUtilities.triangle_mesh import read_obj_mesh
-from UIQt.GLUtilities.gl_material import MaterialGL
 from UIQt.GLUtilities.gl_texture import TextureGL
 from UIQt.GLUtilities.gl_shader import ShaderGL
 from UIQt.GLUtilities.gl_mesh import MeshGL
@@ -99,6 +98,7 @@ def _init_textures():
     GRAY_TEXTURE = TextureGL(100, 100, Color(np.uint8(125), np.uint8(125), np.uint8(125)))
     CARBON_TEXTURE = TextureGL()
     CARBON_TEXTURE.load(r'./GLUtilities/Resources/carbon.jpg')
+    CARBON_TEXTURE.save_texture(r'./GLUtilities/Resources/carbon_new.jpg')
 
 
 ####################################
@@ -121,9 +121,9 @@ def _init_meshes():
 ####################################
 #              MESHES              #
 ####################################
-DEFAULT_MATERIAL = None
-MAP_MATERIAL = None
-GRID_MATERIAL = None
+DEFAULT_MATERIAL: ObjMaterial = None
+MAP_MATERIAL: MapMaterial = None
+GRID_MATERIAL: GridMaterial = None
 
 
 def _init_materials():

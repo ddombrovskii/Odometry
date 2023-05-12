@@ -1,3 +1,4 @@
+from UIQt.GLUtilities.gl_decorators import gl_error_catch
 from OpenGL.GL import *
 import numpy as np
 # Буфер данных на GPU
@@ -68,21 +69,22 @@ class BufferGL:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.unbind()
 
+    @gl_error_catch
     def _create(self) -> None:
-        try:
-            self._id = glGenBuffers(1)
-        except Exception as ex:
-            print(f"GPUBuffer creation error:\n{ex.args}")
-
+        self._id = glGenBuffers(1)
         self.bind()
-
-        try:
-            # print(f"buffer cap {self.__capacity}, item size {self.__item_byte_size}")
-            glBufferData(self.bind_target, self.capacity * self.item_byte_size,
-                         None, self.usage_target)
-        except Exception as ex:
-            print(f"GPUBuffer allocation error:\n{ex.args}")
+        glBufferData(self.bind_target, self.capacity * self.item_byte_size, None, self.usage_target)
         BufferGL.__buffer_instances.update({self.bind_id: self})
+        #  try:
+        #      self._id = glGenBuffers(1)
+        #  except Exception as ex:
+        #      print(f"GPUBuffer creation error:\n{ex.args}")
+        #  self.bind()
+        #  try:
+        #      glBufferData(self.bind_target, self.capacity * self.item_byte_size, None, self.usage_target)
+        #  except Exception as ex:
+        #      print(f"GPUBuffer allocation error:\n{ex.args}")
+        #  BufferGL.__buffer_instances.update({self.bind_id: self})
 
     @property
     def bind_target(self) -> GLenum:
@@ -117,6 +119,7 @@ class BufferGL:
         glBindBuffer(self.bind_target, 0)
         BufferGL.__bounded_id = 0
 
+    @gl_error_catch
     def delete_buffer(self) -> None:
         if self.bind_id == 0:
             return
@@ -127,6 +130,7 @@ class BufferGL:
         self._filling = 0
         self._capacity = 0
 
+    @gl_error_catch
     def read_back_data(self, start_element: int = None, elements_number: int = None) -> np.ndarray:
         if start_element is None:
             start_element = 0
@@ -148,6 +152,7 @@ class BufferGL:
             return b_data.view('<f4')
         return b_data
 
+    @gl_error_catch
     def resize(self, new_size: int) -> None:
         if self.capacity == new_size:
             return
@@ -167,7 +172,6 @@ class BufferGL:
         if self.filling > new_size:
             self._filling = new_size
         glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, self.filling * self.item_byte_size)
-        # glDeleteBuffers(1, np.ndarray([self.__id]))
         self.delete_buffer()
         self._id = bid
         self._capacity = new_size
@@ -177,12 +181,12 @@ class BufferGL:
     def load_buffer_data(self, data: np.ndarray) -> None:
         self.load_buffer_sub_data(0, data)
 
+    @gl_error_catch
     def load_buffer_sub_data(self, start_offset, data: np.ndarray) -> None:
         self.bind()
         if len(data) > self.capacity - start_offset:
             self.resize(len(data) + start_offset)
-        err_code = glGetError()
-        # data_array = (GLfloat * len(data))(*data)
+        # err_code = glGetError()
         glBufferSubData(self.bind_target, start_offset * self.item_byte_size, len(data) * self.item_byte_size, data)
         err_code = glGetError()
 

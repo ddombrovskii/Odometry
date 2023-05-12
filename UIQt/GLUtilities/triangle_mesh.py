@@ -57,10 +57,11 @@ class Face(namedtuple('Face', 'p_1, uv1, n_1,'
 
 
 class TrisMesh:
-    __slots__ = "name", "_vertices", "_normals", "_uvs", "_faces", "_bbox"
+    __slots__ = "name", "material", "_vertices", "_normals", "_uvs", "_faces", "_bbox"
 
     def __init__(self):
         self.name: str = "no name"
+        self.material: str = "no material"
         self._vertices: List[Vector3] = []
         self._normals:  List[Vector3] = []
         self._uvs:      List[Vector2] = []
@@ -458,6 +459,7 @@ def voxels_mesh(voxels: List[Voxel]) -> TrisMesh:
 
 
 def poly_strip(points: List[Vector2], strip_width: float = 0.5) -> TrisMesh:
+
     n_pts = len(points)
 
     if n_pts == 0:

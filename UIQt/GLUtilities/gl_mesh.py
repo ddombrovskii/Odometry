@@ -1,5 +1,6 @@
 from UIQt.GLUtilities.triangle_mesh import TrisMesh, create_plane, create_box
 from Utilities.Geometry import Transform, BoundingBox, Vector3
+from UIQt.GLUtilities.gl_decorators import gl_error_catch
 from UIQt.GLUtilities.gl_buffer import BufferGL
 from Utilities import BitSet32
 from OpenGL.GL import *
@@ -33,7 +34,6 @@ class MeshGL:
 
     @staticmethod
     def enumerate():
-        print(MeshGL.__vao_instances.items())
         for buffer in MeshGL.__vao_instances.items():
             yield buffer[1]
 
@@ -128,6 +128,7 @@ class MeshGL:
             self.delete_mesh()
         self.__create_gpu_buffers(m)
 
+    @gl_error_catch
     def __gen_vao(self):
         if self.__vao == 0:
             self.__vao = glGenVertexArrays(1)
@@ -135,6 +136,7 @@ class MeshGL:
             self.__vertex_byte_size = 0
         self.bind()
 
+    @gl_error_catch
     def __create_gpu_buffers(self, mesh: TrisMesh) -> bool:
 
         if mesh.vertices_count == 0:
@@ -163,6 +165,7 @@ class MeshGL:
 
         return True
 
+    @gl_error_catch
     def delete_mesh(self):
         if self.__vao == 0:
             return
@@ -195,6 +198,7 @@ class MeshGL:
             self.__vbo = BufferGL(len(vertices), int(vertices.nbytes / len(vertices)), GL_ARRAY_BUFFER)
         self.__vbo.load_buffer_data(vertices)
 
+    @gl_error_catch
     def set_attributes(self, attributes: BitSet32):
 
         if self.__vao == 0:

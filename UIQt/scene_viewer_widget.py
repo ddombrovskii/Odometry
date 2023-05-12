@@ -1,6 +1,10 @@
 from PyQt5.QtGui import QOpenGLVersionProfile, QSurfaceFormat, QMouseEvent, QWheelEvent, QKeyEvent
+
+from UIQt.GLUtilities.gl_decorators import gl_error_catch
+from UIQt.GLUtilities.gl_frame_buffer import FrameBufferGL
+from UIQt.GLUtilities.gl_material import MaterialGL
 from UIQt.GLUtilities.triangle_mesh import TrisMesh, read_obj_mesh, poly_strip
-from Utilities.Geometry import Vector3, Transform, BoundingBox, Vector2
+from Utilities.Geometry import Vector3, Transform, Vector2
 from UIQt.GLUtilities.gl_camera import CameraGL
 from UIQt.GLUtilities.gl_model import ModelGL
 from UIQt.GLUtilities.gl_mesh import MeshGL
@@ -19,12 +23,13 @@ class DrawCall(namedtuple('DrawCall', 'view, projection, cam_position, transform
         return super().__new__(cls, cam.look_at_matrix, cam.projection, cam.transform.origin,
                                model.transform.transform_matrix, model.material, model.mesh)
 
-    def __call__(self, *args, **kwargs):
-        self.material.bind()
-        self.material.shader.send_mat_4("view", self.view)
-        self.material.shader.send_mat_4("projection", self.projection)
-        self.material.shader.send_vec_3("cam_position", self.cam_position)
-        self.material.shader.send_mat_4("model", self.transform, GL_TRUE)
+    def __call__(self, material: MaterialGL = None):
+        material = material if material is not None else self.material
+        material.bind()
+        material.shader.send_mat_4("view", self.view)
+        material.shader.send_mat_4("projection", self.projection)
+        material.shader.send_vec_3("cam_position", self.cam_position)
+        material.shader.send_mat_4("model", self.transform, GL_TRUE)
         self.mesh.draw()
 
 
@@ -35,6 +40,7 @@ class SceneViewerWidget(QtOpenGL.QGLWidget):
         self.parent = parent
         self._render_queue: List[DrawCall] = []
         self._scene_models: List[ModelGL] = []
+        self._frame_buffer = None
 
     def render_call(self, cam: CameraGL, model: ModelGL):
         # if cam.cast_object(model.mesh.bounds):
@@ -83,6 +89,16 @@ class SceneViewerWidget(QtOpenGL.QGLWidget):
         model_gl.mesh = MeshGL(poly_strip(points))
         self._scene_models.append(model_gl)
 
+    def _reset_frame_buffer(self):
+        if self._frame_buffer is not None:
+            self._frame_buffer.delete_buffer()
+        self._frame_buffer = FrameBufferGL(self.width(), self.height())
+        self._frame_buffer.create_color_attachment_rgba_8("attachment_0")
+        self._frame_buffer.create_depth()
+        self._frame_buffer.validate()
+        self._frame_buffer.clear_buffer()
+        self._frame_buffer.unbind()
+
     def initializeGL(self):
         self.fmt = QOpenGLVersionProfile()
         self.fmt.setVersion(3, 3)
@@ -95,6 +111,8 @@ class SceneViewerWidget(QtOpenGL.QGLWidget):
         print(SceneViewerWidget._get_opengl_info())
         gl_globals.init()
         gl_globals.MAIN_CAMERA.look_at(Vector3(0, 0, 0), Vector3(1, 1, 1))
+        self._reset_frame_buffer()
+
         self.create_grid()
         # self.load_model('../big_map.obj')
         self.load_model()
@@ -122,6 +140,8 @@ class SceneViewerWidget(QtOpenGL.QGLWidget):
     def clean_up(self) -> None:
         self.makeCurrent()
         gl_globals.free()
+        if self._frame_buffer is not None:
+            self._frame_buffer.delete_buffer()
         self.doneCurrent()
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
@@ -192,6 +212,7 @@ class SceneViewerWidget(QtOpenGL.QGLWidget):
 
     def resizeGL(self, width, height):
         GL.glViewport(0, 0, width, height)
+        self._reset_frame_buffer()
         gl_globals.MAIN_CAMERA.aspect = float(height) / width
 
     def _keyboard_interaction(self):
@@ -230,8 +251,13 @@ class SceneViewerWidget(QtOpenGL.QGLWidget):
             self.render_call(gl_globals.MAIN_CAMERA, m)
         gl_globals.KEYBOARD_CONTROLLER.update_on_hold()
 
+    @gl_error_catch
     def paintGL(self):
+        self._frame_buffer.bind()
+        GL.glEnable(GL.GL_DEPTH_TEST)
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
+        gl_globals.MAP_MATERIAL.heat_or_height = 0
         while len(self._render_queue) != 0:
-            self._render_queue.pop()()
+            self._render_queue.pop()()  # (gl_globals.MAP_MATERIAL)
+        self._frame_buffer.blit()
         self.swapBuffers()

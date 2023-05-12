@@ -1,5 +1,6 @@
 #version 440
-out vec4 outColor;
+// out vec4 outColor;
+layout(location = 0) out vec4 outColor;
 
 ///////////////////////////////
 //// VERTEX PROPERTIES OUT ////
@@ -10,7 +11,7 @@ in  VS_VERTEX_OUT
   vec3  position;
   vec3  max_bound;
   vec3  min_bound;
-  bool  heat_or_height;
+  // int   heat_or_height;
 } vs_vert_in;
 
 ///////////////////////////////
@@ -61,7 +62,7 @@ vec3 heat_map(float v, float vmin, float vmax)
 
 void main()
 {
-	if(!vs_vert_in.heat_or_height)
+	if(false)
 	{
 		float spec = height_map(vs_vert_in.position.y, vs_vert_in.min_bound.y, vs_vert_in.max_bound.y);
 		outColor = vec4(spec, spec, spec,  1.0);

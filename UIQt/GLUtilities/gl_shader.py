@@ -1,6 +1,7 @@
 from ctypes import addressof, POINTER, cast, c_float, c_ubyte, Structure
 from Utilities.Geometry import Matrix4, Matrix3, Vector3, Vector2
 from OpenGL.GL.shaders import compileProgram, compileShader
+from UIQt.GLUtilities.gl_decorators import gl_error_catch
 from OpenGL.GL import *
 import re
 
@@ -240,6 +241,7 @@ class ShaderGL:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.unbind()
 
+    @gl_error_catch
     def delete_shader(self):
         if self.__program_id == 0:
             return
@@ -270,35 +272,38 @@ class ShaderGL:
     def get_attrib_location(self, attrib_name: str):
         return self.__shader_attributes[attrib_name][0] if attrib_name in self.__shader_attributes else -1
 
+    @gl_error_catch
     def __get_all_attrib_locations(self):
         count = glGetProgramiv(self.__program_id, GL_ACTIVE_ATTRIBUTES)
-        print(f"\nActive Attributes: {count}\n", )
+        # print(f"\nActive Attributes: {count}\n", )
         if len(self.__shader_attributes) != 0:
             self.__shader_attributes.clear()
         for i in range(count):
             name_, size_, type_ = ShaderGL.gl_get_active_attrib(self.__program_id, i)
             self.__shader_attributes[name_] = (i, size_, type_)
-            print(f"name: {name_:15}, id: {i:3}, size: {size_:3}, type: {type_:5}")
+            # print(f"name: {name_:15}, id: {i:3}, size: {size_:3}, type: {type_:5}")
 
+    @gl_error_catch
     def __get_all_uniform_blocks(self):
         count = glGetProgramiv(self.__program_id, GL_ACTIVE_UNIFORM_BLOCKS)
-        print(f"Active Uniform Blocks: {count}\n", )
+        #  print(f"Active Uniform Blocks: {count}\n", )
         if len(self.__shader_uniform_blocks) != 0:
             self.__shader_uniform_blocks.clear()
         for i in range(count):
             name_, size_, type_ = ShaderGL.gl_get_active_uniform_block(self.__program_id, i)
             self.__shader_uniform_blocks[name_] = (i, size_, type_)
-            print(f"name: {name_:15}, id: {i:3}, size: {size_:3}, type: {type_:5}")
+            # print(f"name: {name_:15}, id: {i:3}, size: {size_:3}, type: {type_:5}")
 
+    @gl_error_catch
     def __get_all_uniform_locations(self):
         count = glGetProgramiv(self.__program_id, GL_ACTIVE_UNIFORMS)
-        print(f"\nActive Uniforms: {count}\n")
+        # print(f"\nActive Uniforms: {count}\n")
         if len(self.__shader_uniforms) != 0:
             self.__shader_uniforms.clear()
         for i in range(count):
             name_, size_, type_ = ShaderGL.gl_get_active_uniform(self.__program_id, i)
             self.__shader_uniforms[name_] = (i, size_, type_)
-            print(f"name: {name_:15}, id: {i:3}, size: {size_:3}, type: {type_:5}")
+            # print(f"name: {name_:15}, id: {i:3}, size: {size_:3}, type: {type_:5}")
 
     def load_defaults_settings(self):
         for name_ in self.__shader_uniforms:
@@ -324,6 +329,7 @@ class ShaderGL:
                 self.send_int(name_, 0)
                 continue
 
+    @gl_error_catch
     def frag_shader(self, code: str, from_file: bool = True):
         if from_file:
             self.__frag_id = compileShader(self.__read_all_code(code), GL_FRAGMENT_SHADER)
@@ -336,6 +342,7 @@ class ShaderGL:
             raise Exception(f"{GL_FRAGMENT_SHADER} shader compilation error...")
         self.__compile()
 
+    @gl_error_catch
     def vert_shader(self, code: str, from_file: bool = True):
         if from_file:
             self.__vert_id = compileShader(self.__read_all_code(code), GL_VERTEX_SHADER)
@@ -348,6 +355,7 @@ class ShaderGL:
             raise Exception(f"{GL_VERTEX_SHADER} shader compilation error...")
         self.__compile()
 
+    @gl_error_catch
     def __compile(self):
         if self.__vert_id == 0:
             return
@@ -363,8 +371,9 @@ class ShaderGL:
         self.__get_all_uniform_blocks()
         self.__get_all_attrib_locations()
         self.__get_all_uniform_locations()
-        print(self)
+        # print(self)
 
+    @gl_error_catch
     def send_mat_3(self, mat_name: str, mat: Matrix3, transpose=GL_FALSE):
         loc = self.get_uniform_location(mat_name)
         if loc == -1:
@@ -372,6 +381,7 @@ class ShaderGL:
         self.bind()
         glUniformMatrix3fv(loc, 1, transpose, (GLfloat * 9)(*mat))
 
+    @gl_error_catch
     def send_mat_4(self, mat_name: str, mat: Matrix4, transpose=GL_FALSE):
         loc = self.get_uniform_location(mat_name)
         if loc == -1:
@@ -379,6 +389,7 @@ class ShaderGL:
         self.bind()
         glUniformMatrix4fv(loc, 1, transpose, (GLfloat * 16)(*mat))
 
+    @gl_error_catch
     def send_vec_2(self, vec_name: str, vec: Vector2):
         loc = self.get_uniform_location(vec_name)
         if loc == -1:
@@ -386,6 +397,7 @@ class ShaderGL:
         self.bind()
         glUniform2fv(loc, 1, (GLfloat * 2)(*vec))
 
+    @gl_error_catch
     def send_vec_3(self, vec_name: str, vec: Vector3):
         loc = self.get_uniform_location(vec_name)
         if loc == -1:
@@ -393,6 +405,7 @@ class ShaderGL:
         self.bind()
         glUniform3fv(loc, 1, (GLfloat * 3)(*vec))
 
+    @gl_error_catch
     def send_float(self, param_name: str, val: float):
         loc = self.get_uniform_location(param_name)
         if loc == -1:
@@ -400,6 +413,7 @@ class ShaderGL:
         self.bind()
         glUniform1f(loc, GLfloat(val))
 
+    @gl_error_catch
     def send_int(self, param_name: str, val: int):
         loc = self.get_uniform_location(param_name)
         if loc == -1:

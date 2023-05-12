@@ -1,3 +1,4 @@
+from UIQt.GLUtilities.gl_decorators import gl_error_catch
 from typing import Union, List
 from Utilities import Color
 from PIL import Image
@@ -10,7 +11,7 @@ class TextureGL:
 
     __textures_instances = {}
 
-    __bounded_id = 0
+    __bounded_id: int = 0
 
     @staticmethod
     def bounded_id() -> int:
@@ -20,6 +21,17 @@ class TextureGL:
     def enumerate():
         for texture in TextureGL.__textures_instances.items():
             yield texture[1]
+
+    @staticmethod
+    def get_by_name(texture_name):
+        for t in TextureGL.enumerate():
+            if t.name == texture_name:
+                return t
+        return None
+
+    @staticmethod
+    def get_by_id(texture_id: int):
+        return TextureGL.__textures_instances[texture_id] if texture_id in TextureGL.__textures_instances else None
 
     @staticmethod
     def write(file, start="", end=""):
@@ -37,6 +49,7 @@ class TextureGL:
                  alpha=False):
 
         self._source_file = "no-name"
+        self._name = "no-name"
         self._width  = w
         self._height = h
         self._bpp = 4 if alpha else 3
@@ -75,6 +88,7 @@ class TextureGL:
         self.repeat()
         self.bi_linear()
 
+    @gl_error_catch
     def _load_data(self, resource: Union[Color, str]):
 
         if self._id == 0:
@@ -92,29 +106,28 @@ class TextureGL:
         if isinstance(resource, str):
             im = Image.open(resource)
             self._width, self._height = im.size
-            pixel_data: List[np.uint8] = (np.asarray(im, dtype=np.uint8)).ravel()
-            self._bpp = int(len(pixel_data) / self.width / self.height)
+            pixel_data = (np.asarray(im, dtype=np.uint8)).ravel()
+            self._bpp = pixel_data.size // self.width // self.height
+
         elif isinstance(resource, Color):
             pixel_data = [resource[i % self.bpp] for i in range(self.width * self.height * self.bpp)]
+
         else:
             resource = (255, 0, 0, 0)
             pixel_data = [resource[i % self.bpp] for i in range(self.width * self.height * self.bpp)]
 
         if self.bpp == 1:
-            glTexImage2D(self.bind_target, 0, GL_R, self.width, self.height, 0,
-                         GL_R, GL_UNSIGNED_BYTE, pixel_data)
+            glTexImage2D(self.bind_target, 0, GL_R, self.width, self.height, 0, GL_R, GL_UNSIGNED_BYTE, pixel_data)
             glGenerateMipmap(self.bind_target)
             return
 
         if self.bpp == 3:
-            glTexImage2D(self.bind_target, 0, GL_RGB, self.width, self.height, 0,
-                         GL_RGB, GL_UNSIGNED_BYTE, pixel_data)
+            glTexImage2D(self.bind_target, 0, GL_RGB, self.width, self.height, 0, GL_RGB, GL_UNSIGNED_BYTE, pixel_data)
             glGenerateMipmap(self.bind_target)
             return
 
         if self.bpp == 4:
-            glTexImage2D(self.bind_target, 0, GL_RGBA, self.width, self.height, 0,
-                         GL_RGBA, GL_UNSIGNED_BYTE, pixel_data)
+            glTexImage2D(self.bind_target, 0, GL_RGBA, self.width, self.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixel_data)
             glGenerateMipmap(self.bind_target)
 
     @property
@@ -123,21 +136,26 @@ class TextureGL:
 
     @property
     def name(self) -> str:
-        if len(self._source_file) == 0:
-            return ""
-        name: List[str] = self._source_file.split("\\")
+        if self._name == "":
+            if len(self._source_file) == 0:
+                return ""
+            _name: List[str] = self._source_file.split("\\")
 
-        if len(name) == 0:
-            return ""
+            if len(_name) == 0:
+                return ""
 
-        name = name[len(name) - 1].split(".")
+            _name = _name[-1].split(".")
 
-        if len(name) == 0:
-            return ""
+            if len(_name) == 0:
+                return ""
 
-        if len(name) < 2:
-            return name[0]
-        return name[len(name) - 2]
+            self._name = _name[0]if len(_name) < 2 else _name[-2]
+
+        return self._name
+
+    @name.setter
+    def name(self, value: str) -> None:
+        self._name = value if value != "" else self._name
 
     @property
     def source_file_path(self) -> str:
@@ -220,14 +238,16 @@ class TextureGL:
         self._filtering_mode = (GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR_MIPMAP_LINEAR)
 
     def bind(self):
-        if self._id != TextureGL.bounded_id():
-            glBindTexture(self.bind_target, self.bind_id)
-            TextureGL.__bounded_id = self.bind_id
+        if self.bind_id == TextureGL.bounded_id():
+            return
+        glBindTexture(self.bind_target, self.bind_id)
+        TextureGL.__bounded_id = self.bind_id
 
     def bind_to_channel(self, channel: int):
         glActiveTexture(GL_TEXTURE0 + channel)
         glBindTexture(self.bind_target, self.bind_id)
 
+    @gl_error_catch
     def delete_texture(self):
         if self._id == 0:
             return
@@ -239,15 +259,37 @@ class TextureGL:
     def load(self, origin: str):
         self._load_data(origin)
 
+    @gl_error_catch
     def read_back_texture_data(self) -> np.ndarray:
         # todo check!
-        self.bind()
-        # b_data = np.zeros((1, elements_number), dtype=np.float32)
-        b_data = glGetBufferSubData(self._bind_target, 0, self.texture_byte_size)
-        # print(b_data.astype('<f4'))
-        if self.bind_target == GL_ELEMENT_ARRAY_BUFFER:
-            return b_data.view('<i4')
-        if self.bind_target == GL_ARRAY_BUFFER:
-            return b_data.view('<f4')
-        return b_data
+        self.bind()  # _to_channel(0)
+        data = None
+        if self.bpp == 1:
+            data = glGetTexImage(self.bind_target, 0, GL_R, GL_UNSIGNED_BYTE)
+        if self.bpp == 3:
+            data = glGetTexImage(self.bind_target, 0, GL_RGB, GL_UNSIGNED_BYTE)
+        if self.bpp == 4:
+            data = glGetTexImage(self.bind_target, 0, GL_RGBA, GL_UNSIGNED_BYTE)
+        return data
 
+    def save_texture(self, file_path: str) -> bool:
+        data = self.read_back_texture_data()
+
+        if data is None:
+            return False
+        try:
+            image = None
+            if self.bpp == 1:
+                image = Image.frombytes('L', (self.width, self.height), data)
+            if self.bpp == 3:
+                image = Image.frombytes('RGB', (self.width, self.height), data)
+            if self.bpp == 4:
+                image = Image.frombytes('RGBA', (self.width, self.height), data)
+            if image is None:
+                return False
+            image = image.transpose(Image.FLIP_TOP_BOTTOM)
+            image.save(file_path)
+            return True
+        except Exception as _ex:
+            print(f"save_texture {self.name} to file {file_path} error...\n {_ex.args}")
+            return False

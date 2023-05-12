@@ -1,7 +1,7 @@
-from UIQt.GLUtilities import gl_globals
 from UIQt.GLUtilities.gl_material import MaterialGL
 from UIQt.GLUtilities.gl_mesh import MeshGL
 from Utilities.Geometry import Transform
+from UIQt.GLUtilities import gl_globals
 
 
 class ModelGL:
@@ -24,7 +24,7 @@ class ModelGL:
 
     @material.setter
     def material(self, m: MeshGL) -> None:
-        self._material = MaterialGL.DEFAULT_MATERIAL if m is None else m
+        self._material = gl_globals.DEFAULT_MATERIAL if m is None else m
 
     @property
     def transform(self) -> Transform:

@@ -1,8 +1,6 @@
-import UIQt.GLUtilities.gl_globals as gl_globals
-from UIQt.GLUtilities.gl_texture import TextureGL
+from UIQt.GLUtilities.gl_material import MaterialGL
 from UIQt.GLUtilities.gl_shader import ShaderGL
 from Utilities.Geometry import Vector3
-from ..gl_material import MaterialGL
 
 
 class MapMaterial(MaterialGL):

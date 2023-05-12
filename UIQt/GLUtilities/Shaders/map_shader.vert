@@ -10,7 +10,7 @@ layout(location = 2)in vec2 a_texture;
 //////////////////////////////
 uniform vec3  max_bound;
 uniform vec3  min_bound;
-uniform bool  heat_or_height;
+// uniform int   heat_or_height;
 
 //////////////////////////////
 //// CAMERA PROPERTIES IN ////
@@ -29,7 +29,7 @@ out VS_VERTEX_OUT
   vec3  position;
   vec3  max_bound;
   vec3  min_bound;
-  bool  heat_or_height;
+  // int   heat_or_height;
 } vs_vert_out;
 
 ///////////////////////////////
@@ -51,7 +51,7 @@ void main()
 	vs_cam_out.position   = cam_position;
 	vs_cam_out.view       = view;
 	
-	vs_vert_out.heat_or_height = heat_or_height;
+	// vs_vert_out.heat_or_height = heat_or_height;
     vs_vert_out.max_bound      = max_bound;
 	vs_vert_out.min_bound      = min_bound;
 	vs_vert_out.uv             = a_texture ;

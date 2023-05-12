@@ -1,4 +1,4 @@
-import UIQt.GLUtilities.gl_globals as gl_globals
+# import UIQt.GLUtilities.gl_globals as gl_globals
 from UIQt.GLUtilities.gl_shader import ShaderGL
 
 
@@ -12,7 +12,7 @@ class MaterialGL:
 
     def __init__(self, shader: ShaderGL = None):
         self._id = id(self)
-        self._shader: ShaderGL = gl_globals.SAMPLE_SHADER if shader is None else shader
+        self._shader: ShaderGL = shader
 
     def __enter__(self):
         self.bind()

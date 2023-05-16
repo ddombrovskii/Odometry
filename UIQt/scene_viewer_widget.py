@@ -42,6 +42,7 @@ class SceneViewerWidget(QtOpenGL.QGLWidget):
         self._render_queue: List[DrawCall] = []
         self._scene_models: List[ModelGL] = []
         self._frame_buffer = None
+        self.setFocusPolicy(QtCore.Qt.ClickFocus)
 
     def render_call(self, cam: CameraGL, model: ModelGL):
         # if cam.cast_object(model.mesh.bounds):

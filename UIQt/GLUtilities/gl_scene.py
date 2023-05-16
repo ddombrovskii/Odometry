@@ -120,84 +120,68 @@ class SceneGL:
 
 
 def load_scene(src_file: str) -> SceneGL:
-    with open(src_file, 'rt') as input_file:
+    with open(f"{src_file}\\scene.json", 'rt') as input_file:
         raw_data = json.loads(input_file.read())
 
     if raw_data is None:
         return None
 
+    scene = SceneGL()
+
     if "Textures" in raw_data:
         textures = raw_data["Textures"]
         for texture in textures:
             t = TextureGL()
-            t.load(texture["source"])
+            t.load(f"{src_file}\\{texture['source']}")
             t.name = texture["name"]
 
     if "Meshes" in raw_data:
         meshes = raw_data["Meshes"]
         for mesh in meshes:
-            _m = read_obj_mesh(mesh["source"])
+            _m = read_obj_mesh(f"{src_file}\\{mesh['source']}")
             if len(_m) == 0:
                 continue
             m = MeshGL(_m[0])
             m.name = mesh["name"]
 
-    if "Shades" in raw_data:
-        shades = raw_data["Shades"]
+    if "Shaders" in raw_data:
+        shades = raw_data["Shaders"]
         for shader_src in shades:
             shader = ShaderGL()
-            shader.vert_shader(f"{shader_src}.vert")
-            shader.frag_shader(f"{shader_src}.frag")
+            shader.vert_shader(f"{src_file}\\{shader_src}.vert")
+            shader.frag_shader(f"{src_file}\\{shader_src}.frag")
             shader.load_defaults_settings()
 
     if "Camera" in raw_data:
-        camera = raw_data["Camera"]
-        if "z_far" in camera:
-            try:
-                gl_globals.MAIN_CAMERA.z_far = float(camera["z_far"] )
-            except ValueError as er:
-                print(f"load_scene :: incorrect z_far : {camera['z_far']}\n{er.args}")
-        if "z_near" in camera:
-            try:
-                gl_globals.MAIN_CAMERA.z_near = float(camera["z_near"] )
-            except ValueError as er:
-                print(f"load_scene :: incorrect z_near : {camera['z_near']}\n{er.args}")
-        if "aspect" in camera:
-            try:
-                gl_globals.MAIN_CAMERA.aspect = float(camera["aspect"] )
-            except ValueError as er:
-                print(f"load_scene :: incorrect aspect : {camera['aspect']}\n{er.args}")
-        if "fov" in camera:
-            try:
-                gl_globals.MAIN_CAMERA.fov = float(camera["fov"] )
-            except ValueError as er:
-                print(f"load_scene :: incorrect aspect : {camera['fov']}\n{er.args}")
-        if "orthographic_size" in camera:
-            try:
-                gl_globals.MAIN_CAMERA.ortho_size = float(camera["orthographic_size"] )
-            except ValueError as er:
-                print(f"load_scene :: incorrect orthographic_size : {camera['orthographic_size']}\n{er.args}")
-        if "is_orthographic" in camera:
-            try:
-                gl_globals.MAIN_CAMERA.perspective_mode = bool(camera["is_orthographic"] )
-            except ValueError as er:
-                print(f"load_scene :: incorrect is_orthographic : {camera['is_orthographic']}\n{er.args}")
-        if "transform" in camera:
-            try:
-                t = Matrix4(*(float(value) for value in camera["transform"].values()))
-                gl_globals.MAIN_CAMERA.transform.transform_matrix = t
-            except ValueError as er:
-                print(f"load_scene :: incorrect camera transform\n : {camera['transform']}\n{er.args}")
-
+        gl_globals.MAIN_CAMERA.setting_from_json(raw_data["Camera"])
+    # работает
     if "Materials" in raw_data:
         materials = raw_data["Materials"]
         for m in materials:
             shader = ShaderGL.shaders.get_by_name(m["shader"])
             if shader is None:
                 continue
+            material = MaterialGL(shader)
+            material.setting_from_json(m)
 
+    if "Models" in raw_data:
 
-    scene = SceneGL()
+        for node in raw_data["Models"]:
+            if "mesh_src" not in node:
+                continue
+            if "material" not in node:
+                continue
+            model = ModelGL()
+            model.mesh = MeshGL.meshes.get_by_name(node["mesh_src"])
+            model.material = MaterialGL.materials.get_by_name(node["material"])
+            if "transform" in node:
+                try:
+                    model.transform.transform_matrix = Matrix4(*(float(value) for value in node["transform"].values()))
+                except ValueError as er:
+                    print(f"SceneGL :: load_scene :: incorrect model transform\n : {node['transform']}\n{er.args}")
+            scene.add_model(model)
+
+    return scene
 
     # if "Models" in raw_data:
     #     models = raw_data["Models"]

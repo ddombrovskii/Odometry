@@ -1,8 +1,8 @@
 from PyQt5.QtGui import QOpenGLVersionProfile, QSurfaceFormat, QMouseEvent, QWheelEvent, QKeyEvent
-
 from UIQt.GLUtilities.gl_decorators import gl_error_catch
 from UIQt.GLUtilities.gl_frame_buffer import FrameBufferGL
 from UIQt.GLUtilities.gl_material import MaterialGL
+from UIQt.GLUtilities.gl_scene import SceneGL, load_scene
 from UIQt.GLUtilities.triangle_mesh import TrisMesh, read_obj_mesh, poly_strip
 from Utilities.Geometry import Vector3, Transform, Vector2
 from UIQt.GLUtilities.gl_camera import CameraGL
@@ -39,6 +39,7 @@ class SceneViewerWidget(QtOpenGL.QGLWidget):
         self.setFocusPolicy(QtCore.Qt.ClickFocus)
         self.fmt: QOpenGLVersionProfile = None
         self.parent = parent
+        self._scene = SceneGL()
         self._render_queue: List[DrawCall] = []
         self._scene_models: List[ModelGL] = []
         self._frame_buffer = None
@@ -126,6 +127,8 @@ class SceneViewerWidget(QtOpenGL.QGLWidget):
         line = [Vector2(math.sin(i * dpi) * r * (1.0 + 0.25 * math.cos(i * dpi * 8)),
                         math.cos(i * dpi) * r * (1.0 + 0.25 * math.cos(i * dpi * 8))) for i in range(n)]
         self.draw_line_2d(line)
+
+        self._scene = load_scene(r"E:\GitHub\Odometry\Odometry\UIQt\GLUtilities\Scenes")
         # self.draw_line()
 
     def _load_model(self, src: str):
@@ -244,7 +247,7 @@ class SceneViewerWidget(QtOpenGL.QGLWidget):
             ...
         if keyboard.key_x.is_hold:
             self._frame_buffer.grab_snap_shot()
-            self._frame_buffer.grab_depth_snap_shot()
+            # self._frame_buffer.grab_depth_snap_shot()
 
     def updateGL(self) -> None:
         gl_globals.KEYBOARD_CONTROLLER.update_on_hold()
@@ -253,13 +256,16 @@ class SceneViewerWidget(QtOpenGL.QGLWidget):
 
     @gl_error_catch
     def paintGL(self):
+        self._scene.update_camera_state()
         self._frame_buffer.bind()
         GL.glEnable(GL.GL_DEPTH_TEST)
         GL.glEnable(GL.GL_STENCIL_TEST)
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT | GL.GL_STENCIL_BUFFER_BIT)
+        self._scene.draw_scene()
         while len(self._render_queue) != 0:
             self._render_queue.pop()()  # (gl_globals.MAP_MATERIAL)
-        self._keyboard_interaction()
         self._frame_buffer.blit()
         self.swapBuffers()
+        self._keyboard_interaction()
+
 

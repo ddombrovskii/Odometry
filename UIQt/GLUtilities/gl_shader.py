@@ -120,6 +120,7 @@ class ShaderAttribute(namedtuple("ShaderAttribute", "attribute_name, attribute_l
 class ShaderGL:
     Matrix_4: int = 35676
     Matrix_3: int = 35675
+    Vector_4: int = 35666
     Vector_3: int = 35665
     Vector_2: int = 35664
     Float: int = 5126
@@ -225,7 +226,7 @@ class ShaderGL:
         def comas(_name):
             return f"\"{_name}\""
 
-        def parce(_name, _id, _size, _type):
+        def parce(_name, _id, _type, _size):
             return f"{{ \"name\": {comas(_name):20}, \"id\": {_id:3}," \
                    f" \"size\": {_size:3}, \"type\": {ShaderGL.UniformTypesNames[_type]:12}}}"
 
@@ -290,10 +291,12 @@ class ShaderGL:
         return self._program_id
 
     def get_uniform_location(self, uniform_name: str):
-        return self._shader_uniforms_by_name[uniform_name].uniform_location if uniform_name in self._shader_uniforms_by_name else -1
+        return self._shader_uniforms_by_name[uniform_name].uniform_location \
+            if uniform_name in self._shader_uniforms_by_name else -1
 
     def get_attrib_location(self, attrib_name: str):
-        return self._shader_attributes_by_name[attrib_name].attribute_location if attrib_name in self._shader_attributes_by_name else -1
+        return self._shader_attributes_by_name[attrib_name].attribute_location\
+            if attrib_name in self._shader_attributes_by_name else -1
 
     def get_uniform_location_by_id(self, uniform_id: int):
         return uniform_id if uniform_id in self._shader_uniforms_by_id else -1
@@ -309,7 +312,7 @@ class ShaderGL:
             self._shader_attributes_by_id.clear()
         for i in range(count):
             name_, size_, type_ = ShaderGL.gl_get_active_attrib(self._program_id, i)
-            attribute = ShaderAttribute(name_, i, size_, type_)
+            attribute = ShaderAttribute(name_, i, type_, size_)
             self._shader_attributes_by_name.update({name_: attribute})
             self._shader_attributes_by_id.update({i: attribute})
 
@@ -332,7 +335,7 @@ class ShaderGL:
             self._shader_uniforms_by_id.clear()
         for i in range(count):
             name_, size_, type_ = ShaderGL.gl_get_active_uniform(self._program_id, i)
-            uniform = ShaderUniform(name_, i, size_, type_)
+            uniform = ShaderUniform(name_, i, type_, size_)
             self._shader_uniforms_by_name.update({name_: uniform})
             self._shader_uniforms_by_id.update({i: uniform})
 

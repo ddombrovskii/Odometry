@@ -50,6 +50,45 @@ class CameraGL:
                 Matrix4.build_ortho_projection_matrix(-size * self.aspect, size * self.aspect,
                                                       -size, size, self._z_near, self._z_far)
 
+    def setting_from_json(self, camera):
+        if "z_far" in camera:
+            try:
+                self.z_far = float(camera["z_far"])
+            except ValueError as er:
+                print(f"CameraGL :: from_json :: incorrect z_far : {camera['z_far']}\n{er.args}")
+        if "z_near" in camera:
+            try:
+                self.z_near = float(camera["z_near"])
+            except ValueError as er:
+                print(f"CameraGL :: from_json :: incorrect z_near : {camera['z_near']}\n{er.args}")
+        if "aspect" in camera:
+            try:
+                self.aspect = float(camera["aspect"])
+            except ValueError as er:
+                print(f"CameraGL :: from_json :: incorrect aspect : {camera['aspect']}\n{er.args}")
+        if "fov" in camera:
+            try:
+                self.fov = float(camera["fov"])
+            except ValueError as er:
+                print(f"CameraGL :: from_json :: incorrect aspect : {camera['fov']}\n{er.args}")
+        if "orthographic_size" in camera:
+            try:
+                self.ortho_size = float(camera["orthographic_size"])
+            except ValueError as er:
+                print(f"CameraGL :: from_json :: incorrect orthographic_size : {camera['orthographic_size']}\n{er.args}")
+        if "is_orthographic" in camera:
+            try:
+                self.perspective_mode = bool(camera["is_orthographic"])
+            except ValueError as er:
+                print(f"CameraGL :: from_json :: incorrect is_orthographic : {camera['is_orthographic']}\n{er.args}")
+        if "transform" in camera:
+            try:
+                t = Matrix4(*(float(value) for value in camera["transform"].values()))
+                self.transform.transform_matrix = t
+            except ValueError as er:
+                print(f"CameraGL :: from_json :: incorrect camera transform\n : {camera['transform']}\n{er.args}")
+        # print(self)
+
     @property
     def unique_id(self) -> int:
         return id(self)

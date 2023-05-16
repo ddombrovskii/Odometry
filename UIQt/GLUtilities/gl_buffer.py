@@ -28,7 +28,6 @@ class BufferGL:
 
     def __str__(self):
         data = self.read_back_data()
-        # data = np.array2string(data, precision=3, separator=',', suppress_small=True)
         return f"{{\n" \
                f"\t\"name \"         :\"{self.name}\",\n" \
                f"\t\"bind_id\"       :{self.bind_id},\n" \
@@ -38,7 +37,6 @@ class BufferGL:
                f"\t\"bind_target\"   :{int(self.bind_target)},\n" \
                f"\t\"usage_target\"  :{int(self.usage_target)},\n"\
                f"\t\"data\"          :[{','.join(f'{str(v)}' for v in data)}]\n}}"
-               # f"\t\"data\"          :[...]\n}}"
 
     def __del__(self):
         self.delete()

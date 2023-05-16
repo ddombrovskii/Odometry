@@ -384,3 +384,9 @@ class FrameBufferGL:
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0)
         glBlitFramebuffer(0, 0, self.width, self.height, 0, 0, self.width, self.height, GL_COLOR_BUFFER_BIT, GL_NEAREST)
         self.unbind()
+    # https://www.programcreek.com/python/example/8811/PIL.Image.fromstring
+    # https://gist.github.com/yuyu2172/95e406260b2497c4d4c4948f18de827d
+    # https://github.com/trevorvanhoof/sqrmelon/blob/76df51c2cf936cbb9be8b6cf45f19b2497758c9f/SqrMelon/buffers.py#L120
+    # https://python.hotexamples.com/examples/OpenGL/GL/glReadPixels/python-gl-glreadpixels-method-examples.html
+    # http://www.opengl-tutorial.org/miscellaneous/clicking-on-objects/picking-with-an-opengl-hack/
+    # https://ogldev.org/www/tutorial29/tutorial29.html

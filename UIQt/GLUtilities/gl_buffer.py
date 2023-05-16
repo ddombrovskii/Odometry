@@ -1,4 +1,5 @@
 from UIQt.GLUtilities.gl_decorators import gl_error_catch
+from UIQt.GLUtilities.objects_pool import ObjectsPool
 from OpenGL.GL import *
 import numpy as np
 # Буфер данных на GPU
@@ -8,34 +9,9 @@ import numpy as np
 
 class BufferGL:
     # MAX_BUFFER_AVAILABLE_SIZE: int = ???
-    __buffer_instances = {}
+    buffers = ObjectsPool()
 
-    __bounded_id = 0
-
-    @staticmethod
-    def bounded_id() -> int:
-        return BufferGL.__bounded_id
-
-    @staticmethod
-    def write(file, start="", end="") -> None:
-        file.write(f"{start}\"buffers\":[\n")
-        file.write(',\n'.join(str(buffer) for buffer in BufferGL.__buffer_instances.values()))
-        file.write(f"]\n{end}")
-
-    @staticmethod
-    def enumerate():
-        # print(BufferGL.__buffer_instances.items())
-        for buffer in BufferGL.__buffer_instances.items():
-            yield buffer[1]
-
-    @staticmethod
-    def delete_all():
-        # print(GPUBuffer.__buffer_instances)
-        while len(BufferGL.__buffer_instances) != 0:
-            item = BufferGL.__buffer_instances.popitem()
-            item[1].delete_buffer()
-
-    __slots__ = "_id", "_bind_target", "_usage_target", "_filling", "_capacity", "_item_byte_size"
+    __slots__ = "_id", "_bind_target", "_usage_target", "_filling", "_capacity", "_name", "_item_byte_size"
 
     def __init__(self, cap: int,
                  item_b_size: int = 4,
@@ -47,21 +23,25 @@ class BufferGL:
         self._filling: int = 0
         self._capacity: int = cap
         self._item_byte_size: int = item_b_size
+        self._name = ""
         self._create()
 
     def __str__(self):
         data = self.read_back_data()
-        data = np.array2string(data, precision=3, separator=',', suppress_small=True)
-        return f"{{\n\t\"unique_id\"     :{self.bind_id},\n" \
+        # data = np.array2string(data, precision=3, separator=',', suppress_small=True)
+        return f"{{\n" \
+               f"\t\"name \"         :\"{self.name}\",\n" \
+               f"\t\"bind_id\"       :{self.bind_id},\n" \
                f"\t\"capacity \"     :{self.capacity},\n" \
                f"\t\"filling\"       :{self.filling},\n" \
                f"\t\"item_byte_size\":{self.item_byte_size},\n" \
                f"\t\"bind_target\"   :{int(self.bind_target)},\n" \
                f"\t\"usage_target\"  :{int(self.usage_target)},\n"\
-               f"\t\"data\"          :[{data}]\n}}"
+               f"\t\"data\"          :[{','.join(f'{str(v)}' for v in data)}]\n}}"
+               # f"\t\"data\"          :[...]\n}}"
 
     def __del__(self):
-        self.delete_buffer()
+        self.delete()
 
     def __enter__(self):
         self.bind()
@@ -74,17 +54,12 @@ class BufferGL:
         self._id = glGenBuffers(1)
         self.bind()
         glBufferData(self.bind_target, self.capacity * self.item_byte_size, None, self.usage_target)
-        BufferGL.__buffer_instances.update({self.bind_id: self})
-        #  try:
-        #      self._id = glGenBuffers(1)
-        #  except Exception as ex:
-        #      print(f"GPUBuffer creation error:\n{ex.args}")
-        #  self.bind()
-        #  try:
-        #      glBufferData(self.bind_target, self.capacity * self.item_byte_size, None, self.usage_target)
-        #  except Exception as ex:
-        #      print(f"GPUBuffer allocation error:\n{ex.args}")
-        #  BufferGL.__buffer_instances.update({self.bind_id: self})
+        self._name = f"gl_buffer_{self.bind_id}"
+        BufferGL.buffers.register_object(self)
+
+    @property
+    def name(self) -> str:
+        return self._name
 
     @property
     def bind_target(self) -> GLenum:
@@ -111,21 +86,20 @@ class BufferGL:
         return self._id
 
     def bind(self) -> None:
-        if self.bind_id != BufferGL.bounded_id():
-            glBindBuffer(self.bind_target, self.bind_id)
-            BufferGL.__bounded_id = self.bind_id
+        if not BufferGL.buffers.bounded_update(self.bind_id):
+            return
+        glBindBuffer(self.bind_target, self.bind_id)
 
     def unbind(self) -> None:
         glBindBuffer(self.bind_target, 0)
-        BufferGL.__bounded_id = 0
+        BufferGL.buffers.bounded_update(0)
 
     @gl_error_catch
-    def delete_buffer(self) -> None:
+    def delete(self) -> None:
         if self.bind_id == 0:
             return
+        BufferGL.buffers.unregister_object(self)
         glDeleteBuffers(1, np.ndarray([self.bind_id]))
-        if self.bind_id in BufferGL.__buffer_instances:
-            del BufferGL.__buffer_instances[self.bind_id]
         self._id = 0
         self._filling = 0
         self._capacity = 0
@@ -160,7 +134,7 @@ class BufferGL:
             return
         self.bind()
         if self.filling == 0:
-            self.delete_buffer()
+            self.delete()
             self._capacity = new_size
             self._create()
             return
@@ -172,11 +146,11 @@ class BufferGL:
         if self.filling > new_size:
             self._filling = new_size
         glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, self.filling * self.item_byte_size)
-        self.delete_buffer()
+        self.delete()
         self._id = bid
         self._capacity = new_size
         self._filling = new_size
-        BufferGL.__buffer_instances[self.bind_id] = self
+        BufferGL.buffers.register_object(self)
 
     def load_buffer_data(self, data: np.ndarray) -> None:
         self.load_buffer_sub_data(0, data)
@@ -186,7 +160,6 @@ class BufferGL:
         self.bind()
         if len(data) > self.capacity - start_offset:
             self.resize(len(data) + start_offset)
-        # err_code = glGetError()
         glBufferSubData(self.bind_target, start_offset * self.item_byte_size, len(data) * self.item_byte_size, data)
         err_code = glGetError()
 
@@ -195,5 +168,3 @@ class BufferGL:
         self._filling += len(data)
         if self.filling > self.capacity:
             self._filling = self.capacity
-        # self.unbind()
-

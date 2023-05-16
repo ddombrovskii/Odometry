@@ -1,4 +1,5 @@
 from UIQt.GLUtilities.gl_decorators import gl_error_catch
+from UIQt.GLUtilities.objects_pool import ObjectsPool
 from typing import Union, List
 from Utilities import Color
 from PIL import Image
@@ -9,41 +10,7 @@ import numpy as np
 
 class TextureGL:
 
-    __textures_instances = {}
-
-    __bounded_id: int = 0
-
-    @staticmethod
-    def bounded_id() -> int:
-        return TextureGL.__bounded_id
-
-    @staticmethod
-    def enumerate():
-        for texture in TextureGL.__textures_instances.items():
-            yield texture[1]
-
-    @staticmethod
-    def get_by_name(texture_name):
-        for t in TextureGL.enumerate():
-            if t.name == texture_name:
-                return t
-        return None
-
-    @staticmethod
-    def get_by_id(texture_id: int):
-        return TextureGL.__textures_instances[texture_id] if texture_id in TextureGL.__textures_instances else None
-
-    @staticmethod
-    def write(file, start="", end=""):
-        file.write(f"{start}\"textures\":[\n")
-        file.write(',\n'.join(str(m) for m in TextureGL.__textures_instances.values()))
-        file.write(f"]\n{end}")
-
-    @staticmethod
-    def delete_all():
-        while len(TextureGL.__textures_instances) != 0:
-            item = TextureGL.__textures_instances.popitem()
-            item[1].delete_texture()
+    textures = ObjectsPool()
 
     def __init__(self, w: int = 16, h: int = 16, col: Color = Color(np.uint8(255), np.uint8(0), np.uint8(0)),
                  alpha=False):
@@ -60,11 +27,13 @@ class TextureGL:
         self._load_data(col)
         self.repeat()
         self.bi_linear()
-        TextureGL.__textures_instances[self._id] = self
+        TextureGL.textures.register_object(self)
 
     def __str__(self):
-        return f"{{\n\t\"unique_id\":   {self.bind_id},\n" \
+        return f"{{\n" \
+               f"\t\"name\":        \"{self.name}\",\n" \
                f"\t\"asset_src\":   \"{self.source_file_path}\",\n" \
+               f"\t\"bind_id\":     {self.bind_id},\n" \
                f"\t\"width\":       {self.width},\n" \
                f"\t\"height\":      {self.height},\n" \
                f"\t\"bpp\":         {self.bpp},\n" \
@@ -73,14 +42,14 @@ class TextureGL:
                f"\t\"filter_mode\": [{int(self._filtering_mode[0])},{int(self._filtering_mode[1])}]\n}}"
 
     def __del__(self):
-        self.delete_texture()
+        self.delete()
 
     def __enter__(self):
         self.bind()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         glBindTexture(self.bind_target, 0)
-        TextureGL.__bounded_id = 0
+        TextureGL._bounded_id = 0
 
     def _create(self):
         self._id = glGenTextures(1)
@@ -94,25 +63,30 @@ class TextureGL:
         if self._id == 0:
             self._create()
         else:
-            self.delete_texture()
+            self.delete()
             self._create()
 
         if self.texture_byte_size == 0:
-            self.delete_texture()
+            self.delete()
             return
-
-        TextureGL.__textures_instances[self.bind_id] = self
-
         if isinstance(resource, str):
+            if self.source_file_path == resource:
+                return
             im = Image.open(resource)
+            self._source_file = resource
+            _name: List[str] = self._source_file.split("/")
+            _name = _name[-1].split(".")
+            self._name = _name[0] if len(_name) < 2 else _name[-2]
             self._width, self._height = im.size
             pixel_data = (np.asarray(im, dtype=np.uint8)).ravel()
             self._bpp = pixel_data.size // self.width // self.height
 
         elif isinstance(resource, Color):
+            self._name = f"gl_texture_{self.bind_id}"
             pixel_data = [resource[i % self.bpp] for i in range(self.width * self.height * self.bpp)]
 
         else:
+            self._name = f"gl_texture_{self.bind_id}"
             resource = (255, 0, 0, 0)
             pixel_data = [resource[i % self.bpp] for i in range(self.width * self.height * self.bpp)]
 
@@ -136,26 +110,13 @@ class TextureGL:
 
     @property
     def name(self) -> str:
-        if self._name == "":
-            if len(self._source_file) == 0:
-                return ""
-            _name: List[str] = self._source_file.split("\\")
-
-            if len(_name) == 0:
-                return ""
-
-            _name = _name[-1].split(".")
-
-            if len(_name) == 0:
-                return ""
-
-            self._name = _name[0]if len(_name) < 2 else _name[-2]
-
         return self._name
 
     @name.setter
     def name(self, value: str) -> None:
+        TextureGL.textures.unregister_object(self)
         self._name = value if value != "" else self._name
+        TextureGL.textures.register_object(self)
 
     @property
     def source_file_path(self) -> str:
@@ -238,26 +199,29 @@ class TextureGL:
         self._filtering_mode = (GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR_MIPMAP_LINEAR)
 
     def bind(self):
-        if self.bind_id == TextureGL.bounded_id():
-            return
-        glBindTexture(self.bind_target, self.bind_id)
-        TextureGL.__bounded_id = self.bind_id
+        if TextureGL.textures.bounded_update(self.bind_id):
+            glBindTexture(self.bind_target, self.bind_id)
+
+    def unbind(self):
+        glBindTexture(self.bind_target, 0)
+        TextureGL.textures.bounded_update(0)
 
     def bind_to_channel(self, channel: int):
         glActiveTexture(GL_TEXTURE0 + channel)
         glBindTexture(self.bind_target, self.bind_id)
 
     @gl_error_catch
-    def delete_texture(self):
+    def delete(self):
         if self._id == 0:
             return
         glDeleteTextures(1, (self.bind_id,))
-        if self.bind_id in TextureGL.__textures_instances:
-            del TextureGL.__textures_instances[self.bind_id]
+        TextureGL.textures.unregister_object(self)
         self._id = 0
 
     def load(self, origin: str):
+        TextureGL.textures.unregister_object(self)
         self._load_data(origin)
+        TextureGL.textures.register_object(self)
 
     @gl_error_catch
     def read_back_texture_data(self) -> np.ndarray:

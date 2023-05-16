@@ -2,6 +2,9 @@ from ctypes import addressof, POINTER, cast, c_float, c_ubyte, Structure
 from Utilities.Geometry import Matrix4, Matrix3, Vector3, Vector2
 from OpenGL.GL.shaders import compileProgram, compileShader
 from UIQt.GLUtilities.gl_decorators import gl_error_catch
+from UIQt.GLUtilities.objects_pool import ObjectsPool
+from collections import namedtuple
+from typing import Dict
 from OpenGL.GL import *
 import re
 
@@ -88,6 +91,32 @@ class UniformBuffer:
         return "{0}(name={1})".format(self.__class__.__name__, self.name)
 
 
+class ShaderUniform(namedtuple("ShaderUniform", "uniform_name, uniform_location, data_type, data_size")):
+    def __new__(cls, uniform_name: str, uniform_location: int, data_type: int, data_size: int):
+        return super().__new__(cls, uniform_name, uniform_location, data_type, data_size)
+
+    def __str__(self):
+        return f"{{\n" \
+               f"\t\"uniform_name\"     : \"{self.uniform_name}\"," \
+               f"\t\"uniform_location\" : {self.uniform_location}," \
+               f"\t\"data_type\"        : {self.data_type}," \
+               f"\t\"data_size\"        : {self.data_size}" \
+               f"\n}}"
+
+
+class ShaderAttribute(namedtuple("ShaderAttribute", "attribute_name, attribute_location, data_type, data_size")):
+    def __new__(cls, attribute_name: str, attribute_location: int, data_type: int, data_size: int):
+        return super().__new__(cls, attribute_name, attribute_location, data_type, data_size)
+
+    def __str__(self):
+        return f"{{\n" \
+               f"\t\"attribute_name\"     : \"{self.attribute_name}\"," \
+               f"\t\"attribute_location\" : {self.attribute_location}," \
+               f"\t\"data_type\"          : {self.data_type}," \
+               f"\t\"data_size\"          : {self.data_size}" \
+               f"\n}}"
+               
+
 class ShaderGL:
     Matrix_4: int = 35676
     Matrix_3: int = 35675
@@ -128,40 +157,12 @@ class ShaderGL:
             TextureArray: '\"TextureArray\"'
         }
 
-    __shader_instances = {}
-    __bounded_id: int = 0
-
-    @staticmethod
-    def bounded_id():
-        return ShaderGL.__bounded_id
-
-    @staticmethod
-    def enumerate():
-        for buffer in ShaderGL.__shader_instances.items():
-            yield buffer[1]
-
-    @staticmethod
-    def delete_all():
-        while len(ShaderGL.__shader_instances) != 0:
-            item = ShaderGL.__shader_instances.popitem()
-            item[1].delete_shader()
-
-    # @staticmethod
-    # def default_shader():
-    #    shader = Shader()
-    #    shader.vert_shader(vertex_src, False)
-    #    shader.frag_shader(fragment_src, False)
-    #    print(shader)
-    #    shader.load_defaults_settings()
-    #    return shader
+    shaders = ObjectsPool()
 
     @staticmethod
     def __read_all_code(code_src: str) -> str:
-        code: str = ""
         with open(code_src, mode='r') as file:
-            for str_ in file:
-                line = (re.sub(r"\t*", "", str_))
-                code += line
+            code = ''.join((re.sub(r"\t*", "", line)) for line in file)
             if len(code) == 0:
                 raise Exception("Vertex shader creation error::empty src-code...")
             return code
@@ -201,39 +202,50 @@ class ShaderGL:
         return block_name, size[0], block_type[0]
 
     def __init__(self):
-        self.name: str = "default"
-        self.__program_id = 0
-        self.__vert_id = 0
-        self.__frag_id = 0
-        self.__shader_uniforms: dict = {}
-        self.__shader_uniform_blocks: dict = {}
-        self.__shader_attributes: dict = {}
+        # todo name
+        self._name: str = ""
+        self._program_id = 0
+        self._vert_id = 0
+        self._frag_id = 0
+        self._vert_src = ""
+        self._frag_src = ""
+
+        # uniforms
+        self._shader_uniforms_by_name: dict = {}
+        self._shader_uniforms_by_id: dict = {}
+
+        # attributes
+        self._shader_attributes_by_name: dict = {}
+        self._shader_attributes_by_id: dict = {}
+
+        # uniform_blocks
+        self._shader_uniform_blocks: dict = {}
 
     def __str__(self):
         def comas(_name):
             return f"\"{_name}\""
 
-        def parce(_name, _id, _type, _size):
+        def parce(_name, _id, _size, _type):
             return f"{{ \"name\": {comas(_name):20}, \"id\": {_id:3}," \
                    f" \"size\": {_size:3}, \"type\": {ShaderGL.UniformTypesNames[_type]:12}}}"
 
         separator = ',\n\t\t'
         return f"{{\n" \
                f"\t//Shader     : 0x{id(self)}\n" \
-               f"\t\"name\"       : \"{self.name}\",\n" \
-               f"\t\"program_id\" : {self.bound_id},\n" \
-               f"\t\"vert_id\"    : {self.__vert_id},\n" \
-               f"\t\"frag_id\"    : {self.__frag_id},\n" \
+               f"\t\"name\"       : \"{self._name}\",\n" \
+               f"\t\"program_id\" : {self.bind_id},\n" \
+               f"\t\"vert_id\"    : {self._vert_id},\n" \
+               f"\t\"frag_id\"    : {self._frag_id},\n" \
                f"\t\"attributes\" : \n\t[\n\t\t" \
-               f"{separator.join(parce(_name, _id, _type, _size) for _name, (_id, _size, _type) in self.attribytes.items())}" \
+               f"{separator.join(parce(*v) for v in self.attributes.values())}" \
                f"\n\t],\n" \
                f"\t\"uniforms\" : \n\t[\n\t\t" \
-               f"{separator.join(parce(_name, _id, _type, _size) for _name, (_id, _size, _type) in self.uniforms.items())}" \
+               f"{separator.join(parce(*v) for v in self.uniforms.values())}" \
                f"\n\t]\n" \
                f"}}"
 
     def __del__(self):
-        self.delete_shader()
+        self.delete()
 
     def __enter__(self):
         self.bind()
@@ -242,136 +254,169 @@ class ShaderGL:
         self.unbind()
 
     @gl_error_catch
-    def delete_shader(self):
-        if self.__program_id == 0:
+    def delete(self):
+        if self._program_id == 0:
             return
-        glDeleteShader(self.__vert_id)
-        glDeleteShader(self.__frag_id)
-        glDeleteProgram(self.__program_id)
-        if self.__program_id in ShaderGL.__shader_instances:
-            del ShaderGL.__shader_instances[self.__program_id]
-        self.__program_id = 0
-        self.__vert_id = 0
-        self.__frag_id = 0
+        glDeleteShader(self._vert_id)
+        glDeleteShader(self._frag_id)
+        glDeleteProgram(self._program_id)
+        ShaderGL.shaders.unregister_object(self)
+        self._program_id = 0
+        self._vert_id = 0
+        self._frag_id = 0
 
     @property
-    def attribytes(self):
-        return self.__shader_attributes
+    def attributes(self) -> Dict[str, ShaderAttribute]:
+        return self._shader_attributes_by_name
 
     @property
-    def uniforms(self):
-        return self.__shader_uniforms
+    def uniforms(self) -> Dict[str, ShaderUniform]:
+        return self._shader_uniforms_by_name
 
     @property
-    def bound_id(self):
-        return self.__program_id
+    def attributes_by_id(self) -> Dict[int, ShaderAttribute]:
+        return self._shader_attributes_by_id
+
+    @property
+    def uniforms_by_id(self) -> Dict[int, ShaderUniform]:
+        return self._shader_uniforms_by_id
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def bind_id(self):
+        return self._program_id
 
     def get_uniform_location(self, uniform_name: str):
-        return self.__shader_uniforms[uniform_name][0] if uniform_name in self.__shader_uniforms else -1
+        return self._shader_uniforms_by_name[uniform_name].uniform_location if uniform_name in self._shader_uniforms_by_name else -1
 
     def get_attrib_location(self, attrib_name: str):
-        return self.__shader_attributes[attrib_name][0] if attrib_name in self.__shader_attributes else -1
+        return self._shader_attributes_by_name[attrib_name].attribute_location if attrib_name in self._shader_attributes_by_name else -1
+
+    def get_uniform_location_by_id(self, uniform_id: int):
+        return uniform_id if uniform_id in self._shader_uniforms_by_id else -1
+
+    def get_attrib_location_by_id(self, attrib_id: str):
+        return attrib_id if attrib_id in self._shader_attributes_by_id else -1
 
     @gl_error_catch
     def __get_all_attrib_locations(self):
-        count = glGetProgramiv(self.__program_id, GL_ACTIVE_ATTRIBUTES)
-        # print(f"\nActive Attributes: {count}\n", )
-        if len(self.__shader_attributes) != 0:
-            self.__shader_attributes.clear()
+        count = glGetProgramiv(self._program_id, GL_ACTIVE_ATTRIBUTES)
+        if len(self._shader_attributes_by_name) != 0:
+            self._shader_attributes_by_name.clear()
+            self._shader_attributes_by_id.clear()
         for i in range(count):
-            name_, size_, type_ = ShaderGL.gl_get_active_attrib(self.__program_id, i)
-            self.__shader_attributes[name_] = (i, size_, type_)
-            # print(f"name: {name_:15}, id: {i:3}, size: {size_:3}, type: {type_:5}")
+            name_, size_, type_ = ShaderGL.gl_get_active_attrib(self._program_id, i)
+            attribute = ShaderAttribute(name_, i, size_, type_)
+            self._shader_attributes_by_name.update({name_: attribute})
+            self._shader_attributes_by_id.update({i: attribute})
 
     @gl_error_catch
     def __get_all_uniform_blocks(self):
-        count = glGetProgramiv(self.__program_id, GL_ACTIVE_UNIFORM_BLOCKS)
+        count = glGetProgramiv(self._program_id, GL_ACTIVE_UNIFORM_BLOCKS)
         #  print(f"Active Uniform Blocks: {count}\n", )
-        if len(self.__shader_uniform_blocks) != 0:
-            self.__shader_uniform_blocks.clear()
+        if len(self._shader_uniform_blocks) != 0:
+            self._shader_uniform_blocks.clear()
         for i in range(count):
-            name_, size_, type_ = ShaderGL.gl_get_active_uniform_block(self.__program_id, i)
-            self.__shader_uniform_blocks[name_] = (i, size_, type_)
+            name_, size_, type_ = ShaderGL.gl_get_active_uniform_block(self._program_id, i)
+            self._shader_uniform_blocks[name_] = (i, size_, type_)
             # print(f"name: {name_:15}, id: {i:3}, size: {size_:3}, type: {type_:5}")
 
     @gl_error_catch
     def __get_all_uniform_locations(self):
-        count = glGetProgramiv(self.__program_id, GL_ACTIVE_UNIFORMS)
-        # print(f"\nActive Uniforms: {count}\n")
-        if len(self.__shader_uniforms) != 0:
-            self.__shader_uniforms.clear()
+        count = glGetProgramiv(self._program_id, GL_ACTIVE_UNIFORMS)
+        if len(self._shader_uniforms_by_name) != 0:
+            self._shader_uniforms_by_name.clear()
+            self._shader_uniforms_by_id.clear()
         for i in range(count):
-            name_, size_, type_ = ShaderGL.gl_get_active_uniform(self.__program_id, i)
-            self.__shader_uniforms[name_] = (i, size_, type_)
-            # print(f"name: {name_:15}, id: {i:3}, size: {size_:3}, type: {type_:5}")
+            name_, size_, type_ = ShaderGL.gl_get_active_uniform(self._program_id, i)
+            uniform = ShaderUniform(name_, i, size_, type_)
+            self._shader_uniforms_by_name.update({name_: uniform})
+            self._shader_uniforms_by_id.update({i: uniform})
 
     def load_defaults_settings(self):
-        for name_ in self.__shader_uniforms:
-            type_ = self.__shader_uniforms[name_][2]
-            if type_ not in ShaderGL.UniformTypes:
+        for name_ in self._shader_uniforms_by_name:
+            uniform: ShaderUniform = self._shader_uniforms_by_name[name_]
+            if uniform.data_type not in ShaderGL.UniformTypes:
                 continue
-            if ShaderGL.Matrix_4 == type_:
+            if ShaderGL.Matrix_4 == uniform.data_type:
                 self.send_mat_4(name_, Matrix4.identity())
                 continue
-            if ShaderGL.Matrix_3 == type_:
+            if ShaderGL.Matrix_3 == uniform.data_type:
                 self.send_mat_3(name_, Matrix3.identity())
                 continue
-            if ShaderGL.Vector_3 == type_:
+            if ShaderGL.Vector_3 == uniform.data_type:
                 self.send_vec_3(name_, Vector3(1, 1, 1))
                 continue
-            if ShaderGL.Vector_2 == type_:
+            if ShaderGL.Vector_2 == uniform.data_type:
                 self.send_vec_2(name_, Vector2(1, 1))
                 continue
-            if ShaderGL.Float == type_:
+            if ShaderGL.Float == uniform.data_type:
                 self.send_float(name_, 0.0)
                 continue
-            if ShaderGL.Int == type_:
+            if ShaderGL.Int == uniform.data_type:
                 self.send_int(name_, 0)
                 continue
 
     @gl_error_catch
     def frag_shader(self, code: str, from_file: bool = True):
         if from_file:
-            self.__frag_id = compileShader(self.__read_all_code(code), GL_FRAGMENT_SHADER)
-            if self.__frag_id == 0:
+            self._frag_id = compileShader(self.__read_all_code(code), GL_FRAGMENT_SHADER)
+            if self._frag_id == 0:
                 raise Exception(f"{GL_FRAGMENT_SHADER} shader compilation error...")
+            self._frag_src = code
             self.__compile()
             return
-        self.__frag_id = compileShader(code, GL_FRAGMENT_SHADER)
-        if self.__frag_id == 0:
+        self._frag_id = compileShader(code, GL_FRAGMENT_SHADER)
+        if self._frag_id == 0:
             raise Exception(f"{GL_FRAGMENT_SHADER} shader compilation error...")
         self.__compile()
 
     @gl_error_catch
     def vert_shader(self, code: str, from_file: bool = True):
         if from_file:
-            self.__vert_id = compileShader(self.__read_all_code(code), GL_VERTEX_SHADER)
-            if self.__vert_id == 0:
+            self._vert_id = compileShader(self.__read_all_code(code), GL_VERTEX_SHADER)
+            if self._vert_id == 0:
                 raise Exception(f"{GL_VERTEX_SHADER} shader compilation error...")
+            self._vert_src = code
             self.__compile()
             return
-        self.__vert_id = compileShader(code, GL_VERTEX_SHADER)
-        if self.__vert_id == 0:
+        self._vert_id = compileShader(code, GL_VERTEX_SHADER)
+        if self._vert_id == 0:
             raise Exception(f"{GL_VERTEX_SHADER} shader compilation error...")
         self.__compile()
 
     @gl_error_catch
     def __compile(self):
-        if self.__vert_id == 0:
+        if self._vert_id == 0:
             return
-        if self.__frag_id == 0:
+        if self._frag_id == 0:
             return
-        if self.__program_id != 0:
-            self.delete_shader()
-        self.__program_id = compileProgram(self.__vert_id, self.__frag_id)
-        if self.__program_id == 0:
+        if self._program_id != 0:
+            self.delete()
+        self._program_id = compileProgram(self._vert_id, self._frag_id)
+        if self._program_id == 0:
             raise Exception("Shader program compilation error...")
-        ShaderGL.__shader_instances[self.bound_id] = self
         self.bind()
         self.__get_all_uniform_blocks()
         self.__get_all_attrib_locations()
         self.__get_all_uniform_locations()
-        # print(self)
+
+        if self._frag_src == "" and self._vert_src == "":
+            self._name = f"gl_shader_{self.bind_id}"
+            ShaderGL.shaders.register_object(self)
+            return
+        frag_src = self._frag_src.split('.')[-2]
+        vert_src = self._vert_src.split('.')[-2]
+        if frag_src != vert_src:
+            self._name = f"gl_shader_{self.bind_id}"
+            ShaderGL.shaders.register_object(self)
+            return
+        vert_src = vert_src.split('/')[-1]
+        self._name = vert_src
+        ShaderGL.shaders.register_object(self)
 
     @gl_error_catch
     def send_mat_3(self, mat_name: str, mat: Matrix3, transpose=GL_FALSE):
@@ -421,11 +466,52 @@ class ShaderGL:
         self.bind()
         glUniform1i(loc, GLint(val))
 
+    @gl_error_catch
+    def send_mat_3_by_id(self, uniform_id: int, mat: Matrix3, transpose=GL_FALSE):
+        if uniform_id not in self._shader_uniforms_by_id:
+            return
+        self.bind()
+        glUniformMatrix3fv(uniform_id, 1, transpose, (GLfloat * 9)(*mat))
+
+    @gl_error_catch
+    def send_mat_4_by_id(self, uniform_id: int, mat: Matrix4, transpose=GL_FALSE):
+        if uniform_id not in self._shader_uniforms_by_id:
+            return
+        self.bind()
+        glUniformMatrix4fv(uniform_id, 1, transpose, (GLfloat * 16)(*mat))
+
+    @gl_error_catch
+    def send_vec_2_by_id(self, uniform_id: int, vec: Vector2):
+        if uniform_id not in self._shader_uniforms_by_id:
+            return
+        self.bind()
+        glUniform2fv(uniform_id, 1, (GLfloat * 2)(*vec))
+
+    @gl_error_catch
+    def send_vec_3_by_id(self, uniform_id: int, vec: Vector3):
+        if uniform_id not in self._shader_uniforms_by_id:
+            return
+        self.bind()
+        glUniform3fv(uniform_id, 1, (GLfloat * 3)(*vec))
+
+    @gl_error_catch
+    def send_float_by_id(self, uniform_id: int, val: float):
+        if uniform_id not in self._shader_uniforms_by_id:
+            return
+        self.bind()
+        glUniform1f(uniform_id, GLfloat(val))
+
+    @gl_error_catch
+    def send_int_by_id(self, uniform_id: int, val: int):
+        if uniform_id not in self._shader_uniforms_by_id:
+            return
+        self.bind()
+        glUniform1i(uniform_id, GLint(val))
+
     def bind(self):
-        if ShaderGL.bounded_id() != self.bound_id:
-            glUseProgram(self.bound_id)
-            ShaderGL.__bounded_id = self.bound_id
+        if ShaderGL.shaders.bounded_update(self.bind_id):
+            glUseProgram(self.bind_id)
 
     def unbind(self):
+        ShaderGL.shaders.bounded_update(0)
         glUseProgram(0)
-        ShaderGL.__bounded_id = 0

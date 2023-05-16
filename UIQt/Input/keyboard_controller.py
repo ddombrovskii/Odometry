@@ -53,7 +53,7 @@ class KeyboardController:
         self._w: KeyboardButton = KeyboardButton(QtCore.Qt.Key.Key_W)
         self._a: KeyboardButton = KeyboardButton(QtCore.Qt.Key.Key_A)
         self._s: KeyboardButton = KeyboardButton(QtCore.Qt.Key.Key_S)
-        self._d: KeyboardButton = KeyboardButton(QtCore.Qt.Key.Key_W)
+        self._d: KeyboardButton = KeyboardButton(QtCore.Qt.Key.Key_D)
 
         self._q: KeyboardButton = KeyboardButton(QtCore.Qt.Key.Key_Q)
         self._e: KeyboardButton = KeyboardButton(QtCore.Qt.Key.Key_E)
@@ -126,61 +126,61 @@ class KeyboardController:
         return self._x
 
     def update_on_press(self, event: QKeyEvent) -> None:
-        self._w.update_on_pressed(event)
-        self._a.update_on_pressed(event)
-        self._s.update_on_pressed(event)
-        self._d.update_on_pressed(event)
+        self.key_w.update_on_pressed(event)
+        self.key_a.update_on_pressed(event)
+        self.key_s.update_on_pressed(event)
+        self.key_d.update_on_pressed(event)
 
-        self._q.update_on_pressed(event)
-        self._e.update_on_pressed(event)
+        self.key_q.update_on_pressed(event)
+        self.key_e.update_on_pressed(event)
 
-        self._up   .update_on_pressed(event)
-        self._down .update_on_pressed(event)
-        self._left .update_on_pressed(event)
-        self._right.update_on_pressed(event)
+        self.key_up   .update_on_pressed(event)
+        self.key_down .update_on_pressed(event)
+        self.key_left .update_on_pressed(event)
+        self.key_right.update_on_pressed(event)
 
-        self._plus .update_on_pressed(event)
-        self._minus.update_on_pressed(event)
+        self.key_plus .update_on_pressed(event)
+        self.key_minus.update_on_pressed(event)
 
-        self._z.update_on_pressed(event)
-        self._x.update_on_pressed(event)
+        self.key_z.update_on_pressed(event)
+        self.key_x.update_on_pressed(event)
 
     def update_on_hold(self) -> None:
-        self._w.update_on_hold()
-        self._a.update_on_hold()
-        self._s.update_on_hold()
-        self._d.update_on_hold()
+        self.key_w.update_on_hold()
+        self.key_a.update_on_hold()
+        self.key_s.update_on_hold()
+        self.key_d.update_on_hold()
 
-        self._q.update_on_hold()
-        self._e.update_on_hold()
+        self.key_q.update_on_hold()
+        self.key_e.update_on_hold()
 
-        self._up   .update_on_hold()
-        self._down .update_on_hold()
-        self._left .update_on_hold()
-        self._right.update_on_hold()
+        self.key_up   .update_on_hold()
+        self.key_down .update_on_hold()
+        self.key_left .update_on_hold()
+        self.key_right.update_on_hold()
 
-        self._plus .update_on_hold()
-        self._minus.update_on_hold()
+        self.key_plus .update_on_hold()
+        self.key_minus.update_on_hold()
 
-        self._z.update_on_hold()
-        self._x.update_on_hold()
+        self.key_z.update_on_hold()
+        self.key_x.update_on_hold()
 
     def update_on_release(self, event: QKeyEvent) -> None:
-        self._w.update_on_release(event)
-        self._a.update_on_release(event)
-        self._s.update_on_release(event)
-        self._d.update_on_release(event)
+        self.key_w.update_on_release(event)
+        self.key_a.update_on_release(event)
+        self.key_s.update_on_release(event)
+        self.key_d.update_on_release(event)
 
-        self._q.update_on_release(event)
-        self._e.update_on_release(event)
+        self.key_q.update_on_release(event)
+        self.key_e.update_on_release(event)
 
-        self._up   .update_on_release(event)
-        self._down .update_on_release(event)
-        self._left .update_on_release(event)
-        self._right.update_on_release(event)
+        self.key_up   .update_on_release(event)
+        self.key_down .update_on_release(event)
+        self.key_left .update_on_release(event)
+        self.key_right.update_on_release(event)
 
-        self._plus .update_on_release(event)
-        self._minus.update_on_release(event)
+        self.key_plus .update_on_release(event)
+        self.key_minus.update_on_release(event)
 
-        self._z.update_on_release(event)
-        self._x.update_on_release(event)
+        self.key_z.update_on_release(event)
+        self.key_x.update_on_release(event)

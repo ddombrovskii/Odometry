@@ -1,31 +1,33 @@
+from typing import Tuple
+
+from OpenGL.GL.VERSION import GL_1_1
+from PIL import Image
+
 from UIQt.GLUtilities.gl_decorators import gl_error_catch
+from UIQt.GLUtilities.objects_pool import ObjectsPool
 from OpenGL.GL import *
 
 
 class FrameBufferGL:
+    COLOR_ATTACHMENTS = \
+        {0: GL_COLOR_ATTACHMENT0,
+         1: GL_COLOR_ATTACHMENT1,
+         2: GL_COLOR_ATTACHMENT2,
+         3: GL_COLOR_ATTACHMENT3,
+         4: GL_COLOR_ATTACHMENT4,
+         5: GL_COLOR_ATTACHMENT5,
+         6: GL_COLOR_ATTACHMENT6,
+         7: GL_COLOR_ATTACHMENT7,
+         8: GL_COLOR_ATTACHMENT8,
+         9: GL_COLOR_ATTACHMENT9,
+         10: GL_COLOR_ATTACHMENT10,
+         11: GL_COLOR_ATTACHMENT11}
     RGB_F_ATTACHMENT: int = 0
     RGBA_F_ATTACHMENT: int = 1
     RGB_8_ATTACHMENT: int = 2
     RGBA_8_ATTACHMENT: int = 3
 
-    _frame_buffers = {}
-
-    _bounded_id = 0
-
-    @staticmethod
-    def bounded_id() -> int:
-        return FrameBufferGL._bounded_id
-
-    @staticmethod
-    def enumerate():
-        for texture in FrameBufferGL._frame_buffers.items():
-            yield texture[1]
-
-    @staticmethod
-    def delete_all():
-        while len(FrameBufferGL._frame_buffers) != 0:
-            item = FrameBufferGL._frame_buffers.popitem()
-            item[1].delete_buffer()
+    frame_buffers = ObjectsPool()
 
     @staticmethod
     def _create_texture(in_format_: int, w_: int, h_: int, format_: int, type_: int, filtering_: int,
@@ -55,6 +57,17 @@ class FrameBufferGL:
         return tex_id
 
     @staticmethod
+    def _create_depth_shadow(width: int, height: int, _sampling: int = 0) -> int:
+        tex_id = glGenRenderbuffers(1)
+        glBindRenderbuffer(GL_RENDERBUFFER, tex_id)
+        if _sampling != 0:
+            glRenderbufferStorageMultisample(GL_RENDERBUFFER, _sampling, GL_DEPTH_COMPONENT32F, width, height)
+        else:
+            glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT32F, width, height)
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, tex_id)
+        return tex_id
+
+    @staticmethod
     def _create_rgb_8_tex(width: int, height: int, sampling: int = 0) -> (int, int):
         return FrameBufferGL.RGB_8_ATTACHMENT, \
                FrameBufferGL._create_texture(GL_RGB8, width, height, GL_RGB, GL_UNSIGNED_BYTE, GL_NEAREST, sampling)
@@ -67,12 +80,12 @@ class FrameBufferGL:
     @staticmethod
     def _create_rgb_f_tex(width: int, height: int, sampling: int = 0) -> (int, int):
         return FrameBufferGL.RGB_F_ATTACHMENT, \
-               FrameBufferGL._create_texture(GL_RGB16F, width, height, GL_RGB, GL_FLOAT, GL_NEAREST, sampling)
+               FrameBufferGL._create_texture(GL_RGB32F, width, height, GL_RGB, GL_FLOAT, GL_NEAREST, sampling)
 
     @staticmethod
     def _create_rgba_f_tex(width: int, height: int, sampling: int = 0) -> (int, int):
         return FrameBufferGL.RGBA_F_ATTACHMENT, \
-               FrameBufferGL._create_texture(GL_RGBA16F, width, height, GL_RGBA, GL_FLOAT, GL_NEAREST, sampling)
+               FrameBufferGL._create_texture(GL_RGBA32F, width, height, GL_RGBA, GL_FLOAT, GL_NEAREST, sampling)
 
     @staticmethod
     def _get_texture_size(tex_id):
@@ -94,10 +107,21 @@ class FrameBufferGL:
         self._texture_attachments = {}
         self._draw_buffers = []
         self._texture_depth_attachment = 0
-        self._attachment_id = GL_COLOR_ATTACHMENT0
+        self._attachment_id = 0
         self._fbo: int = glGenFramebuffers(1)
-        self._clear_color: (int, int, int) = (0, 0, 0)
-        FrameBufferGL._frame_buffers[self.bind_id] = self
+        self._name = f"frame_buffer_{self._fbo}"
+        self._clear_color: Tuple[int, int, int] = (0, 0, 0)
+        FrameBufferGL.frame_buffers.register_object(self)
+
+    def __enter__(self):
+        self.bind()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.unbind()
+
+    @property
+    def name(self) -> str:
+        return self._name
 
     @property
     def is_multisampling(self) -> bool:
@@ -162,11 +186,11 @@ class FrameBufferGL:
         return self._fbo
 
     @property
-    def clear_color(self) -> (int, int, int):
+    def clear_color(self) -> Tuple[int, int, int]:
         return self._clear_color
 
     @clear_color.setter
-    def clear_color(self, rgb: (int, int, int)) -> None:
+    def clear_color(self, rgb: Tuple[int, int, int]) -> None:
         self.bind()
         self._clear_color = rgb
         glClearColor(rgb[0], rgb[1], rgb[2])
@@ -176,13 +200,12 @@ class FrameBufferGL:
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT)
 
     @gl_error_catch
-    def delete_buffer(self):
+    def delete(self):
         glDeleteFramebuffers(1, (self.bind_id,))
         for key, (tex_type, tex_id) in self._texture_attachments.items():
             glDeleteTextures(1, (tex_id,))
         glDeleteRenderbuffers(1, (self._texture_depth_attachment,))
-        if self.bind_id in FrameBufferGL._frame_buffers:
-            del FrameBufferGL._frame_buffers[self.bind_id]
+        FrameBufferGL.frame_buffers.unregister_object(self)
 
     @gl_error_catch
     def __create_depth(self) -> None:
@@ -191,54 +214,65 @@ class FrameBufferGL:
             raise RuntimeError("FrameBuffer creation error!!!")
 
     @gl_error_catch
-    def __create_color_attachment_rgb_8(self) -> (int, int):
+    def __create_color_attachment_rgb_8(self) -> Tuple[int, int]:
         tex_type, tex_id = FrameBufferGL._create_rgb_8_tex(self._width, self._height, self.samples)
+        if self._attachment_id not in FrameBufferGL.COLOR_ATTACHMENTS:
+            raise RuntimeError("FrameBufferGL::Exceed maximum amount of color attachments...")
+        attachment = FrameBufferGL.COLOR_ATTACHMENTS[self._attachment_id]
         if self.is_multisampling:
-            glFramebufferTexture2D(GL_FRAMEBUFFER, self._attachment_id, GL_TEXTURE_2D_MULTISAMPLE, tex_id, 0)
+            glFramebufferTexture2D(GL_FRAMEBUFFER, attachment, GL_TEXTURE_2D_MULTISAMPLE, tex_id, 0)
         else:
-            glFramebufferTexture2D(GL_FRAMEBUFFER, self._attachment_id, GL_TEXTURE_2D, tex_id, 0)
-        self._draw_buffers.append(self._attachment_id)
+            glFramebufferTexture2D(GL_FRAMEBUFFER, attachment, GL_TEXTURE_2D, tex_id, 0)
+        self._draw_buffers.append(attachment)
         self._attachment_id += 1
         if not FrameBufferGL._check_for_errors():
             raise RuntimeError("FrameBuffer creation error!!!")
         return tex_type, tex_id
 
     @gl_error_catch
-    def __create_color_attachment_rgba_8(self) -> (int, int):
+    def __create_color_attachment_rgba_8(self) -> Tuple[int, int]:
         tex_type, tex_id = FrameBufferGL._create_rgba_8_tex(self._width, self._height, self.samples)
+        if self._attachment_id not in FrameBufferGL.COLOR_ATTACHMENTS:
+            raise RuntimeError("FrameBufferGL::Exceed maximum amount of color attachments...")
+        attachment = FrameBufferGL.COLOR_ATTACHMENTS[self._attachment_id]
         if self.is_multisampling:
-            glFramebufferTexture2D(GL_FRAMEBUFFER, self._attachment_id, GL_TEXTURE_2D_MULTISAMPLE, tex_id, 0)
+            glFramebufferTexture2D(GL_FRAMEBUFFER, attachment, GL_TEXTURE_2D_MULTISAMPLE, tex_id, 0)
         else:
-            glFramebufferTexture2D(GL_FRAMEBUFFER, self._attachment_id, GL_TEXTURE_2D, tex_id, 0)
-
-        self._draw_buffers.append(self._attachment_id)
+            glFramebufferTexture2D(GL_FRAMEBUFFER, attachment, GL_TEXTURE_2D, tex_id, 0)
+        self._draw_buffers.append(attachment)
         self._attachment_id += 1
         if not FrameBufferGL._check_for_errors():
             raise RuntimeError("FrameBuffer creation error!!!")
         return tex_type, tex_id
 
     @gl_error_catch
-    def __create_color_attachment_rgb_f(self) -> (int, int):
+    def __create_color_attachment_rgb_f(self) -> Tuple[int, int]:
         tex_type, tex_id = FrameBufferGL._create_rgb_f_tex(self._width, self._height, self.samples)
+        if self._attachment_id not in FrameBufferGL.COLOR_ATTACHMENTS:
+            raise RuntimeError("FrameBufferGL::Exceed maximum amount of color attachments...")
+        attachment = FrameBufferGL.COLOR_ATTACHMENTS[self._attachment_id]
         if self.is_multisampling:
-            glFramebufferTexture2D(GL_FRAMEBUFFER, self._attachment_id, GL_TEXTURE_2D_MULTISAMPLE, tex_id, 0)
+            glFramebufferTexture2D(GL_FRAMEBUFFER, attachment, GL_TEXTURE_2D_MULTISAMPLE, tex_id, 0)
         else:
-            glFramebufferTexture2D(GL_FRAMEBUFFER, self._attachment_id, GL_TEXTURE_2D, tex_id, 0)
+            glFramebufferTexture2D(GL_FRAMEBUFFER, attachment, GL_TEXTURE_2D, tex_id, 0)
 
-        self._draw_buffers.append(self._attachment_id)
+        self._draw_buffers.append(attachment)
         self._attachment_id += 1
         if not FrameBufferGL._check_for_errors():
             raise RuntimeError("FrameBuffer creation error!!!")
         return tex_type, tex_id
 
     @gl_error_catch
-    def __create_color_attachment_rgba_f(self) -> (int, int):
+    def __create_color_attachment_rgba_f(self) -> Tuple[int, int]:
         tex_type, tex_id = FrameBufferGL._create_rgba_f_tex(self._width, self._height, self.samples)
+        if self._attachment_id not in FrameBufferGL.COLOR_ATTACHMENTS:
+            raise RuntimeError("FrameBufferGL::Exceed maximum amount of color attachments...")
+        attachment = FrameBufferGL.COLOR_ATTACHMENTS[self._attachment_id]
         if self.is_multisampling:
-            glFramebufferTexture2D(GL_FRAMEBUFFER, self._attachment_id, GL_TEXTURE_2D_MULTISAMPLE, tex_id, 0)
+            glFramebufferTexture2D(GL_FRAMEBUFFER, attachment, GL_TEXTURE_2D_MULTISAMPLE, tex_id, 0)
         else:
-            glFramebufferTexture2D(GL_FRAMEBUFFER, self._attachment_id, GL_TEXTURE_2D, tex_id, 0)
-        self._draw_buffers.append(self._attachment_id)
+            glFramebufferTexture2D(GL_FRAMEBUFFER, attachment, GL_TEXTURE_2D, tex_id, 0)
+        self._draw_buffers.append(attachment)
         self._attachment_id += 1
         if not FrameBufferGL._check_for_errors():
             raise RuntimeError("FrameBuffer creation error!!!")
@@ -275,37 +309,78 @@ class FrameBufferGL:
         self._texture_attachments.update({attachment_name: self.__create_color_attachment_rgba_f()})
 
     def validate(self):
-        glDrawBuffers(len(self._draw_buffers), tuple(self._draw_buffers))
+        buffers_count = len(self._draw_buffers)
+        buffers_draw = tuple(self._draw_buffers)
+        glDrawBuffers(buffers_count, buffers_draw)
         if not FrameBufferGL._check_for_errors():
             raise RuntimeError("FrameBuffer creation error!!!")
 
     def bind(self) -> None:
-        if FrameBufferGL.bounded_id() == self.bind_id:
+        if not FrameBufferGL.frame_buffers.bounded_update(self.bind_id):
             return
         glViewport(0, 0, self.width, self.height)
-        FrameBufferGL._bounded_id = self.bind_id
         glBindFramebuffer(GL_FRAMEBUFFER, self.bind_id)
 
     def unbind(self) -> None:
-        FrameBufferGL._bounded_id = 0
+        FrameBufferGL.frame_buffers.bounded_update(0)
         glBindFramebuffer(GL_FRAMEBUFFER, 0)
 
     def bind_buffer_texture_to_point(self, id_: int = 0) -> None:
         attachment = GL_TEXTURE0 + id_
+        if self.is_multisampling:
+            for key, (tex_type, tex_id) in self._texture_attachments.items():
+                glActiveTexture(attachment)
+                glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, tex_id)
+                attachment += 1
+            return
         for key, (tex_type, tex_id) in self._texture_attachments.items():
             glActiveTexture(attachment)
             glBindTexture(GL_TEXTURE_2D, tex_id)
             attachment += 1
+
+    def _read_buffer_attachment(self, attachment_id: int, x0: int, y0: int, width: int, height: int):
+        if attachment_id not in FrameBufferGL.COLOR_ATTACHMENTS:
+            return None
+        self.bind()
+        glReadBuffer(FrameBufferGL.COLOR_ATTACHMENTS[attachment_id])
+        frame = glReadPixels(x0, y0, width, height, GL_RGB, GL_UNSIGNED_BYTE)
+        self.unbind()
+        return frame
+
+    def _read_buffer_depth_attachment(self, x0: int, y0: int, width: int, height: int):
+        if self._texture_depth_attachment == 0:
+            return
+        self.bind()
+        frame = glReadPixels(x0, y0, width, height, GL_DEPTH_COMPONENT, GL_FLOAT)
+        self.unbind()
+        return frame
+
+    def _read_buffer_stencil_attachment(self, x0: int, y0: int, width: int, height: int):
+        if self._texture_depth_attachment == 0:
+            return
+        self.bind()
+        frame = glReadPixels(x0, y0, width, height, GL_STENCIL_ATTACHMENT, GL_FLOAT)
+        self.unbind()
+        return frame
+
+    @gl_error_catch
+    def grab_snap_shot(self):
+        pixels = self._read_buffer_attachment(0, 0, 0, self.width, self.height)
+        if pixels is None:
+            return
+        image = Image.frombytes('RGB', (self.width, self.height), pixels)
+        image = image.transpose(Image.FLIP_TOP_BOTTOM)
+        image.save("snap_shot.png")
+
+    @gl_error_catch
+    def grab_depth_snap_shot(self):
+        pixels = self._read_buffer_depth_attachment(0, 0, self.width, self.height)
+        depth = Image.frombytes('RGB', (self.width, self.height), pixels)
+        depth = depth.transpose(Image.FLIP_TOP_BOTTOM)
+        depth.save("depth_snap_shot.bmp")
 
     def blit(self) -> None:
         glBindFramebuffer(GL_READ_FRAMEBUFFER, self.bind_id)
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0)
         glBlitFramebuffer(0, 0, self.width, self.height, 0, 0, self.width, self.height, GL_COLOR_BUFFER_BIT, GL_NEAREST)
         self.unbind()
-        # glBindFramebuffer(GL_FRAMEBUFFER, 0)
-        # glEnable(GL_STENCIL_TEST)
-        # glEnable(GL_DEPTH_TEST)
-        # glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT)
-        # gl_globals.FRAME_BUFFER_BLIT_SHADER.bind()
-        # self.bind_buffer_texture_to_point()
-        # gl_globals.PLANE_MESH.draw()

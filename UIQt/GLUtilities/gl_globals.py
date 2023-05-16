@@ -1,7 +1,9 @@
 from UIQt.GLUtilities.Materials.grid_material import GridMaterial
 from UIQt.GLUtilities.Materials.map_material import MapMaterial
 from UIQt.GLUtilities.Materials.obj_material import ObjMaterial
+from UIQt.GLUtilities.gl_buffer import BufferGL
 from UIQt.GLUtilities.gl_camera import CameraGL
+from UIQt.GLUtilities.gl_frame_buffer import FrameBufferGL
 from UIQt.GLUtilities.triangle_mesh import read_obj_mesh
 from UIQt.GLUtilities.gl_texture import TextureGL
 from UIQt.GLUtilities.gl_shader import ShaderGL
@@ -165,8 +167,12 @@ def init():
 
 
 def free():
-    TextureGL.delete_all()
-    ShaderGL.delete_all()
-    MeshGL.delete_all()
+    # BufferGL.buffers.write_all_instances()
+    ShaderGL.shaders.write_all_instances()
+    TextureGL.textures.delete_all()
+    ShaderGL.shaders.delete_all()
+    MeshGL.meshes.delete_all()
+    FrameBufferGL.frame_buffers.delete_all()
+
 
 

@@ -11,7 +11,7 @@ from UIQt.GLUtilities.gl_mesh import MeshGL
 from UIQt.GLUtilities import gl_globals
 from OpenGL.GL.shaders import GL_TRUE
 from collections import namedtuple
-from PyQt5 import QtOpenGL
+from PyQt5 import QtOpenGL, QtCore
 from typing import List
 import OpenGL.GL as GL
 import math
@@ -36,6 +36,7 @@ class DrawCall(namedtuple('DrawCall', 'view, projection, cam_position, transform
 class SceneViewerWidget(QtOpenGL.QGLWidget):
     def __init__(self, parent=None):
         QtOpenGL.QGLWidget.__init__(self, parent)
+        self.setFocusPolicy(QtCore.Qt.ClickFocus)
         self.fmt: QOpenGLVersionProfile = None
         self.parent = parent
         self._render_queue: List[DrawCall] = []
@@ -91,7 +92,7 @@ class SceneViewerWidget(QtOpenGL.QGLWidget):
 
     def _reset_frame_buffer(self):
         if self._frame_buffer is not None:
-            self._frame_buffer.delete_buffer()
+            self._frame_buffer.delete()
         self._frame_buffer = FrameBufferGL(self.width(), self.height())
         self._frame_buffer.create_color_attachment_rgba_8("attachment_0")
         self._frame_buffer.create_depth()
@@ -140,8 +141,6 @@ class SceneViewerWidget(QtOpenGL.QGLWidget):
     def clean_up(self) -> None:
         self.makeCurrent()
         gl_globals.free()
-        if self._frame_buffer is not None:
-            self._frame_buffer.delete_buffer()
         self.doneCurrent()
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
@@ -222,13 +221,13 @@ class SceneViewerWidget(QtOpenGL.QGLWidget):
             camera.transform.origin += camera.transform.front
 
         if keyboard.key_a.is_hold or keyboard.key_left.is_hold:
-            camera.transform.origin -= camera.transform.right
+            camera.transform.origin += camera.transform.right
 
         if keyboard.key_s.is_hold or keyboard.key_down.is_hold:
             camera.transform.origin -= camera.transform.front
 
         if keyboard.key_d.is_hold or keyboard.key_right.is_hold:
-            camera.transform.origin = camera.transform.right
+            camera.transform.origin -= camera.transform.right
 
         if keyboard.key_q.is_hold:
             camera.transform.origin += Vector3(0, 1, 0)
@@ -243,21 +242,23 @@ class SceneViewerWidget(QtOpenGL.QGLWidget):
         if keyboard.key_z.is_hold:
             ...
         if keyboard.key_x.is_hold:
-            ...
+            self._frame_buffer.grab_snap_shot()
+            self._frame_buffer.grab_depth_snap_shot()
 
     def updateGL(self) -> None:
-        self._keyboard_interaction()
+        gl_globals.KEYBOARD_CONTROLLER.update_on_hold()
         for m in self._scene_models:
             self.render_call(gl_globals.MAIN_CAMERA, m)
-        gl_globals.KEYBOARD_CONTROLLER.update_on_hold()
 
     @gl_error_catch
     def paintGL(self):
         self._frame_buffer.bind()
         GL.glEnable(GL.GL_DEPTH_TEST)
-        GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
-        gl_globals.MAP_MATERIAL.heat_or_height = 0
+        GL.glEnable(GL.GL_STENCIL_TEST)
+        GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT | GL.GL_STENCIL_BUFFER_BIT)
         while len(self._render_queue) != 0:
             self._render_queue.pop()()  # (gl_globals.MAP_MATERIAL)
+        self._keyboard_interaction()
         self._frame_buffer.blit()
         self.swapBuffers()
+

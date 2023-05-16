@@ -403,6 +403,7 @@ def create_plane(height: float = 1.0, width: float = 1.0, rows: int = 10,
         mesh.append_face(Face(p3, p3, p3, p2, p2, p2, p4, p4, p4))
     if transform is not None:
         mesh.transform_mesh(transform)
+    mesh.name = "procedural_plane"
     return mesh
 
 
@@ -445,6 +446,7 @@ def create_box(min_b: Vector3, max_b: Vector3, transform: Transform = None) -> T
 
     if transform is not None:
         mesh.transform_mesh(transform)
+    mesh.name = "procedural_box"
     return mesh
 
 
@@ -455,6 +457,7 @@ def voxels_mesh(voxels: List[Voxel]) -> TrisMesh:
             mesh = create_box(voxel.min, voxel.max)
             continue
         mesh.merge(create_box(voxel.min, voxel.max))
+    mesh.name = "procedural_voxels"
     return mesh
 
 
@@ -523,6 +526,7 @@ def poly_strip(points: List[Vector2], strip_width: float = 0.5) -> TrisMesh:
     mesh.append_uv(Vector2(1.0, 0.0))
     mesh.append_face(Face(f_index - 4, f_index - 4, 0, f_index - 3, f_index - 3, 0, f_index - 2, f_index - 2, 0))
     mesh.append_face(Face(f_index - 3, f_index - 3, 0, f_index - 1, f_index - 1, 0, f_index - 2, f_index - 2, 0))
+    mesh.name = "procedural_poly_strip_xz"
     return mesh
 
 

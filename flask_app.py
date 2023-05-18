@@ -2,7 +2,7 @@ from flask import Flask, render_template, redirect, url_for, Response, request
 import cv2
 
 
-app = Flask(__name__, template_folder="../templates", static_folder='../static')
+app = Flask(__name__, template_folder="./templates", static_folder='./static')
 cam = cv2.VideoCapture(0)
 
 

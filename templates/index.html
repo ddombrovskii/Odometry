@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        html {
+            font-family: "lucida grande", sans-serif;
+        }
+
+        body {
+            margin: 0;
+        }
+
+        .cam {
+            position: relative;
+            margin-left: 25%;
+        }
+
+        .page {
+            width: calc(100vw - 24px);
+            height: calc(100vh - 24px);
+            border-radius: 5px;
+            background-color: #a0a0a0;
+            overflow: hidden;
+            margin: 6px;
+            padding: 6px;
+            display: flex;
+            align-items: stretch;
+            flex-wrap: nowrap;
+        }
+
+        .tabs {
+            display: flex;
+            flex-direction: column;
+            width: 50px;
+            overflow-y: auto;
+            position: relative;
+            z-index: 3;
+        }
+
+        .tab,
+        .tab:focus,
+        .tab:hover {
+            display: inline-block;
+            position: relative;
+            z-index: 2;
+            padding: 20px 6px;
+            border: 1px solid hsl(219deg 1% 72%);
+            border-radius: 5px 5px 5px 5px;
+            background: hsl(220deg 20% 94%);
+            outline: none;
+            font-weight: bold;
+            overflow: hidden;
+            text-align: left;
+            cursor: pointer;
+            writing-mode: sideways-lr;
+            text-orientation: mixed;
+            flex-grow: 1;
+            text-align: center;
+        }
+
+        .tab + .tab {
+            margin-top: 4px;
+        }
+
+        .tab.selected {
+            border-left-width: 4px;
+            border-left-color: rgb(36 116 214);
+            border-right-color: hsl(220deg 20% 94%);
+            background: #eee;
+            padding-left: 0;
+            padding-right: 12px;
+        }
+
+        .tab:not(.selected) {
+            border-bottom: 1px solid hsl(219deg 1% 72%);
+            margin-right: 10px;
+        }
+
+        .list-wrapper {
+            display: none;
+            background-color: #eee;
+            border-radius: 5px;
+            width: 325px;
+            border: 1px solid hsl(219deg 1% 72%);
+            position: relative;
+            z-index: 2;
+            left: -4px;
+            padding: 20px 16px 8px 16px;
+            overflow-y: auto;
+        }
+
+        .close-wrapper {
+            position: sticky;
+            top: -20px;
+            height: 40px;
+            padding-top: 20px;
+            margin-top: -20px;
+            display: flex;
+            flex-direction: row-reverse;
+            background-color: #eee;
+        }
+
+        .close {
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            cursor: pointer;
+        }
+
+        .action_button-wrapper {
+            position: sticky;
+            top: -20px;
+            height: 40px;
+            padding-top: 20px;
+            margin-top: -20px;
+            display: flex;
+            flex-grow: 1;
+            flex-direction: row-reverse;
+            background-color: #eee;
+        }
+
+        .action_button {
+        / / width: 30 px;
+            height: 30px;
+            padding: 0;
+            flex-grow: 1;
+            cursor: pointer;
+        }
+
+        .list {
+            margin: 0;
+            padding: 0;
+            list-style-type: none;
+        }
+
+        .list-item {
+            border: 1px solid hsl(219deg 1% 72%);
+            padding: 8px;
+            border-radius: 5px;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .list-item + .list-item {
+            margin-top: 8px;
+        }
+
+        .select {
+            margin-top: 8px;
+        }
+
+        .param {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .param-divider {
+            flex-grow: 1;
+            border-bottom: 2px dotted #eee;
+        }
+
+        .content {
+            flex-grow: 1;
+        }
+    </style>
+</head>
+<body>
+<script>
+
+    let _cameraSettings = null;
+    let _imuSettings = null;
+    let _odometerSettings = null;
+
+    let _cameraSettingsContent = null;
+    let _imuSettingsContent = null;
+    let _odometerSettingsContent = null;
+
+    function cameraSettings() {
+        if (_cameraSettings == null) _cameraSettings = document.getElementById("CameraSettings");
+        return _cameraSettings;
+    }
+
+    function imuSettings() {
+        if (_imuSettings == null) _imuSettings = document.getElementById("IMUSettings");
+        return _imuSettings;
+    }
+
+    function odometerSettings() {
+        if (_odometerSettings == null) _odometerSettings = document.getElementById("OdometerSettings");
+        return _odometerSettings;
+    }
+
+    function cameraSettingsContent() {
+        if (_cameraSettingsContent == null) _cameraSettingsContent = document.getElementById("CameraSettingsContent");
+        return _cameraSettingsContent;
+    }
+
+    function imuSettingsContent() {
+        if (_imuSettingsContent == null) _imuSettingsContent = document.getElementById("IMUSettingsContent");
+        return _imuSettingsContent;
+    }
+
+    function odometerSettingsContent() {
+        if (_odometerSettingsContent == null) _odometerSettingsContent = document.getElementById("OdometerSettingsContent");
+        return _odometerSettingsContent;
+    }
+
+    function HideAll() {
+        cameraSettings().classList.remove("selected"); //  style.display = "none";
+        imuSettings().classList.remove("selected");
+        odometerSettings().classList.remove("selected");
+
+        HideElement(cameraSettingsContent());
+        HideElement(imuSettingsContent());
+        HideElement(odometerSettingsContent());
+    }
+
+    function HideElement(element) {
+        element.style.display = "none";
+    }
+
+    function ShowElement(element) {
+        element.style.display = "block";
+    }
+
+    function CameraSettingsShow() {
+        HideAll();
+        cameraSettings().classList.add("selected");
+        ShowElement(cameraSettingsContent());
+    }
+
+    function ImuSettingsShow() {
+        HideAll();
+        imuSettings().classList.add("selected");
+        ShowElement(imuSettingsContent());
+    }
+
+    function OdometerSettingsShow() {
+        HideAll();
+        odometerSettings().classList.add("selected");
+        ShowElement(odometerSettingsContent());
+    }
+
+
+</script>
+<section class="page">
+    <nav class="tabs">
+        <button id="CameraSettings" type="button" onclick="CameraSettingsShow()" class="tab" role="tab">
+            Camera settings
+        </button>
+        <button id="IMUSettings" type="button" onclick="ImuSettingsShow()" class="tab" role="tab">
+            IMU settings
+        </button>
+        <button id="OdometerSettings" type="button" onclick="OdometerSettingsShow()" class="tab" role="tab">
+            Odometer settings
+        </button>
+    </nav>
+    <aside id="CameraSettingsContent" class="list-wrapper">
+        <div class="close-wrapper">
+            <button class="close" type="button" onclick="HideAll()">x</button>
+        </div>
+        <ul class="list">
+            <li class="list-item">
+                <div class="param">
+                    <span>Camera resolution</span>
+                </div>
+                <form method="post" name="cam_res_form" action="/">
+                    <select class="select" name="cam_res_select">
+                        <option>HDTW</option>
+                        <option>1050p</option>
+                        <option>720p</option>
+                    </select>
+                    <input type="submit" value="применить"/>
+                </form>
+            </li>
+            <li class="list-item">
+                <div class="param">
+                    <span>Camera image crop</span>
+                </div>
+               <form method="post" name="cam_offset_form" action="/">
+                   <div class="param">
+                        <span>offset - x, px</span>
+                        <span class="param-divider"></span>
+                        <span>
+                            <input type="text" id="camera_offset_x" name="cam_offset_x" value="8"/>
+                        </span>
+                    </div>
+                    <div class="param">
+                        <span>offset - y, px</span>
+                        <span class="param-divider"></span>
+                        <span>
+                            <input type="text" id="camera_offset_y" name="cam_offset_y" value="8"/>
+                        </span>
+                    </div>
+                    <div class="param">
+                        <span>width, px</span>
+                        <span class="param-divider"></span>
+                        <span>
+                            <input type="text" id="camera_width" name="cam_width" value="800"/>
+                        </span>
+                    </div>
+                    <div class="param">
+                        <span>height, px</span>
+                        <span class="param-divider"></span>
+                        <span>
+                            <input type="text" id="camera_height" name="cam_height" value="600"/>
+                        </span>
+                    </div>
+                   <input type="submit" value="применить"/>
+               </form>
+            </li>
+            <li class="list-item">
+                <form method="post" name="cam_framerate_form">
+                    <div class="param">
+                        <span>Frame time</span>
+                        <span class="param-divider"></span>
+                        <span>
+					        <input type="text" id="camera_frame_time" name="cam_framerate_time" value="0.033sec"/>
+			            </span>
+                    </div>
+                    <select class="select" name="cam_framerate_select">
+                        {% for fps in fps_list %}
+                        <option>{{ fps }}</option>
+                        {% endfor %}
+                    </select>
+                    <input type="submit" name="cam_fps_form" value="применить"/>
+                </form>
+            </li>
+            <li class="list-item">
+                <div class="param">
+                    <span>Record video</span>
+                </div>
+
+                <div class="param">
+                    <span>Video format</span>
+                </div>
+
+                <form method="post">
+                    <div>
+                        <select class="select" name="cam_video_format">
+                            <option>mpeg4</option>
+                            <option>avi</option>
+                            <option>images series</option>
+                        </select>
+                        <input type="submit" value="применить"/>
+                    </div>
+                </form>
+
+                <div class="param">
+                    <span>File name:</span>
+                    <span class="param-divider"></span>
+                    <span>none</span>
+                </div>
+
+                <div class="param">
+                    <button class="action_button" type="button" onclick="">Select or create file...</button>
+                </div>
+                <div class="param">
+                    <button class="action_button" type="button" onclick="">Start</button>
+                    <button class="action_button" type="button" onclick="">Pause</button>
+                    <button class="action_button" type="button" onclick="">Stop</button>
+                </div>
+            </li>
+            <li class="list-item">
+                <div class="param">
+                    <span>Camera calibration</span>
+                    <span class="param-divider"></span>
+                    <span style="background-color: #faa;">uncalibrated</span>
+                </div>
+
+                <div class="param">
+                    <span>File name:</span>
+                    <span class="param-divider"></span>
+                    <span>none</span>
+                </div>
+                <div class="param">
+                    <button class="action_button" type="button" onclick="">Reset calibration</button>
+                </div>
+                <div class="param">
+                    <button class="action_button" type="button" onclick="">Select or create file...</button>
+                </div>
+
+                <div class="param">
+                    <button class="action_button" type="button" onclick="">Start</button>
+                    <button class="action_button" type="button" onclick="">Pause</button>
+                    <button class="action_button" type="button" onclick="">Stop</button>
+                </div>
+            </li>
+
+        </ul>
+    </aside>
+
+    <aside id="IMUSettingsContent" class="list-wrapper">
+        <div class="close-wrapper">
+            <button class="close" type="button" onclick="HideAll()">x</button>
+        </div>
+        <ul class="list">
+            <li class="list-item">
+                <div class="param">
+                    <span>Gravity scale</span>
+                </div>
+                <select class="select">
+                    <option>2g</option>
+                    <option>4g</option>
+                    <option>8g</option>
+                    <option>16g</option>
+                </select>
+            </li>
+            <li class="list-item">
+                <div class="param">
+                    <span>Angles velocity scale</span>
+                </div>
+                <select class="select">
+                    <option>250deg</option>
+                    <option>500deg</option>
+                    <option>1000deg</option>
+                    <option>2000deg</option>
+                </select>
+            </li>
+            <li class="list-item">
+                <div class="param">
+                    <span>Static state acceleration threshold</span>
+                    <span class="param-divider"></span>
+                    <span>
+			    <input type="text" id="imu_acceleration_threshold" value="0.3 m/sec^2"/>
+			</span>
+                </div>
+            </li>
+            <li class="list-item">
+                <div class="param">
+                    <span>Static state acceleration trustable time</span>
+                    <span class="param-divider"></span>
+                    <span>
+				<input type="text" id="imu_acceleration_trust_t" value="0.3 sec"/>
+			</span>
+                </div>
+            </li>
+            <li class="list-item">
+                <div class="param">
+                    <span>Complementary filter k-arg</span>
+                    <span class="param-divider"></span>
+                    <span>
+				<input type="text" id="filter_k_arg" value="0.998"/>
+			</span>
+                </div>
+            </li>
+            <li class="list-item">
+                <div class="param">
+                    <span>Record IMU</span>
+                </div>
+
+                <div class="param">
+                    <span>File name:</span>
+                    <span class="param-divider"></span>
+                    <span>none</span>
+                </div>
+
+                <div class="param">
+                    <button class="action_button" type="button" onclick="">Select or create file...</button>
+                </div>
+                <div class="param">
+                    <button class="action_button" type="button" onclick="">Start</button>
+                    <button class="action_button" type="button" onclick="">Pause</button>
+                    <button class="action_button" type="button" onclick="">Stop</button>
+                </div>
+            </li>
+            <li class="list-item">
+                <div class="param">
+                    <span>Calibrate IMU</span>
+                    <span class="param-divider"></span>
+                    <span style="background-color: #faa;">uncalibrated</span>
+                </div>
+
+                <div class="param">
+                    <span>File name:</span>
+                    <span class="param-divider"></span>
+                    <span>none</span>
+                </div>
+                <div class="param">
+                    <button class="action_button" type="button" onclick="">Reset calibration</button>
+                </div>
+                <div class="param">
+                    <button class="action_button" type="button" onclick="">Select or create file...</button>
+                </div>
+
+                <div class="param">
+                    <button class="action_button" type="button" onclick="">Start</button>
+                    <button class="action_button" type="button" onclick="">Pause</button>
+                    <button class="action_button" type="button" onclick="">Stop</button>
+                </div>
+            </li>
+
+        </ul>
+    </aside>
+
+    <aside id="OdometerSettingsContent" class="list-wrapper">
+        <div class="close-wrapper">
+            <button class="close" type="button" onclick="HideAll()">x</button>
+        </div>
+        <ul class="list">
+            <li class="list-item">
+                <div class="param">
+                    <span>Resolution</span>
+                </div>
+                <select class="select">
+                    <option>HDTW</option>
+                    <option>1050p</option>
+                    <option>720p</option>
+                </select>
+            </li>
+            <li class="list-item">
+                <div class="param">
+                    <span>Param name</span>
+                    <span class="param-divider"></span>
+                    <span>Param value</span>
+                </div>
+                <select class="select">
+                    <option>Option 1</option>
+                    <option>Option 2</option>
+                    <option>Option 3</option>
+                </select>
+            </li>
+            <li class="list-item">
+                <div class="param">
+                    <span>Param name</span>
+                    <span class="param-divider"></span>
+                    <span>Param value</span>
+                </div>
+                <div class="param">
+                    <span>Param name</span>
+                    <span class="param-divider"></span>
+                    <span>Param value</span>
+                </div>
+                <div class="param">
+                    <span>Param name</span>
+                    <span class="param-divider"></span>
+                    <span>Param value</span>
+                </div>
+                <select class="select">
+                    <option>Option 1</option>
+                    <option>Option 2</option>
+                    <option>Option 3</option>
+                </select>
+            </li>
+        </ul>
+    </aside>
+
+    <main class="content">
+        <div class="cam">
+            <img src="{{ url_for('video') }}"/>
+        </div>
+        <!-- some content -->
+    </main>
+</section>
+</body>
+</html>

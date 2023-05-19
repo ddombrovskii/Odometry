@@ -27,7 +27,7 @@ class MeshGL:
                         transform: Transform = None):
         return cls(create_plane(height, width, rows, cols, transform))
 
-    def __str__(self):
+    def __repr__(self):
         return f"{{\n" \
                f"\t\"name\"           :\"{self.name}\",\n" \
                f"\t\"vao_id\"         :{self._vao},\n" \
@@ -36,8 +36,15 @@ class MeshGL:
                f"\t\"bytes_per_vert\" :{self._vertex_byte_size},\n" \
                f"\t\"attribytes\"     :{self._vertex_attributes.state}\n}}"
 
+    def __str__(self):
+        return f"{{\n" \
+               f"\t\"name\"   :\"{self.name}\",\n" \
+               f"\t\"source\" :\"{self.source}\"" \
+               f"\n}}"
+
     def __init__(self, mesh: TrisMesh = None):
         self._name = ""
+        self._source = ""
         self._bounds: BoundingBox = BoundingBox()
         self._vao: int = 0
         self._vbo = None
@@ -46,9 +53,11 @@ class MeshGL:
         self._vertex_attributes: BitSet32 = BitSet32()
         self._vertex_byte_size = 0
         if not (mesh is None):
-            self._create_gpu_buffers(mesh)
-            self.name = f"gl_mesh_{self.bind_id}"
-            self.name = f"{mesh.name}_{self.bind_id}"
+            if self._create_gpu_buffers(mesh):
+                self.name = f"gl_mesh_{self.bind_id}"
+                self.name = f"{mesh.name}_{self.bind_id}"
+                self._source = mesh.source
+
             return
         self.name = f"gl_mesh_{self.bind_id}"
 
@@ -64,6 +73,10 @@ class MeshGL:
     def __call__(self, *args, **kwargs):
         with self:
             self.draw()
+
+    @property
+    def source(self) -> str:
+        return self._source
 
     @property
     def name(self) -> str:
@@ -112,12 +125,6 @@ class MeshGL:
     @property
     def has_triangles(self):
         return self._vertex_attributes.is_bit_set(MeshGL.TrianglesAttribute)
-
-    # def set_mesh(self, m: TrisMesh) -> None:
-    #     if self._vao != 0:
-    #         self.delete_mesh()
-    #     if self._create_gpu_buffers(m):
-    #         self.name = m.name
 
     @gl_error_catch
     def _gen_vao(self):

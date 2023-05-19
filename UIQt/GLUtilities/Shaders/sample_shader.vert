@@ -75,7 +75,6 @@ void main()
 	vs_mat_out.ni	          = ni	          ;
 	vs_mat_out.ns	          = ns	          ;
 	vs_mat_out.specular_color = specular_color;
-
 	vs_cam_out.projection     = projection;
 	vs_cam_out.position       = cam_position;
 	vs_cam_out.view           = view;

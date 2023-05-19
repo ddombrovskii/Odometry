@@ -79,7 +79,6 @@ GREEN_TEXTURE = None
 BLUE_TEXTURE = None
 PINK_TEXTURE = None
 GRAY_TEXTURE = None
-CARBON_TEXTURE = None
 
 
 def _init_textures():
@@ -89,18 +88,19 @@ def _init_textures():
     global BLUE_TEXTURE
     global PINK_TEXTURE
     global GRAY_TEXTURE
-    global CARBON_TEXTURE
-    global CARBON_TEXTURE
 
     WHITE_TEXTURE = TextureGL(100, 100, Color(np.uint8(255), np.uint8(255), np.uint8(255)))
+    WHITE_TEXTURE.name = "white"
     RED_TEXTURE = TextureGL(100, 100, Color(np.uint8(255), np.uint8(0), np.uint8(0)))
+    RED_TEXTURE.name = "red"
     GREEN_TEXTURE = TextureGL(100, 100, Color(np.uint8(0), np.uint8(255), np.uint8(0)))
+    GREEN_TEXTURE.name = "green"
     BLUE_TEXTURE = TextureGL(100, 100, Color(np.uint8(0), np.uint8(0), np.uint8(255)))
+    BLUE_TEXTURE.name = "blue"
     PINK_TEXTURE = TextureGL(100, 100, Color(np.uint8(255), np.uint8(0), np.uint8(255)))
+    PINK_TEXTURE.name = "pink"
     GRAY_TEXTURE = TextureGL(100, 100, Color(np.uint8(125), np.uint8(125), np.uint8(125)))
-    CARBON_TEXTURE = TextureGL()
-    CARBON_TEXTURE.load(r'./GLUtilities/Resources/carbon.jpg')
-    CARBON_TEXTURE.save_texture(r'./GLUtilities/Resources/carbon_new.jpg')
+    GRAY_TEXTURE.name = "gray"
 
 
 ####################################
@@ -168,7 +168,7 @@ def init():
 
 def free():
     # BufferGL.buffers.write_all_instances()
-    ShaderGL.shaders.write_all_instances()
+    # ShaderGL.shaders.write_all_instances()
     TextureGL.textures.delete_all()
     ShaderGL.shaders.delete_all()
     MeshGL.meshes.delete_all()

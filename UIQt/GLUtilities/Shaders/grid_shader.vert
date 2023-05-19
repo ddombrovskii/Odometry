@@ -70,8 +70,7 @@ void main()
 	vs_mat_out.y_axis_color = y_axis_color;
 	vs_mat_out.x_axis_color = x_axis_color;
 	vs_mat_out.line_color   = line_color;
-
-    float x_scale = sqrt(model[0][0] * model[0][0] + 
+    float x_scale = sqrt(model[0][0] * model[0][0] +
                          model[1][0] * model[1][0] +
                          model[2][0] * model[2][0]);
     
@@ -82,7 +81,6 @@ void main()
     vs_vert_out.scaling  = vec2(x_scale, z_scale);
     vs_vert_out.texture  = vec2(a_position.x * x_scale, a_position.z * z_scale);
 	vs_vert_out.position = (model * vec4(a_position, 1.0));
-
     vs_cam_out.projection = projection;
 	vs_cam_out.position   = cam_position;
 	vs_cam_out.view       = view;

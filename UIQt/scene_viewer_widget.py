@@ -1,36 +1,14 @@
 from PyQt5.QtGui import QOpenGLVersionProfile, QSurfaceFormat, QMouseEvent, QWheelEvent, QKeyEvent
 from UIQt.GLUtilities.gl_decorators import gl_error_catch
 from UIQt.GLUtilities.gl_frame_buffer import FrameBufferGL
-from UIQt.GLUtilities.gl_material import MaterialGL
-from UIQt.GLUtilities.gl_scene import SceneGL, load_scene
-from UIQt.GLUtilities.triangle_mesh import TrisMesh, read_obj_mesh, poly_strip
-from Utilities.Geometry import Vector3, Transform, Vector2
-from UIQt.GLUtilities.gl_camera import CameraGL
+from UIQt.GLUtilities.gl_scene import SceneGL, load_scene, save_scene
+from Utilities.Geometry import Vector3, Vector2, Vector4
 from UIQt.GLUtilities.gl_model import ModelGL
-from UIQt.GLUtilities.gl_mesh import MeshGL
 from UIQt.GLUtilities import gl_globals
-from OpenGL.GL.shaders import GL_TRUE
-from collections import namedtuple
 from PyQt5 import QtOpenGL, QtCore
 from typing import List
 import OpenGL.GL as GL
 import math
-
-
-class DrawCall(namedtuple('DrawCall', 'view, projection, cam_position, transform, material, mesh')):
-
-    def __new__(cls, cam: CameraGL, model: ModelGL):
-        return super().__new__(cls, cam.look_at_matrix, cam.projection, cam.transform.origin,
-                               model.transform.transform_matrix, model.material, model.mesh)
-
-    def __call__(self, material: MaterialGL = None):
-        material = material if material is not None else self.material
-        material.bind()
-        material.shader.send_mat_4("view", self.view)
-        material.shader.send_mat_4("projection", self.projection)
-        material.shader.send_vec_3("cam_position", self.cam_position)
-        material.shader.send_mat_4("model", self.transform, GL_TRUE)
-        self.mesh.draw()
 
 
 class SceneViewerWidget(QtOpenGL.QGLWidget):
@@ -40,18 +18,8 @@ class SceneViewerWidget(QtOpenGL.QGLWidget):
         self.fmt: QOpenGLVersionProfile = None
         self.parent = parent
         self._scene = SceneGL()
-        self._render_queue: List[DrawCall] = []
-        self._scene_models: List[ModelGL] = []
         self._frame_buffer = None
         self.setFocusPolicy(QtCore.Qt.ClickFocus)
-
-    def render_call(self, cam: CameraGL, model: ModelGL):
-        # if cam.cast_object(model.mesh.bounds):
-        #     print("non-cast")
-        #     self._render_queue.append(DrawCall(cam, model))
-        #     return
-        # print("cast")
-        self._render_queue.append(DrawCall(cam, model))
 
     @staticmethod
     def _get_opengl_info():
@@ -60,37 +28,6 @@ class SceneViewerWidget(QtOpenGL.QGLWidget):
                f"\t\"Renderer\":       \"{GL.glGetString(GL.GL_RENDERER).decode('utf-8')}\",\n" \
                f"\t\"OpenGL Version\": \"{GL.glGetString(GL.GL_VERSION).decode('utf-8')}\",\n" \
                f"\t\"Shader Version\": \"{GL.glGetString(GL.GL_SHADING_LANGUAGE_VERSION).decode('utf-8')}\"\n}}"
-
-    def create_grid(self):
-        model_gl = ModelGL()
-        model_gl.transform.scale = Vector3(10, 10, 10)
-        model_gl.material = gl_globals.GRID_MATERIAL
-        model_gl.mesh = gl_globals.PLANE_MESH
-        self._scene_models.append(model_gl)
-
-    def load_model(self, file_path: str = None, t: Transform = None):
-        if file_path is None:
-            model_gl = ModelGL()
-            model_gl.mesh = gl_globals.BOX_MESH
-            self._scene_models.append(model_gl)
-            if t is not None:
-                model_gl.transform.transform_matrix *= t.transform_matrix
-            return
-        try:
-            for m in read_obj_mesh(file_path):
-                model_gl = ModelGL()
-                model_gl.mesh = MeshGL(m)
-                if t is not None:
-                    model_gl.transform.transform_matrix *= t.transform_matrix
-                self._scene_models.append(model_gl)
-        except RuntimeError as err:
-            pass
-
-    def draw_line_2d(self, points: List[Vector2]):
-        model_gl = ModelGL()
-        model_gl.material = gl_globals.DEFAULT_MATERIAL
-        model_gl.mesh = MeshGL(poly_strip(points))
-        self._scene_models.append(model_gl)
 
     def _reset_frame_buffer(self):
         if self._frame_buffer is not None:
@@ -106,44 +43,20 @@ class SceneViewerWidget(QtOpenGL.QGLWidget):
         self.fmt = QOpenGLVersionProfile()
         self.fmt.setVersion(3, 3)
         self.fmt.setProfile(QSurfaceFormat.OpenGLContextProfile.CoreProfile)
-        GL.glClearColor(125 / 255, 135 / 255, 145 / 255, 1)
-        GL.glEnable(GL.GL_DEPTH_TEST)
-        GL.glEnable(GL.GL_BLEND)
-        GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
-        # GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_LINE)
         print(SceneViewerWidget._get_opengl_info())
         gl_globals.init()
-        gl_globals.MAIN_CAMERA.look_at(Vector3(0, 0, 0), Vector3(1, 1, 1))
         self._reset_frame_buffer()
-
-        self.create_grid()
-        # self.load_model('../big_map.obj')
-        self.load_model()
-        self.spawn_obj()
-        n = 257
-        dt = 1.0 / (n - 1)
-        dpi = dt * math.pi * 2.0
-        r = 4.0
-        line = [Vector2(math.sin(i * dpi) * r * (1.0 + 0.25 * math.cos(i * dpi * 8)),
-                        math.cos(i * dpi) * r * (1.0 + 0.25 * math.cos(i * dpi * 8))) for i in range(n)]
-        self.draw_line_2d(line)
-
         self._scene = load_scene(r"E:\GitHub\Odometry\Odometry\UIQt\GLUtilities\Scenes")
-        # self.draw_line()
+        gl_globals.MAIN_CAMERA.look_at(self._scene.bounds.min, self._scene.bounds.max)
 
-    def _load_model(self, src: str):
-        # вызов по нажатию на кнопку или чего ещё
-        try:
-            tris_models: List[TrisMesh] = read_obj_mesh(src)
-            for m in tris_models:
-                model_gl = ModelGL()
-                model_gl.mesh = MeshGL(m)
-                self._scene_models.append(model_gl)
-        except:
-            pass
+        for i in range(64):
+            gl_globals.MAIN_CAMERA.transform.origin += gl_globals.MAIN_CAMERA.transform.right *  (i / 100.0)
+            image = self._scene.draw_scene_preview(gl_globals.MAIN_CAMERA, 1024, 1024)
+            image.save(f"previews/preview_{i + 1}.bmp")
 
     def clean_up(self) -> None:
         self.makeCurrent()
+        save_scene("test_scene.json", self._scene)
         gl_globals.free()
         self.doneCurrent()
 
@@ -165,6 +78,7 @@ class SceneViewerWidget(QtOpenGL.QGLWidget):
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
         gl_globals.MOUSE_CONTROLLER.update_on_press(event)
+        self.on_mouse_pick()
         ###############################################
 
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
@@ -180,7 +94,9 @@ class SceneViewerWidget(QtOpenGL.QGLWidget):
             gl_globals.MAIN_CAMERA.transform.origin += \
                 (gl_globals.MAIN_CAMERA.transform.up * -delta.y / self.height() * scale +
                  gl_globals.MAIN_CAMERA.transform.right * delta.x / self.width() * scale)
+
         ###############################################
+        # print(self._frame_buffer.read_depth_pixel( event.x(), event.y()))
 
         # self._mouse.update_position(event.pos().x(), event.pos().y(), self.width(), self.height())
         # if self._mouse.is_left_button:
@@ -197,6 +113,33 @@ class SceneViewerWidget(QtOpenGL.QGLWidget):
         # cntr = bbox.center
         # self._main_camera.look_at(cntr, cntr + size)
 
+    def on_mouse_pick(self):
+        if not gl_globals.MOUSE_CONTROLLER.left_btn.is_pressed:
+            return
+        x_pix = gl_globals.MOUSE_CONTROLLER.left_btn.pressed_pos.x
+        y_pix = gl_globals.MOUSE_CONTROLLER.left_btn.pressed_pos.y
+        depth = self._frame_buffer.read_depth_pixel(x_pix, y_pix)
+        print(*depth)
+        x = -2.0 * x_pix / self.width() + 1
+        y = -2.0 * y_pix / self.height() + 1
+        clip_coord = Vector4(x, y, -1, 1)
+        inv_projection = gl_globals.MAIN_CAMERA.projection.invert()
+        eye_coord = inv_projection * clip_coord
+        eye_coord = Vector4(eye_coord.x, eye_coord.y, 1, 0)
+        inv_view_mat = gl_globals.MAIN_CAMERA.look_at_matrix.invert()
+        eye_coord = inv_view_mat * eye_coord
+        world_ray = Vector3(eye_coord.x, eye_coord.y, eye_coord.z).normalized()
+        print(world_ray)
+
+        # model = ModelGL()
+        # model.mesh = gl_globals.BOX_MESH
+        # view_orig = gl_globals.MAIN_CAMERA.transform.origin
+        # model.transform.origin = (-view_orig.y / world_ray.y) * world_ray + view_orig
+        # print(f"model.transform.origin {model.transform.origin}")
+        # self._scene.add_model(model)
+
+
+
     def spawn_obj(self):
         # pm * vm * p = v
         # vm^-1 * pm^-1 * v
@@ -211,7 +154,7 @@ class SceneViewerWidget(QtOpenGL.QGLWidget):
         model_gl = ModelGL()
         model_gl.transform.origin = (-view_orig.y / view_ray.y) * view_ray + view_orig
         model_gl.mesh = gl_globals.BOX_MESH
-        self._scene_models.append(model_gl)
+        # self._scene_models.append(model_gl)
 
     def resizeGL(self, width, height):
         GL.glViewport(0, 0, width, height)
@@ -251,19 +194,11 @@ class SceneViewerWidget(QtOpenGL.QGLWidget):
 
     def updateGL(self) -> None:
         gl_globals.KEYBOARD_CONTROLLER.update_on_hold()
-        for m in self._scene_models:
-            self.render_call(gl_globals.MAIN_CAMERA, m)
 
     @gl_error_catch
     def paintGL(self):
         self._scene.update_camera_state()
-        self._frame_buffer.bind()
-        GL.glEnable(GL.GL_DEPTH_TEST)
-        GL.glEnable(GL.GL_STENCIL_TEST)
-        GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT | GL.GL_STENCIL_BUFFER_BIT)
-        self._scene.draw_scene()
-        while len(self._render_queue) != 0:
-            self._render_queue.pop()()  # (gl_globals.MAP_MATERIAL)
+        self._scene.draw_scene(self._frame_buffer)
         self._frame_buffer.blit()
         self.swapBuffers()
         self._keyboard_interaction()

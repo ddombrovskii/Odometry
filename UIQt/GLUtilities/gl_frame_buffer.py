@@ -7,7 +7,7 @@ from PIL import Image
 from OpenGL.GL import *
 
 
-class FrameBufferAttachment(namedtuple("FrameBufferAttachment", "name, bind_id,  location, gl_type")):
+class FrameBufferAttachment(namedtuple("FrameBufferAttachment", "name, bind_id, location, gl_type")):
     def __new__(cls, name: str, bind_id, location: int, gl_type: int):
         return super().__new__(cls, name, bind_id, location, gl_type)
 
@@ -21,7 +21,7 @@ class FrameBufferAttachment(namedtuple("FrameBufferAttachment", "name, bind_id, 
 
     @property
     def data_type(self):
-        if self.gl_type == GL_RGB8 or self.gl_type == GL_RGBA:
+        if self.gl_type == GL_RGB8 or self.gl_type == GL_RGBA8:
             return GL_UNSIGNED_BYTE
         if self.gl_type == GL_RGB32F or self.gl_type == GL_RGBA32F:
             return GL_FLOAT
@@ -132,11 +132,15 @@ class FrameBufferGL:
         return True
 
     def __init__(self, w=800, h=600):
-        assert type(w) == int
-        assert type(h) == int
+        assert isinstance(w, int)
+        assert isinstance(h, int)
         self._fbo: int = glGenFramebuffers(1)
+        glClearColor(125 / 255, 135 / 255, 145 / 255, 1)
+        glEnable(GL_DEPTH_TEST)
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         self._fbo_depth_attachment = 0
-        self._multisampling = 16
+        self._samples = 16
         self._width: int = w
         self._height: int = h
         self._fbo_attachments_by_id: Dict[int, FrameBufferAttachment] = {}
@@ -155,16 +159,33 @@ class FrameBufferGL:
     def name(self) -> str:
         return self._name
 
+    @name.setter
+    def name(self, value: str) -> None:
+        if not FrameBufferGL.frame_buffers.check_if_name_valid(value):
+            return
+        FrameBufferGL.frame_buffers.unregister_object(self)
+        self._name = value
+        FrameBufferGL.frame_buffers.register_object(self)
+
     @property
-    def is_multisampling(self) -> bool:
-        return self._multisampling != 0
+    def is_multisampled(self) -> bool:
+        return self._samples != 0
 
     @property
     def samples(self) -> int:
-        return self._multisampling
+        return self._samples
+
+    @samples.setter
+    def samples(self, samples: int) -> None:
+        assert isinstance(samples, int)
+        if samples not in {0, 4, 8, 16, 32}:
+            return
+        self._samples = samples
 
     @gl_error_catch
     def resize(self, w: int, h: int) -> None:
+        assert isinstance(w, int)
+        assert isinstance(h, int)
         while True:
             if w != self._width:
                 break
@@ -247,11 +268,10 @@ class FrameBufferGL:
             raise RuntimeError("FrameBufferGL::Exceed maximum amount of color attachments...")
         tex_type, tex_id = FrameBufferGL._create_rgb_8_tex(self._width, self._height, self.samples)
         tex_location = FrameBufferGL.COLOR_ATTACHMENTS[attachment_id]
-        if self.is_multisampling:
+        if self.is_multisampled:
             glFramebufferTexture2D(GL_FRAMEBUFFER, tex_location, GL_TEXTURE_2D_MULTISAMPLE, tex_id, 0)
         else:
             glFramebufferTexture2D(GL_FRAMEBUFFER, tex_location, GL_TEXTURE_2D, tex_id, 0)
-        # self._draw_buffers.append(tex_location)
         if not FrameBufferGL._check_for_errors():
             raise RuntimeError("FrameBuffer creation error!!!")
         return tex_type, tex_id, tex_location
@@ -262,11 +282,10 @@ class FrameBufferGL:
             raise RuntimeError("FrameBufferGL::Exceed maximum amount of color attachments...")
         tex_type, tex_id = FrameBufferGL._create_rgba_8_tex(self._width, self._height, self.samples)
         tex_location = FrameBufferGL.COLOR_ATTACHMENTS[attachment_id]
-        if self.is_multisampling:
+        if self.is_multisampled:
             glFramebufferTexture2D(GL_FRAMEBUFFER, tex_location, GL_TEXTURE_2D_MULTISAMPLE, tex_id, 0)
         else:
             glFramebufferTexture2D(GL_FRAMEBUFFER, tex_location, GL_TEXTURE_2D, tex_id, 0)
-        # self._draw_buffers.append(tex_location)
         if not FrameBufferGL._check_for_errors():
             raise RuntimeError("FrameBuffer creation error!!!")
         return tex_type, tex_id, tex_location
@@ -277,7 +296,7 @@ class FrameBufferGL:
             raise RuntimeError("FrameBufferGL::Exceed maximum amount of color attachments...")
         tex_type, tex_id = FrameBufferGL._create_rgb_f_tex(self._width, self._height, self.samples)
         tex_location = FrameBufferGL.COLOR_ATTACHMENTS[attachment_id]
-        if self.is_multisampling:
+        if self.is_multisampled:
             glFramebufferTexture2D(GL_FRAMEBUFFER, tex_location, GL_TEXTURE_2D_MULTISAMPLE, tex_id, 0)
         else:
             glFramebufferTexture2D(GL_FRAMEBUFFER, tex_location, GL_TEXTURE_2D, tex_id, 0)
@@ -291,11 +310,10 @@ class FrameBufferGL:
             raise RuntimeError("FrameBufferGL::Exceed maximum amount of color attachments...")
         tex_type, tex_id = FrameBufferGL._create_rgba_f_tex(self._width, self._height, self.samples)
         tex_location = FrameBufferGL.COLOR_ATTACHMENTS[attachment_id]
-        if self.is_multisampling:
+        if self.is_multisampled:
             glFramebufferTexture2D(GL_FRAMEBUFFER, tex_location, GL_TEXTURE_2D_MULTISAMPLE, tex_id, 0)
         else:
             glFramebufferTexture2D(GL_FRAMEBUFFER, tex_location, GL_TEXTURE_2D, tex_id, 0)
-        # self._draw_buffers.append(tex_location)
         if not FrameBufferGL._check_for_errors():
             raise RuntimeError("FrameBuffer creation error!!!")
         return tex_type, tex_id, tex_location
@@ -344,6 +362,7 @@ class FrameBufferGL:
         self._fbo_attachments_by_name.update({attachment.name: attachment})
 
     def validate(self):
+        self.bind()
         glDrawBuffers(len(self._fbo_attachments_by_id), *(v.location for v in self._fbo_attachments_by_id.values()))
         if not FrameBufferGL._check_for_errors():
             raise RuntimeError("FrameBuffer creation error!!!")
@@ -352,7 +371,6 @@ class FrameBufferGL:
         if not FrameBufferGL.frame_buffers.bounded_update(self.bind_id):
             return
         glBindFramebuffer(GL_FRAMEBUFFER, self.bind_id)
-        # glDrawBuffers(len(self._draw_buffers), self._draw_buffers)
         glViewport(0, 0, self.width, self.height)
 
     def unbind(self) -> None:
@@ -361,7 +379,7 @@ class FrameBufferGL:
 
     def bind_buffer_texture_to_point(self, id_: int = 0) -> None:
         attachment_0 = GL_TEXTURE0 + id_
-        if self.is_multisampling:
+        if self.is_multisampled:
             for attachment_id, attachment in enumerate(self._fbo_attachments_by_id.values()):
                 glActiveTexture(attachment_0 + attachment_id)
                 glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, attachment.bind_id)
@@ -378,8 +396,9 @@ class FrameBufferGL:
             self.unbind()
             return glReadPixels(x0, y0, width, height, GL_RGB, GL_UNSIGNED_BYTE)
 
-        if not self.is_multisampling:
-            self.bind()
+        if not self.is_multisampled:
+            # self.bind()
+            # glBindFramebuffer(GL_READ_FRAMEBUFFER, self.bind_id)
             attachment = self._fbo_attachments_by_name[attachment_name]
             glReadBuffer(attachment.location)
             frame = glReadPixels(x0, y0, width, height, attachment.format, attachment.data_type)
@@ -406,26 +425,55 @@ class FrameBufferGL:
         return frame
 
     @gl_error_catch
-    def grab_snap_shot(self):
-        pixels = self._read_buffer_attachment("", 0, 0, self.width, self.height)
-        if pixels is None:
-            return
-        image = Image.frombytes('RGB', (self.width, self.height), pixels)
-        image = image.transpose(Image.FLIP_TOP_BOTTOM)
-        image.save("snap_shot.png")
+    def read_depth_pixel(self, x0: int, y0: int) -> float:
+        if self.is_multisampled:
+            glBindFramebuffer(GL_FRAMEBUFFER, 0)
+            frame = glReadPixels(x0, y0, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT)
+            return frame
+
+        if self._fbo_depth_attachment == 0:
+            return 0.0
+        self.bind()
+        frame = glReadPixels(x0, y0, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT)
+        self.unbind()
+        return frame
 
     @gl_error_catch
-    def grab_depth_snap_shot(self):
+    def grab_snap_shot(self, text_attachment: str = "attachment_0"):  # , path: str = "snap_shot.bmp"):
+        pixels = self._read_buffer_attachment(text_attachment, 0, 0, self.width, self.height)
+        if pixels is None:
+            return
+        bpp = len(pixels) // self.width // self.height
+        if bpp == 4:
+            image = Image.frombytes('RGBA', (self.width, self.height), pixels)
+        elif bpp == 3:
+            image = Image.frombytes('RGB', (self.width, self.height), pixels)
+        elif bpp == 1:
+            image = Image.frombytes('L', (self.width, self.height), pixels)
+        else:
+            raise ValueError()
+
+        image = image.transpose(Image.FLIP_TOP_BOTTOM)
+        return image
+        # image.save(path)
+
+    @gl_error_catch
+    def grab_depth_snap_shot(self, path: str = "depth_snap_shot.bmp"):
         pixels = self._read_buffer_depth_attachment(0, 0, self.width, self.height)
+        # bpp = pixels
         depth = Image.frombytes('RGB', (self.width, self.height), pixels)
         depth = depth.transpose(Image.FLIP_TOP_BOTTOM)
-        depth.save("depth_snap_shot.bmp")
+        depth.save(path)
 
     def blit(self) -> None:
         glBindFramebuffer(GL_READ_FRAMEBUFFER, self.bind_id)
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0)
         glBlitFramebuffer(0, 0, self.width, self.height, 0, 0, self.width, self.height, GL_COLOR_BUFFER_BIT, GL_NEAREST)
+        glBlitFramebuffer(0, 0, self.width, self.height, 0, 0, self.width, self.height, GL_DEPTH_BUFFER_BIT, GL_NEAREST)
+        glBlitFramebuffer(0, 0, self.width, self.height, 0, 0, self.width, self.height, GL_STENCIL_BUFFER_BIT, GL_NEAREST)
         self.unbind()
+
+
     # https://www.programcreek.com/python/example/8811/PIL.Image.fromstring
     # https://gist.github.com/yuyu2172/95e406260b2497c4d4c4948f18de827d
     # https://github.com/trevorvanhoof/sqrmelon/blob/76df51c2cf936cbb9be8b6cf45f19b2497758c9f/SqrMelon/buffers.py#L120

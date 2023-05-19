@@ -87,7 +87,6 @@ class CameraGL:
                 self.transform.transform_matrix = t
             except ValueError as er:
                 print(f"CameraGL :: from_json :: incorrect camera transform\n : {camera['transform']}\n{er.args}")
-        # print(self)
 
     @property
     def unique_id(self) -> int:
@@ -164,8 +163,6 @@ class CameraGL:
                        xaxis.y, yaxis.y, zaxis.y, 0.0,
                        xaxis.z, yaxis.z, zaxis.z, 0.0,
                        Vector3.dot(xaxis, eye), Vector3.dot(yaxis, eye), Vector3.dot(zaxis, eye), 1.0)
-
-    # def orbit(self, angles: Vector3, target: Vector3 = None):
 
     def look_at(self, target: Vector3, eye: Vector3, up: Vector3 = Vector3(0, 1, 0)) -> None:
         """

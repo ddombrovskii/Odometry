@@ -29,7 +29,7 @@ class TextureGL:
         self.bi_linear()
         TextureGL.textures.register_object(self)
 
-    def __str__(self):
+    def __repr__(self):
         return f"{{\n" \
                f"\t\"name\":        \"{self.name}\",\n" \
                f"\t\"asset_src\":   \"{self.source_file_path}\",\n" \
@@ -40,6 +40,17 @@ class TextureGL:
                f"\t\"use_mip_map\": False,\n" \
                f"\t\"wrap_mode\":   {int(self._warp_mode)},\n" \
                f"\t\"filter_mode\": [{int(self._filtering_mode[0])},{int(self._filtering_mode[1])}]\n}}"
+
+    def __str__(self):
+        # todo:
+        # "mip_map": 0,
+        # "tex_type": 123,
+        # "tex_warp": 123,
+        # "tex_filt": [123, 123]
+        return f"{{\n" \
+               f"\t\"tex_name\"   :\"{self.name}\",\n" \
+               f"\t\"tex_source\" :\"{self.source_file_path}\"" \
+               f"\n}}"
 
     def __del__(self):
         self.delete()
@@ -91,7 +102,13 @@ class TextureGL:
             pixel_data = [resource[i % self.bpp] for i in range(self.width * self.height * self.bpp)]
 
         if self.bpp == 1:
-            glTexImage2D(self.bind_target, 0, GL_R, self.width, self.height, 0, GL_R, GL_UNSIGNED_BYTE, pixel_data)
+            if im.format == 'PNG':
+                glTexImage2D(self.bind_target, 0, GL_LUMINANCE8, self.width, self.height, 0, GL_LUMINANCE8,
+                             GL_UNSIGNED_BYTE, pixel_data)
+                glGenerateMipmap(self.bind_target)
+                return
+            glTexImage2D(self.bind_target, 0, GL_LUMINANCE8, self.width, self.height, 0, GL_LUMINANCE8,
+                         GL_UNSIGNED_BYTE, pixel_data)
             glGenerateMipmap(self.bind_target)
             return
 

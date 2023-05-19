@@ -2,27 +2,15 @@
   "Textures": [
     {
       "name": "checker_1",
-      "source": "Textures/checker.jpg"
+      "source": "Textures/checker.jpg",
+      "mip_map" : 0,
+      "type": 123,
+      "warp": 123,
+      "filtering": [123, 123]
     },
     {
       "name": "checkerboard_rainbow",
-      "source": "Textures/checkerboard-rainbow.png"
-    },
-    {
-      "name": "hm_0",
-      "source": "Textures/hm0.bmp"
-    },
-    {
-      "name": "hm_1",
-      "source": "Textures/hm1.bmp"
-    },
-    {
-      "name": "hm_2",
-      "source": "Textures/hm2.bmp"
-    },
-    {
-      "name": "hm_4",
-      "source": "Textures/hm0.png"
+      "source": "Textures/checkerboard-rainbow.jpg"
     },
     {
       "name": "normal_0",
@@ -48,7 +36,7 @@
     },
     {
       "name": "big_map",
-      "source": "Meshes/sphere.obj"
+      "source": "Meshes/big_map.obj"
     }
   ],
   "Shaders": [
@@ -66,16 +54,16 @@
     },
     "z_far": 1000.0,
     "z_near": 0.01,
-    "aspect": 1.333,
-    "fov": 90.0,
+    "aspect": 1.0,
+    "fov": 60.0,
     "is_orthographic": true,
     "orthographic_size": 10.0
   },
   "Materials": [
     {
-      "name": "sample_material",
+      "name": "default_material",
       "shader": "sample_shader",
-      "params": [
+      "properties": [
         {
           "name" : "ni",
           "type": 5126,
@@ -104,38 +92,40 @@
         {
           "name" : "diffuse_color",
           "type": 35665,
-          "args": [1.0, 1.0, 1.0]
+          "args": [1.0, 0.0, 0.0]
+        }
+      ],
+      "textures": [
+       {
+          "name" : "gray",
+          "type": 35678,
+          "location": 0
         },
         {
-          "name" : "diffuse_texture",
+          "name" : "gray",
           "type": 35678,
-          "args": [0]
-        },
-        {
-          "name" : "specular_texture",
-          "type": 35678,
-          "args": [1]
-        },
-        {
-          "name" : "normals_texture",
-          "type": 35678,
-          "args": [2]
+          "location": 2
         }
       ]
     },
     {
-      "name": "grid_material",
+      "name": "grid_gizmo_material",
       "shader": "grid_shader",
-      "params": [
+      "properties": [
         {
           "name" : "fade",
           "type": 5126,
           "args": [1.5]
         },
         {
-          "name" : "grid_fade_radius",
+          "name" : "fade_radius",
           "type": 5126,
-          "args": [4.5]
+          "args": [14.5]
+        },
+        {
+          "name" : "grid_alpha",
+          "type": 5126,
+          "args": [0.25]
         },
         {
           "name" : "grid_x_step",
@@ -148,7 +138,7 @@
           "args": [10.0]
         },
         {
-          "name" : "grid_line_width",
+          "name" : "line_size",
           "type": 5126,
           "args": [0.01]
         },
@@ -168,7 +158,7 @@
           "args": [0.0, 0.0, 1.0]
         },
         {
-          "name" : "grid_color",
+          "name" : "line_color",
           "type": 35665,
           "args": [0.9, 0.9, 0.9]
         }
@@ -182,18 +172,18 @@
   "Models": [
     {
       "mesh_src": "big_map",
-      "material": "sample_material",
+      "material": "default_material",
       "transform":
       {
-        "m00": 1.0, "m01": 0.0, "m02": 0.0, "m03": -10.0,
-        "m10": 0.0, "m11": 1.0, "m12": 0.0, "m13": -10.0,
-        "m20": 0.0, "m21": 0.0, "m22": 1.0, "m23": 0.0,
+        "m00": 2.0, "m01": 0.0, "m02": 0.0, "m03": 0.0,
+        "m10": 0.0, "m11": 2.0, "m12": 0.0, "m13": 0.0,
+        "m20": 0.0, "m21": 0.0, "m22": 2.0, "m23": 0.0,
         "m30": 0.0, "m31": 0.0, "m32": 0.0, "m33": 1.0
       }
     },
     {
       "mesh_src": "box",
-      "material": "sample_material",
+      "material": "default_material",
       "transform":
       {
         "m00": 1.0, "m01": 0.0, "m02": 0.0, "m03": 10.0,
@@ -204,7 +194,7 @@
     },
     {
       "mesh_src": "sphere",
-      "material": "sample_material",
+      "material": "default_material",
       "transform":
       {
         "m00": 1.0, "m01": 0.0, "m02": 0.0, "m03": 10.0,
@@ -217,7 +207,7 @@
   "Gizmos": [
     {
       "type": "grid",
-      "material": "grid_material",
+      "material": "grid_gizmo_material",
       "transform":
       {
         "m00": 10.0, "m01": 0.0, "m02": 0.0, "m03": 0.0,
@@ -228,7 +218,7 @@
     },
     {
       "type": "line-2d",
-      "material": "sample_material",
+      "material": "default_material",
       "points": [
       {"x": 0.0, "y": 5.0},
       {"x": 0.12223458978993344, "y": 4.979285160998552},

@@ -50,7 +50,6 @@ void main()
 	vs_cam_out.projection = projection;
 	vs_cam_out.position   = cam_position;
 	vs_cam_out.view       = view;
-	
 	// vs_vert_out.heat_or_height = heat_or_height;
     vs_vert_out.max_bound      = max_bound;
 	vs_vert_out.min_bound      = min_bound;

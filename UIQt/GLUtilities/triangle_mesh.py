@@ -57,11 +57,12 @@ class Face(namedtuple('Face', 'p_1, uv1, n_1,'
 
 
 class TrisMesh:
-    __slots__ = "name", "material", "_vertices", "_normals", "_uvs", "_faces", "_bbox"
+    __slots__ = "name", "material", "source", "_vertices", "_normals", "_uvs", "_faces", "_bbox"
 
     def __init__(self):
         self.name: str = "no name"
         self.material: str = "no material"
+        self.source: str = "no source"
         self._vertices: List[Vector3] = []
         self._normals:  List[Vector3] = []
         self._uvs:      List[Vector2] = []
@@ -309,6 +310,7 @@ def read_obj_mesh(path: str) -> List[TrisMesh]:
                         continue
 
                     mesh: TrisMesh = TrisMesh()
+                    mesh.source = path
                     mesh.name = tmp[2]
                     meshes.append(mesh)
                     if len(meshes) == 1:

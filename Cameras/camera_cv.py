@@ -38,18 +38,17 @@ class CameraCV(Device):
         try:
             if len(CameraCV._FREE_CAMERA_PORTS) != 0:
                 self._camera_port = CameraCV._FREE_CAMERA_PORTS.pop()
-                self._camera_stream = cv.VideoCapture(self._camera_port, constants.CAP_DSHOW)
+                self._camera_stream = cv.VideoCapture(self._camera_port)  # , constants.CAP_DSHOW)
             else:
                 if CameraCV._MAX_CAMERA_PORTS_SUPPORT < CameraCV._LAST_CAMERA_PORT:
                     raise RuntimeError("CV Camera exceed max amount of instances...")
                 self._camera_port = CameraCV._LAST_CAMERA_PORT
-                self._camera_stream = cv.VideoCapture(self._camera_port, constants.CAP_DSHOW)
+                self._camera_stream = cv.VideoCapture(self._camera_port)  # , constants.CAP_DSHOW)
 
                 CameraCV._LAST_CAMERA_PORT += 1
-
         except RuntimeError("CV Camera instantiate error") as ex:
             print(ex.args)
-
+        print(f"self._camera_port: {self._camera_port}")
         if not self.is_open:
             raise RuntimeError("device init function call error")
         super().__init__()
@@ -63,28 +62,28 @@ class CameraCV(Device):
         self._curr_frame: np.ndarray = np.zeros((self.width, self.height, 3), dtype=np.uint8)  # текущий кадр
         self._prev_frame: np.ndarray = np.zeros((self.width, self.height, 3), dtype=np.uint8)  # предыдущий кадр
         # modes callbacks e.t.c...
-        self._start_up_time: float = 0.10  # время до начала оперирования
+        self._start_up_time: float = 1.0  # время до начала оперирования
         # инициализация новых режимов работы
         self.register_callback(CALIBRATION_MODE,  self._calibrate)
         self.register_callback(SHOW_VIDEO_MODE,   self._show_video)
         self.register_callback(RECORD_VIDEO_MODE, self._record_video)
         self.register_callback(READ_FRAME_MODE,   self._grab_frame)
         self.register_callback(FRAME_SAVE_MODE,   self._save_frame)
-        self.register_callback(SLAM_MODE, self._slam)
-        # self.camera_cv.set(constants.CAP_PROP_EXPOSUREPROGRAM, 2)
-        self.camera_cv.set(constants.CAP_PROP_EXPOSURE, -5.0)
-        self.camera_cv.set(constants.CAP_PROP_GAIN, 0.0)
-        self.camera_cv.set(constants.CAP_PROP_AUTOFOCUS, 0.0)
-        self.camera_cv.set(constants.CAP_PROP_FOCUS, 60.0)
+        self.register_callback(SLAM_MODE,         self._slam)
+        self.camera_cv.set(constants.CAP_PROP_EXPOSUREPROGRAM, 3)
+        self.camera_cv.set(constants.CAP_PROP_EXPOSURE,       -9.0)
+        self.camera_cv.set(constants.CAP_PROP_GAIN,            0.0)
+        self.camera_cv.set(constants.CAP_PROP_AUTOFOCUS,       0.0)
+        self.camera_cv.set(constants.CAP_PROP_FOCUS,           60.0)
         # self.camera_cv.set(constants.CAP_PROP_SATURATION, 1.0)
         # self.camera_cv.set(constants.CAP_PROP_GAMMA, 4.0)
         # self.camera_cv.set(constants.CAP_PROP_BRIGHTNESS, 100.0)
         # self.camera_cv.set(constants.CAP_PROP_CONVERT_RGB, 0.0)
+        self.set_resolution("HD2")
         self.set_mjpg()
-        # self.set_resolution("HD2")
         self.width = 640
         self.height = 480
-        self.fps = 30
+        self.fps = 33
         self._try_to_load_calib_info()
 
     def __del__(self):
@@ -174,33 +173,41 @@ class CameraCV(Device):
         if len(fourcc) < 4:
             return 0
 
+    @staticmethod
+    def mmio_fourcc(ch0: str, ch1: str, ch2: str, ch3: str):
+        assert len(ch0) == 1
+        assert len(ch1) == 1
+        assert len(ch2) == 1
+        assert len(ch3) == 1
+        return ord(ch0) | (ord(ch1) << 8 ) | (ord(ch2) << 16)  | (ord(ch3) << 24)
+
     #  # define mmioFOURCC( ch0, ch1, ch2, ch3 )                \
     #  ((uint32_t)(unsigned char)(ch0) | ((uint32_t)(unsigned char)(ch1) << 8 ) | \
     #          ((uint32_t)(unsigned char)(ch2) << 16 ) | ((uint32_t)(unsigned char)(ch3) << 24 ) )
     #  # endif
 
     def set_mjpg(self):
-        fourcc = cv.VideoWriter_fourcc('M', 'J', 'P', 'G')
+        fourcc = CameraCV.mmio_fourcc('M', 'J', 'P', 'G')
         if not self.camera_cv.set(constants.CAP_PROP_FOURCC, fourcc):
-            self.set_mjpg()
+            print(f"self.set_mjpg({fourcc}) error")
 
     def set_rgb(self):
-        fourcc = cv.VideoWriter_fourcc('M', 'J', 'P', 'G')
+        fourcc = CameraCV.mmio_fourcc('M', 'J', 'P', 'G')
         if not self.camera_cv.set(constants.CAP_PROP_FOURCC, fourcc):
             self.set_mjpg()
 
     def set_grey(self):
-        fourcc = cv.VideoWriter_fourcc('G', 'R', 'E', 'Y')
+        fourcc = CameraCV.mmio_fourcc('G', 'R', 'E', 'Y')
         if not self.camera_cv.set(constants.CAP_PROP_FOURCC, fourcc):
             self.set_mjpg()
 
     def set_bgr(self):
-        fourcc = cv.VideoWriter_fourcc('B', 'G', 'R', 'X')
+        fourcc = CameraCV.mmio_fourcc('B', 'G', 'R', 'X')
         if not self.camera_cv.set(constants.CAP_PROP_FOURCC, fourcc):
             self.set_mjpg()
 
     def set_yuyv(self):
-        fourcc = cv.VideoWriter_fourcc('Y', 'U', 'Y', 'V')
+        fourcc = CameraCV.mmio_fourcc('Y', 'U', 'Y', 'V')
         if not self.camera_cv.set(constants.CAP_PROP_FOURCC, fourcc):
             self.set_mjpg()
 
@@ -316,7 +323,10 @@ class CameraCV(Device):
     def read_frame(self) -> bool:
         if not self.is_open:
             return False
-        has_frame, cam_frame = self.camera_cv.read()
+        try:
+            has_frame, cam_frame = self.camera_cv.read()
+        except cv.error as err:
+            return False
         if not has_frame:
             return False
         self._prev_frame = self._curr_frame
@@ -347,6 +357,9 @@ class CameraCV(Device):
     def show_video(self):
         self.begin_mode(SHOW_VIDEO_MODE)
 
+    def hide_video(self):
+        self.stop_mode(SHOW_VIDEO_MODE)
+
     def begin_slam(self, slam_results_save_path: str = None):
         if not self.begin_mode(SLAM_MODE):
             return
@@ -371,7 +384,7 @@ class CameraCV(Device):
             self.send_log_message(device_progres_bar(t / self._start_up_time, "", 55, '|', '_'))
             if t >= self._start_up_time:
                 self.begin_mode(READ_FRAME_MODE)
-                self.begin_mode(SHOW_VIDEO_MODE)
+                # self.begin_mode(SHOW_VIDEO_MODE)
                 return END_MODE_MESSAGE
             return RUNNING_MODE_MESSAGE
         return DISCARD_MODE_MESSAGE
@@ -387,7 +400,7 @@ class CameraCV(Device):
         if message == BEGIN_MODE_MESSAGE:
             self.stop_all()
             self.begin_mode(READ_FRAME_MODE)
-            self.begin_mode(SHOW_VIDEO_MODE)
+            # self.begin_mode(SHOW_VIDEO_MODE)
             return RUNNING_MODE_MESSAGE
         return DISCARD_MODE_MESSAGE
 
@@ -407,7 +420,7 @@ class CameraCV(Device):
             return RUNNING_MODE_MESSAGE
 
         if message == RUNNING_MODE_MESSAGE:
-            cv.imshow(self._window_handle, self.undistorted_frame)
+            #  cv.imshow(self._window_handle, self.undistorted_frame)
             return RUNNING_MODE_MESSAGE
         return DISCARD_MODE_MESSAGE
 
@@ -658,12 +671,14 @@ class CameraCV(Device):
 
 
 def camera_cv_test():
-    cam = CameraCV()
-    cam.get_total_camera_info()
-    # for val in constants.CAMERA_RESOLUTIONS.keys():
-    #     cam.set_resolution(val)
-    cam.run_in_separated_thread()
+    camera = CameraCV()
+    camera.hide_video()
+    camera.enable_logging = False
+    camera.show_video()
+    while not camera.is_complete:
+        camera.update()
 
 
 if __name__ == "__main__":
     camera_cv_test()
+

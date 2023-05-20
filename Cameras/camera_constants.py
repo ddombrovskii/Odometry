@@ -5,7 +5,7 @@ CAMERA_RESOLUTIONS = \
      "SVGA": (800, 600),
      "XGA": (1024, 768),
      "WXGA16x9": (1280, 720),
-     "WXGA16x10 ": (1280, 800),
+     "WXGA16x10": (1280, 800),
      "SXGA": (1280, 1024),
      "HD1": (1360, 768),
      "HD2": (1366, 768),
@@ -1121,7 +1121,7 @@ CAP_PROP_WHITE_BALANCE_BLUE_U = 17
 CAP_PROP_RECTIFICATION = 18
 CAP_PROP_MONOCHROME = 19
 CAP_PROP_SHARPNESS = 20
-CAP_PROP_AUTO_EXPOSURE = 21  # exposure control done by camera
+CAP_PROP_AUTO_EXPOSURE = 21  # exposure control done by camera (1 - manual mode / 3 - auto mode)
 # user can adjust reference level
 # using this feature
 CAP_PROP_GAMMA = 22

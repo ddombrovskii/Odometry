@@ -97,9 +97,9 @@ class Device:
         self._curr_modes: Dict[int, int]   = {}  # текущие режимы и их состояния
         self._mode_times: Dict[int, float] = {}  # время существования в режимах
         self._d_time: float = 0.0  # время между текущим и предыдущим вызовом метода self.update()
-        # self._timer: LoopTimer = LoopTimer(0.01, init_state=True)  # синхронизирующий таймер
         self.enable_logging = True
         self._update_time: float = 1.0
+        self._last_update_time: float = 0.0
         self._log_messages: List[str] = []
         self._messages: Dict[int, DeviceMessage] = {}  # список сообщений для переключения режимов
         self._callbacks: Dict[int, Callback] = {}  # список служебных функций
@@ -255,6 +255,12 @@ class Device:
         if message == BEGIN_MODE_MESSAGE:
             return END_MODE_MESSAGE
         return message
+
+    def suspend(self):
+        if PAUSE_MODE in self._curr_modes:
+            self.resume()
+            return
+        self.pause()
 
     def on_reset(self, message: int) -> int:
         """
@@ -436,8 +442,14 @@ class Device:
         """
         return self._mode_times[mode] if self.mode_active(mode) else 0.0
 
-    async def update(self) -> None:
-        elapsed_time = time.perf_counter()
+    def update(self) -> bool:
+        curr_t = time.perf_counter()
+        delta_t = curr_t - self._last_update_time
+        if delta_t < self.update_time:
+            return False
+        self._d_time = delta_t
+        self._last_update_time = curr_t
+
         self.print_log_messages()
         self._wait_for_messages()
 
@@ -451,25 +463,14 @@ class Device:
                     self._callbacks[message.mode].__call__(message)
                 if message.mode in self._user_callbacks:
                     self._send_message(message.mode, self._user_callbacks[message.mode].__call__(message))
+        return True
 
-        elapsed_time = time.perf_counter() - elapsed_time
-
-        if elapsed_time > self.update_time:
-            self._d_time = elapsed_time
-            await asyncio.sleep(0.0001)
-        else:
-            self._d_time = self.update_time
-            await asyncio.sleep(self.update_time - elapsed_time)
-
-    async def run_async(self):
+    def run_gen(self) -> bool:
         while not self.is_complete:
-            await self.update()
-
-    def run(self):
-        asyncio.run(self.run_async())
+            yield self.update()
 
     def run_in_separated_thread(self):
-        t = threading.Thread(target=self.run)
+        t = threading.Thread(target=self.run_gen)
         t.start()
         t.join()
         return t

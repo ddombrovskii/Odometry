@@ -1,0 +1,183 @@
+  html {
+            font-family: "lucida grande", sans-serif;
+        }
+
+        body {
+            margin: 0;
+        }
+
+        .cam {
+            position: relative;
+            display: flex;
+            align-items: center;
+            margin: 0 auto;
+            height: 100%;
+            width: 100%;
+        }
+
+        .page {
+            width: calc(100vw - 24px);
+            height: calc(100vh - 24px);
+            border-radius: 5px;
+            background-color: #a0a0a0;
+            overflow: hidden;
+            margin: 6px;
+            padding: 6px;
+            display: flex;
+            align-items: stretch;
+            flex-wrap: nowrap;
+        }
+
+        .tabs {
+            display: flex;
+            flex-direction: column;
+            width: 50px;
+            overflow-y: auto;
+            position: relative;
+            z-index: 3;
+        }
+
+        .tab,
+        .tab:focus,
+        .tab:hover {
+            display: inline-block;
+            position: relative;
+            z-index: 2;
+            padding: 20px 6px;
+            border: 1px solid hsl(219deg 1% 72%);
+            border-radius: 5px 5px 5px 5px;
+            background: hsl(220deg 20% 94%);
+            outline: none;
+            font-weight: bold;
+            overflow: hidden;
+            text-align: left;
+            cursor: pointer;
+            writing-mode: sideways-lr;
+            text-orientation: mixed;
+            flex-grow: 1;
+            text-align: center;
+        }
+
+        .tab + .tab {
+            margin-top: 4px;
+        }
+
+        .tab.selected {
+            border-left-width: 4px;
+            border-left-color: rgb(36 116 214);
+            border-right-color: hsl(220deg 20% 94%);
+            background: #eee;
+            padding-left: 0;
+            padding-right: 12px;
+        }
+
+        .tab:not(.selected) {
+            border-bottom: 1px solid hsl(219deg 1% 72%);
+            margin-right: 10px;
+        }
+
+        .list-wrapper {
+            display: none;
+            background-color: #eee;
+            border-radius: 5px;
+            width: 325px;
+            border: 1px solid hsl(219deg 1% 72%);
+            position: relative;
+            z-index: 2;
+            left: -4px;
+            padding: 20px 16px 8px 16px;
+            overflow-y: auto;
+        }
+
+        .close-wrapper {
+            position: sticky;
+            top: -20px;
+            height: 40px;
+            padding-top: 20px;
+            margin-top: -20px;
+            display: flex;
+            flex-direction: row-reverse;
+            background-color: #eee;
+        }
+
+        .close {
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            cursor: pointer;
+        }
+
+        .action_button-wrapper {
+            position: sticky;
+            top: -20px;
+            height: 40px;
+            padding-top: 20px;
+            margin-top: -20px;
+            display: flex;
+            flex-grow: 1;
+            flex-direction: row-reverse;
+            background-color: #eee;
+        }
+
+        .action_button{
+            background-color: #eee;
+            border: 1px solid #333;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            flex-grow: 1;
+            cursor: pointer;
+        }
+        .action_button:hover
+        {
+           background-color: #ccc;
+        }
+
+        .list {
+            margin: 0;
+            padding: 0;
+            list-style-type: none;
+        }
+
+        .list-item {
+            border: 1px solid hsl(219deg 1% 72%);
+            padding: 8px;
+            border-radius: 5px;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .list-item + .list-item {
+            margin-top: 8px;
+        }
+
+        .select {
+            margin-top: 8px;
+            width: 177px;
+        }
+
+        .input{
+            width: 177px;
+        }
+
+        .option-selected {
+            background: skyblue;
+        }
+        .param {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .param-divider {
+            flex-grow: 1;
+            border-bottom: 2px dotted #eee;
+        }
+
+        .content {
+            flex-grow: 1;
+        }

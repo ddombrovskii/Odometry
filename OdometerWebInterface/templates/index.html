@@ -26,55 +26,61 @@
         </div>
         <ul class="list">
             <li class="list-item">
-                <div class="param">
+                 <div class="param section-title">
                     <span>Camera resolution</span>
-                    <form id="camera_resolution_selector_form" name="cam_res_form">
-                        <select id="camera_resolution_selector" class="select" name="cam_res_select">
-                            {% for resolution in resolutions_list %}
-                             <option value="{{resolution}}">{{ resolution }}</option>
-                            {% endfor %}
-                        </select>
-                    </form>
                 </div>
-
+                 <div class="param">
+                    <span>Value :</span>
+                    <span class="param-divider"></span>
+                    <select id="camera_resolution_selector" class="select" name="cam_res_select">
+                        {% for resolution in resolutions_list %}
+                         <option value="{{resolution}}">{{ resolution }}</option>
+                        {% endfor %}
+                    </select>
+                 </div>
+                 <div class="vertical-divider"></div>
             </li>
             <li class="list-item">
-                <div class="param">
-                    <span>Camera geometry</span>
-                </div>
-               <form id="cam_geometry_form" method="post" name="cam_geometry_form" action="/">
-                   <div class="param">
-                        <span>offset - x, px</span>
+                <div class="param section-title">
+                   <span>Camera geometry</span>
+               </div>
+                <form id="cam_geometry_form" method="post" name="cam_geometry_form" action="/">
+                    <div class="param">
+                        <span>offset-x</span>
                         <span class="param-divider"></span>
                         <span>
-                            <input type="text" id="camera_offset_x" name="cam_offset_x" value="8"/>
+                            <input type="text" id="camera_offset_x" name="cam_offset_x" value="8px"/>
                         </span>
                     </div>
                     <div class="param">
-                        <span>offset - y, px</span>
+                        <span>offset-y</span>
                         <span class="param-divider"></span>
                         <span>
-                            <input type="text" id="camera_offset_y" name="cam_offset_y" value="8"/>
+                            <input type="text" id="camera_offset_y" name="cam_offset_y" value="8px"/>
                         </span>
                     </div>
                     <div class="param">
-                        <span>width, px</span>
+                        <span>width</span>
                         <span class="param-divider"></span>
                         <span>
-                            <input type="text" id="camera_width" name="cam_width" value="800"/>
+                            <input type="text" id="camera_width" name="cam_width" value="800px"/>
                         </span>
                     </div>
                     <div class="param">
-                        <span>height, px</span>
+                        <span>height</span>
                         <span class="param-divider"></span>
                         <span>
-                            <input type="text" id="camera_height" name="cam_height" value="600"/>
+                            <input type="text" id="camera_height" name="cam_height" value="600px"/>
                         </span>
                     </div>
                </form>
+                <div class="vertical-divider"></div>
             </li>
             <li class="list-item">
-                <form method="post" name="cam_frame_rate_form">
+                <div class="param section-title">
+                    <span>Camera frame rate</span>
+                </div>
+                <form id="cam_frame_rate_form" method="post" name="cam_frame_rate_form">
                     <div class="param">
                         <span>Frame time</span>
                         <span class="param-divider"></span>
@@ -94,33 +100,30 @@
                         </span>
                     </div>
                 </form>
+                <div class="vertical-divider"></div>
             </li>
             <li class="list-item">
-                <div class="param">
+                <div class="param section-title">
                     <span>Record video</span>
                 </div>
-
-                <div class="param">
-                    <span>Video format</span>
-                </div>
-
                 <form method="post">
-                    <div>
-                        <select class="select" name="cam_video_format">
-                            <option>mpeg4</option>
-                            <option>avi</option>
-                            <option>images series</option>
-                        </select>
-                        <input type="submit" value="применить"/>
+                    <div class="param">
+                        <span>Video format</span>
+                        <span class="param-divider"></span>
+                        <div>
+                            <select id="cam_video_format" class="select" name="cam_video_format">
+                                <option>mpeg4</option>
+                                <option>avi</option>
+                                <option>images series</option>
+                            </select>
+                        </div>
                     </div>
                 </form>
-
                 <div class="param">
                     <span>File name:</span>
                     <span class="param-divider"></span>
                     <span>none</span>
                 </div>
-
                 <div class="param">
                     <label  class="action_button"><input type="file" onclick="" hidden>Select or create file...</label>
                 </div>
@@ -129,138 +132,223 @@
                    <button id="cam-pause"     class="action_button" type="button" onclick="">Pause</button>
                    <button id="cam-video"     class="action_button" type="button" onclick="">Stop</button>
                 </div>
+                <div class="vertical-divider"></div>
             </li>
             <li class="list-item">
-                <div class="param">
+                <div class="param section-title">
                     <span>Camera calibration</span>
-                    <span class="param-divider"></span>
-                    <span style="background-color: #faa;">uncalibrated</span>
                 </div>
-
                 <div class="param">
                     <span>File name:</span>
                     <span class="param-divider"></span>
                     <span>none</span>
                 </div>
                 <div class="param">
-                    <button class="action_button" type="button" onclick="">Reset calibration</button>
+                    <label  class="action_button"><input type="file" onclick="" hidden>Select or create file...</label>
                 </div>
                 <div class="param">
-                    <button class="action_button" type="button" onclick="">Select or create file...</button>
+                   <button id="cam-calib-recording" class="action_button" type="button" onclick="">Start</button>
+                   <button id="cam-calib-pause"     class="action_button" type="button" onclick="">Pause</button>
+                   <button id="cam-calib-video"     class="action_button" type="button" onclick="">Stop</button>
                 </div>
-
+                <div class="vertical-divider"></div>
+            </li>
+            <li class="list-item">
+                <div class="param section-title">
+                    <span>Camera SLAM</span>
+                </div>
+                <form id="cam_slam_form" method="post" name="cam_slam_form" action="/">
+                    <div class="param">
+                        <span>n-features</span>
+                        <span class="param-divider"></span>
+                        <span>
+                            <input type="text" id="orb_n_features" name="n_features" value="3000"/>
+                        </span>
+                    </div>
+                    <div class="param">
+                        <span>algorithm</span>
+                        <span class="param-divider"></span>
+                        <span>
+                            <input type="text" id="orb_algorithm" name="orb_algorithm" value="flann"/>
+                        </span>
+                    </div>
+                    <div class="param">
+                        <span>key size</span>
+                        <span class="param-divider"></span>
+                        <span>
+                            <input type="text" id="orb_key_size" name="key_size" value="12"/>
+                        </span>
+                    </div>
+               </form>
                 <div class="param">
-                    <button class="action_button" type="button" onclick="">Start</button>
-                    <button class="action_button" type="button" onclick="">Pause</button>
-                    <button class="action_button" type="button" onclick="">Stop</button>
+                    <span>File name:</span>
+                    <span class="param-divider"></span>
+                    <span>none</span>
                 </div>
+                <div class="param">
+                    <label  class="action_button"><input type="file" onclick="" hidden>Select or create file...</label>
+                </div>
+                <div class="param">
+                   <button id="cam-slam-recording" class="action_button" type="button" onclick="">Start</button>
+                   <button id="cam-slam-pause"     class="action_button" type="button" onclick="">Pause</button>
+                   <button id="cam-slam-stop"      class="action_button" type="button" onclick="">Stop</button>
+                </div>
+                <div class="vertical-divider"></div>
+            </li>
+            <li class="list-item">
+                <div class="param section-title">
+                    <span>Camera depth</span>
+                </div>
+                <div class="param">
+                    <span>File name:</span>
+                    <span class="param-divider"></span>
+                    <span>none</span>
+                </div>
+                <div class="param">
+                    <label  class="action_button"><input type="file" onclick="" hidden>Select or create file...</label>
+                </div>
+                <div class="param">
+                   <button id="cam-depth-recording" class="action_button" type="button" onclick="">Start</button>
+                   <button id="cam-depth-pause"     class="action_button" type="button" onclick="">Pause</button>
+                   <button id="cam-depth-video"     class="action_button" type="button" onclick="">Stop</button>
+                </div>
+                <div class="vertical-divider"></div>
             </li>
         </ul>
     </aside>
-
     <aside id="IMUSettingsContent" class="list-wrapper">
         <div class="close-wrapper">
             <button class="close" type="button" onclick="HideAll()">x</button>
         </div>
         <ul class="list">
             <li class="list-item">
-                <div class="param">
+                 <div class="param section-title">
+                    <span>Update time</span>
+                 </div>
+                 <div class="param">
+                        <span>Value :</span>
+                        <span class="param-divider"></span>
+                        <span>
+                            <input type="text" id="imu_update_time" name="imu_update_time"  value="0.1sec"/>
+                        </span>
+                 </div>
+                 <div class="vertical-divider"></div>
+            </li>
+            <li class="list-item">
+                 <div class="param section-title">
                     <span>Gravity scale</span>
-                </div>
-                <select class="select">
-                    <option>2g</option>
-                    <option>4g</option>
-                    <option>8g</option>
-                    <option>16g</option>
-                </select>
+                 </div>
+                 <div class="param">
+                      <span>Value :</span>
+                      <span class="param-divider"></span>
+                      <select id="imu_gravity_scale_selector" class="select" name="imu_gravity_scale_select">
+                            <option>2g</option>
+                            <option>4g</option>
+                            <option>8g</option>
+                            <option>16g</option>
+                      </select>
+                 </div>
+                 <div class="vertical-divider"></div>
             </li>
             <li class="list-item">
-                <div class="param">
+                 <div class="param section-title">
                     <span>Angles velocity scale</span>
-                </div>
-                <select class="select">
-                    <option>250deg</option>
-                    <option>500deg</option>
-                    <option>1000deg</option>
-                    <option>2000deg</option>
-                </select>
+                 </div>
+                 <div class="param">
+                      <span>Value :</span>
+                      <span class="param-divider"></span>
+                      <select id="imu_velocity_scale_selector" class="select" name="imu_velocity_scale_select">
+                            <option>250deg</option>
+                            <option>500deg</option>
+                            <option>1000deg</option>
+                            <option>2000deg</option>
+                      </select>
+                 </div>
+                 <div class="vertical-divider"></div>
             </li>
             <li class="list-item">
+                <div class="param section-title">
+                   <span>Accel static threshold</span>
+                </div>
                 <div class="param">
-                    <span>Static state acceleration threshold</span>
+                        <span>Value :</span>
+                        <span class="param-divider"></span>
+                        <span>
+                            <input type="text" id="imu_set_accel_threshold" name="imu_set_accel_threshold"  value="0.3 m/sec^2"/>
+                        </span>
+                </div>
+                <div class="vertical-divider"></div>
+            </li>
+            <li class="list-item">
+                <div class="param section-title">
+                   <span>Accel static trust time</span>
+                </div>
+                <div class="param">
+                        <span>Value :</span>
+                        <span class="param-divider"></span>
+                        <span>
+                            <input type="text" id="imu_set_trustable_time" name="imu_set_trustable_time" value="0.3 sec"/>
+                        </span>
+                </div>
+                <div class="vertical-divider"></div>
+            </li>
+            <li class="list-item">
+                <div class="param section-title">
+                   <span>Complementary filter k-arg</span>
+                </div>
+                <div class="param">
+                        <span>Value :</span>
+                        <span class="param-divider"></span>
+                        <span>
+                            <input type="text" id="imu_set_k_arg" name="imu_set_k_arg" value="0.998"/>
+                        </span>
+                </div>
+                <div class="vertical-divider"></div>
+            </li>
+            <li class="list-item">
+                <div class="param section-title">
+                   <span>Record IMU</span>
+                </div>
+                <div class="param">
+                    <span>File name:</span>
                     <span class="param-divider"></span>
-                    <span>
-			    <input type="text" id="imu_acceleration_threshold" value="0.3 m/sec^2"/>
-			</span>
+                    <span>none</span>
                 </div>
+                <div class="param">
+                    <label  class="action_button"><input type="file" onclick="" hidden>Select or create file...</label>
+                </div>
+                <div class="param">
+                    <button id="imu_record_start" class="action_button" type="button" onclick="">Start</button>
+                    <button id="imu_record_pause"  class="action_button" type="button" onclick="">Pause</button>
+                    <button id="imu_record_end"   class="action_button" type="button" onclick="">Stop</button>
+                </div>
+                <div class="vertical-divider"></div>
             </li>
             <li class="list-item">
-                <div class="param">
-                    <span>Static state acceleration trustable time</span>
-                    <span class="param-divider"></span>
-                    <span>
-				<input type="text" id="imu_acceleration_trust_t" value="0.3 sec"/>
-			</span>
+                <div class="param section-title">
+                   <span>Calibrate IMU</span>
                 </div>
-            </li>
-            <li class="list-item">
-                <div class="param">
-                    <span>Complementary filter k-arg</span>
-                    <span class="param-divider"></span>
-                    <span>
-				<input type="text" id="filter_k_arg" value="0.998"/>
-			</span>
-                </div>
-            </li>
-            <li class="list-item">
-                <div class="param">
-                    <span>Record IMU</span>
-                </div>
-
                 <div class="param">
                     <span>File name:</span>
                     <span class="param-divider"></span>
                     <span>none</span>
                 </div>
 
-                <div class="param">
-                    <button class="action_button" type="button" onclick="">Select or create file...</button>
-                </div>
-                <div class="param">
-                    <button class="action_button" type="button" onclick="">Start</button>
-                    <button class="action_button" type="button" onclick="">Pause</button>
-                    <button class="action_button" type="button" onclick="">Stop</button>
-                </div>
-            </li>
-            <li class="list-item">
-                <div class="param">
-                    <span>Calibrate IMU</span>
-                    <span class="param-divider"></span>
-                    <span style="background-color: #faa;">uncalibrated</span>
-                </div>
-
-                <div class="param">
-                    <span>File name:</span>
-                    <span class="param-divider"></span>
-                    <span>none</span>
-                </div>
                 <div class="param">
                     <button class="action_button" type="button" onclick="">Reset calibration</button>
                 </div>
                 <div class="param">
-                    <button class="action_button" type="button" onclick="">Select or create file...</button>
+                    <label  class="action_button"><input type="file" onclick="" hidden>Select or create file...</label>
                 </div>
-
                 <div class="param">
-                    <button class="action_button" type="button" onclick="">Start</button>
-                    <button class="action_button" type="button" onclick="">Pause</button>
-                    <button class="action_button" type="button" onclick="">Stop</button>
+                    <button id="imu_calibrate_start" class="action_button" type="button" onclick="">Start</button>
+                    <button id="imu_calibrate_pause" class="action_button" type="button" onclick="">Pause</button>
+                    <button id="imu_calibrate_end"   class="action_button" type="button" onclick="">Stop</button>
                 </div>
+                <div class="vertical-divider"></div>
             </li>
-
         </ul>
     </aside>
-
     <aside id="OdometerSettingsContent" class="list-wrapper">
         <div class="close-wrapper">
             <button class="close" type="button" onclick="HideAll()">x</button>
@@ -312,22 +400,15 @@
             </li>
         </ul>
     </aside>
-
     <main class="content">
         <div class="cam">
-            <img src="{{ url_for('get_frame') }}"/>
+            <img src="{{ url_for('cam_read') }}"/>
         </div>
-        <!-- some content -->
     </main>
 </section>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-    <script
-      type="text/javascript"
-      src="{{ url_for('static', filename='camera_script.js') }}"
-    ></script>
-    <script
-      type="text/javascript"
-      src="{{ url_for('static', filename='globals_script.js') }}"
-    ></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='camera_script.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='imu_script.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='globals_script.js') }}"></script>
 </body>
 </html>

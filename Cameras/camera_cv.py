@@ -336,7 +336,7 @@ class CameraCV(Device):
     def save_frame(self):
         self.begin_mode(FRAME_SAVE_MODE)
 
-    def calibrate(self, calib_results_save_path: str = "calibration_results.json",
+    def calibrate(self, calib_results_save_path: str = None,
                   calib_params: CameraCalibrationArgs = None):
         if not self.begin_mode(CALIBRATION_MODE):
             return

@@ -1,5 +1,5 @@
   html {
-            font-family: "lucida grande", sans-serif;
+           font-family: Consolas, monaco, monospace;
         }
 
         body {
@@ -105,7 +105,15 @@
             height: 30px;
             padding: 0;
             cursor: pointer;
-        }
+            background-color: #fee;
+            border-color: #daa;
+            border-width: 1px;
+            border-radius: 5px;
+         }
+         .close:hover
+         {
+            background-color: #f00;
+         }
 
         .action_button-wrapper {
             position: sticky;
@@ -157,8 +165,9 @@
         }
 
         .select {
-            margin-top: 8px;
+            margin-top: 2px;
             width: 177px;
+            margin-bottom: 2px;
         }
 
         .input{
@@ -180,4 +189,28 @@
 
         .content {
             flex-grow: 1;
+        }
+
+        .vertical-divider
+        {
+            height: 6px;
+            display: flex;
+            vertical-align: middle;
+            background-color: #aaa;
+            border-radius: 3px;
+            margin-top: 9px;
+        }
+
+        .section-title
+        {
+            height: 20px;
+            margin-top: -3px;
+            margin-bottom: 3px;
+            justify-content: center;
+            vertical-align: middle;
+            background-color: #aaa;
+            padding: inherit;
+            border-radius: 5px;
+            font-size: 17px;
+            font-weight: bold;
         }

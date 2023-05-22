@@ -92,7 +92,7 @@
         {
           "name" : "diffuse_color",
           "type": 35665,
-          "args": [1.0, 0.0, 0.0]
+          "args": [1.0, 1.0, 1.0]
         }
       ],
       "textures": [

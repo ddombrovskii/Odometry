@@ -40,9 +40,13 @@ def next_frame():
             yield str(imu)
 
 
-@web_app.route(IMU_READ)
+@web_app.route(IMU_READ, methods=["GET", "POST"])
 def imu_read():
-    return Response(next_frame(), mimetype='multipart/x-mixed-replace; boundary=frame')
+    accel = imu.acceleration
+    omega = imu.omega
+    data = {"accel": {"x": accel.x, "y": accel.y, "z": accel.z},
+            "omega": {"x": omega.x, "y": omega.y, "z": omega.z}}
+    return data
 
 
 @web_app.route(IMU_PAUSE)
@@ -93,6 +97,11 @@ def imu_set_update_time():
     with imu_lock:
         imu.update_time = float(imu_update_time)
     return NOTHING
+
+
+@web_app.context_processor
+def inject_load():
+    return next_frame()
 
 
 @web_app.route(IMU_SET_RECORD_FILE_PATH, methods=['POST'])
@@ -156,3 +165,18 @@ def imu_set_k_arg():
         imu.k_arg = float(k_arg)
     return NOTHING
 
+
+@web_app.route('/', methods=['GET', 'POST'])
+def index():
+    # TODO MOVE TO MAIN FILE
+    """
+    В render_template можно передавать аргументы, например, списки параметров.
+    То есть, в одном месте мы можем определить список возможных параметров камеры (к примеру, массив значений FPS) и там
+    же реализовать изменение объекта cam от этих параметров, а сюда просто передавать в render_template списки параметров
+    для каждого селектора.
+    """
+    return render_template('index.html', fps_list=FRAME_RATES, resolutions_list=RESOLUTIONS)
+
+
+if __name__ == "__main__":
+    web_app.run(debug=True, use_reloader=False)

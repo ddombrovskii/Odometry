@@ -5,6 +5,7 @@ import os
 
 from Utilities.device import Device, START_MODE, BEGIN_MODE_MESSAGE, RUNNING_MODE_MESSAGE, END_MODE_MESSAGE, \
     DeviceMessage, device_progres_bar, DISCARD_MODE_MESSAGE
+from .accelerometer_bno055 import AccelerometerBNO055
 from .accelerometer_settings import load_accelerometer_settings
 from .accelerometer_mpu6050 import Accelerometer
 from Utilities.Geometry.vector3 import Vector3
@@ -45,9 +46,9 @@ class IMU(Device):
     6. Может работать единовременно в режиме интегрирования или интегрирования и записи
     """
     def __init__(self):  # , forward: Vector3 = None):
-        self._accelerometer: Accelerometer
+        self._accelerometer: AccelerometerBNO055
         try:
-            self._accelerometer = Accelerometer()
+            self._accelerometer = AccelerometerBNO055()
         except RuntimeError as err:
             print(err.args)
             exit(0)
@@ -159,7 +160,7 @@ class IMU(Device):
         """
         Углы поворота
         """
-        return self._accelerometer.angle
+        return self._accelerometer.angles
 
     @property
     def acceleration_calib(self) -> Vector3:
@@ -320,7 +321,7 @@ class IMU(Device):
 
         if message.is_running:
             #  self.send_log_message(device_progres_bar((self._mode_times[INTEGRATE_MODE] / 3.0) % 1.0, "", 55, '|', '_'))
-            if not self._accelerometer.read_measurements():
+            if not self._accelerometer.read_request():
                 return message.run
 
             delta_t = self.delta_t

@@ -38,12 +38,14 @@ class CameraCV(Device):
         try:
             if len(CameraCV._FREE_CAMERA_PORTS) != 0:
                 self._camera_port = CameraCV._FREE_CAMERA_PORTS.pop()
-                self._camera_stream = cv.VideoCapture(self._camera_port)  # , constants.CAP_DSHOW)
+                # if win 10 :: self._camera_stream = cv.VideoCapture(self._camera_port)
+                self._camera_stream = cv.VideoCapture(self._camera_port, constants.CAP_DSHOW)
             else:
                 if CameraCV._MAX_CAMERA_PORTS_SUPPORT < CameraCV._LAST_CAMERA_PORT:
                     raise RuntimeError("CV Camera exceed max amount of instances...")
                 self._camera_port = CameraCV._LAST_CAMERA_PORT
-                self._camera_stream = cv.VideoCapture(self._camera_port)  # , constants.CAP_DSHOW)
+                # if win 10 :: self._camera_stream = cv.VideoCapture(self._camera_port)
+                self._camera_stream = cv.VideoCapture(self._camera_port , constants.CAP_DSHOW)
 
                 CameraCV._LAST_CAMERA_PORT += 1
         except RuntimeError("CV Camera instantiate error") as ex:
@@ -70,8 +72,8 @@ class CameraCV(Device):
         self.register_callback(READ_FRAME_MODE,   self._grab_frame)
         self.register_callback(FRAME_SAVE_MODE,   self._save_frame)
         self.register_callback(SLAM_MODE,         self._slam)
-        self.camera_cv.set(constants.CAP_PROP_EXPOSUREPROGRAM, 3)
-        self.camera_cv.set(constants.CAP_PROP_EXPOSURE,       -9.0)
+        self.camera_cv.set(constants.CAP_PROP_EXPOSUREPROGRAM, 1)
+        self.camera_cv.set(constants.CAP_PROP_EXPOSURE,       -12.0)
         self.camera_cv.set(constants.CAP_PROP_GAIN,            0.0)
         self.camera_cv.set(constants.CAP_PROP_AUTOFOCUS,       0.0)
         self.camera_cv.set(constants.CAP_PROP_FOCUS,           60.0)

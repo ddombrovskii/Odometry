@@ -23,29 +23,29 @@ let IMU_SET_ACCEL_THRESHOLD = "/imu_set_accel_threshold";
 let IMU_K_ARG = "/imu_set_k_arg";
 
 
-let HTML_IMU_UPDATE_TIME = "imu_update_time";
-let HTML_IMU_READ = "imu_read";
-let HTML_IMU_PAUSE = "imu_pause";
-let HTML_IMU_EXIT = "imu_exit";
-let HTML_IMU_RESET = "imu_reset";
-let HTML_IMU_CALIBRATE = "imu_calibrate";
+let HTML_IMU_UPDATE_TIME = "#imu_update_time";
+let HTML_IMU_READ = "#imu_read";
+let HTML_IMU_PAUSE = "#imu_pause";
+let HTML_IMU_EXIT = "#imu_exit";
+let HTML_IMU_RESET = "#imu_reset";
+let HTML_IMU_CALIBRATE = "#imu_calibrate";
 
-let HTML_IMU_RECORD_START = "imu_record_start";
-let HTML_IMU_RECORD_PAUSE = "imu_record_pause";
-let HTML_IMU_RECORD_END = "imu_record_end";
+let HTML_IMU_RECORD_START = "#imu_record_start";
+let HTML_IMU_RECORD_PAUSE = "#imu_record_pause";
+let HTML_IMU_RECORD_END = "#imu_record_end";
 
-let HTML_IMU_CALIBRATE_START = "imu_record_start";
-let HTML_IMU_CALIBRATE_PAUSE = "imu_record_pause";
-let HTML_IMU_CALIBRATE_END = "imu_record_end";
+let HTML_IMU_CALIBRATE_START = "#imu_record_start";
+let HTML_IMU_CALIBRATE_PAUSE = "#imu_record_pause";
+let HTML_IMU_CALIBRATE_END = "#imu_record_end";
 
-let HTML_IMU_SET_UPDATE_TIME = "imu_set_update_time";
-let HTML_IMU_SET_RECORD_FILE_PATH = "imu_set_record_file_path";
-let HTML_IMU_SET_CALIB_FILE_PATH = "imu_set_calib_file_path";
-let HTML_IMU_SET_GRAVITY_SCALE = "imu_set_gravity_scale";
-let HTML_IMU_SET_ANGLES_RATE = "imu_set_angles_rate";
-let HTML_IMU_SET_TRUSTABLE_TIME = "imu_set_trustable_time";
-let HTML_IMU_SET_ACCEL_THRESHOLD = "imu_set_accel_threshold";
-let HTML_IMU_K_ARG = "imu_set_k_arg";
+let HTML_IMU_SET_UPDATE_TIME = "#imu_set_update_time";
+let HTML_IMU_SET_RECORD_FILE_PATH = "#imu_set_record_file_path";
+let HTML_IMU_SET_CALIB_FILE_PATH = "#imu_set_calib_file_path";
+let HTML_IMU_SET_GRAVITY_SCALE = "#imu_set_gravity_scale";
+let HTML_IMU_SET_ANGLES_RATE = "#imu_set_angles_rate";
+let HTML_IMU_SET_TRUSTABLE_TIME = "#imu_set_trustable_time";
+let HTML_IMU_SET_ACCEL_THRESHOLD = "#imu_set_accel_threshold";
+let HTML_IMU_K_ARG = "#imu_set_k_arg";
 
 
 $("#imu_gravity_scale_selector").bind("change",

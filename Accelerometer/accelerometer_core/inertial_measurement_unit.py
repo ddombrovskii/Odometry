@@ -133,6 +133,21 @@ class IMU(Device):
         self._accelerometer.k_accel = value
 
     @property
+    def accel_threshold(self) -> float:
+        """
+        Пороговый уровень отклонения значения модуля вектора G относительно которого определяется, движемся или нет.
+        """
+        return self._accelerometer.acceleration_noize_level
+
+    @accel_threshold.setter
+    def accel_threshold(self, value: float) -> None:
+        """
+        Пороговый уровень отклонения значения модуля вектора G относительно которого определяется, движемся или нет.
+        """
+        # with self._lock:
+        self._accelerometer.acceleration_noize_level = value
+
+    @property
     def omega(self) -> Vector3:
         """
         Угловые скорости

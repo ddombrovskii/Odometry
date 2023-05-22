@@ -34,6 +34,7 @@ CAM_SET_SLAM_FILE_PATH = "/cam_set_slam_file_path"
 
 @web_app.route('/', methods=['GET', 'POST'])
 def index():
+    # TODO MOVE TO MAIN FILE
     """
     В render_template можно передавать аргументы, например, списки параметров.
     То есть, в одном месте мы можем определить список возможных параметров камеры (к примеру, массив значений FPS) и там

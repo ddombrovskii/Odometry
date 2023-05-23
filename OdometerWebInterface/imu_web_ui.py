@@ -28,24 +28,18 @@ IMU_SET_ACCEL_THRESHOLD = "/imu_set_accel_threshold"
 IMU_K_ARG = "/imu_set_k_arg"
 
 
-def next_frame():
-    # todo ПЕРЕДЕЛАТЬ!!!!
-    # todo ПЕРЕДЕЛАТЬ!!!!
-    # todo ПЕРЕДЕЛАТЬ!!!!
-    # todo ПЕРЕДЕЛАТЬ!!!!
-    # todo ПЕРЕДЕЛАТЬ!!!!
-    while not imu.is_complete:
-        with imu_lock:
-            imu.update()
-            yield str(imu)
-
-
-@web_app.route(IMU_READ, methods=["GET", "POST"])
+@web_app.route(IMU_READ)
 def imu_read():
-    accel = imu.acceleration
-    omega = imu.omega
-    data = {"accel": {"x": accel.x, "y": accel.y, "z": accel.z},
-            "omega": {"x": omega.x, "y": omega.y, "z": omega.z}}
+    imu.update()
+    accel  = imu.accel_lin
+    omega  = imu.omega
+    angles = imu.angles
+    data = "{\n" \
+           f"\"dtime\":  {imu.delta_t},\n" \
+           f"\"accel\":  {{\"x\": {accel.x},  \"y\": {accel.y},  \"z\": {accel.z}}},\n" \
+           f"\"omega\":  {{\"x\": {omega.x},  \"y\": {omega.y},  \"z\": {omega.z}}},\n" \
+           f"\"angles\": {{\"x\": {angles.x}, \"y\": {angles.y}, \"z\": {angles.z}}}\n" \
+           "}"
     return data
 
 
@@ -97,11 +91,6 @@ def imu_set_update_time():
     with imu_lock:
         imu.update_time = float(imu_update_time)
     return NOTHING
-
-
-@web_app.context_processor
-def inject_load():
-    return next_frame()
 
 
 @web_app.route(IMU_SET_RECORD_FILE_PATH, methods=['POST'])

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+	<head>
+	</head>
+	<body>
+		<div id="chartContainer" style="height: 370px; width: 100%;"></div>
+		<script type="text/javascript" src="https://cdn.canvasjs.com/canvasjs.min.js"></script>
+		<script type="text/javascript">
+
+		</script>
+		<script type="text/javascript">
+			var imu_data;
+			var currentAccel  = '{{ accel }}';
+			var currentOmega  = '{{ omega }}';
+			var currentAngles = '{{ angles }}';
+			class Line2D 
+			{
+			  #points;
+			  #pointsCap;
+			  constructor()
+			  {
+				this.#points = [];
+				this.#pointsCap = 64;
+				for(var i = 0; i < this.#pointsCap; i++) this.#points.push({ x: 0.0, y: 0.0 });
+			  }
+			  appendPoint(_x, _y) 
+			  {
+				this.#points.push({ x: _x, y: _y });
+				if(this.#points.length > this.#pointsCap)this.#points.shift();
+			  }
+			  
+			  get pointsCapasity()
+			  {
+				return this.#pointsCap;
+			  }
+			  
+			  get dataPoints()
+			  {
+				return this.#points;
+			  }
+			}
+			class TripleLinesPlot
+			{
+			  #_line_1;
+			  #_line_2;
+			  #_line_3;
+			  #_chart ;
+			  constructor(_title, _x_title, _y_title, _line_1_title, _line_2_title, _line_3_title)
+			  {
+				this.#_line_1 = new Line2D();
+				this.#_line_2 = new Line2D();
+				this.#_line_3 = new Line2D();
+				this.#_chart = new CanvasJS.Chart("chartContainer", 
+				{		
+					title: { text: _title },
+					axisX: { title: _x_title },
+					axisY: { title: _y_title },
+					data:[
+					{
+						name: _line_1_title,
+						showInLegend: true,
+						type: "line",
+						lineThickness: 2,
+						markerSize: 0,
+						dataPoints: this.#_line_1.dataPoints,
+						
+					},
+					{
+						name: _line_2_title,
+						showInLegend: true,
+						type: "line",
+						lineThickness: 2,
+						markerSize: 0,
+						dataPoints: this.#_line_2.dataPoints,
+						
+					},
+					{
+						name: _line_3_title,
+						showInLegend: true,
+						type: "line",
+						lineThickness: 2,
+						markerSize: 0,
+						dataPoints: this.#_line_3.dataPoints,
+					}
+					]
+				});
+			  }
+			  get line1()
+			  {
+				return this.#_line_1;
+			  }
+			  get line2()
+			  {
+				return this.#_line_2;
+			  }
+			  get line3()
+			  {
+				return this.#_line_3;
+			  }
+			  get chart()
+			  {
+				return this.#_chart;
+			  }
+			  updateLine1(x, y)
+			  {
+				  this.#_line_1.appendPoint(x, y);
+			  }
+			  updateLine2(x, y)
+			  {
+				  this.#_line_2.appendPoint(x, y);
+			  }
+			  updateLine3(x, y)
+			  {
+				  this.#_line_3.appendPoint(x, y);
+			  }
+			  update(x1, y1, x2, y2, x3, y3)
+			  {
+				  this.updateLine1(x1, y1);
+				  this.updateLine2(x2, y2);
+				  this.updateLine3(x3, y3);
+			  }
+			}
+			tripleLines = new TripleLinesPlot("Acceleration", 
+											  "Time,[sec]",
+											  "Accel,[m/sec^2]",
+											  "acceleration_x",
+											  "acceleration_y",
+											  "acceleration_z");
+			let dataLength = 64;
+			let xStep = Math.PI * 2.0 / (dataLength - 1);
+			let updateRate = 1000;
+			window.onload = function()
+			{
+				var xVal = 0.0;
+				var yVal = 0.0;
+				var onCahrtUpdate = function(count)
+				{
+					count = count||1;
+					for(var j = 0;  j < count; j++)
+					{
+						tripleLines.update(xVal, Math.sin(xVal), xVal, Math.sin(xVal + 1), xVal, Math.sin(xVal + 2));
+						xVal += xStep;
+					}
+					tripleLines.chart.render();
+
+					console.log(imu_data);
+				}               
+				onCahrtUpdate(dataLength);
+				setInterval(function(){onCahrtUpdate()}, updateRate);
+			}
+		</script>
+	</body>
+</html>

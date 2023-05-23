@@ -184,15 +184,6 @@ class AccelerometerBNO055(AccelerometerBase):
         | 0xb 0000 0011 | b'x\03' | Ошибка чтения.                           |
         |++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++|
     """
-    ACCELERATION_BIT = 0
-    OMEGA_BIT = 1
-    ANGLES_BIT = 2
-    QUATERNION_BIT = 3
-    MAGNETOMETER_BIT = 4
-    ACCELERATION_LINEAR_BIT = 5
-    CALIBRATION_BIT = 6
-    STATUS_BIT = 7
-
     STATUS_READY = b'\x00'
     STATUS_DATA_CAPTURED = b'\x01'
     STATUS_CALIBRATION = b'\x02'
@@ -217,7 +208,7 @@ class AccelerometerBNO055(AccelerometerBase):
             # if target_port is None:
             #     raise RuntimeError("BNO055 is not connected...")
 
-            self._device_connection = serial.Serial('COM5', baudrate=115200,
+            self._device_connection = serial.Serial('COM4', baudrate=115200,
                                            timeout=1, bytesize=8, stopbits=serial.STOPBITS_ONE)
             return True
         except RuntimeError as err:
@@ -225,6 +216,8 @@ class AccelerometerBNO055(AccelerometerBase):
 
     def _request_for_device_disconnection(self) -> bool:
         if "_device_connection" in self.__dict__:
+            if self._device_connection is None:
+                return False
             self._device_connection.close()
             return True
         return False

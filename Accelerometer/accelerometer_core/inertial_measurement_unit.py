@@ -149,6 +149,13 @@ class IMU(Device):
         self._accelerometer.acceleration_noize_level = value
 
     @property
+    def accel_lin(self) -> Vector3:
+        """
+        Угловые скорости
+        """
+        return self._accelerometer.acceleration_linear
+
+    @property
     def omega(self) -> Vector3:
         """
         Угловые скорости

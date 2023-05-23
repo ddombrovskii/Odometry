@@ -91,8 +91,8 @@ class AccelerometerBase:
         self._omega_curr: Vector3 = Vector3(0, 0, 0)
         self._omega_prev: Vector3 = Vector3(0, 0, 0)
 
-        self._magneto_curr: Vector3 = Vector3(0, 0, 0)
-        self._magneto_prev: Vector3 = Vector3(0, 0, 0)
+        self._mag_curr: Vector3 = Vector3(0, 0, 0)
+        self._mag_prev: Vector3 = Vector3(0, 0, 0)
 
         self._angle_curr: Vector3 = Vector3(0, 0, 0)
         self._angle_prev: Vector3 = Vector3(0, 0, 0)
@@ -573,11 +573,11 @@ class AccelerometerBase:
 
     @property
     def magnetometer(self) -> Vector3:
-        return self._magneto_curr
+        return self._mag_curr
 
     @property
     def magnetometer_prev(self) -> Vector3:
-        return self._magneto_prev
+        return self._mag_prev
     """
     #########################################################
     #####  Local space to world space transform values  #####
@@ -644,8 +644,8 @@ class AccelerometerBase:
         self._angle_curr = Vector3(x, y, z)
 
     def _set_magnetometer(self, x: float, y: float, z: float):
-        self._magneto_prev = self._magneto_curr
-        self._magneto_curr = Vector3(x, y, z)
+        self._mag_prev = self._mag_curr
+        self._mag_curr = Vector3(x, y, z)
 
     def _set_quaternion(self, w: float, x: float, y: float, z: float):
         self._quat_prev = self._quat_curr

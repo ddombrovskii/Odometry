@@ -5,6 +5,7 @@ import os
 
 from Utilities.device import Device, START_MODE, BEGIN_MODE_MESSAGE, RUNNING_MODE_MESSAGE, END_MODE_MESSAGE, \
     DeviceMessage, device_progres_bar, DISCARD_MODE_MESSAGE
+from .accelerometer_base import AccelerometerBase
 from .accelerometer_bno055 import AccelerometerBNO055
 from .accelerometer_settings import load_accelerometer_settings
 from .accelerometer_mpu6050 import Accelerometer
@@ -68,6 +69,14 @@ class IMU(Device):
         self.register_callback(RECORDING_MODE, self._record)
         self.register_callback(CALIBRATION_MODE, self._calibrate)
         self.register_callback(INTEGRATE_MODE, self._integrate)
+
+    @property
+    def accelerometer(self) -> AccelerometerBase:
+        """
+        Время простоя перед запуском.
+        :return:
+        """
+        return self._accelerometer
 
     @property
     def start_time(self) -> float:
@@ -365,7 +374,8 @@ class IMU(Device):
                     try:
                         load_accelerometer_settings(self._accelerometer, file)
                         self._file_name = ""
-                        self.send_log_message(f"|------------------Loaded from file...------------------|\n")
+                        self.send_log_message(f"|------------------Loaded from file...------------------|\n|{file:<56}|\n")
+
                         return message.end
                     except Exception as _ex:
                         self.send_log_message(f"Loading error accelerometer calib info from file\n:{self._file_name}...\n")

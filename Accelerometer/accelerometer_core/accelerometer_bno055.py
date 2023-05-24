@@ -208,7 +208,7 @@ class AccelerometerBNO055(AccelerometerBase):
             # if target_port is None:
             #     raise RuntimeError("BNO055 is not connected...")
 
-            self._device_connection = serial.Serial('COM4', baudrate=115200,
+            self._device_connection = serial.Serial('COM5', baudrate=115200,
                                            timeout=1, bytesize=8, stopbits=serial.STOPBITS_ONE)
             return True
         except RuntimeError as err:
@@ -322,6 +322,7 @@ class AccelerometerBNO055(AccelerometerBase):
 
 if __name__ == '__main__':
     acc = AccelerometerBNO055()
+    acc.use_filtering = True
     # acc.record('record_bno_test.json')  # запись в файл
     # acc.calibrate_request()
     for _ in range(10):

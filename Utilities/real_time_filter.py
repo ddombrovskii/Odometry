@@ -25,7 +25,7 @@ class RealTimeFilter:
         # 0 running average
         # 1 median
         # 2 kalman
-        self._window_size: int = 13
+        self._window_size: int = 3
         self._window_values: CircBuffer = CircBuffer(self.window_size)
         self._prev_value:    float = 0.0
         self._curr_value:    float = 0.0

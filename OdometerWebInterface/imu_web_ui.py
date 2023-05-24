@@ -3,6 +3,7 @@ from threading import Lock
 
 
 imu = IMU()
+imu.accelerometer.use_filtering = True
 imu.enable_logging = False
 imu_record_file_path = None
 imu_clib_file_path = None
@@ -31,7 +32,7 @@ IMU_K_ARG = "/imu_set_k_arg"
 @web_app.route(IMU_READ)
 def imu_read():
     imu.update()
-    accel  = imu.accel_lin
+    accel  = imu.accelerometer.acceleration_local_space
     omega  = imu.omega
     angles = imu.angles
     data = "{\n" \
@@ -168,4 +169,5 @@ def index():
 
 
 if __name__ == "__main__":
-    web_app.run(debug=True, use_reloader=False)
+    # imu.calibrate(5)
+    web_app.run( use_reloader=False)

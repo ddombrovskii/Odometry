@@ -2,6 +2,7 @@ import math
 import time
 from collections import namedtuple
 
+from Accelerometer.accelerometer_core.inertial_measurement_unit import IMU
 from Utilities.Geometry import Vector2
 from typing import List, Tuple
 
@@ -193,8 +194,8 @@ def draw_plot(x, y):
 if __name__ == "__main__":
     wp = WayPoints()
     wp.path_points.append(Vector2(0, 0))
-    wp.path_points.append(Vector2(5, 0))
-    wp.path_points.append(Vector2(8, 0.0))
+    wp.path_points.append(Vector2(0.5, 0))
+    wp.path_points.append(Vector2(0.8, 0.0))
     x_path = [v.x for v in wp.path_points]
     y_path = [v.y for v in wp.path_points]
     x_way = []
@@ -206,7 +207,7 @@ if __name__ == "__main__":
     dx = 8.0 / (n_points - 1)
     for i in range(n_points):
         x_way.append(dx * i)
-        y_way.append(math.cos(dx * i * 5.0) * 0.1)
+        y_way.append(math.cos(dx * i * 5.0) )
         way_points.append(Vector2(x_way[-1], y_way[-1]))
 
     for (p1, p2) in zip(way_points[:-1], way_points[1:]):
@@ -220,3 +221,27 @@ if __name__ == "__main__":
     axis.plot(x_way[:-1], response, 'g')
     axis.plot(x_way[:-1], errors, 'r')
     plt.show()
+
+
+if __name__ == "__main__":
+        wp = WayPoints()
+        wp.path_points.append(Vector2(0, 0))
+        wp.path_points.append(Vector2(1.5, 0))
+        wp.path_points.append(Vector2(1.5, 1.5))
+        wp.path_points.append(Vector2(0, 1.5))
+        t = 0.0
+        imu = IMU()
+        while imu.calib_time > t * 1.1:
+            t += imu.delta_t
+            imu.update()
+        p1 = imu.position
+        p2 = imu.position
+        while True:
+            flag, response = wp.move(p1, p2)
+            imu.update()
+            p1 = p2
+            p2 = imu.position
+            if not flag:
+                break
+
+

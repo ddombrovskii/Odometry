@@ -1,3 +1,6 @@
+import math
+
+from Utilities.Geometry import Vector3
 from application import*
 from threading import Lock
 
@@ -32,9 +35,9 @@ IMU_K_ARG = "/imu_set_k_arg"
 @web_app.route(IMU_READ)
 def imu_read():
     imu.update()
-    accel  = imu.accelerometer.acceleration_local_space
-    omega  = imu.omega
-    angles = imu.angles
+    accel  = imu.position
+    omega  = imu.velocity_clean
+    angles = imu.velocity - imu.velocity_clean # * Vector3(1, 1, 0)# 10 * Vector3(imu.position.x, 0, imu.position.y) #angles / math.pi * 180
     data = "{\n" \
            f"\"dtime\":  {imu.delta_t},\n" \
            f"\"accel\":  {{\"x\": {accel.x},  \"y\": {accel.y},  \"z\": {accel.z}}},\n" \
@@ -169,5 +172,12 @@ def index():
 
 
 if __name__ == "__main__":
-    # imu.calibrate(5)
-    web_app.run( use_reloader=False)
+    imu.update()
+    print(imu_read())
+    # imu.calibrate(50)
+    #t = 0.0
+    #while t < 71.0:
+    #    imu.update()
+    #    print(imu.acceleration)
+    #    t += imu.delta_t
+    web_app.run(use_reloader=False)

@@ -5,7 +5,7 @@ import os
 
 from Utilities.device import Device, START_MODE, BEGIN_MODE_MESSAGE, RUNNING_MODE_MESSAGE, END_MODE_MESSAGE, \
     DeviceMessage, device_progres_bar, DISCARD_MODE_MESSAGE
-from .accelerometer_base import AccelerometerBase
+from .accelerometer_base import AccelerometerBase, smooth_step
 from .accelerometer_bno055 import AccelerometerBNO055
 from .accelerometer_settings import load_accelerometer_settings
 from .accelerometer_mpu6050 import Accelerometer
@@ -30,6 +30,31 @@ ANGLES          = "angles"
 DEVICE_NAME     = "device_name"
 LOG_TIME_START  = "log_time_start"
 WAY_POINTS      = "way_points"
+
+
+class LinearRegressor:
+    def __init__(self):
+        self._x = []
+        self._y = []
+        self._cap = 64
+
+    def update(self, x, y) -> float:
+        self._x.append(x)
+        self._y.append(y)
+        if len(self._x) < 2:
+            return y
+
+        if len(self._x) == self._cap:
+            del self._x[0]
+            del self._y[0]
+
+        sum_x = sum(xi for xi in self._x)
+        sum_y = sum(yi for yi in self._y)
+        sum_xy = sum(xi * yi for xi, yi in zip(self._x, self._y))
+        sum_xx = sum(xi * xi for xi in self._x)
+        k = (sum_xy - sum_x * sum_y / self._cap) / (sum_xx - sum_x * sum_x / self._cap)
+        return k * x + (sum_y - k * sum_x) / self._cap
+
 
 
 # TODO запись актуальных калибровочных данных и поиск логов калибровки при запуске (DONE)
@@ -57,18 +82,24 @@ class IMU(Device):
         self._file_name = ""
         self._file_handle = None
         # время простоя перед запуском
-        self._start_time:   float = 1.0
+        self._start_time:   float = 2.0
         # время калибровки
-        self._calib_time:     float = 2.0
+        self._calib_time:     float = 5.0
         # время ...
         self._trust_acc_time: float = 0.1
         self._acc_check_time: float = 0.0
         self._vel: Vector3   = Vector3(0.0, 0.0, 0.0)
+        self._vel_clean: Vector3   = Vector3(0.0, 0.0, 0.0)
         self._pos: Vector3   = Vector3(0.0, 0.0, 0.0)
         self.update_time = 1.0 / 60.0
         self.register_callback(RECORDING_MODE, self._record)
         self.register_callback(CALIBRATION_MODE, self._calibrate)
         self.register_callback(INTEGRATE_MODE, self._integrate)
+        self._vx = LinearRegressor()
+        self._vy = LinearRegressor()
+        self._vz = LinearRegressor()
+
+
 
     @property
     def accelerometer(self) -> AccelerometerBase:
@@ -200,11 +231,27 @@ class IMU(Device):
         return self._accelerometer.acceleration
 
     @property
-    def velocity(self) -> Vector3:
+    def velocity_clean(self) -> Vector3:
+        """
+        Текущая скорость в мировой системе координат
+        """
+        return self._vel_clean
+
+    @property
+    def velocity_raw(self) -> Vector3:
         """
         Текущая скорость в мировой системе координат
         """
         return self._vel
+
+    @property
+    def velocity(self) -> Vector3:
+        """
+        Текущая скорость в мировой системе координат
+        """
+        return (self._vel - self._vel_clean) * \
+               smooth_step((self._accelerometer.acceleration - self._accelerometer.acceleration_prev).magnitude(),
+                           self.accel_threshold, self.accel_threshold * 2.0 )
 
     @property
     def position(self) -> Vector3:
@@ -287,7 +334,8 @@ class IMU(Device):
 
         if message == RUNNING_MODE_MESSAGE:
             t = self.mode_active_time(START_MODE)
-            self.send_log_message(device_progres_bar(t / self._start_time, "", 55, '|', '_'))
+            self.accelerometer.read_request()
+            self.send_log_message(device_progres_bar(t / self._start_time if self.start_time > 0.001 else 1.0, "", 55, '|', '_'))
             if t >= self._start_time:
                 self.calibrate()
                 return END_MODE_MESSAGE
@@ -333,29 +381,35 @@ class IMU(Device):
             self.send_log_message(f"\n|----------Accelerometer read and integrate...----------|\n"
                                   f"|-------------------Please stand by...------------------|\n")
             self._acc_check_time = 0.0
+            self.accelerometer.build_basis()
+            self._vel = Vector3(0, 0, 0)
+            self._pos = Vector3(0, 0, 0)
+            self._vel_clean = Vector3(0, 0, 0)
             return message.run
 
         if message.is_running:
-            #  self.send_log_message(device_progres_bar((self._mode_times[INTEGRATE_MODE] / 3.0) % 1.0, "", 55, '|', '_'))
             if not self._accelerometer.read_request():
                 return message.run
 
             delta_t = self.delta_t
             # Оценка времени, когда изменение модуля вектора ускорения меньше acceleration_noize_level
             if (self._accelerometer.acceleration - self._accelerometer.acceleration_prev).magnitude() > \
-                    self._accelerometer.acceleration_noize_level:
+                    self.accel_threshold:
                 self._acc_check_time = 0.0
             else:
                 self._acc_check_time += delta_t
             # локальный базис акселерометра
-            r, u, f = self._accelerometer.basis.right_up_front
+            basis = self._accelerometer.basis
             # ускорение в локальном базисе акселерометра
-            a = self._accelerometer.acceleration_local_space
+            a = self._accelerometer.acceleration_local_space * Vector3(1.0, 1.0, 0.0)
             # интегрирование скорости
-            self._vel += (r * a.x + u * a.y + f * a.z) * delta_t \
-                if self._acc_check_time >= self._trust_acc_time else Vector3(0.0, 0.0, 0.0)
-            # интегрирование пути
-            self._pos += (r * self._vel.x + u * self._vel.y + f * self._vel.z) * delta_t
+            self._vel += (basis * a) * Vector3(1.0, 1.0, 0.0) * delta_t
+            t = self.mode_active_time(INTEGRATE_MODE)
+            self._vel_clean = Vector3(self._vx.update(t, self._vel.x),
+                                      self._vy.update(t, self._vel.y),
+                                      self._vz.update(t, self._vel.z))
+
+            self._pos += (basis * self.velocity)* delta_t
             return message.run
 
         return message.discard
@@ -374,7 +428,7 @@ class IMU(Device):
                     try:
                         load_accelerometer_settings(self._accelerometer, file)
                         self._file_name = ""
-                        self.send_log_message(f"|------------------Loaded from file...------------------|\n|{file:<56}|\n")
+                        self.send_log_message(f"|------------------Loaded from file...------------------|\n|{file:^55}|\n")
 
                         return message.end
                     except Exception as _ex:

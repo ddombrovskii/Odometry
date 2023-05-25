@@ -55,6 +55,11 @@ def _clear_bit(bytes_: int, bit_: int) -> int:
     return bytes_
 
 
+def smooth_step(value, edge0, edge1) -> float:
+    x = min(max(0.0, (value - edge0) / (edge1 - edge0)), 1.0)
+    return x * x * (3.0 - 2.0 * x)
+
+
 class AccelerometerBase:
 
     def _request_for_device_connection(self) -> bool:
@@ -99,14 +104,14 @@ class AccelerometerBase:
         self._angle_curr: Vector3 = Vector3(0, 0, 0)
         self._angle_prev: Vector3 = Vector3(0, 0, 0)
 
-        self._quat_curr: Quaternion = Quaternion(0, 0, 0, 0)
-        self._quat_prev: Quaternion = Quaternion(0, 0, 0, 0)
+        self._quat_curr: Quaternion = Quaternion(1.0, 0, 0, 0)
+        self._quat_prev: Quaternion = Quaternion(1.0, 0, 0, 0)
 
         self._basis_curr: Matrix3 = Matrix3.identity()
         self._basis_prev: Matrix3 = Matrix3.identity()
 
         self._k_accel: float = 0.999
-        self._accel_threshold: float = 0.125  # допустимый уровень шума между значениями при калибровке
+        self._accel_threshold: float = 0.05  # допустимый уровень шума между значениями при калибровке
 
         self._curr_t: float = -1.0
         self._prev_t: float = -1.0
@@ -122,13 +127,14 @@ class AccelerometerBase:
         self._accel_calib_lin: Vector3 = Vector3(0.0, 0.0, 0.0)
         self._omega_calib: Vector3 = Vector3(0.0, 0.0, 0.0)
         self._mag_calib: Vector3 = Vector3(0.0, 0.0, 0.0)
+        self._accel_gain = Vector3(0.05, 0.05, 0.05)
         self._default_settings()
 
     def _default_settings(self):
         self.is_accel_read = True
         self.is_omega_read = True
-        self.is_angles_read = True
-        self.is_lin_accel_read = True
+        # self.is_angles_read = True
+        # self.is_lin_accel_read = True
         self.is_quaternion_read = True
 
     def _set_up_filters(self):
@@ -665,23 +671,19 @@ class AccelerometerBase:
         """
         Задана в мировой системе координат (ускорение без G)
         """
-        x, y, z = self.acceleration
-        return Vector3(self.basis.m00 * x + self.basis.m01 * y + self.basis.m02 * z,
-                       self.basis.m10 * x + self.basis.m11 * y + self.basis.m12 * z,
-                       self.basis.m20 * x + self.basis.m21 * y + self.basis.m22 * z) -\
-               Vector3((self.basis.m20 + self.basis.m21 + self.basis.m22) * -0.03,
-                       0.0,
-                       (self.basis.m20 + self.basis.m21 + self.basis.m22) * -0.1)
+        x, y, z = self.acceleration - self.basis * Vector3(0, 0, GRAVITY_CONSTANT)
+        accel = Vector3(self.basis.m00 * x + self.basis.m10 * y + self.basis.m20 * z,
+                        self.basis.m01 * x + self.basis.m11 * y + self.basis.m21 * z,
+                        self.basis.m02 * x + self.basis.m12 * y + self.basis.m22 * z)
+        return Vector3(*(v * smooth_step(abs(v), g, 2.0 * g) for v, g in zip(accel, self._accel_gain)))
 
     @property
     def acceleration_local_space(self) -> Vector3:
         """
         Задана в системе координат акселерометра (ускорение без G)
         """
-        x, y, z = 0.0, 9.81, 0.0 #  self._accel_calib
-        return Vector3(self.acceleration.x - (self.basis.m00 * x + self.basis.m01 * y + self.basis.m02 * z),
-                       self.acceleration.y - (self.basis.m10 * x + self.basis.m11 * y + self.basis.m12 * z),
-                       self.acceleration.z - (self.basis.m20 * x + self.basis.m21 * y + self.basis.m22 * z))
+        accel = self.acceleration - self.basis * Vector3(0, 0, GRAVITY_CONSTANT)
+        return Vector3(*(v * smooth_step(abs(v), g, 2.0 * g) for v, g in zip(accel, self._accel_gain)))
 
     def _set_accel(self, x: float, y: float, z: float):
         self._accel_prev = self._accel_curr
@@ -732,7 +734,7 @@ class AccelerometerBase:
             return
 
         if _is_bit_set(self.read_config, ANGLES_BIT):
-            self._set_angles(response[stride], response[stride + 1], response[stride + 2])
+            # self._set_angles(response[stride], response[stride + 1], response[stride + 2])
             stride += 3
         if stride >= len(response):
             return
@@ -763,21 +765,35 @@ class AccelerometerBase:
             self._prev_t = self._curr_t
             self._curr_t = time.perf_counter()
 
+    def build_basis(self, azimuth: Vector3 = None):
+        cntr = 0
+        while True:
+            if self.read_request():
+                cntr += 1
+            if cntr == 10:
+                break
+        x_axis = Vector3.cross(self.acceleration, Vector3(0, 1, 0) if azimuth is None else azimuth).normalized()
+        y_axis = Vector3.cross(x_axis, self.acceleration).normalized()
+        z_axis = Vector3.cross(y_axis, x_axis)
+        self._set_basis(Matrix3(x_axis.x, y_axis.x, z_axis.x,
+                                x_axis.y, y_axis.y, z_axis.y,
+                                x_axis.z, y_axis.z, z_axis.z))
+        angles = Matrix3.to_euler_angles(self.basis)
+        print(self.basis)
+        self._set_angles(angles.x, angles.y, angles.z)
+
     def _build_basis(self):
         try:
-            u: Vector3 = (self.basis.up + Vector3.cross(self.omega, self.basis.up) * self.delta_t).normalized()
-            u = (u * (1.0 - self.k_accel) + self.k_accel * self.acceleration.normalized()).normalized()
-            # u: Vector3 = ((self.basis.up * Vector3.dot(self.basis.up, self.acceleration) +
-            #                Vector3.cross(self.omega, self.basis.up) * self.delta_t) * self._k_accel +
-            #                self.acceleration * (1.0 - self._k_accel))
-
-            f: Vector3 = (self.basis.front + Vector3.cross(self.omega, self.basis.front) * self.delta_t)
-            r = Vector3.cross(f, u)
-            f = Vector3.cross(u, r)
-            f = f.normalized()
-            u = u.normalized()
-            r = r.normalized()
-            self._set_basis(Matrix3.build_transform(r, u, f))
+            self._set_angles(*(self.angles + self.omega * self.delta_t))
+            y_axis = (self.basis.up    + Vector3.cross(self.omega, self.basis.up)    * self.delta_t).normalized()
+            z_axis = (self.basis.front + Vector3.cross(self.omega, self.basis.front) * self.delta_t).normalized()
+            z_axis = (z_axis * (1.0 - self.k_accel) + self.k_accel * self.acceleration).normalized()
+            x_axis = Vector3.cross(z_axis, y_axis).normalized()
+            y_axis = Vector3.cross(x_axis, z_axis).normalized()
+            self._set_basis(Matrix3(x_axis.x, y_axis.x, z_axis.x,
+                                    x_axis.y, y_axis.y, z_axis.y,
+                                    x_axis.z, y_axis.z, z_axis.z))
+            # print(self.basis)
         except ZeroDivisionError as zero:
             self._set_basis(self._basis_curr)
 
@@ -789,6 +805,7 @@ class AccelerometerBase:
         self._update_time()
         if self.use_filtering:
             self._filter_values()
+        # self._accel_curr = Vector3(*(v * _smooth_step(v, gain, 2.0 * gain) for v in self._accel_curr))
         self._build_basis()
         return True
 
@@ -804,7 +821,9 @@ class AccelerometerBase:
 
         if stop_calib:
             if self._calib_cntr == 0:
+                print(f"self._calib_cntr {self._calib_cntr}")
                 return False
+            print(f"self._calib_cntr {self._calib_cntr}")
             self._accel_calib /= self._calib_cntr
             self._omega_calib /= self._calib_cntr
             self._mag_calib /= self._calib_cntr
@@ -826,14 +845,12 @@ class AccelerometerBase:
             self._angle_prev = self._angle_curr
             return False
 
-        if not self.read_request():
-            return False
-
-        self._calib_cntr += 1
-        self._accel_calib += self.acceleration
-        self._omega_calib += self.omega
-        self._mag_calib += self.magnetometer
-        self._accel_calib_lin += self.acceleration_linear
+        if self.read_request():
+            self._calib_cntr += 1
+            self._accel_calib += self.acceleration
+            self._omega_calib += self.omega
+            self._mag_calib += self.magnetometer
+            self._accel_calib_lin += self.acceleration_linear
         return True
 
     def update(self):

@@ -1,6 +1,3 @@
-# from accelerometer_core.accelerometer_constants import ACCEL_RANGE_2G, GYRO_RANGE_250DEG
-# from accelerometer_core.Utilities.real_time_filter import RealTimeFilter
-# from accelerometer_core.accelerometer import Accelerometer
 from .accelerometer_base import AccelerometerBase
 from .accelerometer_constants import MPU6050_ACCEL_RANGE_2G, MPU6050_GYRO_RANGE_250DEG
 from Utilities.real_time_filter import RealTimeFilter

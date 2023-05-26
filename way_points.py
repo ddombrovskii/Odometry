@@ -1,7 +1,12 @@
 import math
+import struct
 import time
 from collections import namedtuple
 
+import numpy as np
+import serial
+
+from Accelerometer.accelerometer_core.accelerometer_bno055 import write_package, read_package
 from Accelerometer.accelerometer_core.inertial_measurement_unit import IMU
 from Utilities.Geometry import Vector2
 from typing import List, Tuple
@@ -30,35 +35,39 @@ class WayPoint(namedtuple("WayPoint", "position, error, derror, ierror, time")):
 class WayPoints:
     def __init__(self):
         self._path_points: List[Vector2] = []
+        self._path_length: List[float]   = [0.0]
         self._way_points: List[WayPoint] = []
+        self._curr_path_length = 0.0
         self._point_reach_threshold: float = 0.125
-        self._err_prev  = 0.0
-        self._err_curr  = 0.0
-        self._err_total = 0.0
+        self._error_delta = 0.0
+        self._error_int = 0.0
+        self._error = 0.0
         self._time_prev = 0.0
         self._time_curr = 0.0
         self._section_curr = 0
         # PID
         self._i_saturation = 10.0
         # max args
-        self._response_max: float = 1.0
+        self._response_max: float = 100.0
         # min args
-        self._response_min: float = -1.0
+        self._response_min: float = -100.0
 
-        self._threshold: float = 0.1
+        self._threshold: float = 0.125
 
-        self._kp: float = 0.5
-        self._ki: float = 0.02
-        self._kd: float = 0.01
+        self._kp: float = 0.9999
+        self._ki: float = 0.0
+        self._kd: float = 0.0
 
         self._err_p = 0.0
         self._err_i = 0.0
         self._err_d = 0.0
         self._e_old = 0.0
 
-    @property
-    def path_points(self) -> List[Vector2]:
-        return self._path_points
+    def add_point(self, x: float, y: float) -> None:
+        self._path_points.append(Vector2(x, y))
+        if len(self._path_points) == 1:
+            return
+        self._path_length.append(self._path_length[-1] + (self._path_points[-1] - self._path_points[-2]).magnitude())
 
     @property
     def way_points(self) -> List[WayPoint]:
@@ -136,42 +145,37 @@ class WayPoints:
         assert isinstance(val, float)
         self._response_min = min(self._response_max, val)
 
-    def move(self, current_position: Vector2, target_position: Vector2) -> Tuple[bool, float]:
+    def move(self, position: Vector2, direction: Vector2) -> Tuple[bool, float]:
         if self._section_curr == len(self._path_points) - 1:
             return False, 0.0
-        move_next, error = self._compute_error(self._section_curr, current_position, target_position)
-        self._err_total += error
-        self._err_prev = self._err_curr
-        self._err_curr = error
-        if len(self._way_points) == 0:
-            self._way_points.append(WayPoint(target_position, error, 0.0, self._err_total, time.perf_counter()))
-        else:
-            t = time.perf_counter()
-            dt = t - self._way_points[-1].time
-            self._way_points.append(WayPoint(target_position, error,
-                                             (error - self._err_prev) / dt, self._err_total * dt, t))
+        move_next, d_error = self._compute_error(self._section_curr, position, direction)
+        self._error_delta = d_error - self._error
+        self._error = d_error
+        self._error_int += self._error
 
-        self._err_p = self.kp * self._err_curr
-        self._err_i = _clamp(self._err_i + self.ki * self._err_curr,
-                             -self.integral_saturation, self.integral_saturation)
-        self._err_d = self.kd * (self._err_curr - self._e_old)
+        self._way_points.append(
+            WayPoint(position, self._error, self._error_delta, self._error_int, time.perf_counter()))
+
+        self._err_p = self.kp * self._error
+        self._err_i = _clamp(self._err_i + self.ki * self._error, -self.integral_saturation, self.integral_saturation)
+        self._err_d = self.kd * (self._error - self._e_old)
         response = _clamp(self._err_p + self._err_i + self._err_d, self.response_min, self.response_max)
         if move_next:
             self._section_curr += 1
             return True, response
         return True, response
 
-    def _compute_error(self, section_index, position_from: Vector2, position_to: Vector2) -> Tuple[bool, float]:
+    def _compute_error(self, section_index, position: Vector2, direction: Vector2) -> Tuple[bool, float]:
         p0 = self._path_points[section_index]
         p1 = self._path_points[section_index + 1]
-        height0, position0 = WayPoints._distance(position_from, p0, p1)
-        height1, position1 = WayPoints._distance(position_to,   p0, p1)
-        height = (position0 - position1).magnitude()
-        error = (height0 + height1) * height * 0.5
-        error *= 1.0 if Vector2.cross(p1 - p0, position_to) > 0.0 else -1.0
-        if (position_from - p1).magnitude() <= self._point_reach_threshold:
-            return True, error
-        return False, error
+        self._curr_path_length += (self.way_points[-1].position - position).magnitude() if len(self.way_points) != 0 else 0.0
+        # height0, position0 = WayPoints._distance(position_from, p0, p1)
+        # height1, position1 = WayPoints._distance(position_to,   p0, p1)
+        # error = (height0 + height1) * (height0 + height1) * 0.25
+        error = Vector2.cross((p1 - p0).normalized(), direction.normalized())  #  1.0 if Vector2.cross(p1 - p0, position_to) >= 0.0 else -1.0
+        if abs(self._curr_path_length - self._path_length[section_index + 1]) <= self._point_reach_threshold:
+            return True, -error
+        return False, -error
 
     @staticmethod
     def _distance(p: Vector2, p1: Vector2, p2: Vector2) -> Tuple[float, Vector2]:
@@ -193,55 +197,42 @@ def draw_plot(x, y):
 
 if __name__ == "__main__":
     wp = WayPoints()
-    wp.path_points.append(Vector2(0, 0))
-    wp.path_points.append(Vector2(0.5, 0))
-    wp.path_points.append(Vector2(0.8, 0.0))
-    x_path = [v.x for v in wp.path_points]
-    y_path = [v.y for v in wp.path_points]
-    x_way = []
-    y_way = []
-    way_points = []
-    response = []
-    errors = []
-    n_points = 1000
-    dx = 8.0 / (n_points - 1)
-    for i in range(n_points):
-        x_way.append(dx * i)
-        y_way.append(math.cos(dx * i * 5.0) )
-        way_points.append(Vector2(x_way[-1], y_way[-1]))
+    x = np.array([0.0, 1.5, 1.5, 0.0])
+    y = np.array([0.0, 0.0, 1.5, 1.5])
+    t = np.array([0.0, 0.333, 0.666, 1.0])
+    t_interp = np.linspace(0, 1.0, 16)
+    x_1 = np.interp(t_interp, t, x)
+    y_1 = np.interp(t_interp, t, y)
+    for xi, yi in zip(x_1, y_1):
+        wp.add_point(xi, yi)
+    t = 0.0
+    imu = IMU()
+    t_0 = 0.0
+    while imu.start_time > t:
+        t_0 = time.perf_counter()
+        imu.update()
+        t += time.perf_counter() - t_0
 
-    for (p1, p2) in zip(way_points[:-1], way_points[1:]):
-        flag, resp = wp.move(p1, p2)
-        response.append(resp)
-        errors.append(wp.way_points[-1].error) if len(errors) == 0 else errors.append(wp.way_points[-1].error + errors[-1])
+    while imu.calib_time > t:
+        t_0 = time.perf_counter()
+        imu.update()
+        t += time.perf_counter() - t_0
 
-    figure, axis = plt.subplots()
-    #axis.plot(x_path, y_path, 'k')
-    axis.plot(x_way, y_way, 'k')
-    axis.plot(x_way[:-1], response, 'g')
-    axis.plot(x_way[:-1], errors, 'r')
-    plt.show()
-
-
-if __name__ == "__main__":
-        wp = WayPoints()
-        wp.path_points.append(Vector2(0, 0))
-        wp.path_points.append(Vector2(1.5, 0))
-        wp.path_points.append(Vector2(1.5, 1.5))
-        wp.path_points.append(Vector2(0, 1.5))
-        t = 0.0
-        imu = IMU()
-        while imu.calib_time > t * 1.1:
-            t += imu.delta_t
-            imu.update()
-        p1 = imu.position
-        p2 = imu.position
-        while True:
-            flag, response = wp.move(p1, p2)
-            imu.update()
-            p1 = p2
-            p2 = imu.position
-            if not flag:
-                break
+    imu.begin_record("robot_imu_record.json")
+    while True:
+        direction = Vector2(imu.accelerometer.basis.up.x, imu.accelerometer.basis.up.y)
+        position  = Vector2(imu.position.x, imu.position.y)
+        flag, signal = wp.move(position, direction)
+        message = imu.accelerometer.read_config.to_bytes(1, 'big') + b';' + bytes(str(180.0 + signal * 180.0), 'utf-8')
+        # write_package(imu.accelerometer.device, message)
+        # time.sleep(0.01)
+        # response = read_package(imu.accelerometer.device)
+        # status = response[0]
+        # if status != 1:
+        #     ...
+        print(message)
+        imu.update()
+        if not flag:
+            break
 
 

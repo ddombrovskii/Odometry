@@ -229,6 +229,8 @@ class AccelerometerBNO055(AccelerometerBase):
         write_package(self.device, message)
         # time.sleep(0.01)
         response = read_package(self.device)
+        if len(response) == 0:
+            return False, (0.0,)
         self._status = response[0]
         if self._status != 1:
             return False, (0.0, )

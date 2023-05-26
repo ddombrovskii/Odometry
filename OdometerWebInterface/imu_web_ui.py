@@ -1,6 +1,3 @@
-import math
-
-from Utilities.Geometry import Vector3
 from application import*
 from threading import Lock
 
@@ -37,7 +34,7 @@ def imu_read():
     imu.update()
     accel  = imu.position
     omega  = imu.velocity_clean
-    angles = imu.velocity - imu.velocity_clean # * Vector3(1, 1, 0)# 10 * Vector3(imu.position.x, 0, imu.position.y) #angles / math.pi * 180
+    angles = imu.velocity #  - imu.velocity_clean # * Vector3(1, 1, 0)# 10 * Vector3(imu.position.x, 0, imu.position.y) #angles / math.pi * 180
     data = "{\n" \
            f"\"dtime\":  {imu.delta_t},\n" \
            f"\"accel\":  {{\"x\": {accel.x},  \"y\": {accel.y},  \"z\": {accel.z}}},\n" \

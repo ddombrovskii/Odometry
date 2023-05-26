@@ -767,20 +767,27 @@ class AccelerometerBase:
 
     def build_basis(self, azimuth: Vector3 = None):
         cntr = 0
+        cntr_fail = 0
         while True:
+            cntr_fail += 1
             if self.read_request():
                 cntr += 1
+            if cntr_fail == 1000:
+                break
             if cntr == 10:
                 break
-        x_axis = Vector3.cross(self.acceleration, Vector3(0, 1, 0) if azimuth is None else azimuth).normalized()
-        y_axis = Vector3.cross(x_axis, self.acceleration).normalized()
-        z_axis = Vector3.cross(y_axis, x_axis)
-        self._set_basis(Matrix3(x_axis.x, y_axis.x, z_axis.x,
-                                x_axis.y, y_axis.y, z_axis.y,
-                                x_axis.z, y_axis.z, z_axis.z))
-        angles = Matrix3.to_euler_angles(self.basis)
-        print(self.basis)
-        self._set_angles(angles.x, angles.y, angles.z)
+        try:
+            x_axis = Vector3.cross(self.acceleration, Vector3(0, 1, 0) if azimuth is None else azimuth).normalized()
+            y_axis = Vector3.cross(x_axis, self.acceleration).normalized()
+            z_axis = Vector3.cross(y_axis, x_axis)
+            self._set_basis(Matrix3(x_axis.x, y_axis.x, z_axis.x,
+                                    x_axis.y, y_axis.y, z_axis.y,
+                                    x_axis.z, y_axis.z, z_axis.z))
+            angles = Matrix3.to_euler_angles(self.basis)
+            self._set_angles(angles.x, angles.y, angles.z)
+        except ZeroDivisionError as err:
+            self._set_basis(Matrix3.identity())
+            self._set_angles(0.0, 0.0, 0.0)
 
     def _build_basis(self):
         try:
@@ -821,9 +828,9 @@ class AccelerometerBase:
 
         if stop_calib:
             if self._calib_cntr == 0:
-                print(f"self._calib_cntr {self._calib_cntr}")
+                # print(f"self._calib_cntr {self._calib_cntr}")
                 return False
-            print(f"self._calib_cntr {self._calib_cntr}")
+            # print(f"self._calib_cntr {self._calib_cntr}")
             self._accel_calib /= self._calib_cntr
             self._omega_calib /= self._calib_cntr
             self._mag_calib /= self._calib_cntr

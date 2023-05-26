@@ -36,7 +36,7 @@ class LinearRegressor:
     def __init__(self):
         self._x = []
         self._y = []
-        self._cap = 64
+        self._cap = 8
 
     def update(self, x, y) -> float:
         self._x.append(x)
@@ -409,7 +409,7 @@ class IMU(Device):
                                       self._vy.update(t, self._vel.y),
                                       self._vz.update(t, self._vel.z))
 
-            self._pos += (basis * self.velocity)* delta_t
+            self._pos += (basis * self.velocity) * delta_t
             return message.run
 
         return message.discard

@@ -444,9 +444,7 @@ class AccelerometerBase:
             config.append('\t\"LinearAccelerations\": true')
         else:
             config.append('\t\"LinearAccelerations\": false')
-
         sep = ',\n'
-
         return f" {{\n{sep.join(val for val in config)}\n }}"
 
     """

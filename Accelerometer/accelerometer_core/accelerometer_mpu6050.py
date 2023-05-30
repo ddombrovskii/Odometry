@@ -1,8 +1,8 @@
 from Utilities.real_time_filter import RealTimeFilter
+from .accelerometer_base import AccelerometerBase
 from Utilities.Geometry.vector3 import Vector3
 from Utilities.Geometry import Quaternion
 from Utilities.Geometry import Matrix3
-from .accelerometer_base import AccelerometerBase
 from .accelerometer_constants import *
 from typing import List, Tuple
 import random

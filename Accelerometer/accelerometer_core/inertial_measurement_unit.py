@@ -29,26 +29,54 @@ WAY_POINTS      = "way_points"
 
 class LinearRegressor:
     def __init__(self):
+        self._x0 = 0.0
+        self._y0 = 0.0
+        self._x_sum = 0.0
+        self._y_sum = 0.0
+        self._xy_sum = 0.0
+        self._xx_sum = 0.0
         self._x = []
         self._y = []
         self._cap = 8
 
-    def update(self, x, y) -> float:
+    @property
+    def n_points(self) -> int:
+        return len(self._x)
+
+    def _append(self, x, y):
         self._x.append(x)
         self._y.append(y)
-        if len(self._x) < 2:
+        self._x_sum += x
+        self._y_sum += y
+        self._xy_sum += x * y
+        self._xx_sum += x * x
+
+    def _set_start_pt(self, index: int):
+        self._x_sum -= self._x0
+        self._y_sum -= self._y0
+        self._xy_sum -= self._x0 * self._y0
+        self._xx_sum -= self._x0 * self._x0
+        self._x0 = self._x[index]
+        self._y0 = self._x[index]
+
+    def update(self, x, y) -> float:
+        self._append(x, y)
+
+        if self.n_points < 2:
+            self._set_start_pt(0)
             return y
 
         if len(self._x) == self._cap:
+            self._set_start_pt(1)
             del self._x[0]
             del self._y[0]
-
-        sum_x = sum(xi for xi in self._x)
-        sum_y = sum(yi for yi in self._y)
-        sum_xy = sum(xi * yi for xi, yi in zip(self._x, self._y))
-        sum_xx = sum(xi * xi for xi in self._x)
-        k = (sum_xy - sum_x * sum_y / self._cap) / (sum_xx - sum_x * sum_x / self._cap)
-        return k * x + (sum_y - k * sum_x) / self._cap
+        # sum_x = sum(xi for xi in self._x)
+        # sum_y = sum(yi for yi in self._y)
+        # sum_xy = sum(xi * yi for xi, yi in zip(self._x, self._y))
+        # sum_xx = sum(xi * xi for xi in self._x)
+        k = (self._xy_sum - self._x_sum * self._y_sum / self._cap) / \
+            (self._xx_sum - self._x_sum * self._x_sum / self._cap)
+        return k * x + (self._y_sum - k * self._x_sum) / self._cap
 
 
 # TODO запись актуальных калибровочных данных и поиск логов калибровки при запуске (DONE)
@@ -83,7 +111,8 @@ class IMU(Device):
         self._trust_acc_time: float = 0.1
         self._acc_check_time: float = 0.0
         self._vel: Vector3   = Vector3(0.0, 0.0, 0.0)
-        self._vel_clean: Vector3   = Vector3(0.0, 0.0, 0.0)
+        self._vel_raw: Vector3   = Vector3(0.0, 0.0, 0.0)
+        self._vel_reg: Vector3   = Vector3(0.0, 0.0, 0.0)
         self._pos: Vector3   = Vector3(0.0, 0.0, 0.0)
         self.update_time = 1.0 / 60.0
         self.register_callback(RECORDING_MODE, self._record)
@@ -175,7 +204,6 @@ class IMU(Device):
         """
         Пороговый уровень отклонения значения модуля вектора G относительно которого определяется, движемся или нет.
         """
-        # with self._lock:
         self._accelerometer.acceleration_noize_level = value
 
     @property
@@ -223,25 +251,23 @@ class IMU(Device):
     @property
     def velocity_clean(self) -> Vector3:
         """
-        Текущая скорость в мировой системе координат
+        Усреднённая линейным регрессором скорость
         """
-        return self._vel_clean
+        return self._vel_reg
 
     @property
     def velocity_raw(self) -> Vector3:
         """
-        Текущая скорость в мировой системе координат
+        Сырой результат интегрирования ускорения. Текущая скорость в мировой системе координат
         """
-        return self._vel
+        return self._vel_raw
 
     @property
     def velocity(self) -> Vector3:
         """
         Текущая скорость в мировой системе координат
         """
-        return (self._vel - self._vel_clean) * \
-               smooth_step((self._accelerometer.acceleration - self._accelerometer.acceleration_prev).magnitude(),
-                           self.accel_threshold, self.accel_threshold * 2.0 )
+        return self._vel
 
     @property
     def position(self) -> Vector3:
@@ -353,16 +379,20 @@ class IMU(Device):
     def on_reset(self, message: int) -> int:
         if message == BEGIN_MODE_MESSAGE:
             self._accelerometer.reset()
-            self._vel = Vector3(0.0, 0.0, 0.0)
             self._pos = Vector3(0.0, 0.0, 0.0)
+            self._vel = Vector3(0.0, 0.0, 0.0)
+            self._vel_raw = Vector3(0.0, 0.0, 0.0)
+            self._vel_reg = Vector3(0.0, 0.0, 0.0)
             self.send_message(START_MODE, BEGIN_MODE_MESSAGE)
         return END_MODE_MESSAGE
 
     def on_reboot(self, message: int) -> None:
         if message == BEGIN_MODE_MESSAGE:
             self.stop_all()
-            self._vel = Vector3(0.0, 0.0, 0.0)
             self._pos = Vector3(0.0, 0.0, 0.0)
+            self._vel = Vector3(0.0, 0.0, 0.0)
+            self._vel_raw = Vector3(0.0, 0.0, 0.0)
+            self._vel_reg = Vector3(0.0, 0.0, 0.0)
             self.send_message(INTEGRATE_MODE, BEGIN_MODE_MESSAGE)
         return END_MODE_MESSAGE
 
@@ -372,9 +402,10 @@ class IMU(Device):
                                   f"|-------------------Please stand by...------------------|\n")
             self._acc_check_time = 0.0
             self.accelerometer.build_basis()
-            self._vel = Vector3(0, 0, 0)
-            self._pos = Vector3(0, 0, 0)
-            self._vel_clean = Vector3(0, 0, 0)
+            self._pos = Vector3(0.0, 0.0, 0.0)
+            self._vel = Vector3(0.0, 0.0, 0.0)
+            self._vel_raw = Vector3(0.0, 0.0, 0.0)
+            self._vel_reg = Vector3(0.0, 0.0, 0.0)
             return message.run
 
         if message.is_running:
@@ -393,13 +424,21 @@ class IMU(Device):
             # ускорение в локальном базисе акселерометра
             a = self._accelerometer.acceleration_local_space * Vector3(1.0, 1.0, 0.0)
             # интегрирование скорости
-            self._vel += (basis * a) * Vector3(1.0, 1.0, 0.0) * delta_t
+            self._vel_raw += (basis * a) * Vector3(1.0, 1.0, 0.0) * delta_t
+
             t = self.mode_active_time(INTEGRATE_MODE)
-            self._vel_clean = Vector3(self._vx.update(t, self._vel.x),
-                                      self._vy.update(t, self._vel.y),
-                                      self._vz.update(t, self._vel.z))
+
+            self._vel_reg = Vector3(self._vx.update(t, self._vel_raw.x),
+                                    self._vy.update(t, self._vel_raw.y),
+                                    self._vz.update(t, self._vel_raw.z))
+
+            self._vel = (self._vel_raw - self._vel_reg) * \
+                        smooth_step((self._accelerometer.acceleration -
+                                     self._accelerometer.acceleration_prev).magnitude(),
+                                     self.accel_threshold, self.accel_threshold * 2.0)
 
             self._pos += (basis * self.velocity) * delta_t
+
             return message.run
 
         return message.discard

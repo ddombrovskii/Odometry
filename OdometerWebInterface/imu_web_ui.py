@@ -32,9 +32,14 @@ IMU_K_ARG = "/imu_set_k_arg"
 @web_app.route(IMU_READ)
 def imu_read():
     imu.update()
-    accel  = imu.position
-    omega  = imu.velocity_clean
-    angles = imu.velocity #  - imu.velocity_clean # * Vector3(1, 1, 0)# 10 * Vector3(imu.position.x, 0, imu.position.y) #angles / math.pi * 180
+    #accel  = imu.position
+    #omega  = imu.velocity_clean
+    #angles = imu.velocity #  - imu.velocity_clean # * Vector3(1, 1, 0)# 10 * Vector3(imu.position.x, 0, imu.position.y) #angles / math.pi * 180
+
+    accel = imu.acceleration
+    omega = imu.omega
+    angles = imu.angles  # - imu.velocity_clean # * Vector3(1, 1, 0)# 10 * Vector3(imu.position.x, 0, imu.position.y) #angles / math.pi * 180
+
     data = "{\n" \
            f"\"dtime\":  {imu.delta_t},\n" \
            f"\"accel\":  {{\"x\": {accel.x},  \"y\": {accel.y},  \"z\": {accel.z}}},\n" \

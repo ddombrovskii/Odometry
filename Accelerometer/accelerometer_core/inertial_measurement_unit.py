@@ -1,16 +1,11 @@
-# from accelerometer_core.accelerometer import Accelerometer
-# from accelerometer_core.Utilities import LoopTimer
-# from accelerometer_core.Utilities import Vector3
-import os
-
 from Utilities.device import Device, START_MODE, BEGIN_MODE_MESSAGE, RUNNING_MODE_MESSAGE, END_MODE_MESSAGE, \
     DeviceMessage, device_progres_bar, DISCARD_MODE_MESSAGE
 from .accelerometer_base import AccelerometerBase, smooth_step
 from .accelerometer_bno055 import AccelerometerBNO055
 from .accelerometer_settings import load_accelerometer_settings
-from .accelerometer_mpu6050 import Accelerometer
 from Utilities.Geometry.vector3 import Vector3
 import datetime as dt
+import os
 
 
 # modes
@@ -56,7 +51,6 @@ class LinearRegressor:
         return k * x + (sum_y - k * sum_x) / self._cap
 
 
-
 # TODO запись актуальных калибровочных данных и поиск логов калибровки при запуске (DONE)
 # TODO Подумать как можно организовать ввод с клавиатуры без cv2.waitKey(timeout)
 #  вроде Keyboard либа может решить эту проблему
@@ -98,8 +92,6 @@ class IMU(Device):
         self._vx = LinearRegressor()
         self._vy = LinearRegressor()
         self._vz = LinearRegressor()
-
-
 
     @property
     def accelerometer(self) -> AccelerometerBase:
@@ -155,7 +147,6 @@ class IMU(Device):
         Интервал времени для проверки наличия изменения в измерении вектора ускорения
         Если по истечению времени изменений не произошло, то считаем, что акселерометр неподвижен
         """
-        # with self._lock:
         self._trust_acc_time = min(max(0.05, value), 1.0)
 
     @property
@@ -170,7 +161,6 @@ class IMU(Device):
         """
         Параметр комплиментарного фильтра для определения углов поворота
         """
-        # with self._lock:
         self._accelerometer.k_accel = value
 
     @property
@@ -500,9 +490,7 @@ class IMU(Device):
             except IOError as ex:
                 self.send_log_message(f"Unable to close accelerometer record file\n{ex.args}")
                 return message.discard
-
             return message.discard
-
         return message.discard
 
 

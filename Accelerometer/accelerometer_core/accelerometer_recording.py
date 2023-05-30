@@ -1,12 +1,7 @@
-# from accelerometer_core.Utilities.loop_timer import LoopTimer
-# from accelerometer_core.inertial_measurement_unit import IMU
-# from accelerometer_core.accelerometer import Accelerometer
-# from accelerometer_core.Utilities.vector3 import Vector3
-
-from Utilities.loop_timer import LoopTimer
-from .inertial_measurement_unit import IMU
-from .accelerometer_mpu6050 import Accelerometer
+from .accelerometer_base import AccelerometerBase
 from Utilities.Geometry.vector3 import Vector3
+from .inertial_measurement_unit import IMU
+from Utilities.loop_timer import LoopTimer
 from collections import namedtuple
 from typing import List
 import datetime as dt
@@ -153,8 +148,8 @@ class IMULog:
     def time_values(self) -> List[float]: return [v.time - self.way_points[0].time for v in self.way_points]
 
 
-def read_accel(accelerometer: Accelerometer) -> str:
-    if not accelerometer.read_measurements():
+def read_accel(accelerometer: AccelerometerBase) -> str:
+    if not accelerometer.read_request():
         raise RuntimeError("Accelerometer read error")
     return f"{{\n" \
            f"\t\"{DTIME}\"           : {accelerometer.delta_t},\n" \
@@ -178,7 +173,7 @@ def read_imu(imu: IMU) -> str:
            f"\n}}"
 
 
-def read_accel_data(accelerometer: Accelerometer, reading_time: float = 1.0, time_delta: float = 0.05) -> \
+def read_accel_data(accelerometer: AccelerometerBase, reading_time: float = 1.0, time_delta: float = 0.05) -> \
         List[str]:
     lt = LoopTimer()
     lt.timeout = time_delta
@@ -193,7 +188,7 @@ def read_accel_data(accelerometer: Accelerometer, reading_time: float = 1.0, tim
     return records
 
 
-def record_accel_log(file_path: str, accelerometer: Accelerometer,
+def record_accel_log(file_path: str, accelerometer: AccelerometerBase,
                      reading_time: float = 1.0, time_delta: float = 0.075) -> None:
     with open(file_path, 'wt') as out_put:
         print(f"{{\n\"record_date\": \"{dt.datetime.now().strftime('%H; %M; %S')}\",\n", file=out_put)

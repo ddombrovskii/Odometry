@@ -1,7 +1,6 @@
-from .accelerometer_base import AccelerometerBase
 from .accelerometer_constants import MPU6050_ACCEL_RANGE_2G, MPU6050_GYRO_RANGE_250DEG
-from Utilities.real_time_filter import RealTimeFilter
-from .accelerometer_mpu6050 import Accelerometer
+# from Utilities.real_time_filter import RealTimeFilter
+from .accelerometer_base import AccelerometerBase
 from Utilities.Geometry import Vector3
 import os.path
 import json
@@ -90,93 +89,93 @@ def load_accelerometer_settings(acc: AccelerometerBase, settings_file: str) -> b
     except RuntimeWarning as _ex:
         print("use_filtering read error")
 
-    if "ax_filters" in json_file:
-        for filter_id, filter_ in enumerate(json_file["ax_filters"]):
-            try:
-                if filter_id == len(acc.filters_ax):
-                    acc.filters_ax.append(RealTimeFilter())
-                    acc.filters_ax[-1].load_settings(filter_)
-                    continue
-                acc.filters_ax[filter_id].load_settings(filter_)
-            except RuntimeWarning as _ex:
-                print(f"Accelerometer load settings error :: incorrect ax_filters\n"
-                      f"fiter_id: {filter_id}\nfilter:\n{filter_}")
-                continue
-        flag |= True
+    # if "ax_filters" in json_file:
+    #     for filter_id, filter_ in enumerate(json_file["ax_filters"]):
+    #         try:
+    #             if filter_id == len(acc.filters_ax):
+    #                 acc.filters_ax.append(RealTimeFilter())
+    #                 acc.filters_ax[-1].load_settings(filter_)
+    #                 continue
+    #             acc.filters_ax[filter_id].load_settings(filter_)
+    #         except RuntimeWarning as _ex:
+    #             print(f"Accelerometer load settings error :: incorrect ax_filters\n"
+    #                   f"fiter_id: {filter_id}\nfilter:\n{filter_}")
+    #             continue
+    #     flag |= True
 
-    if "ay_filters" in json_file:
-        for filter_id, filter_ in enumerate(json_file["ay_filters"]):
-            try:
-                if filter_id == len(acc.filters_ay):
-                    acc.filters_ay.append(RealTimeFilter())
-                    acc.filters_ay[-1].load_settings(filter_)
-                    continue
-                acc.filters_ay[filter_id].load_settings(filter_)
-            except RuntimeWarning as _ex:
-                print(f"Accelerometer load settings error :: incorrect ay_filters\n"
-                      f"fiter_id: {filter_id}\nfilter:\n{filter_}")
-                continue
-        flag |= True
+    #  if "ay_filters" in json_file:
+    #     for filter_id, filter_ in enumerate(json_file["ay_filters"]):
+    #         try:
+    #             if filter_id == len(acc.filters_ay):
+    #                 acc.filters_ay.append(RealTimeFilter())
+    #                 acc.filters_ay[-1].load_settings(filter_)
+    #                 continue
+    #             acc.filters_ay[filter_id].load_settings(filter_)
+    #         except RuntimeWarning as _ex:
+    #             print(f"Accelerometer load settings error :: incorrect ay_filters\n"
+    #                   f"fiter_id: {filter_id}\nfilter:\n{filter_}")
+    #             continue
+    #     flag |= True
 
-    if "az_filters" in json_file:
-        for filter_id, filter_ in enumerate(json_file["az_filters"]):
-            try:
-                if filter_id == len(acc.filters_az):
-                    acc.filters_az.append(RealTimeFilter())
-                    acc.filters_az[-1].load_settings(filter_)
-                    continue
-                acc.filters_az[filter_id].load_settings(filter_)
-            except RuntimeWarning as _ex:
-                print(f"Accelerometer load settings error :: incorrect az_filters\n"
-                      f"fiter_id: {filter_id}\nfilter:\n{filter_}")
-                continue
-        flag |= True
+    #  if "az_filters" in json_file:
+    #     for filter_id, filter_ in enumerate(json_file["az_filters"]):
+    #         try:
+    #             if filter_id == len(acc.filters_az):
+    #                 acc.filters_az.append(RealTimeFilter())
+    #                 acc.filters_az[-1].load_settings(filter_)
+    #                 continue
+    #             acc.filters_az[filter_id].load_settings(filter_)
+    #         except RuntimeWarning as _ex:
+    #             print(f"Accelerometer load settings error :: incorrect az_filters\n"
+    #                   f"fiter_id: {filter_id}\nfilter:\n{filter_}")
+    #             continue
+    #     flag |= True
 
-    if "gx_filters" in json_file:
-        for filter_id, filter_ in enumerate(json_file["gx_filters"]):
-            try:
-                if filter_id == len(acc.filters_gx):
-                    acc.filters_gx.append(RealTimeFilter())
-                    acc.filters_gx[-1].load_settings(filter_)
-                    continue
-                acc.filters_gx[filter_id].load_settings(filter_)
-            except RuntimeWarning as _ex:
-                print(f"Accelerometer load settings error :: incorrect gx_filters\n"
-                      f"fiter_id: {filter_id}\nfilter:\n{filter_}")
-                continue
-        flag |= True
+    #  if "gx_filters" in json_file:
+    #     for filter_id, filter_ in enumerate(json_file["gx_filters"]):
+    #         try:
+    #             if filter_id == len(acc.filters_gx):
+    #                 acc.filters_gx.append(RealTimeFilter())
+    #                 acc.filters_gx[-1].load_settings(filter_)
+    #                 continue
+    #             acc.filters_gx[filter_id].load_settings(filter_)
+    #         except RuntimeWarning as _ex:
+    #             print(f"Accelerometer load settings error :: incorrect gx_filters\n"
+    #                   f"fiter_id: {filter_id}\nfilter:\n{filter_}")
+    #             continue
+    #     flag |= True
 
-    if "gy_filters" in json_file:
-        for filter_id, filter_ in enumerate(json_file["gy_filters"]):
-            try:
-                if filter_id == len(acc.filters_gy):
-                    acc.filters_gy.append(RealTimeFilter())
-                    acc.filters_gy[-1].load_settings(filter_)
-                    continue
-                acc.filters_gy[filter_id].load_settings(filter_)
-            except RuntimeWarning as _ex:
-                print(f"Accelerometer load settings error :: incorrect gy_filters\n"
-                      f"fiter_id: {filter_id}\nfilter:\n{filter_}")
-                continue
-        flag |= True
+    #  if "gy_filters" in json_file:
+    #     for filter_id, filter_ in enumerate(json_file["gy_filters"]):
+    #         try:
+    #             if filter_id == len(acc.filters_gy):
+    #                 acc.filters_gy.append(RealTimeFilter())
+    #                 acc.filters_gy[-1].load_settings(filter_)
+    #                 continue
+    #             acc.filters_gy[filter_id].load_settings(filter_)
+    #         except RuntimeWarning as _ex:
+    #             print(f"Accelerometer load settings error :: incorrect gy_filters\n"
+    #                   f"fiter_id: {filter_id}\nfilter:\n{filter_}")
+    #             continue
+    #     flag |= True
 
-    if "gz_filters" in json_file:
-        for filter_id, filter_ in enumerate(json_file["gz_filters"]):
-            try:
-                if filter_id == len(acc.filters_gz):
-                    acc.filters_gz.append(RealTimeFilter())
-                    acc.filters_gz[-1].load_settings(filter_)
-                    continue
-                acc.filters_gz[filter_id].load_settings(filter_)
-            except RuntimeWarning as _ex:
-                print(f"Accelerometer load settings error :: incorrect gz_filters\n"
-                      f"fiter_id: {filter_id}\nfilter:\n{filter_}")
-                continue
-        flag |= True
+    #  if "gz_filters" in json_file:
+    #     for filter_id, filter_ in enumerate(json_file["gz_filters"]):
+    #         try:
+    #             if filter_id == len(acc.filters_gz):
+    #                 acc.filters_gz.append(RealTimeFilter())
+    #                 acc.filters_gz[-1].load_settings(filter_)
+    #                 continue
+    #             acc.filters_gz[filter_id].load_settings(filter_)
+    #         except RuntimeWarning as _ex:
+    #             print(f"Accelerometer load settings error :: incorrect gz_filters\n"
+    #                   f"fiter_id: {filter_id}\nfilter:\n{filter_}")
+    #             continue
+    #     flag |= True
 
     return flag
 
 
-def save_accelerometer_settings(acc: Accelerometer, settings_file: str) -> None:
+def save_accelerometer_settings(acc: AccelerometerBase, settings_file: str) -> None:
     with open(settings_file, "wt") as output_file:
         print(acc, file=output_file)

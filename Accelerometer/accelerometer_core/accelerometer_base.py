@@ -1,7 +1,7 @@
 from Accelerometer.accelerometer_core import GRAVITY_CONSTANT
-from Utilities import RealTimeFilter
 from Utilities.Geometry import Vector3, Quaternion, Matrix3
 from typing import Tuple, List, Dict
+from Utilities import RealTimeFilter
 import time
 
 ACCELERATION_BIT = 0

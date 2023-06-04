@@ -208,7 +208,7 @@ class AccelerometerBNO055(AccelerometerBase):
             # if target_port is None:
             #     raise RuntimeError("BNO055 is not connected...")
 
-            self._device_connection = serial.Serial('COM3', baudrate=115200,
+            self._device_connection = serial.Serial('COM6', baudrate=115200,
                                            timeout=1, bytesize=8, stopbits=serial.STOPBITS_ONE)
             return True
         except RuntimeError as err:

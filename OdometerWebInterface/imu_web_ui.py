@@ -1,3 +1,5 @@
+from Accelerometer.accelerometer_core import GRAVITY_CONSTANT
+from Utilities.Geometry import Vector3
 from application import*
 from threading import Lock
 
@@ -28,17 +30,24 @@ IMU_SET_TRUSTABLE_TIME = "/imu_set_trustable_time"
 IMU_SET_ACCEL_THRESHOLD = "/imu_set_accel_threshold"
 IMU_K_ARG = "/imu_set_k_arg"
 
+vel = Vector3()
+pos = Vector3()
+
 
 @web_app.route(IMU_READ)
 def imu_read():
     imu.update()
-    #accel  = imu.position
-    #omega  = imu.velocity_clean
-    #angles = imu.velocity #  - imu.velocity_clean # * Vector3(1, 1, 0)# 10 * Vector3(imu.position.x, 0, imu.position.y) #angles / math.pi * 180
+    accel  = imu.velocity_clean
+    omega  = imu.velocity_raw
+    angles = imu.velocity
 
-    accel = imu.acceleration
-    omega = imu.omega
-    angles = imu.angles  # - imu.velocity_clean # * Vector3(1, 1, 0)# 10 * Vector3(imu.position.x, 0, imu.position.y) #angles / math.pi * 180
+    # global vel
+    # global pos
+    # accel = imu.acceleration - imu.accelerometer.basis * Vector3(0, 0, GRAVITY_CONSTANT)
+    # vel += accel * imu.delta_t
+    # omega = imu.accelerometer.basis.transpose() * vel
+    # pos += vel * imu.delta_t
+    # angles = imu.accelerometer.basis.transpose() * pos  # imu.angles  # - imu.velocity_clean # * Vector3(1, 1, 0)# 10 * Vector3(imu.position.x, 0, imu.position.y) #angles / math.pi * 180
 
     data = "{\n" \
            f"\"dtime\":  {imu.delta_t},\n" \

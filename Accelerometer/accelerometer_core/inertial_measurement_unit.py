@@ -27,56 +27,76 @@ LOG_TIME_START  = "log_time_start"
 WAY_POINTS      = "way_points"
 
 
+# class LinearRegressor:
+#     def __init__(self):
+#         self._x0 = 0.0
+#         self._y0 = 0.0
+#         self._x_sum = 0.0
+#         self._y_sum = 0.0
+#         self._xy_sum = 0.0
+#         self._xx_sum = 0.0
+#         self._x = []
+#         self._y = []
+#         self._cap = 16
+#
+#     @property
+#     def n_points(self) -> int:
+#         return len(self._x)
+#
+#     def _append(self, x, y):
+#         self._x.append(x)
+#         self._y.append(y)
+#         self._x_sum += x
+#         self._y_sum += y
+#         self._xy_sum += x * y
+#         self._xx_sum += x * x
+#
+#     def _set_start_pt(self, index: int):
+#         self._x_sum -= self._x0
+#         self._y_sum -= self._y0
+#         self._xy_sum -= self._x0 * self._y0
+#         self._xx_sum -= self._x0 * self._x0
+#         self._x0 = self._x[index]
+#         self._y0 = self._x[index]
+#
+#     def update(self, x, y) -> float:
+#         self._append(x, y)
+#
+#         if self.n_points < 2:
+#             self._set_start_pt(0)
+#             return y
+#
+#         if len(self._x) == self._cap:
+#             self._set_start_pt(1)
+#             del self._x[0]
+#             del self._y[0]
+#         k = (self._xy_sum - self._x_sum * self._y_sum / self._cap) / \
+#             (self._xx_sum - self._x_sum * self._x_sum / self._cap)
+#         return k * x + (self._y_sum - k * self._x_sum) / self._cap
+
+
 class LinearRegressor:
     def __init__(self):
-        self._x0 = 0.0
-        self._y0 = 0.0
-        self._x_sum = 0.0
-        self._y_sum = 0.0
-        self._xy_sum = 0.0
-        self._xx_sum = 0.0
         self._x = []
         self._y = []
-        self._cap = 8
-
-    @property
-    def n_points(self) -> int:
-        return len(self._x)
-
-    def _append(self, x, y):
-        self._x.append(x)
-        self._y.append(y)
-        self._x_sum += x
-        self._y_sum += y
-        self._xy_sum += x * y
-        self._xx_sum += x * x
-
-    def _set_start_pt(self, index: int):
-        self._x_sum -= self._x0
-        self._y_sum -= self._y0
-        self._xy_sum -= self._x0 * self._y0
-        self._xx_sum -= self._x0 * self._x0
-        self._x0 = self._x[index]
-        self._y0 = self._x[index]
+        self._cap = 16
 
     def update(self, x, y) -> float:
-        self._append(x, y)
-
-        if self.n_points < 2:
-            self._set_start_pt(0)
+        self._x.append(x)
+        self._y.append(y)
+        if len(self._x) < 2:
             return y
 
         if len(self._x) == self._cap:
-            self._set_start_pt(1)
             del self._x[0]
             del self._y[0]
-        # sum_x = sum(xi for xi in self._x)
-        # sum_y = sum(yi for yi in self._y)
-        # sum_xy = sum(xi * yi for xi, yi in zip(self._x, self._y))
-        # sum_xx = sum(xi * xi for xi in self._x)
-        k = (self._xy_sum - self._x_sum * self._y_sum / self._cap) / \
-            (self._xx_sum - self._x_sum * self._x_sum / self._cap)
-        return k * x + (self._y_sum - k * self._x_sum) / self._cap
+
+        sum_x = sum(xi for xi in self._x)
+        sum_y = sum(yi for yi in self._y)
+        sum_xy = sum(xi * yi for xi, yi in zip(self._x, self._y))
+        sum_xx = sum(xi * xi for xi in self._x)
+        k = (sum_xy - sum_x * sum_y / self._cap) / (sum_xx - sum_x * sum_x / self._cap)
+        return k * x + (sum_y - k * sum_x) / self._cap
 
 
 # TODO запись актуальных калибровочных данных и поиск логов калибровки при запуске (DONE)
@@ -104,13 +124,13 @@ class IMU(Device):
         self._file_name = ""
         self._file_handle = None
         # время простоя перед запуском
-        self._start_time:   float = 2.0
+        self._start_time:   float = 1.0
         # время калибровки
         self._calib_time:     float = 5.0
         # время ...
         self._trust_acc_time: float = 0.1
         self._acc_check_time: float = 0.0
-        self._vel: Vector3   = Vector3(0.0, 0.0, 0.0)
+        self._vel: Vector3       = Vector3(0.0, 0.0, 0.0)
         self._vel_raw: Vector3   = Vector3(0.0, 0.0, 0.0)
         self._vel_reg: Vector3   = Vector3(0.0, 0.0, 0.0)
         self._pos: Vector3   = Vector3(0.0, 0.0, 0.0)
@@ -414,17 +434,17 @@ class IMU(Device):
 
             delta_t = self.delta_t
             # Оценка времени, когда изменение модуля вектора ускорения меньше acceleration_noize_level
-            if (self._accelerometer.acceleration - self._accelerometer.acceleration_prev).magnitude() > \
-                    self.accel_threshold:
+            accel_delta = (self._accelerometer.acceleration - self._accelerometer.acceleration_prev).magnitude()
+            if accel_delta > self.accel_threshold:
                 self._acc_check_time = 0.0
             else:
                 self._acc_check_time += delta_t
             # локальный базис акселерометра
             basis = self._accelerometer.basis
             # ускорение в локальном базисе акселерометра
-            a = self._accelerometer.acceleration_local_space * Vector3(1.0, 1.0, 0.0)
+            a = self._accelerometer.acceleration_local_space
             # интегрирование скорости
-            self._vel_raw += (basis * a) * Vector3(1.0, 1.0, 0.0) * delta_t
+            self._vel_raw += (a * Vector3(1, 1, 0)) * delta_t
 
             t = self.mode_active_time(INTEGRATE_MODE)
 
@@ -433,11 +453,9 @@ class IMU(Device):
                                     self._vz.update(t, self._vel_raw.z))
 
             self._vel = (self._vel_raw - self._vel_reg) * \
-                        smooth_step((self._accelerometer.acceleration -
-                                     self._accelerometer.acceleration_prev).magnitude(),
-                                     self.accel_threshold, self.accel_threshold * 2.0)
+                        smooth_step(accel_delta, self.accel_threshold * 0.5, self.accel_threshold * 1.0)
 
-            self._pos += (basis * self.velocity) * delta_t
+            self._pos += self.velocity * delta_t
 
             return message.run
 

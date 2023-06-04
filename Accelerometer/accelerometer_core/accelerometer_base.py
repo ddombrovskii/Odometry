@@ -61,6 +61,13 @@ def smooth_step(value, edge0, edge1) -> float:
 
 
 class AccelerometerBase:
+    RAED_SETTINGS_BITS = {
+            ACCELERATION_BIT,
+            OMEGA_BIT,
+            ANGLES_BIT,
+            QUATERNION_BIT,
+            MAGNETOMETER_BIT,
+            ACCELERATION_LINEAR_BIT}
 
     def _request_for_device_connection(self) -> bool:
         return False
@@ -133,9 +140,8 @@ class AccelerometerBase:
     def _default_settings(self):
         self.is_accel_read = True
         self.is_omega_read = True
-        # self.is_angles_read = True
-        # self.is_lin_accel_read = True
-        self.is_quaternion_read = True
+        # self.is_magnetometer_read = True
+        #  self.is_quaternion_read = True
 
     def _set_up_filters(self):
         self._filters.clear()
@@ -150,11 +156,11 @@ class AccelerometerBase:
                     az.mode = 0
                 else:
                     ax = RealTimeFilter()
-                    ax.mode = 1
+                    ax.mode = 0
                     ay = RealTimeFilter()
-                    ay.mode = 1
+                    ay.mode = 0
                     az = RealTimeFilter()
-                    az.mode = 1
+                    az.mode = 0
                 self._filters.update({bit: [ax, ay, az]})
 
     def _filter_values(self):
@@ -732,7 +738,7 @@ class AccelerometerBase:
             return
 
         if _is_bit_set(self.read_config, ANGLES_BIT):
-            # self._set_angles(response[stride], response[stride + 1], response[stride + 2])
+            self._set_angles(response[stride], response[stride + 1], response[stride + 2])
             stride += 3
         if stride >= len(response):
             return
@@ -798,7 +804,6 @@ class AccelerometerBase:
             self._set_basis(Matrix3(x_axis.x, y_axis.x, z_axis.x,
                                     x_axis.y, y_axis.y, z_axis.y,
                                     x_axis.z, y_axis.z, z_axis.z))
-            # print(self.basis)
         except ZeroDivisionError as zero:
             self._set_basis(self._basis_curr)
 
@@ -810,7 +815,6 @@ class AccelerometerBase:
         self._update_time()
         if self.use_filtering:
             self._filter_values()
-        # self._accel_curr = Vector3(*(v * _smooth_step(v, gain, 2.0 * gain) for v in self._accel_curr))
         self._build_basis()
         return True
 
@@ -826,9 +830,7 @@ class AccelerometerBase:
 
         if stop_calib:
             if self._calib_cntr == 0:
-                # print(f"self._calib_cntr {self._calib_cntr}")
                 return False
-            # print(f"self._calib_cntr {self._calib_cntr}")
             self._accel_calib /= self._calib_cntr
             self._omega_calib /= self._calib_cntr
             self._mag_calib /= self._calib_cntr

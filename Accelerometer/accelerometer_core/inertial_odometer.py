@@ -2,10 +2,9 @@ from Motion.motion_controller import MotionController
 from Utilities import Device, BEGIN_MODE_MESSAGE, END_MODE_MESSAGE, DeviceMessage, RUNNING_MODE_MESSAGE
 from Accelerometer.accelerometer_core.inertial_measurement_unit import IMU
 from Utilities.device import DISCARD_MODE_MESSAGE, START_MODE
-from Cameras.camera_cv import CameraCV
 from typing import List
 import threading
-import asyncio
+import time
 
 COMPOSITE_MODE_ODOMETER = 10
 INERTIAL_MODE_ODOMETER = 11
@@ -21,6 +20,7 @@ class InertialOdometer(Device):
 
         def run(self):
             while True:
+                time.sleep(0.3333)
                 value = input()
                 if value == "exit":
                     break
@@ -35,7 +35,7 @@ class InertialOdometer(Device):
         self._controller: MotionController = MotionController()
         self.update_time = min(self._imu.update_time, self._controller.update_time) * 0.75
         self._controller.enable_logging = False
-        self._imu.enable_logging = False
+        self._imu.enable_logging = True
         self.register_callback(STAN_BY_MODE_ODOMETER, self._stand_by_mode)
         self.register_callback(INERTIAL_MODE_ODOMETER, self._inertial_odometer)
 
@@ -75,10 +75,12 @@ class InertialOdometer(Device):
 
         return DISCARD_MODE_MESSAGE
 
-    async def run_async(self):
+    def _run(self):
         while True:
             self._execute_command()
-            await self.update()
+            self.update()
+            self._imu.update()
+            self._controller.update()
             complete = True
             complete &= self._imu.is_complete
             complete &= self._controller.is_complete
@@ -87,16 +89,12 @@ class InertialOdometer(Device):
                 break
         print("done...")
 
-    async def _async_run(self):
-        tasks = [self.run_async(), self._imu.run_async(),  self._controller.run_async()]
-        await asyncio.gather(*tasks)
-
     def run(self):
-        t = threading.Thread(target=lambda: asyncio.run(self._async_run()))
-        t.start()
+        process = threading.Thread(target=lambda: self._run())
+        process.start()
         self._input.start()
         self._input.join()
-        t.join()
+        process.join()
 
     def _inertial_odometer(self, message: DeviceMessage) -> int:
         if message.mode_arg == BEGIN_MODE_MESSAGE:
@@ -113,7 +111,7 @@ class InertialOdometer(Device):
 
     def _stand_by_mode(self, message: DeviceMessage) -> int:
         if message.mode_arg == BEGIN_MODE_MESSAGE:
-            self._imu.integrate()
+            # self._imu.integrate()
             return RUNNING_MODE_MESSAGE
 
         if message.mode_arg == RUNNING_MODE_MESSAGE:
@@ -142,13 +140,13 @@ class InertialOdometer(Device):
         if len(command) == 0:
             return
         if self._imu is None:
-            self.send_log_message(f"Command \"camera {' '.join(v for v in command)}\" thrown. Camera is none...\n")
+            self.send_log_message(f"IMU Error::\"imu {' '.join(v for v in command)}\" thrown. Camera is none...\n")
             return
         if command[0] == "exit":
             self._imu.exit()
             return
         if command[0] == "pause":
-            self._imu.pause()
+            self._imu.resume()
             return
         if command[0] == "reset":
             self._imu.reset()
@@ -162,8 +160,15 @@ class InertialOdometer(Device):
         if command[0] == "record":
             if len(command) == 1:
                 self._imu.begin_record()
+                self.send_log_message(f"Begin recording IMU in file : {self._imu.tmp_file_name}")
             else:
-                self._imu.begin_record(command[1]) if command[1] != "stop" else self._imu.end_record()
+                if command[1] != "stop":
+                    self._imu.begin_record(command[1])
+                    self.send_log_message(f"Begin recording IMU in file : {command[1]}")
+                else:
+                    self._imu.end_record()
+                    self.send_log_message(f"End of recording")
+
             return
         if command[0] == "calibrate":
             if len(command) == 1:
@@ -194,10 +199,20 @@ class InertialOdometer(Device):
 
         command = command.split(' ')
         if command[0] == 'help' or command[0] == 'info':
-            self.print_log_messages(f'Inertial odometer...\n'
-                                    f'')
-
-
+            self.send_log_message(f"|____________________________Inertial odometer info_____________________________|\n"
+                                  f"|_______________________________IMU_commands_list_______________________________|\n"
+                                  f"|_Command_code__|____Command_args____|___________Command_description____________|\n"
+                                  f"| imu pause     |                    | Приостанавливает/возобновляет работу IMU |\n"
+                                  f"| imu reset     |                    | Делает полный сброс IMU                  |\n"
+                                  f"| imu reboot    |                    | Перезапускает IMU                        |\n"
+                                  f"| imu integrate |                    | Режим интегрирования пути IMU            |\n"
+                                  f"| imu record    | file_name or empty | Запись в файл измерений IMU              |\n"
+                                  f"|_imu_calibrate_|_file_name_or_empty_|_Калибровка_IMU___________________________|\n"
+                                  f"|_______________________________________________________________________________|\n"
+                                  f"|_____________________________Common_commands_list______________________________|\n"
+                                  f"| help/info     |                    | Информация о командах                    |\n"
+                                  f"|_exit__________|____________________|_Завершение_работы________________________|\n"
+                                  )
         if command[0] == 'imu':
             self._tokenize_imu_command(command[1:])
             return
@@ -208,8 +223,6 @@ class InertialOdometer(Device):
 
 
 if __name__ == "__main__":
-    import cv2 as cv
-    cv.namedWindow("accelerometer", cv.WINDOW_NORMAL)
     odometer = InertialOdometer()
     # odometer._tokenize_command("odometer imu run test_record.json")
     odometer.run()

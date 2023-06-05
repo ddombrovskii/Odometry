@@ -104,7 +104,8 @@ $("#" + CAM_SET_FRAME_TIME).bind("change",
 	if(!html_node)return;
     param_post(node_data, "/" + CAM_SET_FRAME_TIME, function()
 	{
-	   var f_time = Number(Object.values(node_data)[0]);
+	   var f_time = Number(Object.values(node_data)[0].replace("sec", ""));
+	   
 	   if(Number.isNaN(f_time))
 	   {
 			html_node.value = String(frame_time) + "sec";

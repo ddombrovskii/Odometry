@@ -5,7 +5,7 @@ from threading import Lock
 
 
 imu = IMU()
-imu.accelerometer.use_filtering = True
+imu.accelerometer.use_filtering = False
 imu.enable_logging = False
 imu_record_file_path = None
 imu_clib_file_path = None
@@ -37,9 +37,9 @@ pos = Vector3()
 @web_app.route(IMU_READ)
 def imu_read():
     imu.update()
-    accel  = imu.velocity_clean
-    omega  = imu.velocity_raw
-    angles = imu.velocity
+    accel  = imu.accelerometer.acceleration_local_space
+    omega  = imu.velocity
+    angles = imu.position
 
     # global vel
     # global pos

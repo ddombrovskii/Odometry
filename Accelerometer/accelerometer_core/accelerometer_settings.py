@@ -17,19 +17,19 @@ def load_accelerometer_settings(acc: AccelerometerBase, settings_file: str) -> b
             return False
     flag = False
     acc.reset()
-    if "address" in json_file:
-        prev_address = acc.address
-        address = int(json_file["address"])
-        if address != acc.address:
-            acc.address = int(json_file["address"])
-            if acc.address == prev_address:
-                print("incorrect device address in HardwareAccelerometerSettings")
-        flag |= True
+    # if "address" in json_file:
+    #     prev_address = acc.address
+    #     address = int(json_file["address"])
+    #     if address != acc.address:
+    #         acc.address = int(json_file["address"])
+    #         if acc.address == prev_address:
+    #             print("incorrect device address in HardwareAccelerometerSettings")
+    #     flag |= True
     try:
         if "acceleration_range_raw" in json_file:
             acc.acceleration_range_raw = int(json_file["acceleration_range_raw"])
             flag |= True
-    except RuntimeWarning as _ex:
+    except ValueError as _ex:
         print("acceleration_range_raw read error")
         acc.acceleration_range_raw = MPU6050_ACCEL_RANGE_2G
 
@@ -37,7 +37,7 @@ def load_accelerometer_settings(acc: AccelerometerBase, settings_file: str) -> b
         if "gyroscope_range_raw" in json_file:
             acc.gyroscope_range_raw = int(json_file["gyroscope_range_raw"])
             flag |= True
-    except RuntimeWarning as _ex:
+    except ValueError as _ex:
         print("gyroscope_range_raw read error")
         acc.acceleration_range_raw = MPU6050_GYRO_RANGE_250DEG
 
@@ -45,7 +45,7 @@ def load_accelerometer_settings(acc: AccelerometerBase, settings_file: str) -> b
         if "hardware_filter_range_raw" in json_file:
             acc.hardware_filter_range_raw = int(json_file["hardware_filter_range_raw"])
             flag |= True
-    except RuntimeWarning as _ex:
+    except ValueError as _ex:
         print("hardware_filter_range_raw read error")
 
     try:
@@ -55,7 +55,7 @@ def load_accelerometer_settings(acc: AccelerometerBase, settings_file: str) -> b
                                        float(value['y']),
                                        float(value['z']))
             flag |= True
-    except RuntimeWarning as _ex:
+    except ValueError as _ex:
         print("angles_velocity_calibration read error")
 
     try:
@@ -65,28 +65,28 @@ def load_accelerometer_settings(acc: AccelerometerBase, settings_file: str) -> b
                                              float(value['y']),
                                              float(value['z']))
             flag |= True
-    except RuntimeWarning as _ex:
+    except ValueError as _ex:
         print("acceleration_calibration read error")
 
     try:
         if "k_accel" in json_file:
             acc.k_accel = float(json_file["k_accel"])
             flag |= True
-    except RuntimeWarning as _ex:
+    except ValueError as _ex:
         print("k_accel read error")
 
     try:
         if "acceleration_noize_level" in json_file:
             acc.acceleration_noize_level = float(json_file["acceleration_noize_level"])
             flag |= True
-    except RuntimeWarning as _ex:
+    except ValueError as _ex:
         print("acceleration_noize_level read error")
 
     try:
         if "use_filtering" in json_file:
             acc.use_filtering = bool(json_file["use_filtering"])
             flag |= True
-    except RuntimeWarning as _ex:
+    except ValueError as _ex:
         print("use_filtering read error")
 
     # if "ax_filters" in json_file:

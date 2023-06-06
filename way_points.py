@@ -16,20 +16,183 @@ def _clamp(val, min_, max_):
     return max(min(val, max_), min_)
 
 
-class WayPoint(namedtuple("WayPoint", "position, error, derror, ierror, time")):
-    __slots__ = ()
-
-    def __new__(cls, position: Vector2, error: float, derror: float, ierror: float, time: float):
-        return super().__new__(cls, position, error, derror, ierror, time)
+class WayPoint:
+    def __init__(self, point: Vector2):
+        self._point = point
+        self.point_prev = None
+        self.point_next = None
 
     def __str__(self):
-        return "{\n" \
-               f"\"position\": {self.position},\n" \
-               f"\"derror\": {self.derror},\n" \
-               f"\"error\": {self.error},\n" \
-               f"\"ierror\": {self.ierror},\n" \
-               f"\"time\": {self.time}\n" \
-               "}"
+        if (not self.has_next) and (not self.has_prev):
+            return f"{{\n" \
+                   f"\t\"curr\": {self.point},\n" \
+                   f"}}"
+
+        if not self.has_next:
+            return f"{{\n" \
+                   f"\t\"prev\": {self.point_prev},\n" \
+                   f"\t\"curr\": {self.point}\n" \
+                   f"}}"
+
+        if not self.has_prev:
+            return f"{{\n" \
+                   f"\t\"curr\": {self.point},\n" \
+                   f"\t\"prev\": {self.point_next}\n" \
+                   f"}}"
+
+        return f"{{\n" \
+               f"\t\"prev\": {Vector2() if self.point_prev is None else self.point_prev},\n" \
+               f"\t\"curr\": {self.point},\n" \
+               f"\t\"next\": {Vector2() if self.point_next is None else self.point_next}\n" \
+               f"}}"
+
+    @property
+    def has_next(self) -> bool:
+        return not(self.point_next is None)
+
+    @property
+    def has_prev(self) -> bool:
+        return not (self.point_prev is None)
+
+    @property
+    def point(self) -> Vector2:
+        return self._point
+
+
+class GridMap:
+    def __init__(self, way_points):
+        assert isinstance(way_points, list)
+        assert len(way_points) != 0
+        assert isinstance(way_points[0], WayPoint)
+
+        self._cell_dxdy: Vector2 = Vector2(0.1, 0.1)
+        self._origin: Vector2 = Vector2(0., 0.)
+        self._size: Vector2 = Vector2(0., 0.)
+        self._way_points: List[WayPoint] = way_points
+        self._cells = {}
+
+    def point_within(self, pt: Vector2):
+        tmp = pt.point.x - self.x0
+        if tmp < 0 or tmp > self.width:
+            return False
+        tmp = pt.point.y - self.y0
+        if tmp < 0 or tmp > self.height:
+            return False
+        return True
+
+    def pt_index(self, pt: Vector2):
+        if not self.point_within(pt):
+            return -1, -1
+        int((pt.x - self.x0) / self.dx), int((pt.y - self.y0) / self.dy)
+
+    def _link_points(self):
+        for index in range(1, len(self._way_points) - 1, 1):
+            pt = self._way_points[index]
+            if not self.point_within(pt.point):
+                del self._way_points[index]
+                continue
+            pt.point_prev = self._way_points[index - 1]
+            pt.point_next = self._way_points[index + 1]
+
+        pt = self._way_points[0]
+        if not self.point_within(pt.point):
+            del self._way_points[0]
+
+        pt = self._way_points[-1]
+        if not self.point_within(pt.point):
+            del self._way_points[-1]
+
+    def _register_points(self):
+        for pt in self._way_points:
+            row_col = self.pt_index(pt.point)
+            if row_col in self._cells:
+                self._cells[row_col].append(pt)
+                continue
+            self._cells.update({row_col: [pt]})
+
+    def _rebuild(self):
+        self._link_points()
+        self._register_points()
+
+    @staticmethod
+    def _get_closest_in_cell(cell: List[WayPoint], point: Vector2):
+        dist_min = 1e32
+        pt_min = None
+        for p in cell:
+            dist_curr = (p.point - point).magnitude()
+            if dist_curr > dist_min:
+                continue
+            dist_min = dist_curr
+            pt_min = p
+        return pt_min
+
+    def closer_pt(self, pt: Vector2):
+        row_col = self.pt_index(pt)
+        if row_col in self._cells:
+            return self._get_closest_in_cell(self._cells[row_col], pt)
+
+        search_area = 0
+        cells = []
+        while True:
+            search_area += 2
+            for row in range(row_col[0] - search_area // 2, row_col[0] + search_area // 2, 1):
+                for col in range(row_col[1] - search_area // 2, row_col[1] + search_area // 2, 1):
+                    if (row, col) not in self._cells:
+                        continue
+                    cells.append(self._cells[(row, col)])
+            if len(cells) == 0:
+                continue
+
+        points = [self._get_closest_in_cell(cell, pt) for cell in cells]
+        dist_min = 1e32
+        pt_min = None
+        for p in points:
+            dist_curr = (p.point - pt).magnitude()
+            if dist_curr > dist_min:
+                continue
+            dist_min = dist_curr
+            pt_min = p
+        return pt_min
+
+    @property
+    def width(self) -> float:
+        return self._size.x
+
+    @property
+    def height(self) -> float:
+        return self._size.y
+
+    @width.setter
+    def width(self, value: float) -> None:
+        self._size = Vector2(min(max(1.0, value), 1000.0), self.height)
+
+    @height.setter
+    def height(self, value: float) -> None:
+        self._size = Vector2(self.width, min(max(1.0, value), 1000.0))
+
+    @property
+    def x0(self) -> float:
+        return self._origin.x
+
+    @property
+    def y0(self) -> float:
+        return self._origin.y
+
+    @x0.setter
+    def x0(self, value: float) -> None:
+        self._origin = Vector2(value, self.height)
+
+    @y0.setter
+    def y0(self, value: float) -> None:
+        self._origin = Vector2(self.width, value)
+
+    @property
+    def dx(self) -> float:
+        return self._cell_dxdy.x
+
+    @property
+    def dy(self) -> float:
+        return self._cell_dxdy.y
 
 
 class WayPoints:

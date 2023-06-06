@@ -83,6 +83,8 @@ class AccelerometerBase:
         if not self._request_for_device_connection():
             raise RuntimeError("AccelerometerBase:: unable to establish device connection...")
 
+        self._wait_response = False
+
         self._use_filter = False
         self._accel_range_key: int = -1  # 2
         self._accel_range_val: int = -1
@@ -140,8 +142,9 @@ class AccelerometerBase:
     def _default_settings(self):
         self.is_accel_read = True
         self.is_omega_read = True
+        self.is_angles_read = True
         # self.is_magnetometer_read = True
-        #  self.is_quaternion_read = True
+        # self.is_quaternion_read = True
 
     def _set_up_filters(self):
         self._filters.clear()
@@ -476,6 +479,7 @@ class AccelerometerBase:
         self._accel_calib = Vector3(0.0, 0.0, 0.0)
         self._omega_calib = Vector3(0.0, 0.0, 0.0)
         self._mag_calib = Vector3(0.0, 0.0, 0.0)
+        self._wait_response = False
         if reset_ranges:
             self.acceleration_range_key = 2
             self.gyroscope_range_key = 250

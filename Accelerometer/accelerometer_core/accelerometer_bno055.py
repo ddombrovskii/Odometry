@@ -4,7 +4,6 @@ from serial.tools import list_ports
 from typing import Tuple, Any
 import struct
 import serial
-import time
 
 UART_START_MESSAGE = b'$#'
 UART_END_MESSAGE = b'#$'
@@ -18,11 +17,11 @@ def read_package(serial_port: serial.Serial) -> bytes:
     :return: b'$#...Данные...#$' или пустой пакет b'$##$'
     """
     if serial_port.in_waiting == 0:
-        return UART_EMPTY_MESSAGE
+        return b''
     while serial_port.read(2) != UART_START_MESSAGE:
         if serial_port.in_waiting != 0:
             continue
-        return UART_EMPTY_MESSAGE
+        break
     res = serial_port.read_until(UART_END_MESSAGE)
     return res[:-2]
 
@@ -208,7 +207,7 @@ class AccelerometerBNO055(AccelerometerBase):
             # if target_port is None:
             #     raise RuntimeError("BNO055 is not connected...")
 
-            self._device_connection = serial.Serial('COM6', baudrate=115200,
+            self._device_connection = serial.Serial('COM3', baudrate=115200,
                                            timeout=1, bytesize=8, stopbits=serial.STOPBITS_ONE)
             return True
         except RuntimeError as err:
@@ -218,29 +217,40 @@ class AccelerometerBNO055(AccelerometerBase):
         if "_device_connection" in self.__dict__:
             if self._device_connection is None:
                 return False
-            self._device_connection.close()
+            # self._device_connection.close()
             return True
         return False
 
     def _device_read_request(self) -> Tuple[bool, Tuple[float, ...]]:
         # TODO сделать асинхронным, добавить ожидание результата со стороны BNO в течении какого-то, по истечении
         #  которого ничего не возвращать.
-        message = self.read_config.to_bytes(1, 'big')
-        write_package(self.device, message)
-        # time.sleep(0.01)
-        response = read_package(self.device)
-        if len(response) == 0:
-            return False, (0.0,)
-        self._status = response[0]
-        if self._status != 1:
+        if not self._wait_response:
+            message = self.read_config.to_bytes(1, 'big')
+            write_package(self.device, b'\x00,' + message)
+            self._wait_response = True
             return False, (0.0, )
-        response = response[1:len(response) - (len(response) - 1) % 8]
+
+        if self.device.in_waiting == 0:
+            return False, (0.0, )
+
+        response = read_package(self.device)
+
+        try:
+            self._status = response[2]
+            if self._status != 1:
+                return False, (0.0,)
+            response = response[3:]
+            response = response[0: len(response) - len(response) % 8]
+        except IndexError as err:
+            return False, (0.0, )
+        # print(response)
         try:
             response = struct.unpack(f'<{len(response) // 8}d', response)
         except ValueError as error:
             print(f"AccelerometerBase :: data parce error\n{error.args}")
             return False, (0.0, )
 
+        self._wait_response = False
         return True, response
 
     def __init__(self):
@@ -320,14 +330,3 @@ class AccelerometerBNO055(AccelerometerBase):
         Диапазон измеряемых ускорений, выраженный в м/сек^2.
         """
         return AccelerometerBNO055._gyro_scales[self.gyroscope_range_key]
-
-
-if __name__ == '__main__':
-    acc = AccelerometerBNO055()
-    acc.use_filtering = True
-    # acc.record('record_bno_test.json')  # запись в файл
-    # acc.calibrate_request()
-    for _ in range(10):
-        acc.read_request()
-        print(acc)
-        time.sleep(.50)

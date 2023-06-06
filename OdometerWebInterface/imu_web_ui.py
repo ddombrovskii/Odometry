@@ -38,8 +38,8 @@ pos = Vector3()
 def imu_read():
     imu.update()
     accel  = imu.accelerometer.acceleration_local_space
-    omega  = imu.velocity
-    angles = imu.position
+    omega  = imu.omega
+    angles = imu.angles
 
     # global vel
     # global pos

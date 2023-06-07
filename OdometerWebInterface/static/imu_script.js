@@ -333,5 +333,5 @@ window.onload = function()
         omegasLines.chart.render();
         anglesLines.chart.render();
     }
-    setInterval(function(){readBackIMU()}, 200);
+    setInterval(function(){readBackIMU()}, 0.033);
 };

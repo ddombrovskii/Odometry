@@ -39,7 +39,7 @@ def imu_read():
     imu.update()
     accel  = imu.accelerometer.acceleration_local_space
     omega  = imu.omega
-    angles = imu.angles
+    angles = imu.position
 
     # global vel
     # global pos
@@ -55,6 +55,7 @@ def imu_read():
            f"\"omega\":  {{\"x\": {omega.x},  \"y\": {omega.y},  \"z\": {omega.z}}},\n" \
            f"\"angles\": {{\"x\": {angles.x}, \"y\": {angles.y}, \"z\": {angles.z}}}\n" \
            "}"
+    print(data)
     return data
 
 

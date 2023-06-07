@@ -82,7 +82,7 @@ class AccelerometerBase:
         self._device_connection = None
         if not self._request_for_device_connection():
             raise RuntimeError("AccelerometerBase:: unable to establish device connection...")
-
+        self._package_size: int = 0
         self._wait_response = False
 
         self._use_filter = False
@@ -138,6 +138,10 @@ class AccelerometerBase:
         self._mag_calib: Vector3 = Vector3(0.0, 0.0, 0.0)
         self._accel_gain = Vector3(0.05, 0.05, 0.05)
         self._default_settings()
+
+    @property
+    def package_bytes_count(self) -> int:
+        return self._package_size
 
     def _default_settings(self):
         self.is_accel_read = True
@@ -395,31 +399,37 @@ class AccelerometerBase:
     def is_accel_read(self, val: bool) -> None:
         self._read_config = _set_bit(self.read_config, ACCELERATION_BIT) if val else \
             _clear_bit(self.read_config, ACCELERATION_BIT)
+        self._package_size += 3 if self.is_accel_read else -3
 
     @is_lin_accel_read.setter
     def is_lin_accel_read(self, val: bool) -> None:
         self._read_config = _set_bit(self.read_config, ACCELERATION_LINEAR_BIT) if val else \
             _clear_bit(self.read_config, ACCELERATION_LINEAR_BIT)
+        self._package_size += 3 if self.is_lin_accel_read else -3
 
     @is_omega_read.setter
     def is_omega_read(self, val: bool) -> None:
         self._read_config = _set_bit(self.read_config, OMEGA_BIT) if val else \
             _clear_bit(self.read_config, OMEGA_BIT)
+        self._package_size += 3 if self.is_omega_read else -3
 
     @is_angles_read.setter
     def is_angles_read(self, val: bool) -> None:
         self._read_config = _set_bit(self.read_config, ANGLES_BIT) if val else \
             _clear_bit(self.read_config, ANGLES_BIT)
+        self._package_size += 3 if self.is_angles_read else -3
 
     @is_quaternion_read.setter
     def is_quaternion_read(self, val: bool) -> None:
         self._read_config = _set_bit(self.read_config, QUATERNION_BIT) if val else \
             _clear_bit(self.read_config, QUATERNION_BIT)
+        self._package_size += 4 if self.is_quaternion_read else -4
 
     @is_magnetometer_read.setter
     def is_magnetometer_read(self, val: bool) -> None:
         self._read_config = _set_bit(self.read_config, MAGNETOMETER_BIT) if val else \
             _clear_bit(self.read_config, MAGNETOMETER_BIT)
+        self._package_size += 3 if self.is_magnetometer_read else -3
 
     @property
     def config_info(self) -> str:

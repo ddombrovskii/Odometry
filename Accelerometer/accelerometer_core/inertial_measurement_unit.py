@@ -1,3 +1,4 @@
+from Utilities import RealTimeFilter
 from Utilities.device import Device, START_MODE, BEGIN_MODE_MESSAGE, RUNNING_MODE_MESSAGE, END_MODE_MESSAGE, \
     DeviceMessage, device_progres_bar, DISCARD_MODE_MESSAGE
 from .accelerometer_base import AccelerometerBase, smooth_step
@@ -144,9 +145,12 @@ class IMU(Device):
         self._vy = LinearRegressor()
         self._vz = LinearRegressor()
 
-        self._sx = LinearRegressor()
-        self._sy = LinearRegressor()
-        self._sz = LinearRegressor()
+        self._filt_x = RealTimeFilter()
+        self._filt_x.mode = 0
+        self._filt_y = RealTimeFilter()
+        self._filt_y.mode = 0
+        self._filt_z = RealTimeFilter()
+        self._filt_z.mode = 0
 
     @property
     def tmp_file_name(self) -> str:
@@ -478,11 +482,11 @@ class IMU(Device):
 
             self._pos_raw += self.velocity * delta_t
 
-            # self._pos_reg = Vector3(self._sx.update(self._pos_raw.x),
-            #                        self._sy.update(self._pos_raw.y),
-            #                        self._sz.update(self._pos_raw.z))
+            self._pos = self.accelerometer.basis.transpose() * self._pos_raw  # (self._pos_raw - self._pos_reg)
 
-            self._pos = self.accelerometer.basis.transpose() * self._pos_raw # (self._pos_raw - self._pos_reg)
+            self._pos = Vector3(self._filt_x.filter(self._pos.x),
+                                self._filt_x.filter(self._pos.y),
+                                self._filt_x.filter(self._pos.z))
 
             return message.run
 

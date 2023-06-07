@@ -1,3 +1,5 @@
+import time
+
 from .accelerometer_base import AccelerometerBase
 from Utilities.Geometry.vector3 import Vector3
 from .inertial_measurement_unit import IMU
@@ -215,12 +217,20 @@ def record_imu_log(file_path: str, imu: IMU,
         lt.timeout = time_delta
         t = 0.0
         while True:
-            with lt:
-                print(read_imu(imu), file=out_put)
-                t += lt.last_loop_time
-                if t >= reading_time:
-                    break
+            t0 = time.perf_counter()
+            imu.update()
+            print(read_imu(imu), file=out_put)
+            d_t = time.perf_counter() - t0
+
+            if d_t > time_delta:
+                t += d_t
                 print(',', file=out_put)
+                continue
+            t += time_delta
+            time.sleep(time_delta - d_t)
+            if t >= reading_time:
+                break
+            print(',', file=out_put)
         print("\t]\n}", file=out_put)
 
 

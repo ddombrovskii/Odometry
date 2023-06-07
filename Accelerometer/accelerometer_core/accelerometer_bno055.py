@@ -1,3 +1,5 @@
+from time import sleep
+
 from Accelerometer.accelerometer_core.accelerometer_base import AccelerometerBase
 from .accelerometer_constants import *
 from serial.tools import list_ports
@@ -23,6 +25,8 @@ def read_package(serial_port: serial.Serial) -> bytes:
             continue
         break
     res = serial_port.read_until(UART_END_MESSAGE)
+    # sleep(0.001)
+    # serial_port.flush()
     return res[:-2]
 
 
@@ -207,7 +211,7 @@ class AccelerometerBNO055(AccelerometerBase):
             # if target_port is None:
             #     raise RuntimeError("BNO055 is not connected...")
 
-            self._device_connection = serial.Serial('COM3', baudrate=115200,
+            self._device_connection = serial.Serial('COM5', baudrate=115200,
                                            timeout=1, bytesize=8, stopbits=serial.STOPBITS_ONE)
             return True
         except RuntimeError as err:
@@ -224,16 +228,24 @@ class AccelerometerBNO055(AccelerometerBase):
     def _device_read_request(self) -> Tuple[bool, Tuple[float, ...]]:
         # TODO сделать асинхронным, добавить ожидание результата со стороны BNO в течении какого-то, по истечении
         #  которого ничего не возвращать.
-        if not self._wait_response:
+        if self.device.in_waiting == 0:
             message = self.read_config.to_bytes(1, 'big')
             write_package(self.device, b'\x00,' + message)
-            self._wait_response = True
-            return False, (0.0, )
+            return False, (0.0,)
 
-        if self.device.in_waiting == 0:
-            return False, (0.0, )
+        if self.device.in_waiting < self.package_bytes_count + 7:  # + 4 + 3:
+            return False, (0.0,)
 
         response = read_package(self.device)
+
+        if len(response) == 0:
+            return False, (0.0,)
+
+        if response[0] != 0:
+            return False, (0.0,)
+
+        message = self.read_config.to_bytes(1, 'big')
+        write_package(self.device, b'\x00,' + message)
 
         try:
             self._status = response[2]
@@ -243,14 +255,13 @@ class AccelerometerBNO055(AccelerometerBase):
             response = response[0: len(response) - len(response) % 8]
         except IndexError as err:
             return False, (0.0, )
-        # print(response)
+
         try:
             response = struct.unpack(f'<{len(response) // 8}d', response)
         except ValueError as error:
             print(f"AccelerometerBase :: data parce error\n{error.args}")
             return False, (0.0, )
 
-        self._wait_response = False
         return True, response
 
     def __init__(self):

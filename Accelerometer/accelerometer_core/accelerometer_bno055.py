@@ -226,14 +226,12 @@ class AccelerometerBNO055(AccelerometerBase):
         return False
 
     def _device_read_request(self) -> Tuple[bool, Tuple[float, ...]]:
-        # TODO сделать асинхронным, добавить ожидание результата со стороны BNO в течении какого-то, по истечении
-        #  которого ничего не возвращать.
         if self.device.in_waiting == 0:
             message = self.read_config.to_bytes(1, 'big')
             write_package(self.device, b'\x00,' + message)
             return False, (0.0,)
 
-        if self.device.in_waiting < self.package_bytes_count + 7:  # + 4 + 3:
+        if self.device.in_waiting < self.package_bytes_count+ 7:  # + 4 + 3:
             return False, (0.0,)
 
         response = read_package(self.device)

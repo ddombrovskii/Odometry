@@ -282,26 +282,6 @@ class AccelIntegrator:
         self._accel_basis.append(Matrix4.build_transform(r, u, f, a))
         v = self._velocities[-1] + ((r * a.x + u * a.y + f * a.z) * dt) \
             if self._time <= self._trust_t else Vector3(0.0, 0.0, 0.0)
-
-        # self._window_vx.append(v.x)
-        # self._window_vy.append(v.y)
-        # self._window_vz.append(v.z)
-#
-        # if len(self._window_vx) <= self._window_size:
-        #     v = Vector3(0.0, 0.0, 0.0)
-        # else:
-        #     del self._window_vx[0]
-        #     del self._window_vy[0]
-        #     del self._window_vz[0]
-#
-        #     self._window_vx = sorted(self._window_vx)
-        #     self._window_vy = sorted(self._window_vy)
-        #     self._window_vz = sorted(self._window_vz)
-#
-        #     v = Vector3(self._window_vx[self._window_size // 2],
-        #                 self._window_vy[self._window_size // 2],
-        #                 self._window_vz[self._window_size // 2])
-#
         self._velocities.append(v)
         self._positions.append(self._positions[-1] + (r * v.x + u * v.y + f * v.z) * dt)
         self._time_values.append(self._time_values[-1] + dt)

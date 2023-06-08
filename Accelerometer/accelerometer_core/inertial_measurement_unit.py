@@ -125,9 +125,9 @@ class IMU(Device):
         self._file_name = ""
         self._file_handle = None
         # время простоя перед запуском
-        self._start_time:   float = 5.0
+        self._start_time:   float = 1.0
         # время калибровки
-        self._calib_time:     float = 5.0
+        self._calib_time:     float = 1.0
         # время ...
         self._trust_acc_time: float = 0.1
         self._acc_check_time: float = 0.0
@@ -387,7 +387,7 @@ class IMU(Device):
             return RUNNING_MODE_MESSAGE
 
         if message == RUNNING_MODE_MESSAGE:
-            self.accelerometer.read_request()
+            # self.accelerometer.read_request()
             t = self.mode_active_time(START_MODE)
             self.send_log_message(device_progres_bar(t / self._start_time if self.start_time > 0.001 else 1.0, "", 55, '|', '_'))
             if t >= self._start_time:
@@ -482,7 +482,7 @@ class IMU(Device):
 
             self._pos_raw += self.velocity * delta_t
 
-            self._pos = self.accelerometer.basis.transpose() * self._pos_raw  # (self._pos_raw - self._pos_reg)
+            self._pos = self.accelerometer.basis.transpose() * (self._pos_raw - self._pos_reg)
 
             self._pos = Vector3(self._filt_x.filter(self._pos.x),
                                 self._filt_x.filter(self._pos.y),

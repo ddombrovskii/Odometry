@@ -1,4 +1,4 @@
-from Accelerometer.accelerometer_core import GRAVITY_CONSTANT
+from Accelerometer.accelerometer_core.accelerometer_constants import GRAVITY_CONSTANT
 from Utilities.Geometry import Vector3, Quaternion, Matrix3
 from typing import Tuple, List, Dict
 from Utilities import RealTimeFilter
@@ -124,8 +124,6 @@ class AccelerometerBase:
 
         self._curr_t: float = -1.0
         self._prev_t: float = -1.0
-        self._start_t: float = time.perf_counter()
-
         self._status: int = 0
         self._read_config: int = 0
         self._calib_cntr: int = 0
@@ -141,7 +139,7 @@ class AccelerometerBase:
 
     @property
     def package_bytes_count(self) -> int:
-        return self._package_size
+        return self._package_size*8
 
     def _default_settings(self):
         self.is_accel_read = True
@@ -156,11 +154,11 @@ class AccelerometerBase:
             if _is_bit_set(self._read_config, bit):
                 if bit != ANGLES_BIT:
                     ax = RealTimeFilter()
-                    ax.mode = 0
+                    ax.mode = 2
                     ay = RealTimeFilter()
-                    ay.mode = 0
+                    ay.mode = 2
                     az = RealTimeFilter()
-                    az.mode = 0
+                    az.mode = 2
                 else:
                     ax = RealTimeFilter()
                     ax.mode = 0
@@ -482,7 +480,6 @@ class AccelerometerBase:
         self._omega_prev = Vector3(0.0, 0.0, 0.0)
         self._basis_curr = Matrix3.identity()
         self._basis_prev = Matrix3.identity()
-        self._start_t = time.perf_counter()
         self._curr_t = 0.0
         self._prev_t = 0.0
         # if reset_calib_info:
@@ -701,7 +698,7 @@ class AccelerometerBase:
         Задана в системе координат акселерометра (ускорение без G)
         """
         accel = self.acceleration - self.basis * Vector3(0, 0, GRAVITY_CONSTANT)
-        return Vector3(*(v * smooth_step(abs(v), g, 2.0 * g) for v, g in zip(accel, self._accel_gain)))
+        return accel # Vector3(*(v * smooth_step(abs(v), g, 2.0 * g) for v, g in zip(accel, self._accel_gain)))
 
     def _set_accel(self, x: float, y: float, z: float):
         self._accel_prev = self._accel_curr

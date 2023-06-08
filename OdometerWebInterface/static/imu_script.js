@@ -327,11 +327,11 @@ window.onload = function()
 
         accelLines. update(imu_time, x1, imu_time, y1, imu_time, z1);
         omegasLines.update(imu_time, x2, imu_time, y2, imu_time, z2);
-        anglesLines.update(imu_time, x3, imu_time, y3, imu_time, z3);
+        anglesLines.update(0.0, 0.0, 0.0, 0.0, z3, y3);
         imu_time += time;
         accelLines. chart.render();
         omegasLines.chart.render();
         anglesLines.chart.render();
     }
-    setInterval(function(){readBackIMU()}, 0.033);
+    setInterval(function(){readBackIMU()}, 15);
 };

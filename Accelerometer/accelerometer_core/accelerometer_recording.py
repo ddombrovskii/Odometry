@@ -1,13 +1,11 @@
-import time
-
-from .accelerometer_base import AccelerometerBase
 from Utilities.Geometry.vector3 import Vector3
-from .inertial_measurement_unit import IMU
+# from inertial_measurement_unit import IMU
 from Utilities.loop_timer import LoopTimer
 from collections import namedtuple
 from typing import List
 import datetime as dt
 import json
+import time
 
 TIME = "time"
 DTIME = "dtime"
@@ -80,6 +78,9 @@ class WayPoint(namedtuple('WayPoint', 'time, dtime, acceleration, velocity, posi
         return super().__new__(cls, time, dtime, acceleration, velocity, position, angles_velocity, angles)
 
 
+TIME_CUT = 0.0
+
+
 class IMULog:
     def __init__(self, n: str, t: str, wp: List[WayPoint]):
         self.device_name: str = n
@@ -87,70 +88,70 @@ class IMULog:
         self.way_points: List[WayPoint] = wp
 
     @property
-    def accelerations_x(self) -> List[float]: return [v.acceleration.x for v in self.way_points]
+    def accelerations_x(self) -> List[float]: return [v.acceleration.x for v in self.way_points if v.time > TIME_CUT]
 
     @property
-    def accelerations_y(self) -> List[float]: return [v.acceleration.y for v in self.way_points]
+    def accelerations_y(self) -> List[float]: return [v.acceleration.y for v in self.way_points if v.time > TIME_CUT]
 
     @property
-    def accelerations_z(self) -> List[float]: return [v.acceleration.z for v in self.way_points]
+    def accelerations_z(self) -> List[float]: return [v.acceleration.z for v in self.way_points if v.time > TIME_CUT]
 
     @property
-    def accelerations(self) -> List[Vector3]: return [v.acceleration for v in self.way_points]
+    def accelerations(self) -> List[Vector3]: return [v.acceleration for v in self.way_points if v.time > TIME_CUT]
 
     @property
-    def velocities_x(self) -> List[float]: return [v.velocity.x for v in self.way_points]
+    def velocities_x(self) -> List[float]: return [v.velocity.x for v in self.way_points if v.time > TIME_CUT]
 
     @property
-    def velocities_y(self) -> List[float]: return [v.velocity.y for v in self.way_points]
+    def velocities_y(self) -> List[float]: return [v.velocity.y for v in self.way_points if v.time > TIME_CUT]
 
     @property
-    def velocities_z(self) -> List[float]: return [v.velocity.z for v in self.way_points]
+    def velocities_z(self) -> List[float]: return [v.velocity.z for v in self.way_points if v.time > TIME_CUT]
 
     @property
-    def velocities(self) -> List[Vector3]: return [v.velocity for v in self.way_points]
+    def velocities(self) -> List[Vector3]: return [v.velocity for v in self.way_points if v.time > TIME_CUT]
 
     @property
-    def positions_x(self) -> List[float]: return [v.position.x for v in self.way_points]
+    def positions_x(self) -> List[float]: return [v.position.x for v in self.way_points if v.time > TIME_CUT]
 
     @property
-    def positions_y(self) -> List[float]: return [v.position.y for v in self.way_points]
+    def positions_y(self) -> List[float]: return [v.position.y for v in self.way_points if v.time > TIME_CUT]
 
     @property
-    def positions_z(self) -> List[float]: return [v.position.z for v in self.way_points]
+    def positions_z(self) -> List[float]: return [v.position.z for v in self.way_points if v.time > TIME_CUT]
 
     @property
-    def positions(self) -> List[Vector3]: return [v.position for v in self.way_points]
+    def positions(self) -> List[Vector3]: return [v.position for v in self.way_points if v.time > TIME_CUT]
 
     @property
-    def angles_velocities_x(self) -> List[float]: return [v.angles_velocity.x for v in self.way_points]
+    def angles_velocities_x(self) -> List[float]: return [v.angles_velocity.x for v in self.way_points if v.time > TIME_CUT]
 
     @property
-    def angles_velocities_y(self) -> List[float]: return [v.angles_velocity.y for v in self.way_points]
+    def angles_velocities_y(self) -> List[float]: return [v.angles_velocity.y for v in self.way_points if v.time > TIME_CUT]
 
     @property
-    def angles_velocities_z(self) -> List[float]: return [v.angles_velocity.z for v in self.way_points]
+    def angles_velocities_z(self) -> List[float]: return [v.angles_velocity.z for v in self.way_points if v.time > TIME_CUT]
 
     @property
-    def angles_velocities(self) -> List[Vector3]: return [v.angles_velocity for v in self.way_points]
+    def angles_velocities(self) -> List[Vector3]: return [v.angles_velocity for v in self.way_points if v.time > TIME_CUT]
 
     @property
-    def angles_x(self) -> List[float]: return [v.angles.x for v in self.way_points]
+    def angles_x(self) -> List[float]: return [v.angles.x for v in self.way_points if v.time > TIME_CUT]
 
     @property
-    def angles_y(self) -> List[float]: return [v.angles.y for v in self.way_points]
+    def angles_y(self) -> List[float]: return [v.angles.y for v in self.way_points if v.time > TIME_CUT]
 
     @property
-    def angles_z(self) -> List[float]: return [v.angles.z for v in self.way_points]
+    def angles_z(self) -> List[float]: return [v.angles.z for v in self.way_points if v.time > TIME_CUT]
 
     @property
-    def angles(self) -> List[Vector3]: return [v.angles for v in self.way_points]
+    def angles(self) -> List[Vector3]: return [v.angles for v in self.way_points if v.time > TIME_CUT]
 
     @property
-    def time_values(self) -> List[float]: return [v.time - self.way_points[0].time for v in self.way_points]
+    def time_values(self) -> List[float]: return [v.time - self.way_points[0].time for v in self.way_points if v.time > TIME_CUT]
 
 
-def read_accel(accelerometer: AccelerometerBase) -> str:
+def read_accel(accelerometer) -> str:
     if not accelerometer.read_request():
         raise RuntimeError("Accelerometer read error")
     return f"{{\n" \
@@ -161,7 +162,7 @@ def read_accel(accelerometer: AccelerometerBase) -> str:
            f"\n}}"
 
 
-def read_imu(imu: IMU) -> str:
+def read_imu(imu) -> str:
     # if not imu.read():
     #     raise RuntimeError("IMU read error")
     return f"{{\n" \
@@ -175,7 +176,7 @@ def read_imu(imu: IMU) -> str:
            f"\n}}"
 
 
-def read_accel_data(accelerometer: AccelerometerBase, reading_time: float = 1.0, time_delta: float = 0.05) -> \
+def read_accel_data(accelerometer, reading_time: float = 1.0, time_delta: float = 0.05) -> \
         List[str]:
     lt = LoopTimer()
     lt.timeout = time_delta
@@ -190,7 +191,7 @@ def read_accel_data(accelerometer: AccelerometerBase, reading_time: float = 1.0,
     return records
 
 
-def record_accel_log(file_path: str, accelerometer: AccelerometerBase,
+def record_accel_log(file_path: str, accelerometer,
                      reading_time: float = 1.0, time_delta: float = 0.075) -> None:
     with open(file_path, 'wt') as out_put:
         print(f"{{\n\"record_date\": \"{dt.datetime.now().strftime('%H; %M; %S')}\",\n", file=out_put)
@@ -208,7 +209,7 @@ def record_accel_log(file_path: str, accelerometer: AccelerometerBase,
         print("\t]\n}", file=out_put)
 
 
-def record_imu_log(file_path: str, imu: IMU,
+def record_imu_log(file_path: str, imu,
                    reading_time: float = 1.0, time_delta: float = 0.075) -> None:
     with open(file_path, 'wt') as out_put:
         print(f"{{\n\"record_date\": \"{dt.datetime.now().strftime('%H; %M; %S')}\",\n", file=out_put)

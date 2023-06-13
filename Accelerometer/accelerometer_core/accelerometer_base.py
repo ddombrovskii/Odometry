@@ -1,4 +1,4 @@
-from Accelerometer.accelerometer_core import GRAVITY_CONSTANT
+from Accelerometer.accelerometer_core.accelerometer_constants import GRAVITY_CONSTANT
 from Utilities.Geometry import Vector3, Quaternion, Matrix3
 from typing import Tuple, List, Dict
 from Utilities import RealTimeFilter
@@ -82,6 +82,8 @@ class AccelerometerBase:
         self._device_connection = None
         if not self._request_for_device_connection():
             raise RuntimeError("AccelerometerBase:: unable to establish device connection...")
+        self._package_size: int = 0
+        self._wait_response = False
 
         self._use_filter = False
         self._accel_range_key: int = -1  # 2
@@ -122,8 +124,6 @@ class AccelerometerBase:
 
         self._curr_t: float = -1.0
         self._prev_t: float = -1.0
-        self._start_t: float = time.perf_counter()
-
         self._status: int = 0
         self._read_config: int = 0
         self._calib_cntr: int = 0
@@ -137,11 +137,16 @@ class AccelerometerBase:
         self._accel_gain = Vector3(0.05, 0.05, 0.05)
         self._default_settings()
 
+    @property
+    def package_bytes_count(self) -> int:
+        return self._package_size*8
+
     def _default_settings(self):
         self.is_accel_read = True
         self.is_omega_read = True
+        self.is_angles_read = True
         # self.is_magnetometer_read = True
-        #  self.is_quaternion_read = True
+        # self.is_quaternion_read = True
 
     def _set_up_filters(self):
         self._filters.clear()
@@ -149,11 +154,11 @@ class AccelerometerBase:
             if _is_bit_set(self._read_config, bit):
                 if bit != ANGLES_BIT:
                     ax = RealTimeFilter()
-                    ax.mode = 0
+                    ax.mode = 2
                     ay = RealTimeFilter()
-                    ay.mode = 0
+                    ay.mode = 2
                     az = RealTimeFilter()
-                    az.mode = 0
+                    az.mode = 2
                 else:
                     ax = RealTimeFilter()
                     ax.mode = 0
@@ -392,31 +397,37 @@ class AccelerometerBase:
     def is_accel_read(self, val: bool) -> None:
         self._read_config = _set_bit(self.read_config, ACCELERATION_BIT) if val else \
             _clear_bit(self.read_config, ACCELERATION_BIT)
+        self._package_size += 3 if self.is_accel_read else -3
 
     @is_lin_accel_read.setter
     def is_lin_accel_read(self, val: bool) -> None:
         self._read_config = _set_bit(self.read_config, ACCELERATION_LINEAR_BIT) if val else \
             _clear_bit(self.read_config, ACCELERATION_LINEAR_BIT)
+        self._package_size += 3 if self.is_lin_accel_read else -3
 
     @is_omega_read.setter
     def is_omega_read(self, val: bool) -> None:
         self._read_config = _set_bit(self.read_config, OMEGA_BIT) if val else \
             _clear_bit(self.read_config, OMEGA_BIT)
+        self._package_size += 3 if self.is_omega_read else -3
 
     @is_angles_read.setter
     def is_angles_read(self, val: bool) -> None:
         self._read_config = _set_bit(self.read_config, ANGLES_BIT) if val else \
             _clear_bit(self.read_config, ANGLES_BIT)
+        self._package_size += 3 if self.is_angles_read else -3
 
     @is_quaternion_read.setter
     def is_quaternion_read(self, val: bool) -> None:
         self._read_config = _set_bit(self.read_config, QUATERNION_BIT) if val else \
             _clear_bit(self.read_config, QUATERNION_BIT)
+        self._package_size += 4 if self.is_quaternion_read else -4
 
     @is_magnetometer_read.setter
     def is_magnetometer_read(self, val: bool) -> None:
         self._read_config = _set_bit(self.read_config, MAGNETOMETER_BIT) if val else \
             _clear_bit(self.read_config, MAGNETOMETER_BIT)
+        self._package_size += 3 if self.is_magnetometer_read else -3
 
     @property
     def config_info(self) -> str:
@@ -469,13 +480,13 @@ class AccelerometerBase:
         self._omega_prev = Vector3(0.0, 0.0, 0.0)
         self._basis_curr = Matrix3.identity()
         self._basis_prev = Matrix3.identity()
-        self._start_t = time.perf_counter()
         self._curr_t = 0.0
         self._prev_t = 0.0
         # if reset_calib_info:
         self._accel_calib = Vector3(0.0, 0.0, 0.0)
         self._omega_calib = Vector3(0.0, 0.0, 0.0)
         self._mag_calib = Vector3(0.0, 0.0, 0.0)
+        self._wait_response = False
         if reset_ranges:
             self.acceleration_range_key = 2
             self.gyroscope_range_key = 250
@@ -687,7 +698,7 @@ class AccelerometerBase:
         Задана в системе координат акселерометра (ускорение без G)
         """
         accel = self.acceleration - self.basis * Vector3(0, 0, GRAVITY_CONSTANT)
-        return Vector3(*(v * smooth_step(abs(v), g, 2.0 * g) for v, g in zip(accel, self._accel_gain)))
+        return accel # Vector3(*(v * smooth_step(abs(v), g, 2.0 * g) for v, g in zip(accel, self._accel_gain)))
 
     def _set_accel(self, x: float, y: float, z: float):
         self._accel_prev = self._accel_curr

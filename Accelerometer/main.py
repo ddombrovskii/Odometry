@@ -1,50 +1,60 @@
-import math
-import queue
-import random
-
-import numpy as np
-
+from Accelerometer.accelerometer_core.accelerometer_bno055 import AccelerometerBNO055
 from Accelerometer.accelerometer_core.accelerometer_integrator import AccelIntegrator
 
+# if __name__ == "__main__":
+#     integrator = AccelIntegrator("accelerometer_core/accelerometer_records/the newest/building_way.json")
+#     # integrator = AccelIntegrator("accelerometer_core/accelerometer_records/record_bno_test.json")
+#     integrator.integrate()
+#     integrator.show_results_xz()
+#     integrator.show_path()
+from Accelerometer.accelerometer_core.accelerometer_recording import record_imu_log
+
+from Accelerometer.accelerometer_core.inertial_measurement_unit import IMU, CALIBRATION_MODE
+from Utilities.Geometry import Vector2
+from Utilities import START_MODE
+import time
+
+UART_START_MESSAGE = b'$#'
+UART_END_MESSAGE = b'#$'
+UART_EMPTY_MESSAGE = b'$##$'
+
+
+def write_package(serial_port, message: bytes):
+    """
+    Пишет в UART порт сообщение в виде массива из HEX значений.  Признаками начала и конца b'$#', b'#$'
+     выставляются автоматически.
+    :param serial_port:
+    :param message:
+    """
+    serial_port.write(UART_START_MESSAGE)
+    serial_port.write(message)
+    serial_port.write(UART_END_MESSAGE)
+    print(UART_START_MESSAGE + message + UART_END_MESSAGE)
+
+
 if __name__ == "__main__":
-    # q = queue.PriorityQueue(maxsize=5)
-    # for i in range(5):
-    #     v = random.uniform(-5, 5)
-    #     q.put(v)
-    #     print(f"{i} | {v}")
-#
-    # for i in range(5):
-    #     print(f"{i} | {q.queue.pop()}")
-    # print(q)
-
-    integrator = AccelIntegrator("accelerometer_core/accelerometer_records/the newest/building_way.json")
-    # integrator = AccelIntegrator("accelerometer_core/accelerometer_records/record_bno_test.json")
-    integrator.integrate()
-    integrator.show_results_xz()
-    integrator.show_path()
-# from Accelerometer.accelerometer_core.inertial_measurement_unit import IMU
-#
-#if __name__ == "__main__":
-#    import cv2 as cv
-#    cv.namedWindow("accelerometer", cv.WINDOW_NORMAL)
-#    imu = IMU()
-#    imu.run()
-
-
-# from matplotlib import pyplot as plt
-#
-# t = np.linspace(0, np.pi, 2000)
-# x = np.cos(t * 10)
-# y = np.sin(t * 5)
-# _x = [x[0]]
-# _y = [y[0]]
-# s = 0.01
-# for xi, yi in zip(x.flat, y.flat):
-#     alpha = (xi - yi) * s
-#     _x.append(_x[-1] - alpha)
-#     _y.append(_y[-1] + alpha)
-#
-#
-# plt.plot(_x, 'r')
-# plt.plot(_y, 'g')
-# plt.show()
+    acc = IMU()
+    acc.update()
+    while acc.mode_active(START_MODE) or acc.mode_active(CALIBRATION_MODE):
+        acc.update()
+    # acc.use_filtering = True
+    # acc.record('record_bno_test.json')  # запись в файл
+    # acc.calibrate_request()
+    # record_imu_log("acc.json", acc, 20, 0.033)
+    path_list = [Vector2(0, 0), Vector2(1, 270), Vector2(1, 270), Vector2(1, 270)]
+    dist = 0.0
+    path_list.reverse()
+    position = acc.position
+    target = path_list.pop()
+    write_package(acc.accelerometer.device, f"{1},{0}".encode())
+    while len(path_list) != 0:
+        acc.update()
+        time.sleep(0.5)
+        dist += (acc.position - position).magnitude() + 0.00033
+        print(dist)
+        position = acc.position
+        if dist >= target.x:
+            write_package(acc.accelerometer.device, f"{1},{int(target.y)}".encode())
+            dist = 0.0
+            target = path_list.pop()
+    write_package(acc.accelerometer.device, f"{1},{400}".encode())

@@ -1,3 +1,4 @@
+from Utilities import RealTimeFilter
 from Utilities.device import Device, START_MODE, BEGIN_MODE_MESSAGE, RUNNING_MODE_MESSAGE, END_MODE_MESSAGE, \
     DeviceMessage, device_progres_bar, DISCARD_MODE_MESSAGE
 from .accelerometer_base import AccelerometerBase, smooth_step
@@ -124,9 +125,9 @@ class IMU(Device):
         self._file_name = ""
         self._file_handle = None
         # время простоя перед запуском
-        self._start_time:   float = 5.0
+        self._start_time:   float = 1.0
         # время калибровки
-        self._calib_time:     float = 5.0
+        self._calib_time:     float = 1.0
         # время ...
         self._trust_acc_time: float = 0.1
         self._acc_check_time: float = 0.0
@@ -144,9 +145,12 @@ class IMU(Device):
         self._vy = LinearRegressor()
         self._vz = LinearRegressor()
 
-        self._sx = LinearRegressor()
-        self._sy = LinearRegressor()
-        self._sz = LinearRegressor()
+        self._filt_x = RealTimeFilter()
+        self._filt_x.mode = 0
+        self._filt_y = RealTimeFilter()
+        self._filt_y.mode = 0
+        self._filt_z = RealTimeFilter()
+        self._filt_z.mode = 0
 
     @property
     def tmp_file_name(self) -> str:
@@ -383,7 +387,7 @@ class IMU(Device):
             return RUNNING_MODE_MESSAGE
 
         if message == RUNNING_MODE_MESSAGE:
-            self.accelerometer.read_request()
+            # self.accelerometer.read_request()
             t = self.mode_active_time(START_MODE)
             self.send_log_message(device_progres_bar(t / self._start_time if self.start_time > 0.001 else 1.0, "", 55, '|', '_'))
             if t >= self._start_time:
@@ -478,11 +482,11 @@ class IMU(Device):
 
             self._pos_raw += self.velocity * delta_t
 
-            # self._pos_reg = Vector3(self._sx.update(self._pos_raw.x),
-            #                        self._sy.update(self._pos_raw.y),
-            #                        self._sz.update(self._pos_raw.z))
+            self._pos = self.accelerometer.basis.transpose() * (self._pos_raw - self._pos_reg)
 
-            self._pos = self.accelerometer.basis.transpose() * self._pos_raw # (self._pos_raw - self._pos_reg)
+            self._pos = Vector3(self._filt_x.filter(self._pos.x),
+                                self._filt_x.filter(self._pos.y),
+                                self._filt_x.filter(self._pos.z))
 
             return message.run
 

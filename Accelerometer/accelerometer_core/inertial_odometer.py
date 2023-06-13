@@ -80,10 +80,10 @@ class InertialOdometer(Device):
             self._execute_command()
             self.update()
             self._imu.update()
-            self._controller.update()
+            # self._controller.update()
             complete = True
             complete &= self._imu.is_complete
-            complete &= self._controller.is_complete
+            # complete &= self._controller.is_complete
             complete &= self.is_complete
             if complete:
                 break

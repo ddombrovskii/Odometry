@@ -222,6 +222,7 @@ BNO055_SYSTEM_ERROR_LOW_PWR_MODE_NOT_AVAILABLE_FOR_SELECTED_OPR_MODE = 0x07
 BNO055_SYSTEM_ERROR_ACCEL_PWR_MODE_NOT_AVAILABLE                     = 0x08
 BNO055_SYSTEM_ERROR_FUSION_ALGO_CONF_ERROR                           = 0x09
 BNO055_SYSTEM_ERROR_SENSOR_CONF_ERROR                                = 0x0A
+
 bno055_vector_t = '>ddd'
 bno055_sensor_t = '>cccccccccccciiifffi'
 bno055_self_test_result_t = '>cccc'

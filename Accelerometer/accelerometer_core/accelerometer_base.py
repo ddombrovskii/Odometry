@@ -13,7 +13,6 @@ ACCELERATION_LINEAR_BIT = 5
 CALIBRATION_BIT = 6
 STATUS_BIT = 7
 
-
 TIME = "\"time\""
 DTIME = "\"dtime\""
 ACCELERATION = "\"acceleration\""
@@ -30,7 +29,7 @@ WAY_POINTS = "\"way_points\""
 
 
 def _device_progres_bar(val: float, label: str = "", max_chars: int = 55,
-                       char_progress: str = '#', char_stand_by: str = '.') -> str:
+                        char_progress: str = '#', char_stand_by: str = '.') -> str:
     filler_l = int(min(max(0.0, val), 1.0) * max_chars)  # max_chars - title chars count
     filler_r = max_chars - filler_l
     if len(label) == 0:
@@ -62,21 +61,21 @@ def smooth_step(value, edge0, edge1) -> float:
 
 class AccelerometerBase:
     RAED_SETTINGS_BITS = {
-            ACCELERATION_BIT,
-            OMEGA_BIT,
-            ANGLES_BIT,
-            QUATERNION_BIT,
-            MAGNETOMETER_BIT,
-            ACCELERATION_LINEAR_BIT}
+        ACCELERATION_BIT,
+        OMEGA_BIT,
+        ANGLES_BIT,
+        QUATERNION_BIT,
+        MAGNETOMETER_BIT,
+        ACCELERATION_LINEAR_BIT}
 
     def _request_for_device_connection(self) -> bool:
         return False
 
     def _request_for_device_disconnection(self) -> bool:
-        return False
+        return True
 
     def _device_read_request(self) -> Tuple[bool, Tuple[float, ...]]:
-        return False, (0.0, )
+        return False, (0.0,)
 
     def __init__(self):
         self._device_connection = None
@@ -139,7 +138,7 @@ class AccelerometerBase:
 
     @property
     def package_bytes_count(self) -> int:
-        return self._package_size*8
+        return self._package_size * 8
 
     def _default_settings(self):
         self.is_accel_read = True
@@ -169,27 +168,27 @@ class AccelerometerBase:
                 self._filters.update({bit: [ax, ay, az]})
 
     def _filter_values(self):
-        if _is_bit_set(self._read_config, ACCELERATION_BIT):
+        if self.is_accel_read:
             fx, fy, fz = self._filters[ACCELERATION_BIT]
             x, y, z = self._accel_curr
             self._accel_curr = Vector3(fx.filter(x), fy.filter(y), fz.filter(z))
 
-        if _is_bit_set(self._read_config, OMEGA_BIT):
+        if self.is_omega_read:
             fx, fy, fz = self._filters[OMEGA_BIT]
             x, y, z = self._omega_curr
             self._omega_curr = Vector3(fx.filter(x), fy.filter(y), fz.filter(z))
 
-        if _is_bit_set(self._read_config, ANGLES_BIT):
+        if self.is_angles_read:
             fx, fy, fz = self._filters[ANGLES_BIT]
             x, y, z = self._angle_curr
             self._angle_curr = Vector3(fx.filter(x), fy.filter(y), fz.filter(z))
 
-        if _is_bit_set(self._read_config, MAGNETOMETER_BIT):
+        if self.is_magnetometer_read:
             fx, fy, fz = self._filters[MAGNETOMETER_BIT]
             x, y, z = self._mag_curr
             self._mag_curr = Vector3(fx.filter(x), fy.filter(y), fz.filter(z))
 
-        if _is_bit_set(self._read_config, ACCELERATION_LINEAR_BIT):
+        if self.is_lin_accel_read:
             fx, fy, fz = self._filters[ACCELERATION_LINEAR_BIT]
             x, y, z = self._accel_lin_curr
             self._accel_lin_curr = Vector3(fx.filter(x), fy.filter(y), fz.filter(z))
@@ -198,22 +197,22 @@ class AccelerometerBase:
 
         data = [f"\t{DTIME:22}: {str(self.delta_t)}"]
 
-        if _is_bit_set(self._read_config, ACCELERATION_BIT):
+        if self.is_accel_read:
             data.append(f"\t{ACCELERATION:22}: {str(self.acceleration)}")
 
-        if _is_bit_set(self._read_config, OMEGA_BIT):
+        if self.is_omega_read:
             data.append(f"\t{ANGLES_VELOCITY:22}: {str(self.omega)}")
 
-        if _is_bit_set(self._read_config, ANGLES_BIT):
+        if self.is_angles_read:
             data.append(f"\t{ANGLES:22}: {str(self.angles)}")
 
-        if _is_bit_set(self._read_config, QUATERNION_BIT):
+        if self.is_quaternion_read:
             data.append(f"\t{QUATERNION:22}: {str(self.quaternion)}")
 
-        if _is_bit_set(self._read_config, MAGNETOMETER_BIT):
+        if self.is_magnetometer_read:
             data.append(f"\t{MAGNETOMETER:22}: {str(self.magnetometer)}")
 
-        if _is_bit_set(self._read_config, ACCELERATION_LINEAR_BIT):
+        if self.is_lin_accel_read:
             data.append(f"\t{ACCELERATION_LIN:22}: {str(self.acceleration_linear)}")
 
         sep = ',\n'
@@ -239,11 +238,13 @@ class AccelerometerBase:
     @property
     def device(self):
         return self._device_connection
+
     """
     ###############################################
     #####  Acceleration measurement settings  #####
     ###############################################
     """
+
     @property
     def acceleration_range_key(self) -> int:
         """
@@ -279,11 +280,13 @@ class AccelerometerBase:
         Диапазон измеряемых ускорений, выраженный в м/сек^2.
         """
         return 1.0
+
     """
     ###############################################
     #####    Gyroscope measurement settings   #####
     ###############################################
     """
+
     @property
     def gyroscope_range_key(self) -> int:
         """
@@ -325,6 +328,7 @@ class AccelerometerBase:
     #####  Magnetometer measurement settings  #####
     ###############################################
     """
+
     @property
     def magnetometer_range_key(self) -> int:
         """
@@ -360,11 +364,13 @@ class AccelerometerBase:
         Диапазон измеряемых ускорений, выраженный в м/сек^2.
         """
         return self.gyroscope_range
+
     """
     ######################################################
     #####  Accelerometer measurements read settings  #####
     ######################################################
     """
+
     @property
     def read_config(self) -> int:
         return self._read_config
@@ -431,36 +437,13 @@ class AccelerometerBase:
 
     @property
     def config_info(self) -> str:
-        config = []
-        if _is_bit_set(self.read_config, ACCELERATION_BIT):
-            config.append('\t\"Accelerations\": true')
-        else:
-            config.append('\t\"Accelerations\": false')
 
-        if _is_bit_set(self.read_config, OMEGA_BIT):
-            config.append('\t\"Omegas\": true')
-        else:
-            config.append('\t\"Omegas\": false')
-
-        if _is_bit_set(self.read_config, ANGLES_BIT):
-            config.append('\t\"Angles\": true')
-        else:
-            config.append('\t\"Angles\": false')
-
-        if _is_bit_set(self.read_config, QUATERNION_BIT):
-            config.append('\t\"Quaternion\": true')
-        else:
-            config.append('\t\"Quaternion\": false')
-
-        if _is_bit_set(self.read_config, MAGNETOMETER_BIT):
-            config.append('\t\"Magnetometer\": true')
-        else:
-            config.append('\t\"Magnetometer\": false')
-
-        if _is_bit_set(self.read_config, ACCELERATION_LINEAR_BIT):
-            config.append('\t\"LinearAccelerations\": true')
-        else:
-            config.append('\t\"LinearAccelerations\": false')
+        config = ['\t\"Accelerations\"      : true' if self.is_accel_read else '\t\"Accelerations\":       false',
+                  '\t\"Omegas\"             : true' if self.is_omega_read else '\t\"Omegas\":              false',
+                  '\t\"Angles\"             : true' if self.is_angles_read else '\t\"Angles\":              false',
+                  '\t\"Quaternion\"         : true' if self.is_quaternion_read else '\t\"Quaternion\":          false',
+                  '\t\"Magnetometer\"       : true' if self.is_magnetometer_read else '\t\"Magnetometer\":        false',
+                  '\t\"LinearAccelerations\": true' if self.is_lin_accel_read else '\t\"LinearAccelerations\": false']
         sep = ',\n'
         return f" {{\n{sep.join(val for val in config)}\n }}"
 
@@ -469,6 +452,7 @@ class AccelerometerBase:
     #####  Main accelerometer functions  #####
     ##########################################
     """
+
     def reset(self, reset_ranges: bool = False) -> None:
         """
         Сброс параметров к начальным
@@ -517,11 +501,13 @@ class AccelerometerBase:
         Последнее время, когда было измерено ускорение
         """
         return self._prev_t
+
     """
     ############################################
     #####  Accelerometer filtering params  #####
     ############################################
     """
+
     @property
     def acceleration_noize_level(self) -> float:
         """
@@ -549,11 +535,13 @@ class AccelerometerBase:
         Параметр комплиментарного фильтра для определения углов поворота.
         """
         self._k_accel = min(max(0.0, value), 1.0)
+
     """
     ########################################
     #####  Accelerometer calib params  #####
     ########################################
     """
+
     @property
     def acceleration_calib(self) -> Vector3:
         """
@@ -601,6 +589,7 @@ class AccelerometerBase:
     #####  Accelerometer measurements  #####
     ########################################
     """
+
     @property
     def omega(self) -> Vector3:
         """
@@ -662,11 +651,13 @@ class AccelerometerBase:
     @property
     def magnetometer_prev(self) -> Vector3:
         return self._mag_prev
+
     """
     #########################################################
     #####  Local space to world space transform values  #####
     #########################################################
     """
+
     @property
     def basis(self) -> Matrix3:
         """
@@ -698,7 +689,7 @@ class AccelerometerBase:
         Задана в системе координат акселерометра (ускорение без G)
         """
         accel = self.acceleration - self.basis * Vector3(0, 0, GRAVITY_CONSTANT)
-        return accel # Vector3(*(v * smooth_step(abs(v), g, 2.0 * g) for v, g in zip(accel, self._accel_gain)))
+        return accel  # Vector3(*(v * smooth_step(abs(v), g, 2.0 * g) for v, g in zip(accel, self._accel_gain)))
 
     def _set_accel(self, x: float, y: float, z: float):
         self._accel_prev = self._accel_curr
@@ -730,43 +721,42 @@ class AccelerometerBase:
 
     def _parce_response(self, response: Tuple[float, ...]) -> None:
         stride = 0
-
         if len(response) < 3:
             print('EMPTY PACKAGE')
             return
 
-        if _is_bit_set(self.read_config, ACCELERATION_BIT):
+        if self.is_accel_read:
             self._set_accel(response[stride], response[stride + 1], response[stride + 2])
             stride += 3
 
         if stride >= len(response):
             return
 
-        if _is_bit_set(self.read_config, OMEGA_BIT):
+        if self.is_omega_read:
             self._set_omega(response[stride], response[stride + 1], response[stride + 2])
             stride += 3
         if stride >= len(response):
             return
 
-        if _is_bit_set(self.read_config, ANGLES_BIT):
+        if self.is_angles_read:
             self._set_angles(response[stride], response[stride + 1], response[stride + 2])
             stride += 3
         if stride >= len(response):
             return
 
-        if _is_bit_set(self.read_config, QUATERNION_BIT):
+        if self.is_quaternion_read:
             self._set_quaternion(response[stride], response[stride + 1], response[stride + 2], response[stride + 3])
             stride += 4
         if stride >= len(response):
             return
 
-        if _is_bit_set(self.read_config, MAGNETOMETER_BIT):
+        if self.is_magnetometer_read:
             self._set_magnetometer(response[stride], response[stride + 1], response[stride + 2])
             stride += 3
         if stride >= len(response):
             return
 
-        if _is_bit_set(self.read_config, ACCELERATION_LINEAR_BIT):
+        if self.is_lin_accel_read:
             self._set_lin_accel(response[stride], response[stride + 1], response[stride + 2])
             stride += 3
         if stride >= len(response):
@@ -807,7 +797,7 @@ class AccelerometerBase:
     def _build_basis(self):
         try:
             self._set_angles(*(self.angles + self.omega * self.delta_t))
-            y_axis = (self.basis.up    + Vector3.cross(self.omega, self.basis.up)    * self.delta_t).normalized()
+            y_axis = (self.basis.up + Vector3.cross(self.omega, self.basis.up) * self.delta_t).normalized()
             z_axis = (self.basis.front + Vector3.cross(self.omega, self.basis.front) * self.delta_t).normalized()
             z_axis = (z_axis * (1.0 - self.k_accel) + self.k_accel * self.acceleration).normalized()
             x_axis = Vector3.cross(z_axis, y_axis).normalized()
@@ -903,4 +893,3 @@ class AccelerometerBase:
                 time.sleep(time_out - d_t)
             record.seek(record.tell() - 3, 0)
             print("]\n}", file=record)
-

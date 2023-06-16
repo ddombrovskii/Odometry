@@ -1,12 +1,11 @@
-import math
-
-from Utilities.Geometry import Vector3, Matrix3
+from Accelerometer.accelerometer_core import GRAVITY_CONSTANT
+from Utilities.Geometry import Vector3
 from application import*
 from threading import Lock
 
 
 imu = IMU()
-imu.accelerometer.use_filtering = True
+imu.accelerometer.use_filtering = False
 imu.enable_logging = False
 imu_record_file_path = None
 imu_clib_file_path = None
@@ -33,21 +32,14 @@ IMU_K_ARG = "/imu_set_k_arg"
 
 vel = Vector3()
 pos = Vector3()
-first_time = True
-ang = Vector3()
 
 
 @web_app.route(IMU_READ)
 def imu_read():
-    global first_time
-    global ang
-    if first_time:
-        ang = imu.angles
-        first_time = False
     imu.update()
-    accel  =  imu.accelerometer.acceleration_local_space
-    omega  = imu.velocity
-    angles = imu.position
+    accel  = imu.accelerometer.acceleration_local_space
+    omega  = imu.omega
+    angles = imu.angles
 
     # global vel
     # global pos
@@ -63,7 +55,6 @@ def imu_read():
            f"\"omega\":  {{\"x\": {omega.x},  \"y\": {omega.y},  \"z\": {omega.z}}},\n" \
            f"\"angles\": {{\"x\": {angles.x}, \"y\": {angles.y}, \"z\": {angles.z}}}\n" \
            "}"
-    print(data)
     return data
 
 

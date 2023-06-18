@@ -8,7 +8,6 @@ from UIQt.GLUtilities.gl_shader import ShaderGL
 from UIQt.GLUtilities.gl_model import ModelGL
 from UIQt.GLUtilities.gl_mesh import MeshGL
 from UIQt.GLUtilities import gl_globals
-from OpenGL.GL.shaders import GL_TRUE
 from Utilities import BitSet32
 from typing import List, Dict
 import OpenGL.GL as GL
@@ -202,8 +201,8 @@ class SceneGL:
     def _draw_any(self, model: ModelGL, material: MaterialGL = None):
         material = material if material is not None else model.material
         if material.bind():
-            material.set_property_val("view", self._cam_view_matrix)
-            material.set_property_val("projection", self._cam_projection)
+            material.set_property_val("view",         self._cam_view_matrix)
+            material.set_property_val("projection",   self._cam_projection)
             material.set_property_val("cam_position", self._cam_position)
             # material.set_property_val("model", model.transform.transform_matrix.transpose())
         material.shader.send_mat_4("model", model.transform.transform_matrix.transpose())

@@ -430,13 +430,10 @@ class FrameBufferGL:
             glBindFramebuffer(GL_FRAMEBUFFER, 0)
             frame = glReadPixels(x0, y0, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT)
             return frame
-
         if self._fbo_depth_attachment == 0:
             return 0.0
-        self.bind()
-        frame = glReadPixels(x0, y0, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT)
-        self.unbind()
-        return frame
+        with self:
+            return glReadPixels(x0, y0, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT)
 
     @gl_error_catch
     def grab_snap_shot(self, text_attachment: str = "attachment_0"):  # , path: str = "snap_shot.bmp"):

@@ -116,29 +116,23 @@ class SceneViewerWidget(QtOpenGL.QGLWidget):
     def on_mouse_pick(self):
         if not gl_globals.MOUSE_CONTROLLER.left_btn.is_pressed:
             return
-        x_pix = gl_globals.MOUSE_CONTROLLER.left_btn.pressed_pos.x
-        y_pix = gl_globals.MOUSE_CONTROLLER.left_btn.pressed_pos.y
+        x_pix = gl_globals.MOUSE_CONTROLLER.left_btn.pressed_pos.y
+        y_pix = gl_globals.MOUSE_CONTROLLER.left_btn.pressed_pos.x
         depth = self._frame_buffer.read_depth_pixel(x_pix, y_pix)
-        print(*depth)
-        x = -2.0 * x_pix / self.width() + 1
-        y = -2.0 * y_pix / self.height() + 1
-        clip_coord = Vector4(x, y, -1, 1)
-        inv_projection = gl_globals.MAIN_CAMERA.projection.invert()
-        eye_coord = inv_projection * clip_coord
-        eye_coord = Vector4(eye_coord.x, eye_coord.y, 1, 0)
-        inv_view_mat = gl_globals.MAIN_CAMERA.look_at_matrix.invert()
-        eye_coord = inv_view_mat * eye_coord
-        world_ray = Vector3(eye_coord.x, eye_coord.y, eye_coord.z).normalized()
-        print(world_ray)
-
-        # model = ModelGL()
-        # model.mesh = gl_globals.BOX_MESH
-        # view_orig = gl_globals.MAIN_CAMERA.transform.origin
-        # model.transform.origin = (-view_orig.y / world_ray.y) * world_ray + view_orig
-        # print(f"model.transform.origin {model.transform.origin}")
-        # self._scene.add_model(model)
-
-
+        tg_fov = 1.0 / math.tan(gl_globals.MAIN_CAMERA.fov / 180.0 * math.pi * 0.5)
+        x = 2.0 * x_pix / self.width() - 1.0
+        y = 2.0 * y_pix / self.height() - 1.0
+        view_ray = Vector3(y, -x, tg_fov).normalized()
+        view_ray = gl_globals.MAIN_CAMERA.transform.transform_vect(view_ray, 0.0)
+        model = ModelGL()
+        model.mesh = gl_globals.BOX_MESH
+        view_orig = gl_globals.MAIN_CAMERA.transform.origin
+        t = -(view_orig.y / view_ray.y)
+        model.transform.origin = Vector3(view_ray.x * t + view_orig.x,
+                                         view_ray.y * t + view_orig.y,
+                                         view_ray.z * t + view_orig.z)
+        # print(f"model.transform.origin {model.transform.origin} | {view_orig}")
+        self._scene.add_model(model)
 
     def spawn_obj(self):
         # pm * vm * p = v

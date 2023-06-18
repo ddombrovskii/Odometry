@@ -36,7 +36,7 @@
     },
     {
       "name": "big_map",
-      "source": "Meshes/big_map.obj"
+      "source": "Meshes/sphere.obj"
     }
   ],
   "Shaders": [

@@ -8,6 +8,7 @@ from PyQt5.QtGui import QCloseEvent
 
 from UIQt.scene_viewer_widget import SceneViewerWidget
 from point_widget import PointWidget
+from reference_view_widget import ReferenceViewWidget
 
 
 class MainWindowUI(QMainWindow):
@@ -15,7 +16,6 @@ class MainWindowUI(QMainWindow):
         super(MainWindowUI, self).__init__()
         uic.loadUi("./UI/MainWindow.ui", self)
 
-        self.points_count: int = 0
         self.start_point: PointWidget = None
         self.finish_point: PointWidget = None
 
@@ -40,6 +40,7 @@ class MainWindowUI(QMainWindow):
         self.angles_layout.setAlignment(Qt.AlignTop)
 
         self.addAngleBtn: QPushButton = self.findChild(QPushButton, "addAngleBtn")
+        self.addAngleBtn.clicked.connect(self.addNewAngle)
         self.deleteAngleBtn: QPushButton = self.findChild(QPushButton, "deleteAngleBtn")
 
         # right tab
@@ -83,10 +84,12 @@ class MainWindowUI(QMainWindow):
         if self.mapPixmap is None:
             return
         x, y = self.get_correct_coordinates(event.pos())
-        newPoint = PointWidget(self.points_count)
+        newPoint = PointWidget(self.points_layout.count())
+        if self.points_layout.count() == 0:
+            newPoint.setStyleSheet('background-color: #90f100;')
+
         newPoint.setCoordinates(x, y)
         self.points_layout.addWidget(newPoint)
-        self.points_count += 1
         if event.button() == Qt.LeftButton:
             self.start_point = newPoint
             self.draw_something(x, y, width=15, color='blue')
@@ -138,6 +141,10 @@ class MainWindowUI(QMainWindow):
     def update_map_image(self):
         # update() и repaint() у self.mapLabel работают хуёво (не работают), поэтому постоянно заменяем pixmap
         self.mapLabel.setPixmap(self.mapPixmap)
+
+    def addNewAngle(self):
+        newAngle = ReferenceViewWidget(self.angles_layout.count())
+        self.angles_layout.addWidget(newAngle)
 
 
 if __name__ == "__main__":

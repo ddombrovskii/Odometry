@@ -296,7 +296,7 @@ class PathFinder:
         if _path_p.contents.n_points == 0:
             print("empty path...")
             return []
-        
+
         path_points = []
         x_smooth = RunningAverage(16)
         y_smooth = RunningAverage(16)

@@ -1,5 +1,7 @@
 from PyQt5 import QtCore
 from PyQt5.QtGui import QMouseEvent, QWheelEvent
+
+from Utilities import BitSet32
 from Utilities.Geometry import Vector2
 
 LEFT_BTN   = QtCore.Qt.MouseButton.LeftButton
@@ -92,6 +94,23 @@ class MouseController:
         self._right_btn:  MouseButton = MouseButton(RIGHT_BTN)
         self._middle_btn: MouseButton = MouseButton(MIDDLE_BTN)
         self._wheel_delta = 0.0
+        self._phase: BitSet32 = BitSet32()
+
+    @property
+    def is_wheel_rotated(self) -> bool:
+        return self._phase.is_bit_set(WHEEL_ROT)
+
+    @property
+    def is_any_pressed(self) -> bool:
+        return self._phase.is_bit_set(BUTTON_PRESSED)
+
+    @property
+    def is_any_hold(self) -> bool:
+        return self._phase.is_bit_set(BUTTON_HOLD)
+
+    @property
+    def is_any_released(self) -> bool:
+        return self._phase.is_bit_set(BUTTON_RELEASED)
 
     @property
     def wheel_delta(self):
@@ -122,19 +141,27 @@ class MouseController:
         return self._right_btn
 
     def update_on_press(self, event: QMouseEvent) -> None:
+        self._phase.set_bit(BUTTON_PRESSED)
         self._left_btn.update_on_pressed(event)
         self._right_btn.update_on_pressed(event)
         self._middle_btn.update_on_pressed(event)
 
     def update_on_hold(self, event: QMouseEvent) -> None:
+        self._phase.clear_bit(BUTTON_PRESSED)
+        self._phase.set_bit(BUTTON_HOLD)
+
         self._left_btn.update_on_hold(event)
         self._right_btn.update_on_hold(event)
         self._middle_btn.update_on_hold(event)
 
     def update_on_release(self, event: QMouseEvent) -> None:
+        self._phase.clear_bit(BUTTON_HOLD)
+        self._phase.clear_bit(BUTTON_PRESSED)
+
         self._left_btn.update_on_release(event)
         self._right_btn.update_on_release(event)
         self._middle_btn.update_on_release(event)
 
     def update_on_wheel(self, event: QWheelEvent):
+        self._phase.set_bit(WHEEL_ROT)
         self._wheel_delta = event.angleDelta().y()

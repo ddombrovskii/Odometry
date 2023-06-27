@@ -13,34 +13,34 @@ def deg_to_rad(deg: float) -> float:
 
 class Transform:
 
-    __slots__ = "__transform_m", "__angles"
+    __slots__ = "_transform_m", "_angles"
 
     def __init__(self):
-        self.__angles: Vector3 = Vector3(0.0, 0.0, 0.0)
-        self.__transform_m = Matrix4(1.0, 0.0, 0.0, 0.0,
-                                     0.0, 1.0, 0.0, 0.0,
-                                     0.0, 0.0, 1.0, 0.0,
-                                     0.0, 0.0, 0.0, 1.0)
+        self._angles: Vector3 = Vector3(0.0, 0.0, 0.0)
+        self._transform_m = Matrix4(1.0, 0.0, 0.0, 0.0,
+                                    0.0, 1.0, 0.0, 0.0,
+                                    0.0, 0.0, 1.0, 0.0,
+                                    0.0, 0.0, 0.0, 1.0)
 
     def __str__(self) -> str:
         return f"{{\n\t\"unique_id\"   :{self.unique_id},\n" \
                    f"\t\"origin\"      :{self.origin},\n" \
                    f"\t\"scale\"       :{self.scale},\n" \
                    f"\t\"rotate\"      :{self.angles / math.pi * 180},\n" \
-                   f"\t\"transform_m\" :\n{self.__transform_m}\n}}"
+                   f"\t\"transform_m\" :\n{self._transform_m}\n}}"
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, Transform):
             return False
-        if not(self.__transform_m == other.__transform_m):
+        if not(self._transform_m == other._transform_m):
             return False
         return True
 
     def __hash__(self) -> int:
-        return hash(self.__transform_m)
+        return hash(self._transform_m)
 
     def __build_basis(self, ex: Vector3, ey: Vector3, ez: Vector3) -> None:
-        self.__transform_m = Matrix4.build_transform(ex, ey, ez, self.origin)
+        self._transform_m = Matrix4.build_transform(ex, ey, ez, self.origin)
 
     @property
     def unique_id(self) -> int:
@@ -48,17 +48,17 @@ class Transform:
 
     @property
     def transform_matrix(self) -> Matrix4:
-        return self.__transform_m
+        return self._transform_m
 
     @transform_matrix.setter
     def transform_matrix(self, t: Matrix4) -> None:
-        self.__transform_m = Matrix4.build_transform(t.right, t.up, t.front, t.origin)
+        self._transform_m = Matrix4.build_transform(t.right, t.up, t.front, t.origin)
 
     @property
     def front(self) -> Vector3:
-        return Vector3(self.__transform_m.m02,
-                       self.__transform_m.m12,
-                       self.__transform_m.m22).normalized()
+        return Vector3(self._transform_m.m02,
+                       self._transform_m.m12,
+                       self._transform_m.m22).normalized()
 
     @front.setter
     def front(self, front_: Vector3) -> None:
@@ -72,9 +72,9 @@ class Transform:
 
     @property
     def up(self) -> Vector3:
-        return Vector3(self.__transform_m.m01,
-                       self.__transform_m.m11,
-                       self.__transform_m.m21).normalized()
+        return Vector3(self._transform_m.m01,
+                       self._transform_m.m11,
+                       self._transform_m.m21).normalized()
 
     @up.setter
     def up(self, up_: Vector3) -> None:
@@ -88,9 +88,9 @@ class Transform:
 
     @property
     def right(self) -> Vector3:
-        return Vector3(self.__transform_m.m00,
-                       self.__transform_m.m10,
-                       self.__transform_m.m20).normalized()
+        return Vector3(self._transform_m.m00,
+                       self._transform_m.m10,
+                       self._transform_m.m20).normalized()
 
     @right.setter
     def right(self, right_: Vector3) -> None:
@@ -104,16 +104,16 @@ class Transform:
 
     @property
     def sx(self) -> float:
-        x = self.__transform_m.m00
-        y = self.__transform_m.m10
-        z = self.__transform_m.m20
+        x = self._transform_m.m00
+        y = self._transform_m.m10
+        z = self._transform_m.m20
         return math.sqrt(x * x + y * y + z * z)
 
     @property
     def sy(self) -> float:
-        x = self.__transform_m.m01
-        y = self.__transform_m.m11
-        z = self.__transform_m.m21
+        x = self._transform_m.m01
+        y = self._transform_m.m11
+        z = self._transform_m.m21
         return math.sqrt(x * x + y * y + z * z)
 
     @property
@@ -122,9 +122,9 @@ class Transform:
         установить масштаб по Х
         :return:
         """
-        x = self.__transform_m.m02
-        y = self.__transform_m.m12
-        z = self.__transform_m.m22
+        x = self._transform_m.m02
+        y = self._transform_m.m12
+        z = self._transform_m.m22
         return math.sqrt(x * x + y * y + z * z)
 
     @sx.setter
@@ -132,9 +132,9 @@ class Transform:
         if s_x == 0:
             return
         scl = self.sx
-        self.__transform_m = Matrix4.build_transform(self.__transform_m.right * s_x / scl,
-                                                     self.__transform_m.up,
-                                                     self.__transform_m.front, self.origin)
+        self._transform_m = Matrix4.build_transform(self._transform_m.right * s_x / scl,
+                                                    self._transform_m.up,
+                                                    self._transform_m.front, self.origin)
 
     @sy.setter
     def sy(self, s_y: float) -> None:
@@ -146,9 +146,9 @@ class Transform:
         if s_y == 0:
             return
         scl = self.sy
-        self.__transform_m = Matrix4.build_transform(self.__transform_m.right,
-                                                     self.__transform_m.up    *  s_y / scl,
-                                                     self.__transform_m.front, self.origin)
+        self._transform_m = Matrix4.build_transform(self._transform_m.right,
+                                                    self._transform_m.up    *  s_y / scl,
+                                                    self._transform_m.front, self.origin)
 
     # установить масштаб по Z
     @sz.setter
@@ -156,9 +156,9 @@ class Transform:
         if s_z == 0:
             return
         scl = self.sz
-        self.__transform_m = Matrix4.build_transform(self.__transform_m.right,
-                                                     self.__transform_m.up   ,
-                                                     self.__transform_m.front *  s_z / scl, self.origin)
+        self._transform_m = Matrix4.build_transform(self._transform_m.right,
+                                                    self._transform_m.up   ,
+                                                    self._transform_m.front *  s_z / scl, self.origin)
 
     @property
     def scale(self) -> Vector3:
@@ -167,21 +167,21 @@ class Transform:
     @scale.setter
     def scale(self, xyz: Vector3):
         scl = self.scale
-        self.__transform_m = Matrix4.build_transform(self.__transform_m.right *  xyz.x / scl.x,
-                                                     self.__transform_m.up    *  xyz.y / scl.y,
-                                                     self.__transform_m.front *  xyz.z / scl.z, self.origin)
+        self._transform_m = Matrix4.build_transform(self._transform_m.right *  xyz.x / scl.x,
+                                                    self._transform_m.up    *  xyz.y / scl.y,
+                                                    self._transform_m.front *  xyz.z / scl.z, self.origin)
 
     @property
     def x(self) -> float:
-        return self.__transform_m.m03
+        return self._transform_m.m03
 
     @property
     def y(self) -> float:
-        return self.__transform_m.m13
+        return self._transform_m.m13
 
     @property
     def z(self) -> float:
-        return self.__transform_m.m23
+        return self._transform_m.m23
 
     @x.setter
     def x(self, x: float) -> None:
@@ -201,23 +201,23 @@ class Transform:
 
     @origin.setter
     def origin(self, xyz: Vector3) -> None:
-        self.__transform_m = Matrix4.build_transform(self.__transform_m.right,
-                                                     self.__transform_m.up,
-                                                     self.__transform_m.front, xyz)
+        self._transform_m = Matrix4.build_transform(self._transform_m.right,
+                                                    self._transform_m.up,
+                                                    self._transform_m.front, xyz)
 
     @property
     def angles(self) -> Vector3:
-        return self.__angles  # Matrix4.to_euler_angles(self.rotation_mat())
+        return self._angles  # Matrix4.to_euler_angles(self.rotation_mat())
 
     @angles.setter
     def angles(self, xyz: Vector3) -> None:
-        self.__angles = xyz
+        self._angles = xyz
         i: Matrix4 = Matrix4.rotate_x(xyz.x)
         i = Matrix4.rotate_y(xyz.y) * i
         i = Matrix4.rotate_z(xyz.z) * i
         scl  = self.scale
         orig = self.origin
-        self.__transform_m = Matrix4.build_transform(i.right * scl.x, i.up * scl.y, i.front * scl.z, orig)
+        self._transform_m = Matrix4.build_transform(i.right * scl.x, i.up * scl.y, i.front * scl.z, orig)
 
     @property
     def ax(self) -> float:
@@ -248,14 +248,14 @@ class Transform:
 
     def rotation_mat(self) -> Matrix4:
         scl = 1.0 / self.scale
-        return Matrix4(self.__transform_m.m00 * scl.x, self.__transform_m.m01 * scl.y, self.__transform_m.m02 * scl.z, 0,
-                       self.__transform_m.m10 * scl.x, self.__transform_m.m11 * scl.y, self.__transform_m.m12 * scl.z, 0,
-                       self.__transform_m.m20 * scl.x, self.__transform_m.m21 * scl.y, self.__transform_m.m22 * scl.z, 0,
+        return Matrix4(self._transform_m.m00 * scl.x, self._transform_m.m01 * scl.y, self._transform_m.m02 * scl.z, 0,
+                       self._transform_m.m10 * scl.x, self._transform_m.m11 * scl.y, self._transform_m.m12 * scl.z, 0,
+                       self._transform_m.m20 * scl.x, self._transform_m.m21 * scl.y, self._transform_m.m22 * scl.z, 0,
                        0, 0, 0, 1)
 
     def look_at(self, target: Vector3, eye: Vector3, up: Vector3 = Vector3(0, 1, 0)) -> None:
-        self.__transform_m = Matrix4.transform_look_at(target, eye, up)
-        self.__angles = Matrix4.to_euler_angles(self.__transform_m)
+        self._transform_m = Matrix4.transform_look_at(target, eye, up)
+        self._angles = Matrix4.to_euler_angles(self._transform_m)
 
     def transform_vect(self, vec: Vector3, w=1.0) -> Vector3:
         """
@@ -265,14 +265,14 @@ class Transform:
         :return:
         """
         if w == 0:
-            return Vector3(self.__transform_m.m00 * vec.x + self.__transform_m.m01 * vec.y + self.__transform_m.m02 * vec.z,
-                           self.__transform_m.m10 * vec.x + self.__transform_m.m11 * vec.y + self.__transform_m.m12 * vec.z,
-                           self.__transform_m.m20 * vec.x + self.__transform_m.m21 * vec.y + self.__transform_m.m22 * vec.z)
+            return Vector3(self._transform_m.m00 * vec.x + self._transform_m.m01 * vec.y + self._transform_m.m02 * vec.z,
+                           self._transform_m.m10 * vec.x + self._transform_m.m11 * vec.y + self._transform_m.m12 * vec.z,
+                           self._transform_m.m20 * vec.x + self._transform_m.m21 * vec.y + self._transform_m.m22 * vec.z)
 
         return Vector3(
-            self.__transform_m.m00 * vec.x + self.__transform_m.m01 * vec.y + self.__transform_m.m02 * vec.z + self.__transform_m.m03,
-            self.__transform_m.m10 * vec.x + self.__transform_m.m11 * vec.y + self.__transform_m.m12 * vec.z + self.__transform_m.m13,
-            self.__transform_m.m20 * vec.x + self.__transform_m.m21 * vec.y + self.__transform_m.m22 * vec.z + self.__transform_m.m23)
+            self._transform_m.m00 * vec.x + self._transform_m.m01 * vec.y + self._transform_m.m02 * vec.z + self._transform_m.m03,
+            self._transform_m.m10 * vec.x + self._transform_m.m11 * vec.y + self._transform_m.m12 * vec.z + self._transform_m.m13,
+            self._transform_m.m20 * vec.x + self._transform_m.m21 * vec.y + self._transform_m.m22 * vec.z + self._transform_m.m23)
 
     def inv_transform_vect(self, vec: Vector3, w=1.0) -> Vector3:
         """
@@ -284,11 +284,11 @@ class Transform:
         scl: Vector3 = self.scale
         scl = Vector3(1.0 / (scl.x * scl.x), 1.0 / (scl.y * scl.y), 1.0 / (scl.z * scl.z))
         if w == 0:
-            return Vector3((self.__transform_m.m00 * vec.x + self.__transform_m.m10 * vec.y + self.__transform_m.m20 * vec.z) * scl.x,
-                           (self.__transform_m.m01 * vec.x + self.__transform_m.m11 * vec.y + self.__transform_m.m21 * vec.z) * scl.y,
-                           (self.__transform_m.m02 * vec.x + self.__transform_m.m12 * vec.y + self.__transform_m.m22 * vec.z) * scl.z)
+            return Vector3((self._transform_m.m00 * vec.x + self._transform_m.m10 * vec.y + self._transform_m.m20 * vec.z) * scl.x,
+                           (self._transform_m.m01 * vec.x + self._transform_m.m11 * vec.y + self._transform_m.m21 * vec.z) * scl.y,
+                           (self._transform_m.m02 * vec.x + self._transform_m.m12 * vec.y + self._transform_m.m22 * vec.z) * scl.z)
 
         vec_ = Vector3(vec.x - self.x, vec.y - self.y, vec.z - self.z)
-        return Vector3((self.__transform_m.m00 * vec_.x + self.__transform_m.m10 * vec_.y + self.__transform_m.m20 * vec_.z) * scl.x,
-                       (self.__transform_m.m01 * vec_.x + self.__transform_m.m11 * vec_.y + self.__transform_m.m21 * vec_.z) * scl.y,
-                       (self.__transform_m.m02 * vec_.x + self.__transform_m.m12 * vec_.y + self.__transform_m.m22 * vec_.z) * scl.z)
+        return Vector3((self._transform_m.m00 * vec_.x + self._transform_m.m10 * vec_.y + self._transform_m.m20 * vec_.z) * scl.x,
+                       (self._transform_m.m01 * vec_.x + self._transform_m.m11 * vec_.y + self._transform_m.m21 * vec_.z) * scl.y,
+                       (self._transform_m.m02 * vec_.x + self._transform_m.m12 * vec_.y + self._transform_m.m22 * vec_.z) * scl.z)

@@ -1,15 +1,14 @@
 from UIQt.GLUtilities.Materials.grid_material import GridMaterial
 from UIQt.GLUtilities.Materials.map_material import MapMaterial
 from UIQt.GLUtilities.Materials.obj_material import ObjMaterial
-from UIQt.GLUtilities.gl_buffer import BufferGL
-from UIQt.GLUtilities.gl_camera import CameraGL
+from UIQt.Input.keyboard_controller import KeyboardController
 from UIQt.GLUtilities.gl_frame_buffer import FrameBufferGL
 from UIQt.GLUtilities.triangle_mesh import read_obj_mesh
+from UIQt.Input.mouse_controller import MouseController
 from UIQt.GLUtilities.gl_texture import TextureGL
 from UIQt.GLUtilities.gl_shader import ShaderGL
+from UIQt.GLUtilities.gl_camera import CameraGL
 from UIQt.GLUtilities.gl_mesh import MeshGL
-from UIQt.Input.keyboard_controller import KeyboardController
-from UIQt.Input.mouse_controller import MouseController
 from Utilities import Color
 import numpy as np
 
@@ -17,10 +16,10 @@ import numpy as np
 ####################################
 #              SHADERS             #
 ####################################
-SAMPLE_SHADER = None
-MAP_SHADER = None
-GRID_SHADER = None
-FRAME_BUFFER_BLIT_SHADER = None
+SAMPLE_SHADER: ShaderGL | None = None
+MAP_SHADER: ShaderGL | None = None
+GRID_SHADER: ShaderGL | None = None
+FRAME_BUFFER_BLIT_SHADER: ShaderGL | None = None
 
 # UI_TEXT_SHADER = None
 # UI_CLEAR_FB_SHADER = None
@@ -73,12 +72,12 @@ def _init_shaders():
 ####################################
 #              SHADERS             #
 ####################################
-WHITE_TEXTURE = None
-RED_TEXTURE = None
-GREEN_TEXTURE = None
-BLUE_TEXTURE = None
-PINK_TEXTURE = None
-GRAY_TEXTURE = None
+WHITE_TEXTURE: TextureGL | None = None
+RED_TEXTURE: TextureGL | None = None
+GREEN_TEXTURE: TextureGL | None = None
+BLUE_TEXTURE: TextureGL | None = None
+PINK_TEXTURE: TextureGL | None = None
+GRAY_TEXTURE: TextureGL | None = None
 
 
 def _init_textures():
@@ -106,9 +105,9 @@ def _init_textures():
 ####################################
 #              MESHES              #
 ####################################
-PLANE_MESH = None
-BOX_MESH = None
-SPHERE_MESH = None
+PLANE_MESH: MeshGL | None = None
+BOX_MESH: MeshGL | None = None
+SPHERE_MESH: MeshGL | None = None
 
 
 def _init_meshes():
@@ -123,9 +122,9 @@ def _init_meshes():
 ####################################
 #              MESHES              #
 ####################################
-DEFAULT_MATERIAL: ObjMaterial = None
-MAP_MATERIAL: MapMaterial = None
-GRID_MATERIAL: GridMaterial = None
+DEFAULT_MATERIAL: ObjMaterial | None = None
+MAP_MATERIAL: MapMaterial | None = None
+GRID_MATERIAL: GridMaterial | None = None
 
 
 def _init_materials():
@@ -140,17 +139,17 @@ def _init_materials():
 ####################################
 #             CAMERAS              #
 ####################################
-MAIN_CAMERA: CameraGL = None
+MAIN_CAMERA: CameraGL | None = None
 
 ####################################
 #              MOUSE               #
 ####################################
-MOUSE_CONTROLLER: MouseController = None
+MOUSE_CONTROLLER: MouseController | None = None
 
 ####################################
 #             KEYBOARD             #
 ####################################
-KEYBOARD_CONTROLLER: KeyboardController = None
+KEYBOARD_CONTROLLER: KeyboardController | None = None
 
 
 def init():

@@ -5,14 +5,14 @@ ORTHOGRAPHIC_PROJECTION_MODE = 1
 
 class CameraGL:
     def __init__(self):
-        self._transform: Transform = Transform()
-        self._projection: Matrix4 = Matrix4.identity()
         self._projection_mode = PERSPECTIVE_PROJECTION_MODE
-        self._ortho_size = 10.0
-        self._z_far: float  = 1000
+        self._projection: Matrix4 = Matrix4.identity()
+        self._transform: Transform = Transform()
+        self._z_far:  float = 1000
         self._z_near: float = 0.01
-        self._fov: float    = 70.0
+        self._fov:    float = 70.0
         self._aspect: float = 10.0
+        self._ortho_size: float = 10.0
         self.__build_projection()
 
     def __str__(self) -> str:
@@ -134,6 +134,7 @@ class CameraGL:
     @perspective_mode.setter
     def perspective_mode(self, value: bool) -> None:
         self._projection_mode = PERSPECTIVE_PROJECTION_MODE if value else ORTHOGRAPHIC_PROJECTION_MODE
+        self.__build_projection()
 
     @property
     def fov(self) -> float:
@@ -155,14 +156,14 @@ class CameraGL:
 
     @property
     def look_at_matrix(self) -> Matrix4:
-        xaxis = self.transform.right
-        yaxis = self.transform.up
-        zaxis = self.transform.front
-        eye   = -self.transform.origin
-        return Matrix4(xaxis.x, yaxis.x, zaxis.x, 0.0,
-                       xaxis.y, yaxis.y, zaxis.y, 0.0,
-                       xaxis.z, yaxis.z, zaxis.z, 0.0,
-                       Vector3.dot(xaxis, eye), Vector3.dot(yaxis, eye), Vector3.dot(zaxis, eye), 1.0)
+        x_axis = self.transform.right
+        y_axis = self.transform.up
+        z_axis = self.transform.front
+        eye    = -self.transform.origin
+        return Matrix4(x_axis.x, y_axis.x, z_axis.x, 0.0,
+                       x_axis.y, y_axis.y, z_axis.y, 0.0,
+                       x_axis.z, y_axis.z, z_axis.z, 0.0,
+                       Vector3.dot(x_axis, eye), Vector3.dot(y_axis, eye), Vector3.dot(z_axis, eye), 1.0)
 
     def look_at(self, target: Vector3, eye: Vector3, up: Vector3 = Vector3(0, 1, 0)) -> None:
         """
@@ -199,7 +200,8 @@ class CameraGL:
             self._projection.m12 + v.z * self._projection.m22 + self._projection.m32)
         w = v.x * self._projection.m03 + v.y *\
             self._projection.m13 + v.z * self._projection.m23 + self._projection.m33
-        if w != 1 and abs(w) > 1e-6:  # normalize if w is different from 1 (convert from homogeneous to Cartesian coordinates)
+        if w != 1 and abs(w) > 1e-6:  # normalize if w is different from 1
+            # (convert from homogeneous to Cartesian coordinates)
             return out / w
 
         return out

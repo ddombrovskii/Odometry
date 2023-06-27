@@ -1,7 +1,7 @@
-from UIQt.GLUtilities.objects_pool import ObjectsPool
 from UIQt.GLUtilities.triangle_mesh import TrisMesh, create_plane, create_box
 from Utilities.Geometry import Transform, BoundingBox, Vector3
 from UIQt.GLUtilities.gl_decorators import gl_error_catch
+from UIQt.GLUtilities.objects_pool import ObjectsPool
 from UIQt.GLUtilities.gl_buffer import BufferGL
 from Utilities import BitSet32
 from OpenGL.GL import *
@@ -34,7 +34,7 @@ class MeshGL:
                f"\t\"ibo_id\"         :{self._vbo.bind_id},\n" \
                f"\t\"vbo_id\"         :{self._ibo.bind_id},\n" \
                f"\t\"bytes_per_vert\" :{self._vertex_byte_size},\n" \
-               f"\t\"attribytes\"     :{self._vertex_attributes.state}\n}}"
+               f"\t\"attributes\"     :{self._vertex_attributes.state}\n}}"
 
     def __str__(self):
         return f"{{\n" \
@@ -43,13 +43,13 @@ class MeshGL:
                f"\n}}"
 
     def __init__(self, mesh: TrisMesh = None):
-        self._name = ""
-        self._source = ""
+        self._name: str = ""
+        self._source: str = ""
         self._bounds: BoundingBox = BoundingBox()
         self._vao: int = 0
-        self._vbo = None
-        self._ibo = None
-        self._instance_buffer = None
+        self._vbo: BufferGL | None = None
+        self._ibo: BufferGL | None = None
+        self._instance_buffer: BufferGL | None = None
         self._vertex_attributes: BitSet32 = BitSet32()
         self._vertex_byte_size = 0
         if not (mesh is None):
@@ -57,7 +57,6 @@ class MeshGL:
                 self.name = f"gl_mesh_{self.bind_id}"
                 self.name = f"{mesh.name}_{self.bind_id}"
                 self._source = mesh.source
-
             return
         self.name = f"gl_mesh_{self.bind_id}"
 
@@ -136,29 +135,20 @@ class MeshGL:
 
     @gl_error_catch
     def _create_gpu_buffers(self, mesh: TrisMesh) -> bool:
-
         if mesh.vertices_count == 0:
             return False
         if mesh.faces_count == 0:
             return False
-
-        self._vertex_attributes.set_bit(MeshGL.VerticesAttribute)
-        self._vertex_attributes.set_bit(MeshGL.NormalsAttribute)
-        self._vertex_attributes.set_bit(MeshGL.UVsAttribute)
+        self._vertex_attributes.set_bit(MeshGL.VerticesAttribute )
+        self._vertex_attributes.set_bit(MeshGL.NormalsAttribute  )
+        self._vertex_attributes.set_bit(MeshGL.UVsAttribute      )
         self._vertex_attributes.set_bit(MeshGL.TrianglesAttribute)
-
         self._gen_vao()
-
         self._bounds.reset()
-
         self._bounds.encapsulate(mesh.bbox.max)
-
         self._bounds.encapsulate(mesh.bbox.min)
-
         self.vertices_array = mesh.vertex_array_data
-
         self.indices_array = mesh.index_array_data
-
         self.set_attributes(self._vertex_attributes)
 
         return True
@@ -197,37 +187,24 @@ class MeshGL:
 
     @gl_error_catch
     def set_attributes(self, attributes: BitSet32):
-
         if self._vao == 0:
             return
-
         if self._vbo is None:
             return
-
         self._vertex_byte_size = 0
-
         self._vertex_attributes = attributes
-
         if attributes.is_bit_set(MeshGL.VerticesAttribute):
             self._vertex_byte_size += 3
-
         if attributes.is_bit_set(MeshGL.NormalsAttribute):
             self._vertex_byte_size += 3
-
         if attributes.is_bit_set(MeshGL.TangentsAttribute):
             self._vertex_byte_size += 3
-
         if attributes.is_bit_set(MeshGL.UVsAttribute):
             self._vertex_byte_size += 2
-
         ptr = 0
-
         attr_i = 0
-
         d_ptr = int(self.vbo.filling / self._vertex_byte_size)
-
         self.vbo.bind()
-
         if self.has_vertices:
             glEnableVertexAttribArray(attr_i)
             glVertexAttribPointer(attr_i, 3, GL_FLOAT, GL_FALSE, 12, ctypes.c_void_p(ptr))

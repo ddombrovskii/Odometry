@@ -15,8 +15,8 @@ class GridMaterial(MaterialGL):
         self._grid_fade: float = 1.5
         self._grid_fade_radius: float = 4.5
 
-        self._grid_x_step: float = 10.
-        self._grid_y_step: float = 10.
+        self._grid_x_step: float = 1.0
+        self._grid_y_step: float = 1.0
 
         self._grid_line_width: float = 0.01
 

@@ -9,8 +9,8 @@ class CircBuffer:
         return (index + self._indent) % self.capacity
 
     def __init__(self, cap: int):
-        self._indent: int  = 0
-        self._n_items: int  = 0
+        self._indent: int = 0
+        self._n_items: int = 0
         self._values: List[float] = [0.0 for _ in range(cap)]
 
     def __getitem__(self, index: int):

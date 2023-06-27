@@ -1,7 +1,7 @@
 from Utilities import Device, DeviceMessage, RUNNING_MODE_MESSAGE, BEGIN_MODE_MESSAGE
 from Utilities.Geometry import Vector2
 from Motion.motor_controller import MotorController
-from Utilities.device import DISCARD_MODE_MESSAGE
+from Utilities.Device.device import DISCARD_MODE_MESSAGE
 from typing import List, Tuple
 
 MANUAL_MODE = 7

@@ -1,3 +1,4 @@
+from .common import NUMERICAL_FORMAT_4F as _4F, NUMERICAL_ACCURACY
 from collections import namedtuple
 import math
 
@@ -8,11 +9,11 @@ class Vector2(namedtuple('Vector2', 'x, y')):
     """
     __slots__ = ()
 
-    def __new__(cls, x=0.0, y=0.0, z=0.0):
+    def __new__(cls, x: float = 0.0, y: float = 0.0):
         return super().__new__(cls, float(x), float(y))
 
     def __str__(self):
-        return f"{{\"x\": {self.x}, \"y\": {self.y}}}"
+        return f"{{\"x\": {self.x:{_4F}}, \"y\": {self.y:{_4F}}}}"
 
     def __neg__(self):
         return Vector2(*(val for val in self))
@@ -81,8 +82,11 @@ class Vector2(namedtuple('Vector2', 'x, y')):
         return math.sqrt(self.magnitude_sqr())
 
     def normalized(self):
-        n = 1.0 / self.magnitude()
-        return Vector2(*(x * n for x in self))
+        try:
+            n = 1.0 / self.magnitude()
+            return Vector2(*(x * n for x in self))
+        except ZeroDivisionError as _:
+            return Vector2()
 
     @staticmethod
     def dot(a, b) -> float:
@@ -116,6 +120,16 @@ class Vector2(namedtuple('Vector2', 'x, y')):
         sign /= math.sqrt(dx * dx + dy * dy)
         return cls(dx * sign, dy * sign)
 
+    @staticmethod
+    def overlay(a1, a2, b1, b2):
+        da_db = abs(a2 - a1) + abs(b2 - b1)
+        dc = abs((a1 + a2) - (b2 + b1))
+        if dc.x > da_db.x:
+            return False
+        if dc.y > da_db.y:
+            return False
+        return True
+
     @classmethod
     def intersect_lines(cls, pt1, pt2, pt3, pt4):
         """
@@ -130,7 +144,9 @@ class Vector2(namedtuple('Vector2', 'x, y')):
         da = cls(pt2.x - pt1.x, pt2.y - pt1.y)
         db = cls(pt4.x - pt3.x, pt4.y - pt3.y)
         det = Vector2.cross(da, db)
-        if abs(det) < 1e-9:
+        if abs(det) < 1e-5:
+            # if Vector2.overlay(pt1, pt2, pt3, pt4):
+            #     return sum((pt1, pt2, pt3, pt4)) * 0.25
             return None
         det = 1.0 / det
         x = Vector2.cross(pt1, da)

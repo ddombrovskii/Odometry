@@ -1,3 +1,4 @@
+from .common import NUMERICAL_FORMAT_4F as _4F
 from collections import namedtuple
 import math
 
@@ -8,11 +9,11 @@ class Vector3(namedtuple('Vector3', 'x, y, z')):
     """
     __slots__ = ()
 
-    def __new__(cls, x=0.0, y=0.0, z=0.0):
+    def __new__(cls, x: float = 0.0, y: float = 0.0, z: float = 0.0):
         return super().__new__(cls, float(x), float(y), float(z))
 
     def __str__(self):
-        return f"{{\"x\": {self.x}, \"y\": {self.y}, \"z\": {self.z}}}"
+        return f"{{\"x\": {self.x:{_4F}}, \"y\": {self.y:{_4F}}, \"z\": {self.z:{_4F}}}}"
 
     def __neg__(self):
         return Vector3(*(val for val in self))
@@ -81,8 +82,11 @@ class Vector3(namedtuple('Vector3', 'x, y, z')):
         return math.sqrt(self.magnitude_sqr())
 
     def normalized(self):
-        n = 1.0 / self.magnitude()
-        return Vector3(*(x * n for x in self))
+        try:
+            n = 1.0 / self.magnitude()
+            return Vector3(*(x * n for x in self))
+        except ZeroDivisionError as _:
+            return Vector3()
 
     @staticmethod
     def dot(a, b) -> float:

@@ -1,5 +1,5 @@
 # from accelerometer_core.Utilities.vector3 import Vector3
-
+from .common import NUMERICAL_FORMAT_4F as _4F, DEG_TO_RAD, NUMERICAL_ACCURACY
 from collections import namedtuple
 from .vector3 import Vector3
 from typing import Tuple
@@ -38,7 +38,7 @@ class Matrix3(namedtuple('Matrix3', 'm00, m01, m02,'
         cos_a = math.cos(angle)
         sin_a = math.sin(angle)
         if not angle_in_rad:
-            angle *= (math.pi / 180.0)
+            angle *= DEG_TO_RAD
         return cls(1.0, 0.0, 0.0,
                    0.0, cos_a, -sin_a,
                    0.0, sin_a, cos_a)
@@ -46,7 +46,7 @@ class Matrix3(namedtuple('Matrix3', 'm00, m01, m02,'
     @classmethod
     def rotate_y(cls, angle: float, angle_in_rad: bool = True):
         if not angle_in_rad:
-            angle *= (math.pi / 180.0)
+            angle *= DEG_TO_RAD
         cos_a = math.cos(angle)
         sin_a = math.sin(angle)
         return cls(cos_a, 0.0, sin_a,
@@ -56,7 +56,7 @@ class Matrix3(namedtuple('Matrix3', 'm00, m01, m02,'
     @classmethod
     def rotate_z(cls, angle: float, angle_in_rad: bool = True):
         if not angle_in_rad:
-            angle *= (math.pi / 180.0)
+            angle *= DEG_TO_RAD
         cos_a = math.cos(angle)
         sin_a = math.sin(angle)
         return cls(cos_a, -sin_a, 0.0,
@@ -106,10 +106,10 @@ class Matrix3(namedtuple('Matrix3', 'm00, m01, m02,'
         """
         :return: углы поворота по осям
         """
-        if math.fabs(self.m20 + 1) < 1e-6:
+        if math.fabs(self.m20 + 1) < NUMERICAL_ACCURACY:
             return Vector3(0.0, math.pi * 0.5, math.atan2(self.m01, self.m02))
 
-        if math.fabs(self.m20 - 1) < 1e-6:
+        if math.fabs(self.m20 - 1) < NUMERICAL_ACCURACY:
             return Vector3(0.0, -math.pi * 0.5, math.atan2(-self.m01, -self.m02))
 
         x1 = -math.asin(self.m20)
@@ -150,7 +150,7 @@ class Matrix3(namedtuple('Matrix3', 'm00, m01, m02,'
         det: float = (self.m00 * (self.m11 * self.m22 - self.m21 * self.m12) -
                       self.m01 * (self.m10 * self.m22 - self.m12 * self.m20) +
                       self.m02 * (self.m10 * self.m21 - self.m11 * self.m20))
-        if abs(det) < 1e-12:
+        if abs(det) < NUMERICAL_ACCURACY:
             raise ArithmeticError("Mat3 :: singular matrix")
         det = 1.0 / det
 
@@ -165,9 +165,9 @@ class Matrix3(namedtuple('Matrix3', 'm00, m01, m02,'
                        (self.m00 * self.m11 - self.m10 * self.m01) * det)
 
     def __str__(self) -> str:
-        return f"{{\n\t\"m00\": {self.m00:20}, \"m01\": {self.m01:20}, \"m02\": {self.m02:20},\n" \
-               f"\t\"m10\": {self.m10:20}, \"m11\": {self.m11:20}, \"m12\": {self.m12:20},\n" \
-               f"\t\"m20\": {self.m20:20}, \"m21\": {self.m21:20}, \"m22\": {self.m22:20}\n}}\n"
+        return f"{{\n\t\"m00\": {self.m00:{_4F}}, \"m01\": {self.m01:{_4F}}, \"m02\": {self.m02:{_4F}},\n" \
+               f"\t\"m10\": {self.m10:{_4F}}, \"m11\": {self.m11:{_4F}}, \"m12\": {self.m12:{_4F}},\n" \
+               f"\t\"m20\": {self.m20:{_4F}}, \"m21\": {self.m21:{_4F}}, \"m22\": {self.m22:{_4F}}\n}}\n"
 
     def __neg__(self):
         return Matrix3(*(-val for val in self))

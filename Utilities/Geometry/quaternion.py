@@ -1,6 +1,4 @@
-# from accelerometer_core.Utilities.matrix4 import Matrix4
-# from accelerometer_core.Utilities.vector3 import Vector3
-
+from .common import NUMERICAL_FORMAT_4F as _4F
 from collections import namedtuple
 from .matrix4 import Matrix4
 from .vector3 import Vector3
@@ -13,7 +11,7 @@ class Quaternion(namedtuple('Quaternion', 'ew, ex, ey, ez')):
     """
     __slots__ = ()
 
-    def __new__(cls, ew=0.0, ex=0.0, ey=0.0, ez=0.0):
+    def __new__(cls, ew: float = 0.0, ex: float = 0.0, ey: float = 0.0, ez: float = 0.0):
         return super().__new__(cls, float(ew), float(ex), float(ey), float(ez))
 
     def conj(self):
@@ -26,19 +24,28 @@ class Quaternion(namedtuple('Quaternion', 'ew, ex, ey, ez')):
         return math.sqrt(self.magnitude_sqr())
 
     def normalized(self):
-        n2 = 1.0 / self.magnitude()
-        return Quaternion(*(x * n2 for x in self))
+        try:
+            n2 = 1.0 / self.magnitude()
+            return Quaternion(*(x * n2 for x in self))
+        except ZeroDivisionError as _:
+            return Quaternion()
 
     def reciprocal(self):
-        n2 = 1.0 / self.magnitude_sqr()
-        return Quaternion(*(x * n2 for x in self.conj()))
+        try:
+            n2 = 1.0 / self.magnitude_sqr()
+            return Quaternion(*(x * n2 for x in self.conj()))
+        except ZeroDivisionError as _:
+            return Quaternion()
 
     def invert(self):
-        n2 = 1.0 / self.magnitude()
-        return Quaternion(*(x * n2 for x in self.conj()))
+        try:
+            n2 = 1.0 / self.magnitude()
+            return Quaternion(*(x * n2 for x in self.conj()))
+        except ZeroDivisionError as _:
+            return Quaternion()
 
     def __str__(self):
-        return f"{{\"ew\": {self.ew}, \"ex\": {self.ex}, \"ey\": {self.ey}, \"ez\": {self.ez}}}"
+        return f"{{\"ew\": {self.ew:{_4F}}, \"ex\": {self.ex:{_4F}}, \"ey\": {self.ey:{_4F}}, \"ez\": {self.ez:{_4F}}}}"
 
     def __neg__(self):
         return Quaternion(-self.ew, -self.ex, -self.ey, -self.ez)
@@ -166,8 +173,11 @@ class Quaternion(namedtuple('Quaternion', 'ew, ex, ey, ez')):
         qx = math.copysign(qx, rm.m21 - rm.m12)
         qy = math.copysign(qy, rm.m02 - rm.m20)
         qz = math.copysign(qz, rm.m10 - rm.m01)
-        norm = 1.0 / math.sqrt(sum(v ** 2 for v in (qw, qx, qy, qz)))
-        return cls(qw * norm, qx * norm, qy * norm, qz * norm)
+        try:
+            norm = 1.0 / math.sqrt(sum(v ** 2 for v in (qw, qx, qy, qz)))
+            return cls(qw * norm, qx * norm, qy * norm, qz * norm)
+        except ZeroDivisionError as _:
+            return cls()
 
 
 if __name__ == "__main__":

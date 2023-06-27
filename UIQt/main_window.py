@@ -1,143 +1,129 @@
-from PyQt5 import uic  # если пайчарм подсвечивает ошибку, то это ОК, просто баг пайчарма
-from PyQt5.QtWidgets import QMainWindow, QApplication, QLabel, QPushButton, QVBoxLayout, \
-    QFileDialog, QTabWidget
-from PyQt5.QtCore import Qt, QTimer
-from PyQt5.QtGui import QPixmap, QMouseEvent, QPainter, QPen, QColor, QImage, QPaintEngine
-import sys
-from PyQt5.QtGui import QCloseEvent
+from PyQt5.QtWidgets import QMainWindow, QApplication, QPushButton, QVBoxLayout, QFileDialog, QTabWidget
 
+from UIQt.Scripts.Functionality.mouse_view_contoller import MouseViewController
+from UIQt.Scripts.Functionality.path_create_behaviour import PathCreateBehaviour
+from UIQt.Scripts.map_renderers import WeightsMapRenderer
 from UIQt.scene_viewer_widget import SceneViewerWidget
+from Utilities.Geometry import Vector2
 from point_widget import PointWidget
+from PyQt5.QtGui import QCloseEvent
+from PyQt5.QtCore import Qt, QTimer
+from serial import SerialException
+from typing import List
+from PyQt5 import uic  # если пайчарм подсвечивает ошибку, то это ОК, просто баг пайчарма
+import serial
+import sys
+import os
+UART_START_MESSAGE = b'$#'
+UART_END_MESSAGE = b'#$'
+
+
+def send_to_uart(data: List[Vector2], port="COM5"):
+    try:
+        serial_port = serial.Serial(port, baudrate=115200, timeout=1, bytesize=8, stopbits=serial.STOPBITS_ONE)
+        serial_port.write(UART_START_MESSAGE)
+        data = bytes("|".join(f"{v.x:.3f},{v.y:.3f}" for v in data), "utf-8")
+        serial_port.write(data)
+        serial_port.write(UART_END_MESSAGE)
+    except SerialException as ex:
+        print(ex.args)
 
 
 class MainWindowUI(QMainWindow):
     def __init__(self):
         super(MainWindowUI, self).__init__()
         uic.loadUi("./UI/MainWindow.ui", self)
+        self._gl_widget: SceneViewerWidget | None = None
+        self._way_points: List[Vector2] = []
+        self._way_points_widgets: List[PointWidget] = []
 
-        self.points_count: int = 0
-        self.start_point: PointWidget = None
-        self.finish_point: PointWidget = None
+        self._init_layouts()
+        self._init_buttons()
+        self._setup_update_rate()
+        self.closeEvent(QCloseEvent())
+        self._path_builder: PathCreateBehaviour | None = None
 
+    def _start_movement(self):
+        if self._path_builder is None:
+            return
+        if len(self._path_builder.path_sections) == 0:
+            return
+        path = self._path_builder.path_sections[-1]
+        send_to_uart(path)
+
+    def _init_layouts(self):
         # left tab
-        self.leftTabWidget: QTabWidget = self.findChild(QTabWidget, "leftTabWidget")
-        self.leftTabWidget.setCurrentIndex(0)  # делает вкладку "точки" активным
+        leftTabWidget: QTabWidget = self.findChild(QTabWidget, "leftTabWidget")
+        leftTabWidget.setCurrentIndex(0)  # делает вкладку "точки" активным
 
         # left tab (точки)
         self.points_layout: QVBoxLayout = self.findChild(QVBoxLayout, "pointsVLayout")
         self.points_layout.setAlignment(Qt.AlignTop)  # устанавливаю добавление точек на верх списка
 
-        # объявление кнопок в табе "карта"
-        self.addStartPointBtn: QPushButton = self.findChild(QPushButton, "addStartPointBtn")
-        self.addStartPointBtn.clicked.connect(self.addStartPoint)
-        self.addFinishPointBtn: QPushButton = self.findChild(QPushButton, "addFinishPointBtn")
-        self.addFinishPointBtn.clicked.connect(self.addFinishPoint)
-        self.startMoveBtn: QPushButton = self.findChild(QPushButton, "startMoveBtn")
-        self.stopMoveBtn: QPushButton = self.findChild(QPushButton, "stopMoveBtn")
-
         # left tab (ракурсы)
-        self.angles_layout: QVBoxLayout = self.findChild(QVBoxLayout, "anglesVLayout")
-        self.angles_layout.setAlignment(Qt.AlignTop)
-
-        self.addAngleBtn: QPushButton = self.findChild(QPushButton, "addAngleBtn")
-        self.deleteAngleBtn: QPushButton = self.findChild(QPushButton, "deleteAngleBtn")
+        angles_layout: QVBoxLayout = self.findChild(QVBoxLayout, "anglesVLayout")
+        angles_layout.setAlignment(Qt.AlignTop)
 
         # right tab
-        # если сделать "карта" открытым табом по умолчанию, то приложуха вылетит
-        self.rightTabWidget: QTabWidget = self.findChild(QTabWidget, "rightTabWidget")
-        self.rightTabWidget.setCurrentIndex(1)
-
-        # right tab (карта)
-        self.mapLabel: QLabel = self.findChild(QLabel, "mapLabel")
-        self.mapLabel.mousePressEvent = self.singleMapClick
-        self.mapLabel.mouseDoubleClickEvent = self.doubleMapClick
-        self.mapPixmap: QPixmap = None
-
-        self.addMapBtn: QPushButton = self.findChild(QPushButton, "addMapBtn")
-        self.addMapBtn.clicked.connect(self.addMap)
-        self.deleteMapBtn: QPushButton = self.findChild(QPushButton, "deleteMapBtn")
-        self.deleteMapBtn.clicked.connect(self.deleteMap)
+        # если сделать "карта" открытым табом по умолчанию, то приложение вылетит
+        rightTabWidget: QTabWidget = self.findChild(QTabWidget, "rightTabWidget")
+        rightTabWidget.setCurrentIndex(0)
 
         # right tab (3D)
-        self.d3Layout = self.findChild(QVBoxLayout, "d3TabVLayout")
-        self.glWidget: SceneViewerWidget = SceneViewerWidget(self)
-        self.d3Layout.insertWidget(0, self.glWidget)
+        mapLayout = self.findChild(QVBoxLayout, "mapTabVLayout")
+        self._gl_widget: SceneViewerWidget = SceneViewerWidget(self)
+        mapLayout.insertWidget(1, self._gl_widget)
 
-        self.addModelBtn: QPushButton = self.findChild(QPushButton, "addModelBtn")
-        self.deleteModelBtn: QPushButton = self.findChild(QPushButton, "deleteModelBtn")
-
+    def _setup_update_rate(self):
         timer_update = QTimer(self)
-        timer_update.setInterval(20)  # period, in milliseconds
-        timer_update.timeout.connect(self.glWidget.updateGL)
+        timer_update.setInterval(15)  # period, in milliseconds
+        timer_update.timeout.connect(self._gl_widget.updateGL)
         timer_update.start()
         timer_paint = QTimer(self)
-        timer_paint.setInterval(33)  # period, in milliseconds
-        timer_paint.timeout.connect(self.glWidget.paintGL)
+        timer_paint.setInterval(15)  # period, in milliseconds
+        timer_paint.timeout.connect(self._gl_widget.paintGL)
         timer_paint.start()
-        self.closeEvent(QCloseEvent())
+
+    def _init_buttons(self):
+        # объявление кнопок в табе "карта"
+        setup_path:       QPushButton = self.findChild(QPushButton, "setupPathPointBtn")
+        start_movement:   QPushButton = self.findChild(QPushButton, "startMoveBtn")
+        stop_movement:    QPushButton = self.findChild(QPushButton, "stopMoveBtn")
+        perspective_prj:  QPushButton = self.findChild(QPushButton, "perspectiveProjectionBtn")
+        orthographic_prj: QPushButton = self.findChild(QPushButton, "orthoProjectionBtn")
+        add_view:         QPushButton = self.findChild(QPushButton, "addAngleBtn")
+        delete_view:      QPushButton = self.findChild(QPushButton, "deleteAngleBtn")
+        load_map:         QPushButton = self.findChild(QPushButton, "loadMapBtn")
+        delete_map:       QPushButton = self.findChild(QPushButton, "deleteModelBtn")
+
+        setup_path.clicked.connect(lambda: self._path_setup_mode())
+        start_movement.clicked.connect(lambda: self._start_movement())
+        orthographic_prj.clicked.connect(lambda: self._gl_widget.switch_to_ortho())
+        perspective_prj.clicked.connect(lambda: self._gl_widget.switch_to_perspective())
+        load_map.clicked.connect(lambda: self.load_map())
+
+    def _path_setup_mode(self):
+        if self._path_builder is None:
+            return
+        self._path_builder.enabled = not self._path_builder.enabled
 
     def closeEvent(self, a0) -> None:
-        self.glWidget.clean_up()
+        self._gl_widget.clean_up()
 
-    def singleMapClick(self, event: QMouseEvent):
-        if self.mapPixmap is None:
+    def load_map(self):
+        directory = QFileDialog.getExistingDirectory(None, 'Open File', './')
+        if directory == '':
             return
-        x, y = self.get_correct_coordinates(event.pos())
-        newPoint = PointWidget(self.points_count)
-        newPoint.setCoordinates(x, y)
-        self.points_layout.addWidget(newPoint)
-        self.points_count += 1
-        if event.button() == Qt.LeftButton:
-            self.start_point = newPoint
-            self.draw_something(x, y, width=15, color='blue')
-        if event.button() == Qt.RightButton:
-            self.finish_point = newPoint
-            self.draw_something(x, y, width=15, color='green')
 
-    def addStartPoint(self):
+        self._gl_widget.append_to_scene(directory)
+        if not os.path.isdir(f"{directory}/Maps/"):
+            os.mkdir(f"{directory}/Maps/")
+        weights_renderer = WeightsMapRenderer(2048, 2048)
+        weights_renderer.render_to_image(self._gl_widget.scene_gl, f"{directory}/Maps/weights_map.png")
 
-        print("add button clicked")
-
-    def addFinishPoint(self):
-        print("add button clicked")
-
-    def addMap(self):
-        file, _ = QFileDialog.getOpenFileName(None, 'Open File', './', "Image (*.png *.jpg *jpeg)")
-        if file != '':
-            self.deleteMap()
-            self.mapPixmap = QPixmap(file)
-            self.update_map_image()
-            print(file)
-
-    def deleteMap(self):
-        self.mapLabel.setPixmap(QPixmap())
-        self.mapPixmap = None
-        self.start_point = None
-        self.finish_point = None
-        for i in reversed(range(self.points_layout.count())):
-            self.points_layout.itemAt(i).widget().deleteLater()
-
-    def get_correct_coordinates(self, pos):
-        x = pos.x() * self.mapPixmap.size().width() // self.mapLabel.width()
-        y = pos.y() * self.mapPixmap.size().height() // self.mapLabel.height()
-        return x, y
-
-    def doubleMapClick(self, event: QMouseEvent):
-        pass
-
-    def draw_something(self, x, y, width=15, color='red'):
-        painter = QPainter(self.mapPixmap)
-        pen = QPen()
-        pen.setWidth(width)
-        pen.setColor(QColor(color))
-        painter.setPen(pen)
-        painter.drawPoint(x, y)
-        painter.end()
-        self.update_map_image()
-
-    def update_map_image(self):
-        # update() и repaint() у self.mapLabel работают хуёво (не работают), поэтому постоянно заменяем pixmap
-        self.mapLabel.setPixmap(self.mapPixmap)
+        self._path_builder = PathCreateBehaviour(self._gl_widget.scene_gl, directory, self.points_layout)
+        self._path_builder.enabled = False
+        self._gl_widget.register_behaviour(self._path_builder)
 
 
 if __name__ == "__main__":

@@ -19,16 +19,19 @@ def clear_bit(bytes_: int, bit_: int) -> int:
 
 class BitSet32:
 
-    __empty_state: int = 0
-    __full_state:  int  = 4294967295
+    _empty_state: int = 0
+    _full_state:  int = 4294967295
 
-    __slots__ = "__state"
+    __slots__ = "_state"
 
     def __init__(self, value: int = 0):
-        self.__state: int = value
+        self._state: int = value
 
+    def __repr__(self):
+        return f"{{\"bits\": \"0x{''.join(str(bit) for bit in self.bits)}\"}}"
+        
     def __str__(self):
-        return "".join(str(bit) for bit in self.bits)
+        return str(self._state)
 
     @property
     def bits(self):
@@ -40,38 +43,38 @@ class BitSet32:
 
     @property
     def state(self) -> int:
-        return self.__state
+        return self._state
 
     @property
     def is_empty(self) -> bool:
-        return self.__state == BitSet32.__empty_state
+        return self._state == BitSet32._empty_state
 
     @property
     def is_full(self) -> bool:
-        return self.__state == BitSet32.__full_state
+        return self._state == BitSet32._full_state
 
     def is_bit_set(self, bit_: int):
-        return is_bit_set(self.__state, bit_)
+        return is_bit_set(self._state, bit_)
 
     def set_bit(self, bit_: int):
-        self.__state = set_bit(self.__state, bit_)
+        self._state = set_bit(self._state, bit_)
         return self
 
     def inverse_bit(self, bit_: int):
-        self.__state = inverse_bit(self.__state, bit_)
+        self._state = inverse_bit(self._state, bit_)
         return self
 
     def clear_bit(self, bit_: int):
-        self.__state = clear_bit(self.__state, bit_)
+        self._state = clear_bit(self._state, bit_)
         return self
 
     def clear(self):
-        self.__state = BitSet32.__empty_state
+        self._state = BitSet32._empty_state
         return self
 
     def inverse(self):
         for i in range(32):
-            self.__state = inverse_bit(self.__state, i)
+            self._state = inverse_bit(self._state, i)
         return self
 
 

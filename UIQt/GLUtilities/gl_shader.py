@@ -205,19 +205,19 @@ class ShaderGL:
     def __init__(self):
         # todo name
         self._name: str = ""
-        self._program_id = 0
-        self._vert_id = 0
-        self._frag_id = 0
-        self._vert_src = ""
-        self._frag_src = ""
+        self._program_id: int = 0
+        self._vert_id: int = 0
+        self._frag_id: int = 0
+        self._vert_src: str = ""
+        self._frag_src: str = ""
 
         # uniforms
-        self._shader_uniforms_by_name: dict = {}
-        self._shader_uniforms_by_id: dict = {}
+        self._shader_uniforms_by_name: Dict[str, ShaderUniform] = {}
+        self._shader_uniforms_by_id: Dict[int, ShaderUniform] = {}
 
         # attributes
-        self._shader_attributes_by_name: dict = {}
-        self._shader_attributes_by_id: dict = {}
+        self._shader_attributes_by_name: Dict[str, ShaderAttribute] = {}
+        self._shader_attributes_by_id: Dict[int, ShaderAttribute] = {}
 
         # uniform_blocks
         self._shader_uniform_blocks: dict = {}

@@ -1,6 +1,3 @@
-import math
-import time
-
 from Utilities.Geometry import Vector3, BoundingBox, Transform
 from Utilities.Geometry.voxel import Voxel
 from Utilities.Geometry import Vector2
@@ -60,9 +57,9 @@ class TrisMesh:
     __slots__ = "name", "material", "source", "_vertices", "_normals", "_uvs", "_faces", "_bbox"
 
     def __init__(self):
-        self.name: str = "no name"
+        self.name:     str = "no name"
         self.material: str = "no material"
-        self.source: str = "no source"
+        self.source:   str = "no source"
         self._vertices: List[Vector3] = []
         self._normals:  List[Vector3] = []
         self._uvs:      List[Vector2] = []
@@ -75,10 +72,10 @@ class TrisMesh:
                f"\t\"name\"     :\"{self.name}\",\n" \
                f"\t\"unique_id\":{self.unique_id},\n" \
                f"\t\"bounds\"   :\n{self._bbox},\n" \
-               f"\t\"vertices\" :\n\t[\n\t\t{new_l.join(str(v) for v in self._vertices)}\n\t],\n" \
-               f"\t\"normals\"  :\n\t[\n\t\t{new_l.join(str(v) for v in self._normals)}\n\t],\n" \
-               f"\t\"uvs\"      :\n\t[\n\t\t{new_l.join(str(v) for v in self._uvs)}\n\t],\n" \
-               f"\t\"faces\"    :\n\t[\n\t\t{new_l.join(str(v) for v in self._faces)}\n\t]\n" \
+               f"\t\"vertices\" :\n\t[\n\t\t{new_l.join(str(pi) for pi in self._vertices)}\n\t],\n" \
+               f"\t\"normals\"  :\n\t[\n\t\t{new_l.join(str(pi) for pi in self._normals)}\n\t],\n" \
+               f"\t\"uvs\"      :\n\t[\n\t\t{new_l.join(str(pi) for pi in self._uvs)}\n\t],\n" \
+               f"\t\"faces\"    :\n\t[\n\t\t{new_l.join(str(pi) for pi in self._faces)}\n\t]\n" \
                f"}}"
 
     @property
@@ -167,43 +164,34 @@ class TrisMesh:
     def set_vertex(self, i_id: int, v: Union[Vector3, Tuple[float, float, float]]) -> None:
         if i_id < 0:
             return
-
         if i_id >= self.vertices_count:
             return
-
         if isinstance(v, tuple):
             _v = Vector3(v[0], v[1], v[2])
             self._bbox.encapsulate(_v)
             self._vertices[i_id] = _v
             return
-
         self._bbox.encapsulate(v)
         self._vertices[i_id] = v
 
     def set_normal(self, i_id: int, v: Union[Vector3, Tuple[float, float, float]]) -> None:
         if i_id < 0:
             return
-
         if i_id >= self.normals_count:
             return
-
         if isinstance(v, tuple):
             self._normals[i_id] = Vector3(v[0], v[1], v[2])
             return
-
         self._normals[i_id] = v
 
     def set_uv(self, i_id: int, v: Union[Vector2, Tuple[float, float]]) -> None:
         if i_id < 0:
             return
-
         if i_id >= self.uvs_count:
             return
-
         if isinstance(v, tuple):
             self._uvs[i_id] = Vector2(v[0], v[1])
             return
-
         self._uvs[i_id] = v
 
     def append_vertex(self, v: Union[Vector3, Tuple[float, float, float]]) -> None:
@@ -472,11 +460,11 @@ def poly_strip(points: List[Vector2], strip_width: float = 0.5) -> TrisMesh:
 
     u_length = 0.0
     for i in range(len(points)-1):
-        u_length += (points[i] -  points[i+1]).magnitude()
+        u_length += (points[i] - points[i+1]).magnitude()
 
     if n_pts == 1:
         t = Transform()
-        t.origin = Vector3(points[0].x, 0.0, points[0].z)
+        t.origin = Vector3(points[0].x, 0.0, points[0].y)
         return create_plane(strip_width, strip_width, 1, 1, t)
 
     mesh = TrisMesh()
@@ -532,24 +520,24 @@ def poly_strip(points: List[Vector2], strip_width: float = 0.5) -> TrisMesh:
     return mesh
 
 
-if __name__ == "__main__":
-    n = 257
-    dt = 1.0 / (n - 1)
-    dpi = dt * math.pi * 2.0
-    r = 2.5
-    line = [Vector2(math.sin(i * dpi) * r * (1.0 + 0.25 * math.cos(i * dpi * 4)),
-                    math.cos(i * dpi) * r * (1.0 + 0.25 * math.cos(i * dpi * 4))) for i in range(n)]
-    pl = poly_strip(line)
-    write_obj_mesh(pl, "strip.obj")
-    t = time.perf_counter()
-    mesh = read_obj_mesh('../../big_map.obj')
-    print(f"obj file read elapsed : {time.perf_counter() - t}")
-
-    t = time.perf_counter()
-    v = mesh[-1].vertex_array_data
-    print(f"vertex_array_data elapsed : {time.perf_counter() - t}")
-
-    t = time.perf_counter()
-    i = mesh[-1].index_array_data
-    print(f"index_array_data elapsed : {time.perf_counter() - t}")
+# if __name__ == "__main__":
+#     n = 257
+#     dt = 1.0 / (n - 1)
+#     dpi = dt * math.pi * 2.0
+#     r = 2.5
+#     line = [Vector2(math.sin(i * dpi) * r * (1.0 + 0.25 * math.cos(i * dpi * 4)),
+#                     math.cos(i * dpi) * r * (1.0 + 0.25 * math.cos(i * dpi * 4))) for i in range(n)]
+#     pl = poly_strip(line)
+#     write_obj_mesh(pl, "strip.obj")
+#     t = time.perf_counter()
+#     mesh = read_obj_mesh('../../big_map.obj')
+#     print(f"obj file read elapsed : {time.perf_counter() - t}")
+#
+#     t = time.perf_counter()
+#     v = mesh[-1].vertex_array_data
+#     print(f"vertex_array_data elapsed : {time.perf_counter() - t}")
+#
+#     t = time.perf_counter()
+#     i = mesh[-1].index_array_data
+#     print(f"index_array_data elapsed : {time.perf_counter() - t}")
 

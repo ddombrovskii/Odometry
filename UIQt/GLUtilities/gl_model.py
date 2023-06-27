@@ -1,7 +1,7 @@
-from UIQt.GLUtilities.gl_material import MaterialGL
-from UIQt.GLUtilities.gl_mesh import MeshGL
 from UIQt.GLUtilities.objects_pool import ObjectsPool
 from Utilities.Geometry import Transform, BoundingBox
+from UIQt.GLUtilities.gl_material import MaterialGL
+from UIQt.GLUtilities.gl_mesh import MeshGL
 from UIQt.GLUtilities import gl_globals
 
 
@@ -16,6 +16,7 @@ class ModelGL:
         self._material: MaterialGL = gl_globals.DEFAULT_MATERIAL
         self._transform: Transform = Transform()
         ModelGL.models.register_object(self)
+        self.enable = True
 
     @property
     def bounds_local(self) -> BoundingBox:

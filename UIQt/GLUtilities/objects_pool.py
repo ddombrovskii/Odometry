@@ -1,6 +1,6 @@
 class ObjectsPool:
     def __init__(self):
-        self._bounded_id = -1
+        self._bounded_id: int = -1
         self._objects_by_id = {}
         self._objects_by_name = {}
 

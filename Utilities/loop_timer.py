@@ -9,12 +9,12 @@ class LoopTimer:
         if timeout <= 0.001:
             self.__timeout = 0.001
         else:
-            self.__timeout = timeout
-        self._time_enter: float = 0.0
+            self.__timeout      =  timeout
+        self._time_enter: float =  0.0
         self._time_exit:  float = -1.0
-        self._delta_time: float = 0.0
-        self._total_time: float = 0.0
-        self._loop_done: bool = init_state
+        self._delta_time: float =  0.0
+        self._total_time: float =  0.0
+        self._loop_done:  bool  =  init_state
 
     def __str__(self):
         return f"{{\n" \

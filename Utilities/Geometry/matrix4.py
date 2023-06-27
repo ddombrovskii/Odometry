@@ -1,3 +1,4 @@
+from .common import NUMERICAL_FORMAT_4F as _4F, DEG_TO_RAD, NUMERICAL_ACCURACY
 from collections import namedtuple
 from .vector4 import Vector4
 from .vector3 import Vector3
@@ -45,14 +46,14 @@ class Matrix4(namedtuple('Matrix4', 'm00, m01, m02, m03,'
         :param up: вектор вверх
         :return: матрица взгляда
         """
-        zaxis = (target - eye).normalized()  # The "forward" vector.
-        xaxis = Vector3.cross(up, zaxis).normalized()  # The "right" vector.
-        yaxis = Vector3.cross(zaxis, xaxis)  # The "up" vector.
+        z_axis = (target - eye).normalized()  # The "forward" vector.
+        x_axis = Vector3.cross(up, z_axis).normalized()  # The "right" vector.
+        y_axis = Vector3.cross(z_axis, x_axis)  # The "up" vector.
 
-        return cls(xaxis.x, yaxis.x, zaxis.x, 0.0,
-                   xaxis.y, yaxis.y, zaxis.y, 0.0,
-                   xaxis.z, yaxis.z, zaxis.z, 0.0,
-                   Vector3.dot(xaxis, -eye), Vector3.dot(yaxis, -eye), Vector3.dot(zaxis, -eye), 1.0)
+        return cls(x_axis.x, y_axis.x, z_axis.x, 0.0,
+                   x_axis.y, y_axis.y, z_axis.y, 0.0,
+                   x_axis.z, y_axis.z, z_axis.z, 0.0,
+                   Vector3.dot(x_axis, -eye), Vector3.dot(y_axis, -eye), Vector3.dot(z_axis, -eye), 1.0)
 
     @classmethod
     def transform_look_at(cls, target: Vector3, eye: Vector3, up: Vector3 = Vector3(0, 1, 0)):
@@ -62,13 +63,13 @@ class Matrix4(namedtuple('Matrix4', 'm00, m01, m02, m03,'
         :param up: вектор вверх
         :return: матрица взгляда
         """
-        zaxis = (target - eye).normalized()  # The "forward" vector.
-        xaxis = Vector3.cross(up, zaxis).normalized()  # The "right" vector.
-        yaxis = Vector3.cross(xaxis, zaxis)  # The "up" vector.
+        z_axis = (target - eye).normalized()  # The "forward" vector.
+        x_axis = Vector3.cross(up, z_axis).normalized()  # The "right" vector.
+        y_axis = Vector3.cross(x_axis, z_axis)  # The "up" vector.
 
-        return cls(xaxis.x, yaxis.x, zaxis.x, eye.x,
-                   xaxis.y, yaxis.y, zaxis.y, eye.y,
-                   xaxis.z, yaxis.z, zaxis.z, eye.z,
+        return cls(x_axis.x, y_axis.x, z_axis.x, eye.x,
+                   x_axis.y, y_axis.y, z_axis.y, eye.y,
+                   x_axis.z, y_axis.z, z_axis.z, eye.z,
                    0.0, 0.0, 0.0, 1.0)
 
     @classmethod
@@ -80,17 +81,17 @@ class Matrix4(namedtuple('Matrix4', 'm00, m01, m02, m03,'
         :param z_far: дальняя плоскость отсечения
         :return: матрица перспективной проекции
         """
-        scale = 1.0 / math.tan(fov * 0.5 * math.pi / 180)
+        scale = max(1.0 / math.tan(fov * 0.5 * math.pi / 180), 0.01)
         #  scale * aspect  # scale the x coordinates of the projected point
         #  scale  # scale the y coordinates of the projected point
         #  z_far / (z_near - z_far)  # used to remap z to [0,1]
         #  z_far * z_near / (z_near - z_far)  # used to remap z [0,1]
         #  -1  # set w = -z
         #  0
-        return cls(scale * aspect, 0.0, 0.0, 0.0,
-                   0.0, scale, 0.0, 0.0,
-                   0.0, 0.0, z_far / (z_near - z_far), -1.0,
-                   0.0, 0.0, z_far * z_near / (z_near - z_far), 0.0)
+        return cls(scale * aspect, 0.0,   0.0,                               0.0,
+                   0.0,            scale, 0.0,                               0.0,
+                   0.0,            0.0,   z_far / (z_near - z_far),         -1.0,
+                   0.0,            0.0,   z_far * z_near / (z_near - z_far), 0.0)
 
     @classmethod
     def build_ortho_projection_matrix(cls,
@@ -107,7 +108,7 @@ class Matrix4(namedtuple('Matrix4', 'm00, m01, m02, m03,'
         cos_a = math.cos(angle)
         sin_a = math.sin(angle)
         if not angle_in_rad:
-            angle *= (math.pi / 180.0)
+            angle *= DEG_TO_RAD
         return cls(1.0, 0.0, 0.0, 0.0,
                    0.0, cos_a, -sin_a, 0.0,
                    0.0, sin_a, cos_a, 0.0,
@@ -116,7 +117,7 @@ class Matrix4(namedtuple('Matrix4', 'm00, m01, m02, m03,'
     @classmethod
     def rotate_y(cls, angle: float, angle_in_rad: bool = True):
         if not angle_in_rad:
-            angle *= (math.pi / 180.0)
+            angle *= DEG_TO_RAD
         cos_a = math.cos(angle)
         sin_a = math.sin(angle)
         return cls(cos_a, 0.0, sin_a, 0.0,
@@ -127,7 +128,7 @@ class Matrix4(namedtuple('Matrix4', 'm00, m01, m02, m03,'
     @classmethod
     def rotate_z(cls, angle: float, angle_in_rad: bool = True):
         if not angle_in_rad:
-            angle *= (math.pi / 180.0)
+            angle *= DEG_TO_RAD
         cos_a = math.cos(angle)
         sin_a = math.sin(angle)
         return cls(cos_a, -sin_a, 0.0, 0.0,
@@ -187,10 +188,10 @@ class Matrix4(namedtuple('Matrix4', 'm00, m01, m02, m03,'
         """
         :return: углы поворота по осям
         """
-        if math.fabs(self.m20 + 1) < 1e-6:
+        if math.fabs(self.m20 + 1) < NUMERICAL_ACCURACY:
             return Vector3(0.0, math.pi * 0.5, math.atan2(self.m01, self.m02))
 
-        if math.fabs(self.m20 - 1) < 1e-6:
+        if math.fabs(self.m20 - 1) < NUMERICAL_ACCURACY:
             return Vector3(0.0, -math.pi * 0.5, math.atan2(-self.m01, -self.m02))
 
         x1 = -math.asin(self.m20)
@@ -257,7 +258,7 @@ class Matrix4(namedtuple('Matrix4', 'm00, m01, m02, m03,'
                      + self.m02 * (self.m10 * a1323 - self.m11 * a0323 + self.m13 * a0123) \
                      - self.m03 * (self.m10 * a1223 - self.m11 * a0223 + self.m12 * a0123)
 
-        if abs(det) < 1e-12:
+        if abs(det) < NUMERICAL_ACCURACY:
             raise ArithmeticError("Matrix4:: Invert :: singular matrix")
 
         det = 1.0 / det
@@ -281,10 +282,10 @@ class Matrix4(namedtuple('Matrix4', 'm00, m01, m02, m03,'
 
     def __str__(self):
         return "" \
-               f"{{\n\t\"m00\": {self.m00:20}, \"m01\": {self.m01:20}, \"m02\": {self.m02:20}, \"m03\": {self.m03:20},\n" \
-               f"\t\"m10\": {self.m10:20}, \"m11\": {self.m11:20}, \"m12\": {self.m12:20}, \"m13\": {self.m13:20},\n" \
-               f"\t\"m20\": {self.m20:20}, \"m21\": {self.m21:20}, \"m22\": {self.m22:20}, \"m23\": {self.m23:20},\n" \
-               f"\t\"m30\": {self.m30:20}, \"m31\": {self.m31:20}, \"m32\": {self.m32:20}, \"m33\": {self.m33:20}\n}}"
+               f"{{\n\t\"m00\": {self.m00:{_4F}}, \"m01\": {self.m01:{_4F}}, \"m02\": {self.m02:{_4F}}, \"m03\": {self.m03:{_4F}},\n" \
+               f"\t\"m10\": {self.m10:{_4F}}, \"m11\": {self.m11:{_4F}}, \"m12\": {self.m12:{_4F}}, \"m13\": {self.m13:{_4F}},\n" \
+               f"\t\"m20\": {self.m20:{_4F}}, \"m21\": {self.m21:{_4F}}, \"m22\": {self.m22:{_4F}}, \"m23\": {self.m23:{_4F}},\n" \
+               f"\t\"m30\": {self.m30:{_4F}}, \"m31\": {self.m31:{_4F}}, \"m32\": {self.m32:{_4F}}, \"m33\": {self.m33:{_4F}}\n}}"
 
     def __neg__(self):
         return Matrix4(*(-val for val in self))

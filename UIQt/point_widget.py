@@ -1,5 +1,5 @@
 from PyQt5 import uic  # если пайчарм подсвечивает ошибку, то это ОК, просто баг пайчарма
-from PyQt5.QtWidgets import QWidget, QGroupBox, QLineEdit, QLabel, QSizePolicy
+from PyQt5.QtWidgets import QWidget, QGroupBox, QLineEdit, QLabel, QSizePolicy, QStyle, QPushButton
 
 
 class PointWidget(QWidget):
@@ -17,7 +17,22 @@ class PointWidget(QWidget):
         self.yLabel: QLineEdit = self.findChild(QLabel, "yLabel")
         self.zLabel: QLineEdit = self.findChild(QLabel, "zLabel")
 
-    def setCoordinates(self, x, y, z=0.):
-        self.xLine.setText(str(float(x)))
-        self.yLine.setText(str(float(y)))
-        self.zLine.setText(str(float(z)))
+        delete_icon_pixmap = self.style().standardIcon(getattr(QStyle, "SP_DockWidgetCloseButton"))
+        self.deleteBtn: QPushButton = self.findChild(QPushButton, "deleteBtn")
+        self.deleteBtn.setIcon(delete_icon_pixmap)
+        self.deleteBtn.clicked.connect(self.delete_clicked)
+        self.delete_callback = None
+
+    def set_coordinates(self, x, y, z):
+        self.xLine.setText(f"{float(x):.3f}")
+        self.yLine.setText(f"{float(y):.3f}")
+        self.zLine.setText(f"{float(z):.3f}")
+
+    def delete_clicked(self):
+        if self.delete_callback is not None:
+            self.delete_callback()
+        self.deleteLater()
+
+    def set_number(self, number: int):
+        self.number = number
+        self.coordBox.setTitle(f"Point {number}")

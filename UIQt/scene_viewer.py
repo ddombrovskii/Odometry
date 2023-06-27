@@ -5,15 +5,15 @@ from PyQt5 import QtCore
 import sys
 
 
-class MainWindow(QWidget):
+class SceneViewer(QWidget):
     def __init__(self):
-        super(MainWindow, self).__init__()  # call the init for the parent class
+        super(SceneViewer, self).__init__()  # call the init for the parent class
         self.resize(1000, 1000)
         self.setWindowTitle('Hello OpenGL App')
         self.glWidget: SceneViewerWidget = SceneViewerWidget(self)
-        mainLayout = QHBoxLayout()
-        mainLayout.addWidget(self.glWidget)
-        self.setLayout(mainLayout)
+        main_layout = QHBoxLayout()
+        main_layout.addWidget(self.glWidget)
+        self.setLayout(main_layout)
         timer_update = QtCore.QTimer(self)
         timer_update.setInterval(30)  # period, in milliseconds
         timer_update.timeout.connect(self.glWidget.updateGL)
@@ -30,6 +30,6 @@ class MainWindow(QWidget):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    window = MainWindow()
+    window = SceneViewer()
     window.show()
     sys.exit(app.exec_())

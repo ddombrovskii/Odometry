@@ -1,7 +1,6 @@
-from collections import namedtuple
-
 from UIQt.GLUtilities.gl_decorators import gl_error_catch
 from UIQt.GLUtilities.objects_pool import ObjectsPool
+from collections import namedtuple
 from typing import Tuple, Dict
 from PIL import Image
 from OpenGL.GL import *
@@ -38,18 +37,20 @@ class FrameBufferAttachment(namedtuple("FrameBufferAttachment", "name, bind_id, 
 
 class FrameBufferGL:
     COLOR_ATTACHMENTS = \
-        {0: GL_COLOR_ATTACHMENT0,
-         1: GL_COLOR_ATTACHMENT1,
-         2: GL_COLOR_ATTACHMENT2,
-         3: GL_COLOR_ATTACHMENT3,
-         4: GL_COLOR_ATTACHMENT4,
-         5: GL_COLOR_ATTACHMENT5,
-         6: GL_COLOR_ATTACHMENT6,
-         7: GL_COLOR_ATTACHMENT7,
-         8: GL_COLOR_ATTACHMENT8,
-         9: GL_COLOR_ATTACHMENT9,
-         10: GL_COLOR_ATTACHMENT10,
-         11: GL_COLOR_ATTACHMENT11}
+        {
+            0: GL_COLOR_ATTACHMENT0,
+            1: GL_COLOR_ATTACHMENT1,
+            2: GL_COLOR_ATTACHMENT2,
+            3: GL_COLOR_ATTACHMENT3,
+            4: GL_COLOR_ATTACHMENT4,
+            5: GL_COLOR_ATTACHMENT5,
+            6: GL_COLOR_ATTACHMENT6,
+            7: GL_COLOR_ATTACHMENT7,
+            8: GL_COLOR_ATTACHMENT8,
+            9: GL_COLOR_ATTACHMENT9,
+            10: GL_COLOR_ATTACHMENT10,
+            11: GL_COLOR_ATTACHMENT11
+        }
 
     PIXEL_FORMAT_TO_LAYOUT =\
         {
@@ -60,9 +61,16 @@ class FrameBufferGL:
         }
     frame_buffers = ObjectsPool()
 
+    MAIN_SCREEN_FRAME_BUFFER = "main-screen-frame-buffer"
+
+    @staticmethod
+    def get_main_frame_buffer():
+        return FrameBufferGL.frame_buffers.get_by_name(FrameBufferGL.MAIN_SCREEN_FRAME_BUFFER)
+
     @staticmethod
     def _create_texture(in_format_: int, w_: int, h_: int, format_: int, type_: int, filtering_: int,
                         _sampling: int = 0) -> int:
+
         tex_id = glGenTextures(1)
 
         if _sampling != 0:
@@ -131,9 +139,11 @@ class FrameBufferGL:
             return False
         return True
 
-    def __init__(self, w=800, h=600):
+    def __init__(self, w: int = 800, h: int = 600):
         assert isinstance(w, int)
         assert isinstance(h, int)
+        h = max(h, 10)
+        w = max(w, 10)
         self._fbo: int = glGenFramebuffers(1)
         glClearColor(125 / 255, 135 / 255, 145 / 255, 1)
         glEnable(GL_DEPTH_TEST)
@@ -229,6 +239,10 @@ class FrameBufferGL:
     @property
     def height(self) -> int:
         return self._height
+
+    @property
+    def shape(self) -> Tuple[int, int]:
+        return self.width, self.height
 
     @property
     def bind_id(self) -> int:
@@ -436,7 +450,11 @@ class FrameBufferGL:
             return glReadPixels(x0, y0, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT)
 
     @gl_error_catch
-    def grab_snap_shot(self, text_attachment: str = "attachment_0"):  # , path: str = "snap_shot.bmp"):
+    def read_pixel(self,  x0: int, y0: int, text_attachment: str = "attachment_0"):
+        return self._read_buffer_attachment(text_attachment, x0,  y0, x0 + 1, y0 + 1)
+
+    @gl_error_catch
+    def grab_snap_shot(self, text_attachment: str = "attachment_0"):
         pixels = self._read_buffer_attachment(text_attachment, 0, 0, self.width, self.height)
         if pixels is None:
             return
@@ -457,7 +475,6 @@ class FrameBufferGL:
     @gl_error_catch
     def grab_depth_snap_shot(self, path: str = "depth_snap_shot.bmp"):
         pixels = self._read_buffer_depth_attachment(0, 0, self.width, self.height)
-        # bpp = pixels
         depth = Image.frombytes('RGB', (self.width, self.height), pixels)
         depth = depth.transpose(Image.FLIP_TOP_BOTTOM)
         depth.save(path)

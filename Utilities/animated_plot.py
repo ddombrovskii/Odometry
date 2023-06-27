@@ -37,9 +37,9 @@ class AnimatedPlot:
     """
     def __init__(self, n_lines: int = 3, fig_title: str = "figure"):
         plt.ion()
-        self._buffer_cap = 128
         self._figure, self._ax = plt.subplots()
         self._figure.suptitle(fig_title, fontsize=16)
+        self._buffer_cap: int = 128
         cmap = _color_map_lin(n_lines)
         self._lines = [self._ax.plot([], [], color=f"{c}")[0] for c in cmap]
         self._ax.legend([f'$line_{i}$' for i in range(n_lines)], loc='upper left')
@@ -55,10 +55,8 @@ class AnimatedPlot:
         self._timer.timeout = 12.5 / self._buffer_cap
 
     def __call__(self, src: Callable[..., Tuple[float, ...]] = None):
-
         if src is not None:
             self._src = src
-
         while plt.fignum_exists(self._figure.number):
             with self._timer:
                 self._time += self._timer.timeout

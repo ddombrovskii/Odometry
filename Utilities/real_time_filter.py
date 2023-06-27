@@ -1,5 +1,3 @@
-# from accelerometer_core.Utilities.circ_buffer import CircBuffer
-# from circ_buffer import CircBuffer
 from .circ_buffer import CircBuffer
 from typing import Callable
 import math
@@ -21,11 +19,11 @@ def _clamp(val: float, min_: float, max_: float) -> float:
 
 class RealTimeFilter:
     def __init__(self):
-        self.__mode = 0
+        self._mode: int = 0
         # 0 running average
         # 1 median
         # 2 kalman
-        self._window_size: int = 128
+        self._window_size:   int = 128
         self._window_values: CircBuffer = CircBuffer(self.window_size)
         self._prev_value:    float = 0.0
         self._curr_value:    float = 0.0

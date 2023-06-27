@@ -7,7 +7,7 @@ from typing import Dict
 
 class MaterialProperty:
 
-    def __init__(self, prop_name, prop_type):
+    def __init__(self, prop_name: str, prop_type: int):
         self._prop_name = prop_name
         self._prop_type = prop_type
         self._prop_value = None
@@ -86,7 +86,7 @@ class MaterialGL:
         self._bind_id = id(self)
         self._material_properties: Dict[str, MaterialProperty] = {}
         self._material_textures: Dict[int, TextureGL] = {}
-        self._shader: ShaderGL = None
+        self._shader: ShaderGL | None = None
         if shader is None:
             self._name = f"material_{self.bind_id}"
             MaterialGL.materials.register_object(self)
@@ -141,7 +141,7 @@ class MaterialGL:
                     p_type = int(param["type"])
                     if p_type not in ShaderGL.UniformTypes:
                         continue
-                except ValueError as er:
+                except ValueError as _:
                     print(f"MaterialGL :: setting_from_json :: unknown param type {param['type']}")
                     continue
 
@@ -176,7 +176,7 @@ class MaterialGL:
                         location = self._material_properties[p_name].prop_value = int(param["args"][0])
                         self._material_textures.update({location: TextureGL.textures.get_by_name(p_name)})
                         continue
-                except ValueError as er:
+                except ValueError as _:
                     print(f"MaterialGL :: setting_from_json :: args parsing error {param['args']}\n"
                           f"Default value for {p_type} will be assigned...")
 
@@ -191,13 +191,11 @@ class MaterialGL:
 
                 p_name = texture["name"]
 
-                # if p_name not in self._:
-                #     continue
                 try:
                     p_type = int(texture["type"])
                     if p_type not in ShaderGL.UniformTypes:
                         continue
-                except ValueError as er:
+                except ValueError as _:
                     print(f"MaterialGL :: setting_from_json :: unknown param type {texture['type']}")
                     continue
                 try:
@@ -208,7 +206,7 @@ class MaterialGL:
                             continue
                         self._material_textures.update({location: texture})
                         continue
-                except ValueError as er:
+                except ValueError as _:
                     print(f"MaterialGL :: setting_from_json :: args parsing error {texture['args']}\n"
                           f"Default value for {p_type} will be assigned...")
 

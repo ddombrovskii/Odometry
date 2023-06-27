@@ -10,8 +10,8 @@ from Accelerometer.accelerometer_core.accelerometer_integrator import AccelInteg
 from Accelerometer.accelerometer_core.accelerometer_recording import record_imu_log
 
 from Accelerometer.accelerometer_core.inertial_measurement_unit import IMU, CALIBRATION_MODE
+from Utilities.Device import START_MODE
 from Utilities.Geometry import Vector2
-from Utilities import START_MODE
 import time
 
 UART_START_MESSAGE = b'$#'
@@ -35,7 +35,7 @@ def write_package(serial_port, message: bytes):
 if __name__ == "__main__":
     acc = IMU()
     acc.update()
-    while acc.mode_active(START_MODE) or acc.mode_active(CALIBRATION_MODE):
+    while not acc.is_complete:
         acc.update()
     # acc.use_filtering = True
     # acc.record('record_bno_test.json')  # запись в файл
@@ -46,15 +46,16 @@ if __name__ == "__main__":
     path_list.reverse()
     position = acc.position
     target = path_list.pop()
-    write_package(acc.accelerometer.device, f"{1},{0}".encode())
+    # write_package(acc.accelerometer.device, f"{1},{0}".encode())
     while len(path_list) != 0:
         acc.update()
+        print(acc.accelerometer)
         time.sleep(0.5)
         dist += (acc.position - position).magnitude() + 0.00033
-        print(dist)
+        # print(dist)
         position = acc.position
         if dist >= target.x:
-            write_package(acc.accelerometer.device, f"{1},{int(target.y)}".encode())
+            # write_package(acc.accelerometer.device, f"{1},{int(target.y)}".encode())
             dist = 0.0
             target = path_list.pop()
-    write_package(acc.accelerometer.device, f"{1},{400}".encode())
+    # write_package(acc.accelerometer.device, f"{1},{400}".encode())

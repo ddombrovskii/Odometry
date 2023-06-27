@@ -5,7 +5,6 @@ from Utilities.Geometry.vector3 import Vector3
 from matplotlib import pyplot as plt
 from typing import List
 
-
 CALIBRATION_MODE = 0
 BASIS_COMPUTE_MODE = 1
 INTEGRATE_MODE = 2
@@ -16,25 +15,25 @@ WARM_UP_MODE = 4
 class AccelIntegrator:
     def __init__(self, log_src: str):
         self._log_file = read_accel_log(log_src, order=0)
-        self._time_values:  List[float] = []
-        self._omegas:       List[Vector3] = [Vector3(0.0, 0.0, 0.0)]
-        self._angles:       List[Vector3] = []
-        self._velocities:   List[Vector3] = []  # [Vector3(0.0, 0.0, 0.0)]
-        self._positions:    List[Vector3] = []  # [Vector3(0.0, 0.0, 0.0)]
-        self._accel_basis:  List[Matrix4] = []  # [Matrix4.build_basis(point.acceleration)]
-        self._curr_accel:   Vector3 = Vector3(0.0, 0.0, 0.0)
-        self._prev_accel:   Vector3 = Vector3(0.0, 0.0, 0.0)
-        self._calib_accel:  Vector3 = Vector3(0.0, 0.0, 0.0)
-        self._calib_omega:  Vector3 = Vector3(0.0, 0.0, 0.0)
-        self._accel_bias:   float = 0.095
-        self._trust_t:      float = 0.1
-        self._time:         float = 0.0
+        self._time_values: List[float] = []
+        self._omegas: List[Vector3] = [Vector3(0.0, 0.0, 0.0)]
+        self._angles: List[Vector3] = []
+        self._velocities: List[Vector3] = []  # [Vector3(0.0, 0.0, 0.0)]
+        self._positions: List[Vector3] = []  # [Vector3(0.0, 0.0, 0.0)]
+        self._accel_basis: List[Matrix4] = []  # [Matrix4.build_basis(point.acceleration)]
+        self._curr_accel: Vector3 = Vector3(0.0, 0.0, 0.0)
+        self._prev_accel: Vector3 = Vector3(0.0, 0.0, 0.0)
+        self._calib_accel: Vector3 = Vector3(0.0, 0.0, 0.0)
+        self._calib_omega: Vector3 = Vector3(0.0, 0.0, 0.0)
+        self._accel_bias: float = 0.095
+        self._trust_t: float = 0.1
+        self._time: float = 0.0
         self._warm_up_time: float = 1.0
-        self._calib_time:   float = 1.0
-        self._calib_cntr:   int = 0
-        self._mode:         int = WARM_UP_MODE
-        self._accel_k:      float = 0.05  # значение параметра комплиментарного фильтра для ускорения
-        self._velocity_k:   float = 0.9995  # значение параметра комплиментарного фильтра для ускорения
+        self._calib_time: float = 1.0
+        self._calib_cntr: int = 0
+        self._mode: int = WARM_UP_MODE
+        self._accel_k: float = 0.05  # значение параметра комплиментарного фильтра для ускорения
+        self._velocity_k: float = 0.9995  # значение параметра комплиментарного фильтра для ускорения
         # self._window_vx: List[float] = []
         # self._window_vy: List[float] = []
         # self._window_vz: List[float] = []
@@ -53,7 +52,7 @@ class AccelIntegrator:
         Параметр комплиметарного фильтра для направления ускорения
         """
         self._accel_k = min(max(0.0, value), 1.0)
-        
+
     @property
     def calib_time(self) -> float:
         """
@@ -67,7 +66,7 @@ class AccelIntegrator:
         Время калибровки
         """
         self._calib_time = min(max(0.5, value), 60.0)
-    
+
     @property
     def warm_up_time(self) -> float:
         """
@@ -81,7 +80,7 @@ class AccelIntegrator:
         Время старта
         """
         self._warm_up_time = min(max(0.5, value), 60.0)
-        
+
     @property
     def accel_trust_time(self) -> float:
         """
@@ -97,7 +96,7 @@ class AccelIntegrator:
         обнуляем скорость движения
         """
         self._trust_t = min(max(0.01, value), 10.0)
-        
+
     @property
     def accel_trust_bias(self) -> float:
         """
@@ -113,7 +112,7 @@ class AccelIntegrator:
         обнуляем скорость движения
         """
         self._accel_bias = min(max(0.001, value), 1.0)
-    
+
     @property
     def time_values(self) -> List[float]:
         """
@@ -183,7 +182,7 @@ class AccelIntegrator:
         Калибровочное значение угловой скорости
         """
         return self._calib_omega
-    
+
     def _warm_up(self, point: AccelMeasurement) -> bool:
         """
         Пропускает часть измерений в течении какого-то времени. По завершении включается калибровка
@@ -208,8 +207,8 @@ class AccelIntegrator:
         if self._time < self._calib_time:
             self._calib_accel += point.acceleration
             self._calib_omega += point.angles_velocity
-            self._time        += point.dtime
-            self._calib_cntr  += 1
+            self._time += point.dtime
+            self._calib_cntr += 1
             return True
 
         self._mode = INTEGRATE_MODE
@@ -256,21 +255,22 @@ class AccelIntegrator:
         """
         if self._mode != INTEGRATE_MODE:
             return False
-        dt    = point.dtime
+        dt = point.dtime
         omega = point.angles_velocity
         self._omegas.append(omega)
         self._angles.append(self._angles[-1] + (point.angles_velocity - self._calib_omega) * dt)
         basis = self._accel_basis[-1]
         f = (basis.front + Vector3.cross(omega, basis.front) * dt).normalized()
-        u = (basis.up    + Vector3.cross(omega, basis.up)    * dt).normalized()
+        u = (basis.up + Vector3.cross(omega, basis.up) * dt).normalized()
         #  комплиментарная фильтрация и привязка u к направлению g
         u = (u * (1.0 - self._accel_k) + self._accel_k * self._curr_accel.normalized()).normalized()
         r = Vector3.cross(f, u).normalized()
         f = Vector3.cross(u, r).normalized()
         # получим ускорение в мировой системе координат за вычетом ускорения свободного падения
-        a: Vector3 = Vector3(self._curr_accel.x - (r.x * self._calib_accel.x + u.x * self._calib_accel.y + f.x * self._calib_accel.z),
-                             self._curr_accel.y - (r.y * self._calib_accel.x + u.y * self._calib_accel.y + f.y * self._calib_accel.z),
-                             self._curr_accel.z - (r.z * self._calib_accel.x + u.z * self._calib_accel.y + f.z * self._calib_accel.z))
+        a: Vector3 = Vector3(
+            self._curr_accel.x - (r.x * self._calib_accel.x + u.x * self._calib_accel.y + f.x * self._calib_accel.z),
+            self._curr_accel.y - (r.y * self._calib_accel.x + u.y * self._calib_accel.y + f.y * self._calib_accel.z),
+            self._curr_accel.z - (r.z * self._calib_accel.x + u.z * self._calib_accel.y + f.z * self._calib_accel.z))
         """
         Проверка наличия весомых изменений в векторе ускорения в течении времени
         """
@@ -377,7 +377,7 @@ class AccelIntegrator:
         axes.set_ylabel("Sz, [m]")
         axes.set_title("positions - world space")
         plt.show()
-  
+
     def integrate(self):
         for point in self._log_file.way_points:
             self._prev_accel = self._curr_accel

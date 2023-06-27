@@ -1,7 +1,7 @@
 from Motion.motion_controller import MotionController
 from Utilities import Device, BEGIN_MODE_MESSAGE, END_MODE_MESSAGE, DeviceMessage, RUNNING_MODE_MESSAGE
 from Accelerometer.accelerometer_core.inertial_measurement_unit import IMU
-from Utilities.device import DISCARD_MODE_MESSAGE, START_MODE
+from Utilities.Device.device import DISCARD_MODE_MESSAGE, START_MODE
 from typing import List
 import threading
 import time

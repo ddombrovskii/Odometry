@@ -70,7 +70,8 @@ class Color:
     def _unpack_args(*args) -> int:
         args = args[0]
         n_args = len(args)
-        if n_args == 0: return 0  # create_color_rgba(125, 127, 130, 0)
+        if n_args == 0:
+            return 0  # create_color_rgba(125, 127, 130, 0)
         if n_args == 1:  # one argument
             args = args[0]
             if isinstance(args, Color):
@@ -80,8 +81,10 @@ class Color:
             if isinstance(args, float):
                 c = int(255 * args)
                 return create_color_rgba(c, c, c, 0)
-        if n_args == 3: return create_color_rgba(args[0], args[1], args[2], 0)
-        if n_args == 4: return create_color_rgba(args[0], args[1], args[2], args[3])
+        if n_args == 3:
+            return create_color_rgba(args[0], args[1], args[2], 0)
+        if n_args == 4:
+            return create_color_rgba(args[0], args[1], args[2], args[3])
         raise TypeError(f'Invalid Input: {args}')
 
     __slots__ = "_rgba"
@@ -94,10 +97,10 @@ class Color:
 
     def __str__(self):
         return f"{{" \
-               f"\"red\"  :{self.red:3}, " \
-               f"\"green\":{self.green:3}, " \
-               f"\"blue\" :{self.blue:3}, " \
-               f"\"alpha\":{self.alpha:3}" \
+               f"\"red\"  : {self.red:>3}, " \
+               f"\"green\": {self.green:>3}, " \
+               f"\"blue\" : {self.blue:>3}, " \
+               f"\"alpha\": {self.alpha:>3}" \
                f"}}"
 
     def __getitem__(self, index: int):

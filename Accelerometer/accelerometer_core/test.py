@@ -12,10 +12,10 @@ COLOR = {
     "ENDC": "\033[0m",
 }
 
-#print(COLOR["HEADER"], "Testing Green!!", COLOR["ENDC"])
+# print(COLOR["HEADER"], "Testing Green!!", COLOR["ENDC"])
 
 if __name__ == "__main__":
-    log_src = "accelerometer_records/acc_record_90_degrees_corner.json"
+    log_src = "accelerometer_records/record_bno_test.json"
     log_file = read_imu_log(log_src, order=0)
     fig, axes = plt.subplots(4, 1)
 

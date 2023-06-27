@@ -1,38 +1,54 @@
 from PyQt5.QtGui import QOpenGLVersionProfile, QSurfaceFormat, QMouseEvent, QWheelEvent, QKeyEvent
-from UIQt.GLUtilities.gl_decorators import gl_error_catch
+from UIQt.GLUtilities.gl_scene import SceneGL, load_scene, save_scene, merge_scene
 from UIQt.GLUtilities.gl_frame_buffer import FrameBufferGL
-from UIQt.GLUtilities.gl_scene import SceneGL, load_scene, save_scene
-from Utilities.Geometry import Vector3, Vector2, Vector4
-from UIQt.GLUtilities.gl_model import ModelGL
+from UIQt.GLUtilities.gl_decorators import gl_error_catch
+from UIQt.GLUtilities.gl_material import MaterialGL
+from UIQt.Scripts.Functionality.mouse_view_contoller import MouseViewController
+from UIQt.Scripts.viewer_behaviour import ViewerBehaviour
+from Utilities.Geometry import Vector3, Matrix4
 from UIQt.GLUtilities import gl_globals
 from PyQt5 import QtOpenGL, QtCore
 from typing import List
 import OpenGL.GL as GL
-import math
 
 
 class SceneViewerWidget(QtOpenGL.QGLWidget):
     def __init__(self, parent=None):
         QtOpenGL.QGLWidget.__init__(self, parent)
-        self.setFocusPolicy(QtCore.Qt.ClickFocus)
-        self.fmt: QOpenGLVersionProfile = None
         self.parent = parent
-        self._scene = SceneGL()
-        self._frame_buffer = None
+        self._components: List[ViewerBehaviour] = []
         self.setFocusPolicy(QtCore.Qt.ClickFocus)
+        self.fmt: QOpenGLVersionProfile | None = None
+        self._scene: SceneGL = SceneGL()
+        self._frame_buffer: FrameBufferGL | None = None
+        self._camera_last_transform = Matrix4.identity()
+        self._mouse_controller = MouseViewController(self.scene_gl)
+
+    def register_behaviour(self, behaviour: ViewerBehaviour):
+        self._components.append(behaviour)
+
+    @property
+    def scene_gl(self) -> SceneGL:
+        return self._scene
 
     @staticmethod
     def _get_opengl_info():
+        def formatter(v):
+            v = f"\"{v}\""
+            return f"{v:>50}"
+
         return f"{{\n" \
-               f"\t\"Vendor\":         \"{GL.glGetString(GL.GL_VENDOR).decode('utf-8')}\",\n" \
-               f"\t\"Renderer\":       \"{GL.glGetString(GL.GL_RENDERER).decode('utf-8')}\",\n" \
-               f"\t\"OpenGL Version\": \"{GL.glGetString(GL.GL_VERSION).decode('utf-8')}\",\n" \
-               f"\t\"Shader Version\": \"{GL.glGetString(GL.GL_SHADING_LANGUAGE_VERSION).decode('utf-8')}\"\n}}"
+               f"\t\"Vendor\"         : {formatter(GL.glGetString(GL.GL_VENDOR).decode('utf-8'))},\n" \
+               f"\t\"Renderer\"       : {formatter(GL.glGetString(GL.GL_RENDERER).decode('utf-8'))},\n" \
+               f"\t\"OpenGL Version\" : {formatter(GL.glGetString(GL.GL_VERSION).decode('utf-8'))},\n" \
+               f"\t\"Shader Version\" : {formatter(GL.glGetString(GL.GL_SHADING_LANGUAGE_VERSION).decode('utf-8'))}\n" \
+               f"}}"
 
     def _reset_frame_buffer(self):
         if self._frame_buffer is not None:
             self._frame_buffer.delete()
         self._frame_buffer = FrameBufferGL(self.width(), self.height())
+        self._frame_buffer.name = "main-screen-frame-buffer"
         self._frame_buffer.create_color_attachment_rgba_8("attachment_0")
         self._frame_buffer.create_depth()
         self._frame_buffer.validate()
@@ -46,13 +62,8 @@ class SceneViewerWidget(QtOpenGL.QGLWidget):
         print(SceneViewerWidget._get_opengl_info())
         gl_globals.init()
         self._reset_frame_buffer()
-        self._scene = load_scene(r"E:\GitHub\Odometry\Odometry\UIQt\GLUtilities\Scenes")
-        gl_globals.MAIN_CAMERA.look_at(self._scene.bounds.min, self._scene.bounds.max)
-
-        for i in range(64):
-            gl_globals.MAIN_CAMERA.transform.origin += gl_globals.MAIN_CAMERA.transform.right *  (i / 100.0)
-            image = self._scene.draw_scene_preview(gl_globals.MAIN_CAMERA, 1024, 1024)
-            image.save(f"previews/preview_{i + 1}.bmp")
+        self._scene = load_scene(r".\GLUtilities\StartScene")
+        gl_globals.MAIN_CAMERA.look_at(Vector3(0, 0, 0), self._scene.bounds.max * 0.6)
 
     def clean_up(self) -> None:
         self.makeCurrent()
@@ -68,133 +79,113 @@ class SceneViewerWidget(QtOpenGL.QGLWidget):
 
     def wheelEvent(self, event: QWheelEvent) -> None:
         gl_globals.MOUSE_CONTROLLER.update_on_wheel(event)
-        ###############################################
-        gl_globals.MAIN_CAMERA.transform.origin += \
-            gl_globals.MAIN_CAMERA.transform.front * gl_globals.MOUSE_CONTROLLER.wheel_delta / 120.0
+        self._mouse_controller.wheel_update()
 
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
         gl_globals.MOUSE_CONTROLLER.update_on_release(event)
+        self._mouse_controller.mouse_update()
         ###############################################
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
         gl_globals.MOUSE_CONTROLLER.update_on_press(event)
-        self.on_mouse_pick()
+        self._mouse_controller.mouse_update()
         ###############################################
 
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
         gl_globals.MOUSE_CONTROLLER.update_on_hold(event)
-        ###############################################
-        if gl_globals.MOUSE_CONTROLLER.right_btn.is_hold:
-            delta = gl_globals.MOUSE_CONTROLLER.right_btn.delta_pos
-            gl_globals.MAIN_CAMERA.transform.angles += Vector3(delta.y / self.height(), -delta.x / self.width(), 0)
-        ###############################################
-        if gl_globals.MOUSE_CONTROLLER.middle_btn.is_hold:
-            scale = gl_globals.MAIN_CAMERA.transform.origin.magnitude()
-            delta = gl_globals.MOUSE_CONTROLLER.middle_btn.delta_pos
-            gl_globals.MAIN_CAMERA.transform.origin += \
-                (gl_globals.MAIN_CAMERA.transform.up * -delta.y / self.height() * scale +
-                 gl_globals.MAIN_CAMERA.transform.right * delta.x / self.width() * scale)
-
-        ###############################################
-        # print(self._frame_buffer.read_depth_pixel( event.x(), event.y()))
-
-        # self._mouse.update_position(event.pos().x(), event.pos().y(), self.width(), self.height())
-        # if self._mouse.is_left_button:
-        #     self.spawn_obj()  #g l_globals.MAIN_CAMERA.transform.angles += Vector3(self._mouse.y_delta, -self._mouse.x_delta, 0)
-
-        # if self._mouse.is_right_button:
-        #     gl_globals.MAIN_CAMERA.transform.angles += Vector3(self._mouse.y_delta, -self._mouse.x_delta, 0)
-
-        # bbox = BoundingBox()
-        # for m in self._scene_models:
-        #     bbox.encapsulate(m.mesh.bounds.max)
-        #     bbox.encapsulate(m.mesh.bounds.min)
-        # size = bbox.size
-        # cntr = bbox.center
-        # self._main_camera.look_at(cntr, cntr + size)
-
-    def on_mouse_pick(self):
-        if not gl_globals.MOUSE_CONTROLLER.left_btn.is_pressed:
-            return
-        x_pix = gl_globals.MOUSE_CONTROLLER.left_btn.pressed_pos.y
-        y_pix = gl_globals.MOUSE_CONTROLLER.left_btn.pressed_pos.x
-        depth = self._frame_buffer.read_depth_pixel(x_pix, y_pix)
-        tg_fov = 1.0 / math.tan(gl_globals.MAIN_CAMERA.fov / 180.0 * math.pi * 0.5)
-        x = 2.0 * x_pix / self.width() - 1.0
-        y = 2.0 * y_pix / self.height() - 1.0
-        view_ray = Vector3(y, -x, tg_fov).normalized()
-        view_ray = gl_globals.MAIN_CAMERA.transform.transform_vect(view_ray, 0.0)
-        model = ModelGL()
-        model.mesh = gl_globals.BOX_MESH
-        view_orig = gl_globals.MAIN_CAMERA.transform.origin
-        t = -(view_orig.y / view_ray.y)
-        model.transform.origin = Vector3(view_ray.x * t + view_orig.x,
-                                         view_ray.y * t + view_orig.y,
-                                         view_ray.z * t + view_orig.z)
-        # print(f"model.transform.origin {model.transform.origin} | {view_orig}")
-        self._scene.add_model(model)
-
-    def spawn_obj(self):
-        # pm * vm * p = v
-        # vm^-1 * pm^-1 * v
-        pos = gl_globals.MOUSE_CONTROLLER.middle_btn.hold_pos
-        view_ray: Vector3 = gl_globals.MAIN_CAMERA.screen_coord_to_camera_ray(pos.x / self.width(), pos.y / self.height())
-        if abs(view_ray.y) < 1e-3:
-            return
-        view_orig = gl_globals.MAIN_CAMERA.transform.origin
-        # (r - r0, n) = (et + r0, {0, 1, 0}) = ey t + y0 = 0
-        t = -view_orig.y / view_ray.y
-        #
-        model_gl = ModelGL()
-        model_gl.transform.origin = (-view_orig.y / view_ray.y) * view_ray + view_orig
-        model_gl.mesh = gl_globals.BOX_MESH
-        # self._scene_models.append(model_gl)
+        self._mouse_controller.mouse_update()
 
     def resizeGL(self, width, height):
         GL.glViewport(0, 0, width, height)
         self._reset_frame_buffer()
         gl_globals.MAIN_CAMERA.aspect = float(height) / width
 
+    def _switch_projection_mode(self):
+        gl_globals.MAIN_CAMERA.perspective_mode = not gl_globals.MAIN_CAMERA.perspective_mode
+        if not gl_globals.MAIN_CAMERA.perspective_mode:
+            self._camera_last_transform = gl_globals.MAIN_CAMERA.transform.transform_matrix
+            gl_globals.MAIN_CAMERA.look_at(Vector3(0, 0, 0), Vector3(0, 100, 0), Vector3(-1, 0, 0))
+            self.scene_gl.override_material = MaterialGL.materials.get_by_name("map_material")
+        else:
+            gl_globals.MAIN_CAMERA.transform.transform_matrix = self._camera_last_transform
+            gl_globals.MAIN_CAMERA.look_at(gl_globals.MAIN_CAMERA.transform.origin +
+                                           gl_globals.MAIN_CAMERA.transform.front,
+                                           gl_globals.MAIN_CAMERA.transform.origin, Vector3(0, 1, 0))
+            self.scene_gl.override_material = None
+
     def _keyboard_interaction(self):
         keyboard = gl_globals.KEYBOARD_CONTROLLER
-        camera  = gl_globals.MAIN_CAMERA
-        if keyboard.key_w.is_hold or keyboard.key_up.is_hold:
-            camera.transform.origin += camera.transform.front
+        camera = gl_globals.MAIN_CAMERA
+        if camera.perspective_mode:
+            if keyboard.key_w.is_hold or keyboard.key_up.is_hold:
+                camera.transform.origin += camera.transform.front
 
-        if keyboard.key_a.is_hold or keyboard.key_left.is_hold:
-            camera.transform.origin += camera.transform.right
+            if keyboard.key_a.is_hold or keyboard.key_left.is_hold:
+                camera.transform.origin += camera.transform.right
 
-        if keyboard.key_s.is_hold or keyboard.key_down.is_hold:
-            camera.transform.origin -= camera.transform.front
+            if keyboard.key_s.is_hold or keyboard.key_down.is_hold:
+                camera.transform.origin -= camera.transform.front
 
-        if keyboard.key_d.is_hold or keyboard.key_right.is_hold:
-            camera.transform.origin -= camera.transform.right
+            if keyboard.key_d.is_hold or keyboard.key_right.is_hold:
+                camera.transform.origin -= camera.transform.right
 
-        if keyboard.key_q.is_hold:
-            camera.transform.origin += Vector3(0, 1, 0)
+            if keyboard.key_q.is_hold:
+                camera.transform.origin += Vector3(0, 1, 0)
 
-        if keyboard.key_e.is_hold:
-            camera.transform.origin -= Vector3(0, 1, 0)
+            if keyboard.key_e.is_hold:
+                camera.transform.origin -= Vector3(0, 1, 0)
+        else:
+            if keyboard.key_w.is_hold or keyboard.key_up.is_hold:
+                camera.transform.origin -= camera.transform.up
+
+            if keyboard.key_a.is_hold or keyboard.key_left.is_hold:
+                camera.transform.origin += camera.transform.right
+
+            if keyboard.key_s.is_hold or keyboard.key_down.is_hold:
+                camera.transform.origin += camera.transform.up
+
+            if keyboard.key_d.is_hold or keyboard.key_right.is_hold:
+                camera.transform.origin -= camera.transform.right
+
+            if keyboard.key_q.is_hold:
+                size = gl_globals.MAIN_CAMERA.ortho_size - 1.0
+                max_size = self._scene.bounds.size.magnitude()
+                gl_globals.MAIN_CAMERA.ortho_size = min(max(0.1, size), max_size * 0.5)
+
+            if keyboard.key_e.is_hold:
+                size = gl_globals.MAIN_CAMERA.ortho_size + 1.0
+                max_size = self._scene.bounds.size.magnitude()
+                gl_globals.MAIN_CAMERA.ortho_size = min(max(0.1, size), max_size * 0.5)
 
         if keyboard.key_plus .is_hold:
             ...
         if keyboard.key_minus.is_hold:
             ...
         if keyboard.key_z.is_hold:
-            ...
+            self._switch_projection_mode()
         if keyboard.key_x.is_hold:
-            self._frame_buffer.grab_snap_shot()
-            # self._frame_buffer.grab_depth_snap_shot()
+            self._frame_buffer.grab_snap_shot().save("snap-shoot.png")
 
-    def updateGL(self) -> None:
-        gl_globals.KEYBOARD_CONTROLLER.update_on_hold()
+    def switch_to_ortho(self):
+        if gl_globals.MAIN_CAMERA.perspective_mode:
+            self._switch_projection_mode()
+
+    def switch_to_perspective(self):
+        if not gl_globals.MAIN_CAMERA.perspective_mode:
+            self._switch_projection_mode()
+
+    def append_to_scene(self, folder_path: str):
+        merge_scene(self._scene, folder_path)
 
     @gl_error_catch
     def paintGL(self):
+        gl_globals.KEYBOARD_CONTROLLER.update_on_hold()
+        for c in self._components:
+            c.update()
         self._scene.update_camera_state()
         self._scene.draw_scene(self._frame_buffer)
         self._frame_buffer.blit()
-        self.swapBuffers()
         self._keyboard_interaction()
+        self.swapBuffers()
 
 

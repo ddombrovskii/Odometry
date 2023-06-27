@@ -2,8 +2,8 @@ from UIQt.GLUtilities.gl_decorators import gl_error_catch
 from UIQt.GLUtilities.objects_pool import ObjectsPool
 from typing import Union, List
 from Utilities import Color
-from PIL import Image
 from OpenGL.GL import *
+from PIL import Image
 import numpy as np
 # TODO texture_cube
 
@@ -17,9 +17,9 @@ class TextureGL:
 
         self._source_file = "no-name"
         self._name = "no-name"
-        self._width  = w
-        self._height = h
-        self._bpp = 4 if alpha else 3
+        self._width: int = w
+        self._height: int = h
+        self._bpp: int = 4 if alpha else 3
         self._id: int = 0
         self._filtering_mode = (GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR)
         self._bind_target: GLenum = GL_TEXTURE_2D

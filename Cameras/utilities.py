@@ -8,6 +8,12 @@ import json
 import os
 
 
+def create_fourcc(fourcc: str) -> int:
+    if len(fourcc) < 4:
+        return 0
+    return ord(fourcc[0]) | (ord(fourcc[1]) << 8) | (ord(fourcc[2]) << 16) | (ord(fourcc[3]) << 24)
+
+
 def get_screen_resolution() -> Tuple[int, int]:
     if platform.system() == 'Linux':
         screen = os.popen("xrandr -q -d :0").readlines()[0]
@@ -30,13 +36,15 @@ class CameraCalibrationInfo(namedtuple('CameraCalibrationInfo', 'camera_matrix, 
         return super().__new__(cls, cm, dc, tv, rv)
 
     def __str__(self):
+        _fmt = '>20.5f'
+
         def print_(vectors: np.ndarray):
-            return ',\n\t\t'.join(f"{{ \"x\": {v[0]:20}, \"y\": {v[1]:20}, \"z\": {v[2]:20}}}" for v in vectors)
+            return ',\n\t\t'.join(f"{{ \"x\": {v[0]:{_fmt}}, \"y\": {v[1]:{_fmt}}, \"z\": {v[2]:{_fmt}}}}" for v in vectors)
         return "{\n\t\"camera_matrix\": \n\t{\n" \
-               f"\t\t\"m00\": {self.camera_matrix[0][0]:20}, \"m01\": {self.camera_matrix[0][1]:20}, \"m02\": {self.camera_matrix[0][2]:20},\n"\
-               f"\t\t\"m10\": {self.camera_matrix[1][0]:20}, \"m11\": {self.camera_matrix[1][1]:20}, \"m12\": {self.camera_matrix[1][2]:20},\n"\
-               f"\t\t\"m20\": {self.camera_matrix[2][0]:20}, \"m21\": {self.camera_matrix[2][1]:20}, \"m22\": {self.camera_matrix[2][2]:20}\n\t}},\n" \
-               f"\t\"distortion\": \n\t[\n\t\t{', '.join(f'{value:20}' for value in self.distortion_coefficients.flat)}\n\t],\n" \
+               f"\t\t\"m00\": {self.camera_matrix[0][0]:{_fmt}}, \"m01\": {self.camera_matrix[0][1]:{_fmt}}, \"m02\": {self.camera_matrix[0][2]:{_fmt}},\n"\
+               f"\t\t\"m10\": {self.camera_matrix[1][0]:{_fmt}}, \"m11\": {self.camera_matrix[1][1]:{_fmt}}, \"m12\": {self.camera_matrix[1][2]:{_fmt}},\n"\
+               f"\t\t\"m20\": {self.camera_matrix[2][0]:{_fmt}}, \"m21\": {self.camera_matrix[2][1]:{_fmt}}, \"m22\": {self.camera_matrix[2][2]:{_fmt}}\n\t}},\n" \
+               f"\t\"distortion\": \n\t[\n\t\t{', '.join(f'{value:{_fmt}}' for value in self.distortion_coefficients.flat)}\n\t],\n" \
                f"\t\"translation_vectors\": \n\t[\n\t\t{(print_(self.translation_vectors))}\n\t],\n" \
                f"\t\"rotation_vectors\": \n\t[\n\t\t{(print_(self.rotation_vectors))}\n\t]\n}}"
 
@@ -53,10 +61,11 @@ class CameraCalibrationArgs(namedtuple('CameraCalibrationArgs',
         return super().__new__(cls, criteria, [], [], ches_board_size, _obj_p, recalibrate)
 
     def __str__(self):
+        sep  = ','
         return f"{{" \
-               f"\"criteria\": {self.criteria},\n" \
-               f"\"ches_board_size\":[{self.ches_board_size[0]}, {self.ches_board_size[1]}]\n" \
-               f"\"recalibrate\": {self.recalibrate},\n" \
+               f"\"criteria\":       [{sep.join(f'{v:>5}' for v in self.criteria)}],\n" \
+               f"\"ches_board_size\":[{self.ches_board_size[0]:>5.3f}, {self.ches_board_size[1]:>5}],\n" \
+               f"\"recalibrate\":     {'true' if self.recalibrate else 'false'}\n" \
                f"}}"
 
 
@@ -155,7 +164,6 @@ def show_slam_results(file_path: str):
                 [y[i], y[i] + ez[i][1]],
                 [z[i], z[i] + ez[i][2]], 'b')
     plt.show()
-    # cv.NamedWindow(f"Slam results : {file_path}")
 
 
 if __name__ == "__main__":

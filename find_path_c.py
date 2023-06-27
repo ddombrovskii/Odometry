@@ -1,9 +1,9 @@
-from PathFinder.path_finder import PathFinder
+from PathFinder.path_finder import PathFinderFigure
 
 
 if __name__ == "__main__":
-    PathFinder('Maps/simple_test.bmp')()
-    PathFinder('Maps/map1.png')()
-    PathFinder('Maps/penalty_map_processed_lr.png')()
-    PathFinder('Maps/map_low_res.png')()
+    PathFinderFigure('Maps/simple_test.bmp')()
+    PathFinderFigure('Maps/map1.png')()
+    PathFinderFigure('Maps/penalty_map_processed_lr.png')()
+    PathFinderFigure('Maps/map_low_res.png')()
 

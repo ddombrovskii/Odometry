@@ -5,7 +5,7 @@ from typing import Tuple, Any, List
 from time import sleep
 import struct
 import serial
-import smbus
+# import smbus
 
 UART_START_MESSAGE = b'$#'
 UART_END_MESSAGE = b'#$'
@@ -93,13 +93,13 @@ def write_float_package(serial_port, message: Tuple[float, ...]) -> None:
     _template_write_package(serial_port, message, 'f')
 
 
-def read_block(self, register: int, block_size: int = 3,  type_size: int = 2) -> Tuple[bool, Tuple[float, ...]]:
+def read_block(self, register: int, block_size: int = 3, type_size: int = 2) -> Tuple[bool, Tuple[float, ...]]:
     try:
         buf = self._read_bytes(register, block_size * type_size)
         raw_vec = tuple(map(lambda a: a if a < 0x8000 else a - 65536, struct.unpack(f'>{block_size}h', buf)))
         # raw_vec = struct.unpack(f"{block_size}{self.data_size_map[type_size]}", struct.pack(f"{len(buf)}B", *buf))
         return True, raw_vec
-    except struct.error as struct_err:
+    except struct.error as _:
         # raise Exception("Error while reading vector") from struct_err
         return False, tuple(0.0 for _ in range(block_size))
 
@@ -144,7 +144,7 @@ class AccelerometerBNO055(AccelerometerBase):
                     BNO055_GYRO_RANGE_1000DEG: BNO055_GYRO_SCALE_MODIFIER_1000DEG,
                     BNO055_GYRO_RANGE_2000DEG: BNO055_GYRO_SCALE_MODIFIER_2000DEG}
     """
-   Акселерометр основанный на чипе bno0550. Читает ускорения, угловые скорости, углы.
+    Акселерометр основанный на чипе bno0550. Читает ускорения, угловые скорости, углы.
                      Протокол управления акселерометром BNO055.
     Параметры пакета:
         1. Начало пакета: b'$#'.
@@ -237,8 +237,11 @@ class AccelerometerBNO055(AccelerometerBase):
     def __init__(self):
         super().__init__()
 
-    def _read_bytes(self, register: int, bytes_count: int = 1) -> List[bytes]:
-        return self.device.read_i2c_block_data(self.BNO055_ADDRESS, register, bytes_count)
+    def _read_bytes(self, register: int, bytes_count: int = 1) -> bytes:
+        try:
+            return self.device.read_i2c_block_data(self.BNO055_ADDRESS, register, bytes_count)
+        except OSError as _:
+            return b''
 
     def _write_bytes(self, register: int, bytes_data: List) -> None:
         self.device.write_i2c_block_data(self.BNO055_ADDRESS, register, bytes_data)
@@ -247,14 +250,14 @@ class AccelerometerBNO055(AccelerometerBase):
         self._write_bytes(self.BNO055_OPR_MODE_ADDR, [mode])
         sleep(0.03)
 
-    def _read_block(self, register: int, block_size: int = 3,  type_size: int = 2) -> Tuple[bool, Tuple[float, ...]]:
+    def _read_block(self, register: int, block_size: int = 3, type_size: int = 2) -> Tuple[bool, Tuple[float, ...]]:
         try:
             buf = self._read_bytes(register, block_size * type_size)
-            raw_vec = tuple(map(lambda a: a if a < 0x8000 else a - 65536, struct.unpack(f'>{block_size}h', buf)))
-            # raw_vec = struct.unpack(f"{block_size}{self.data_size_map[type_size]}", struct.pack(f"{len(buf)}B", *buf))
+
+            raw_vec = tuple(map(lambda a: a if a < 0x8000 else a - 65536,
+                                struct.unpack(f'{block_size}h', struct.pack(f"{len(buf)}B", *buf))))
             return True, raw_vec
-        except struct.error as struct_err:
-            # raise Exception("Error while reading vector") from struct_err
+        except struct.error as _:
             return False, tuple(0.0 for _ in range(block_size))
 
     def _request_for_device_connection(self) -> bool:
@@ -310,7 +313,11 @@ class AccelerometerBNO055(AccelerometerBase):
             sleep(0.02)
 
             return True
-        except RuntimeError as err:
+        except RuntimeError as _:
+            return False
+        except TimeoutError as _:
+            return False
+        except NameError as _:
             return False
 
     def _device_read_request(self, vec_type=_VECTOR_GRAVITY) -> Tuple[bool, Tuple[float, ...]]:
@@ -471,3 +478,4 @@ class AccelerometerBNO055(AccelerometerBase):
         Диапазон измеряемых ускорений, выраженный в м/сек^2.
         """
         return AccelerometerBNO055._gyro_scales[self.gyroscope_range_key]
+

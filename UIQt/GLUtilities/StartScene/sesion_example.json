@@ -1,0 +1,77 @@
+{
+	"PathFiderSettings":
+	{
+		"map_render_resolution"  : [2048, 2048],
+		"map_weight_image_src"   : "Maps/map_weight_image_0.png",
+		"map_inversion"          : 0,
+		"map_weight_max"         : 100.0,
+		"map_weight_min"         : 100.0,
+		"map_weight_threshold"   : 0.1,
+		"map_weight_blur_radius" : 3.0,
+		"path_smooth"            : 8.0,
+		"path_each_nth"          : 4,
+		"min_path_step_distance" : 0.125
+	},
+	"Paths":
+	[
+		{
+			"unique_id"    : 2,
+			"total_length" : 123.0,
+			"points_count" : 125,
+			"path_points"  : [
+				{ "x": 0.0, "y": 0.0, "z": 0.0},
+				{ "x": 0.0, "y": 0.0, "z": 0.0},
+			]
+		},
+		{
+			"unique_id"    : 2,
+			"total_length" : 123.0,
+			"points_count" : 125,
+			"path_points"  : [
+				{ "x": 0.0, "y": 0.0, "z": 0.0},
+				{ "x": 0.0, "y": 0.0, "z": 0.0},
+			]
+		}
+	],
+	"ReferenceViews":
+	[
+		{
+			"path_id"        : 0,
+			"point_id"       : 0,
+			"view_image_src" : "Maps/MapViews/view_image_0.png",
+			"projection"     :
+			{
+				"m00": 1.0, "m01": 0.0, "m02": 0.0, "m03": 0.0,
+				"m10": 0.0, "m11": 1.0, "m12": 0.0, "m13": 0.0,
+				"m20": 0.0, "m21": 0.0, "m22": 1.0, "m23": 0.0,
+				"m30": 0.0, "m31": 0.0, "m32": 0.0, "m33": 1.0
+			},
+			"transform":
+			{
+				"m00": 1.0, "m01": 0.0, "m02": 0.0, "m03": 0.0,
+				"m10": 0.0, "m11": 1.0, "m12": 0.0, "m13": 0.0,
+				"m20": 0.0, "m21": 0.0, "m22": 1.0, "m23": 0.0,
+				"m30": 0.0, "m31": 0.0, "m32": 0.0, "m33": 1.0
+			}
+		},
+		{
+			"path_id"        : 0,
+			"point_id"       : 125,
+			"view_image_src" : "Maps/MapViews/view_image_125.png",
+			"projection"     :
+			{
+				"m00": 1.0, "m01": 0.0, "m02": 0.0, "m03": 0.0,
+				"m10": 0.0, "m11": 1.0, "m12": 0.0, "m13": 0.0,
+				"m20": 0.0, "m21": 0.0, "m22": 1.0, "m23": 0.0,
+				"m30": 0.0, "m31": 0.0, "m32": 0.0, "m33": 1.0
+			},
+			"transform":
+			{
+				"m00": 1.0, "m01": 0.0, "m02": 0.0, "m03": 0.0,
+				"m10": 0.0, "m11": 1.0, "m12": 0.0, "m13": 0.0,
+				"m20": 0.0, "m21": 0.0, "m22": 1.0, "m23": 0.0,
+				"m30": 0.0, "m31": 0.0, "m32": 0.0, "m33": 1.0
+			}
+		}
+	]
+}

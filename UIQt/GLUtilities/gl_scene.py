@@ -252,7 +252,7 @@ GL_SCENE_MODELS = "Models"
 GL_SCENE_GIZMOS = "Gizmos"
 
 
-def merge_scene(scene: SceneGL, src_file: str) -> SceneGL:
+def merge_scene(scene: SceneGL, src_file: str, dont_destroy_on_load: bool = False) -> SceneGL:
     with open(f"{src_file}\\scene.json", 'rt') as input_file:
         raw_data = json.loads(input_file.read())
 
@@ -386,9 +386,9 @@ def merge_scene(scene: SceneGL, src_file: str) -> SceneGL:
     return scene
 
 
-def load_scene(src_file: str) -> SceneGL:
+def load_scene(src_file: str, dont_destroy_on_load: bool = False) -> SceneGL:
     scene: SceneGL = SceneGL()
-    merge_scene(scene, src_file)
+    merge_scene(scene, src_file, dont_destroy_on_load)
     return scene
 
 

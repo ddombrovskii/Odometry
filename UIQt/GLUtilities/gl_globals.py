@@ -131,9 +131,12 @@ def _init_materials():
     global DEFAULT_MATERIAL
     global MAP_MATERIAL
     global GRID_MATERIAL
-    DEFAULT_MATERIAL = ObjMaterial(SAMPLE_SHADER)  # ObjMaterial()
-    MAP_MATERIAL = MapMaterial(MAP_SHADER)
-    GRID_MATERIAL = GridMaterial(GRID_SHADER)
+    if DEFAULT_MATERIAL is None:
+        DEFAULT_MATERIAL = ObjMaterial(SAMPLE_SHADER)  # ObjMaterial()
+    if MAP_MATERIAL is None:
+        MAP_MATERIAL = MapMaterial(MAP_SHADER)
+    if GRID_MATERIAL is None:
+        GRID_MATERIAL = GridMaterial(GRID_SHADER)
 
 
 ####################################
@@ -156,9 +159,12 @@ def init():
     global MAIN_CAMERA
     global MOUSE_CONTROLLER
     global KEYBOARD_CONTROLLER
-    MOUSE_CONTROLLER = MouseController()
-    KEYBOARD_CONTROLLER = KeyboardController()
-    MAIN_CAMERA = CameraGL()
+    if MOUSE_CONTROLLER is None:
+        MOUSE_CONTROLLER = MouseController()
+    if KEYBOARD_CONTROLLER is None:
+        KEYBOARD_CONTROLLER = KeyboardController()
+    if MAIN_CAMERA is None:
+        MAIN_CAMERA = CameraGL()
     _init_textures()
     _init_shaders()
     _init_meshes()

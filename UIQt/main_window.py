@@ -1,7 +1,9 @@
 from PyQt5.QtWidgets import QMainWindow, QApplication, QPushButton, QVBoxLayout, QFileDialog, QTabWidget
 
-from UIQt.Scripts.Functionality.mouse_view_contoller import MouseViewController
+from UIQt.GLUtilities import gl_globals
+from UIQt.GLUtilities.gl_scene import merge_scene
 from UIQt.Scripts.Functionality.path_create_behaviour import PathCreateBehaviour
+from UIQt.Scripts.Functionality.swich_view_behavior import SwitchViewBehaviour
 from UIQt.Scripts.map_renderers import WeightsMapRenderer
 from UIQt.scene_viewer_widget import SceneViewerWidget
 from Utilities.Geometry import Vector2
@@ -36,12 +38,13 @@ class MainWindowUI(QMainWindow):
         self._gl_widget: SceneViewerWidget | None = None
         self._way_points: List[Vector2] = []
         self._way_points_widgets: List[PointWidget] = []
+        self._path_builder: PathCreateBehaviour | None = None
+        self._projection_switcher: SwitchViewBehaviour | None = None
 
         self._init_layouts()
         self._init_buttons()
         self._setup_update_rate()
         self.closeEvent(QCloseEvent())
-        self._path_builder: PathCreateBehaviour | None = None
 
     def _start_movement(self):
         if self._path_builder is None:
@@ -72,15 +75,16 @@ class MainWindowUI(QMainWindow):
         # right tab (3D)
         mapLayout = self.findChild(QVBoxLayout, "mapTabVLayout")
         self._gl_widget: SceneViewerWidget = SceneViewerWidget(self)
+        self._projection_switcher = SwitchViewBehaviour(self._gl_widget.scene_gl)
         mapLayout.insertWidget(1, self._gl_widget)
 
     def _setup_update_rate(self):
         timer_update = QTimer(self)
-        timer_update.setInterval(15)  # period, in milliseconds
+        timer_update.setInterval(16)  # period, in milliseconds
         timer_update.timeout.connect(self._gl_widget.updateGL)
         timer_update.start()
         timer_paint = QTimer(self)
-        timer_paint.setInterval(15)  # period, in milliseconds
+        timer_paint.setInterval(16)  # period, in milliseconds
         timer_paint.timeout.connect(self._gl_widget.paintGL)
         timer_paint.start()
 
@@ -94,13 +98,14 @@ class MainWindowUI(QMainWindow):
         add_view:         QPushButton = self.findChild(QPushButton, "addAngleBtn")
         delete_view:      QPushButton = self.findChild(QPushButton, "deleteAngleBtn")
         load_map:         QPushButton = self.findChild(QPushButton, "loadMapBtn")
-        delete_map:       QPushButton = self.findChild(QPushButton, "deleteModelBtn")
+        delete_map:       QPushButton = self.findChild(QPushButton, "deleteMapBtn")
 
-        setup_path.clicked.connect(lambda: self._path_setup_mode())
-        start_movement.clicked.connect(lambda: self._start_movement())
-        orthographic_prj.clicked.connect(lambda: self._gl_widget.switch_to_ortho())
-        perspective_prj.clicked.connect(lambda: self._gl_widget.switch_to_perspective())
-        load_map.clicked.connect(lambda: self.load_map())
+        setup_path.      clicked.connect(lambda: self._path_setup_mode())
+        start_movement.  clicked.connect(lambda: self._start_movement())
+        orthographic_prj.clicked.connect(lambda: self._projection_switcher.switch_view())
+        perspective_prj. clicked.connect(lambda: self._projection_switcher.switch_view())
+        load_map.        clicked.connect(lambda: self.load_map())
+        delete_map.      clicked.connect(lambda: self.clear_map())
 
     def _path_setup_mode(self):
         if self._path_builder is None:
@@ -110,20 +115,23 @@ class MainWindowUI(QMainWindow):
     def closeEvent(self, a0) -> None:
         self._gl_widget.clean_up()
 
+    def clear_map(self):
+        self._gl_widget.clear_scene()
+
     def load_map(self):
         directory = QFileDialog.getExistingDirectory(None, 'Open File', './')
         if directory == '':
             return
 
-        self._gl_widget.append_to_scene(directory)
+        merge_scene(self._gl_widget.scene_gl, directory)
+
         if not os.path.isdir(f"{directory}/Maps/"):
             os.mkdir(f"{directory}/Maps/")
         weights_renderer = WeightsMapRenderer(2048, 2048)
         weights_renderer.render_to_image(self._gl_widget.scene_gl, f"{directory}/Maps/weights_map.png")
-
-        self._path_builder = PathCreateBehaviour(self._gl_widget.scene_gl, directory, self.points_layout)
-        self._path_builder.enabled = False
-        self._gl_widget.register_behaviour(self._path_builder)
+        # self._path_builder = PathCreateBehaviour(self._gl_widget.scene_gl, directory, self.points_layout)
+        # self._path_builder.enabled = False
+        # self._gl_widget.register_behaviour(self._path_builder)
 
 
 if __name__ == "__main__":

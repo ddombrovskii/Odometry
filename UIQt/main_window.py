@@ -71,6 +71,7 @@ class MainWindowUI(QMainWindow):
         # если сделать "карта" открытым табом по умолчанию, то приложение вылетит
         rightTabWidget: QTabWidget = self.findChild(QTabWidget, "rightTabWidget")
         rightTabWidget.setCurrentIndex(0)
+        
 
         # right tab (3D)
         mapLayout = self.findChild(QVBoxLayout, "mapTabVLayout")

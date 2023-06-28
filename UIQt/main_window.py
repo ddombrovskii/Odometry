@@ -1,6 +1,4 @@
 from PyQt5.QtWidgets import QMainWindow, QApplication, QPushButton, QVBoxLayout, QFileDialog, QTabWidget
-
-from UIQt.GLUtilities import gl_globals
 from UIQt.GLUtilities.gl_scene import merge_scene
 from UIQt.Scripts.Functionality.path_create_behaviour import PathCreateBehaviour
 from UIQt.Scripts.Functionality.swich_view_behavior import SwitchViewBehaviour

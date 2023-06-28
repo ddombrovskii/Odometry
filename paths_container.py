@@ -6,13 +6,272 @@ from typing import Tuple, List
 
 
 class PathSegmentWidget(QWidget):
+
+    @staticmethod
+    def init_vect_2(parent: QWidget, label_str: str = "label", x_str: str = "\"X\"",
+                    y_str: str = "\"Y\"") -> Tuple[QWidget, QLineEdit, QLineEdit]:
+        container = QWidget(parent)  # контейнер с вертикальным размещением
+        label = None if len(label_str) == 0 else QLabel(f"{label_str} : ")
+        layout = QVBoxLayout()
+        vect_container = QWidget()  # контейнер с горизонтальным размещением
+        # container.move(10, 100) # так не нужно делать.
+        # нужно использовать QVBoxLayout для вертикального размещения компонентов
+        # в родителе или QHBoxLayout для горизонтального
+        # X - coordinate
+        label_x = QLabel(f"{x_str} :")
+        input_x = QLineEdit()
+        input_x.setText("0.0")
+
+        # Y - coordinate
+        label_y = QLabel(f"{y_str} :")
+        input_y = QLineEdit()
+        input_y.setText("0.0")
+
+        vect_layout = QHBoxLayout()
+        vect_layout.addWidget(label_x)
+        vect_layout.addWidget(input_x)
+
+        vect_layout.addWidget(label_y)
+        vect_layout.addWidget(input_y)
+
+        vect_container.setLayout(vect_layout)
+
+        if label is not None:
+            layout.addWidget(label)
+        layout.addWidget(vect_container)
+        container.setLayout(layout)
+
+        return container, input_x, input_y
+
+    @staticmethod
+    def init_vect_3(parent: QWidget, label_str: str = "label", x_str: str = "\"X\"",
+                    y_str: str = "\"Y\"", z_str: str = "\"Z\"") -> Tuple[QWidget, QLineEdit, QLineEdit, QLineEdit]:
+
+        container = QWidget(parent)  # контейнер с вертикальным размещением
+        label = None if len(label_str) == 0 else QLabel(f"{label_str} : ")
+        layout = QVBoxLayout()
+
+        vect_container = QWidget()  # контейнер с горизонтальным размещением
+        # container.move(10, 100) # так не нужно делать.
+        # нужно использовать QVBoxLayout для вертикального размещения
+        # компонентов в родителе или QHBoxLayout для горизонтального
+        # X - coordinate
+        label_x = QLabel(f"{x_str} :")
+        input_x = QLineEdit()
+        input_x.setText("0.0")
+
+        # Y - coordinate
+        label_y = QLabel(f"{y_str} :")
+        input_y = QLineEdit()
+        input_y.setText("0.0")
+
+        # Z - coordinate
+        label_z = QLabel(f"{z_str} :")
+        input_z = QLineEdit()
+        input_z.setText("0.0")
+
+        vect_layout = QHBoxLayout()
+        vect_layout.addWidget(label_x)
+        vect_layout.addWidget(input_x)
+
+        vect_layout.addWidget(label_y)
+        vect_layout.addWidget(input_y)
+
+        vect_layout.addWidget(label_z)
+        vect_layout.addWidget(input_z)
+        vect_container.setLayout(vect_layout)
+
+        if label is not None:
+            layout.addWidget(label)
+        layout.addWidget(vect_container)
+        container.setLayout(layout)
+
+        return container, input_x, input_y, input_z
+
+    @staticmethod
+    def init_vect_4(parent: QWidget, label_str: str = "label", x_str: str = "\"X\"",
+                    y_str: str = "\"Y\"", z_str: str = "\"Z\"", w_str: str = "\"W\"") -> \
+            Tuple[QWidget, QLineEdit, QLineEdit, QLineEdit, QLineEdit]:
+        container = QWidget(parent)  # контейнер с вертикальным размещением
+        label = None if len(label_str) == 0 else QLabel(f"{label_str} : ")  # лейбл с заголовком элемента интерфейса
+        layout = QVBoxLayout()
+        vect_container = QWidget()  # контейнер с горизонтальным размещением
+        # X - coordinate
+        label_x = QLabel(f"{x_str} :")
+        input_x = QLineEdit()
+        input_x.setText("0.0")
+
+        # Y - coordinate
+        label_y = QLabel(f"{y_str} :")
+        input_y = QLineEdit()
+        input_y.setText("0.0")
+
+        # Z - coordinate
+        label_z = QLabel(f"{z_str} :")
+        input_z = QLineEdit()
+        input_z.setText("0.0")
+
+        # W - coordinate
+        label_w = QLabel(f"{w_str} :")
+        input_w = QLineEdit()
+        input_w.setText("0.0")
+
+        vect_layout = QHBoxLayout()
+        vect_layout.addWidget(label_x)
+        vect_layout.addWidget(input_x)
+
+        vect_layout.addWidget(label_y)
+        vect_layout.addWidget(input_y)
+
+        vect_layout.addWidget(label_z)
+        vect_layout.addWidget(input_z)
+
+        vect_layout.addWidget(label_w)
+        vect_layout.addWidget(input_w)
+        vect_container.setLayout(vect_layout)
+        if label is not None:
+            layout.addWidget(label)
+        layout.addWidget(vect_container)
+        container.setLayout(layout)
+
+        return container, input_x, input_y, input_z, input_w
+
+    @staticmethod
+    def init_mat_2(parent: QWidget, label_str: str = "label") -> [QWidget, List[QLineEdit]]:
+        container = QWidget(parent)  # контейнер с вертикальным размещением
+        label = None if len(label_str) == 0 else QLabel(f"{label_str} : ")  # лейбл с заголовком элемента интерфейса
+        layout = QVBoxLayout()
+
+        mat_container = QWidget()
+        rows_layout = QVBoxLayout()
+
+        row1, m00, m01 = PathSegmentWidget.init_vect_2(parent, label_str="", x_str="\"M00\"", y_str="\"M01\"")
+        rows_layout.addWidget(row1)
+
+        row2, m10, m11 = PathSegmentWidget.init_vect_2(parent, label_str="", x_str="\"M10\"", y_str="\"M11\"")
+        rows_layout.addWidget(row2)
+
+        mat_container.setLayout(rows_layout)
+        if label is not None:
+            layout.addWidget(label)
+        layout.addWidget(mat_container)
+        container.setLayout(layout)
+        return container, [m00, m01, m10, m11]
+
+    @staticmethod
+    def init_mat_3(parent: QWidget, label_str: str = "label") -> [QWidget, List[QLineEdit]]:
+        container = QWidget(parent)  # контейнер с вертикальным размещением
+        label = None if len(label_str) == 0 else QLabel(f"{label_str} : ")  # лейбл с заголовком элемента интерфейса
+        layout = QVBoxLayout()
+
+        mat_container = QWidget()
+        rows_layout = QVBoxLayout()
+
+        row1, m00, m01, m02 = PathSegmentWidget.init_vect_3(parent, label_str="",
+                                                            x_str="\"M00\"", y_str="\"M01\"", z_str="\"M02\"")
+        rows_layout.addWidget(row1)
+
+        row2, m10, m11, m12 = PathSegmentWidget.init_vect_3(parent, label_str="",
+                                                            x_str="\"M10\"", y_str="\"M11\"", z_str="\"M12\"")
+        rows_layout.addWidget(row2)
+
+        row3, m20, m21, m22 = PathSegmentWidget.init_vect_3(parent, label_str="",
+                                                            x_str="\"M20\"", y_str="\"M21\"", z_str="\"M22\"")
+        rows_layout.addWidget(row3)
+
+        mat_container.setLayout(rows_layout)
+        if label is not None:
+            layout.addWidget(label)
+        layout.addWidget(mat_container)
+        container.setLayout(layout)
+        return container, [m00, m01, m02, m10, m11, m12, m20, m21, m22]
+
+    @staticmethod
+    def init_mat_4(parent: QWidget, label_str: str = "label") -> [QWidget, List[QLineEdit]]:
+        container = QWidget(parent)  # контейнер с вертикальным размещением
+        label = None if len(label_str) == 0 else QLabel(f"{label_str} : ")  # лейбл с заголовком элемента интерфейса
+        layout = QVBoxLayout()
+
+        mat_container = QWidget()
+        rows_layout = QVBoxLayout()
+
+        row1, m00, m01, m02, m03 = PathSegmentWidget.init_vect_4(parent, label_str="",
+                                                                 x_str="\"M00\"", y_str="\"M01\"",
+                                                                 z_str="\"M02\"", w_str="\"M03\"")
+        rows_layout.addWidget(row1)
+
+        row2, m10, m11, m12, m13 = PathSegmentWidget.init_vect_4(parent, label_str="",
+                                                                 x_str="\"M10\"", y_str="\"M11\"",
+                                                                 z_str="\"M12\"", w_str="\"M13\"")
+        rows_layout.addWidget(row2)
+
+        row3, m20, m21, m22, m23 = PathSegmentWidget.init_vect_4(parent, label_str="",
+                                                                 x_str="\"M20\"", y_str="\"M21\"",
+                                                                 z_str="\"M22\"", w_str="\"M23\"")
+        rows_layout.addWidget(row3)
+
+        row4, m30, m31, m32, m33 = PathSegmentWidget.init_vect_4(parent, label_str="",
+                                                                 x_str="\"M30\"", y_str="\"M31\"",
+                                                                 z_str="\"M32\"", w_str="\"M33\"")
+        rows_layout.addWidget(row4)
+
+        mat_container.setLayout(rows_layout)
+        if label is not None:
+            layout.addWidget(label)
+        layout.addWidget(mat_container)
+        container.setLayout(layout)
+        return container, [m00, m01, m02, m03, m10, m11, m12, m13, m20, m21, m22, m23, m30, m31, m32, m33]
+
+    @staticmethod
+    def init_text_field(parent: QWidget, label_str: str = "text field",
+                        start_value: str = "nothing") -> Tuple[QWidget, QLabel]:
+        container = QWidget(parent)  # контейнер с горизонтальным размещением
+        label_name = QLabel(f"{label_str} : ")  # лейбл с заголовком элемента интерфейса
+        label_text = QLabel(f"{start_value}")  # поле которое можно поменять из вне
+        layout = QHBoxLayout()
+        layout.addWidget(label_name)
+        layout.addWidget(label_text)
+        container.setLayout(layout)
+        return container, label_text
+
+    @staticmethod
+    def init_drop_down(parent: QWidget, label_str: str = "drop down",
+                       values: List[str] | None = None) -> Tuple[QWidget, QComboBox]:
+        container = QWidget(parent)  # контейнер с горизонтальным размещением
+        label = QLabel(f"{label_str} : ")  # лейбл с заголовком элемента интерфейса
+        drop_down = QComboBox()
+        layout = QHBoxLayout()
+        layout.addWidget(label)
+        layout.addWidget(drop_down)
+        container.setLayout(layout)
+        drop_down.addItems(["item 1", "item 2", "item 3"] if values is None else values)
+        return container, drop_down
+
+    @staticmethod
+    def buttons_group(parent: QWidget, label_str: str = "buttons group",
+                      buttons_str: List[str] | None = None, vert: bool = False) -> Tuple[QWidget, List[QPushButton]]:
+        container = QWidget(parent)  # контейнер с вертикальным размещением
+        label = QLabel(f"{label_str} : ")  # лейбл с заголовком элемента интерфейса
+        layout = QVBoxLayout()
+        buttons_container = QWidget()
+        buttons_layout = QVBoxLayout() if vert else QHBoxLayout()
+        buttons = [QPushButton(name) for name in ("btn1", "btn2", "btn3")] if buttons_str is None else \
+            [QPushButton(name) for name in buttons_str]
+        for b in buttons:
+            buttons_layout.addWidget(b)
+        buttons_container.setLayout(buttons_layout)
+        layout.addWidget(label)
+        layout.addWidget(buttons_container)
+        container.setLayout(layout)
+        return container, buttons
+
     def __init__(self):
         super(PathSegmentWidget, self).__init__()
         
         self._layout: QVBoxLayout | None = None        
         
         self._path_name_label:   QLabel | None = None 
-        self._ponts_count_label: QLabel | None = None
+        self._points_count_label: QLabel | None = None
         
         self._start_x: QLineEdit | None = None
         self._start_y: QLineEdit | None = None
@@ -30,277 +289,19 @@ class PathSegmentWidget(QWidget):
         
         self._start_btn:   QPushButton | None = None
         self._stop_btn:    QPushButton | None = None
-        self._reverce_btn: QPushButton | None = None
+        self._reverse_btn: QPushButton | None = None
     
         try:
             self._init_layouts()
         except RuntimeError as _:
             ...
-    
-    @staticmethod
-    def init_vect_2(parent: QWidget, label_str: str = "label", x_str: str = "\"X\"",\
-                    y_str: str = "\"Y\"", z_str: str = "\"Z\"") -> Tuple[QWidget, QLineEdit, QLineEdit]:
-        container = QWidget(parent)           # контейнер с вертикальным размещением
-        label     = None if len(label_str) == 0 else QLabel(f"{label_str} : ")
-        layout    = QVBoxLayout()
-        vect_container = QWidget() # контейнер с горизонтальным размещением
-        # container.move(10, 100) # так не нужно делать.
-        # нужно использовать QVBoxLayout для вертикального размещения компонентов в родителе или QHBoxLayout для горизонтального
-        # X - coordinate
-        label_x = QLabel(f"{x_str} :")
-        input_x = QLineEdit()
-        input_x.setText("0.0")
-        
-        # Y - coordinate
-        label_y = QLabel(f"{y_str} :")
-        input_y = QLineEdit()
-        input_y.setText("0.0")
-        
-        vect_layout = QHBoxLayout()
-        vect_layout.addWidget(label_x)
-        vect_layout.addWidget(input_x)
-        
-        vect_layout.addWidget(label_y)
-        vect_layout.addWidget(input_y)
 
-        vect_container.setLayout(vect_layout)
-        
-        if label is not None:
-            layout.addWidget(label)
-        layout.addWidget(vect_container)
-        container.setLayout(layout)
-        
-        return container, input_x, input_y
-    
-    @staticmethod
-    def init_vect_3(parent: QWidget, label_str: str = "label", x_str: str = "\"X\"",\
-                    y_str: str = "\"Y\"", z_str: str = "\"Z\"") -> Tuple[QWidget, QLineEdit, QLineEdit, QLineEdit]:
-        
-        container = QWidget(parent)           # контейнер с вертикальным размещением
-        label     = None if len(label_str) == 0 else QLabel(f"{label_str} : ")
-        layout    = QVBoxLayout()
-        
-        vect_container = QWidget() # контейнер с горизонтальным размещением
-        # container.move(10, 100) # так не нужно делать.
-        # нужно использовать QVBoxLayout для вертикального размещения компонентов в родителе или QHBoxLayout для горизонтального
-        # X - coordinate
-        label_x = QLabel(f"{x_str} :")
-        input_x = QLineEdit()
-        input_x.setText("0.0")
-        
-        # Y - coordinate
-        label_y = QLabel(f"{y_str} :")
-        input_y = QLineEdit()
-        input_y.setText("0.0")
-        
-        # Z - coordinate
-        label_z = QLabel(f"{z_str} :")
-        input_z = QLineEdit()
-        input_z.setText("0.0")
-        
-        vect_layout = QHBoxLayout()
-        vect_layout.addWidget(label_x)
-        vect_layout.addWidget(input_x)
-        
-        vect_layout.addWidget(label_y)
-        vect_layout.addWidget(input_y)
-        
-        vect_layout.addWidget(label_z)
-        vect_layout.addWidget(input_z)
-        vect_container.setLayout(vect_layout)
-        
-        if label is not None:
-            layout.addWidget(label)
-        layout.addWidget(vect_container)
-        container.setLayout(layout)
-        
-        return container, input_x, input_y, input_z
-        
-    @staticmethod
-    def init_vect_4(parent: QWidget, label_str: str = "label", x_str: str = "\"X\"",\
-                    y_str: str = "\"Y\"", z_str: str = "\"Z\"", w_str: str = "\"W\"") -> Tuple[QWidget, QLineEdit, QLineEdit, QLineEdit, QLineEdit]:
-        container = QWidget(parent)           # контейнер с вертикальным размещением
-        label     = None if len(label_str) == 0 else QLabel(f"{label_str} : ") # лейбл с заголовком элемента интерфейса
-        layout    = QVBoxLayout()
-        vect_container = QWidget() # контейнер с горизонтальным размещением
-        # X - coordinate
-        label_x = QLabel(f"{x_str} :")
-        input_x = QLineEdit()
-        input_x.setText("0.0")
-        
-        # Y - coordinate
-        label_y = QLabel(f"{y_str} :")
-        input_y = QLineEdit()
-        input_y.setText("0.0")
-        
-        # Z - coordinate
-        label_z = QLabel(f"{z_str} :")
-        input_z = QLineEdit()
-        input_z.setText("0.0")
-        
-        # W - coordinate
-        label_w = QLabel(f"{w_str} :")
-        input_w = QLineEdit()
-        input_w.setText("0.0")
-        
-        vect_layout = QHBoxLayout()
-        vect_layout.addWidget(label_x)
-        vect_layout.addWidget(input_x)
-        
-        vect_layout.addWidget(label_y)
-        vect_layout.addWidget(input_y)
-        
-        vect_layout.addWidget(label_z)
-        vect_layout.addWidget(input_z)
-        
-        vect_layout.addWidget(label_w)
-        vect_layout.addWidget(input_w)
-        vect_container.setLayout(vect_layout)
-        if label is not None:
-            layout.addWidget(label)
-        layout.addWidget(vect_container)
-        container.setLayout(layout)
-        
-        return container, input_x, input_y, input_z, label_w
-    
-    @staticmethod
-    def init_mat_2(parent: QWidget, label_str: str = "label") -> [QWidget, List[QLineEdit]]:
-        container = QWidget(parent)           # контейнер с вертикальным размещением
-        label     = None if len(label_str) == 0 else QLabel(f"{label_str} : ") # лейбл с заголовком элемента интерфейса
-        layout    = QVBoxLayout()
-        
-        mat_container = QWidget()
-        rows_layout   = QVBoxLayout()
-        
-        row1, m00, m01 = PathSegmentWidget.init_vect_2(parent, label_str="",\
-                         x_str = "\"M00\"", y_str = "\"M01\"")
-        rows_layout.addWidget(row1)
-        
-        row2, m10, m11 = PathSegmentWidget.init_vect_2(parent, label_str="",\
-                         x_str = "\"M10\"", y_str = "\"M11\"")
-        rows_layout.addWidget(row2)
-        
-        mat_container.setLayout(rows_layout)
-        if label is not None:
-            layout.addWidget(label)
-        layout.addWidget(mat_container)
-        container.setLayout(layout)
-        return container, [m00, m01, m10, m11]
-    
-    
-    @staticmethod
-    def init_mat_3(parent: QWidget, label_str: str = "label") -> [QWidget, List[QLineEdit]]:
-        container = QWidget(parent)           # контейнер с вертикальным размещением
-        label     = None if len(label_str) == 0 else QLabel(f"{label_str} : ") # лейбл с заголовком элемента интерфейса
-        layout    = QVBoxLayout()
-        
-        mat_container = QWidget()
-        rows_layout   = QVBoxLayout()
-        
-        row1, m00, m01, m02 = PathSegmentWidget.init_vect_3(parent, label_str="",\
-                              x_str = "\"M00\"", y_str = "\"M01\"", z_str = "\"M02\"")
-        rows_layout.addWidget(row1)
-        
-        row2, m10, m11, m12 = PathSegmentWidget.init_vect_3(parent, label_str="",\
-                              x_str = "\"M10\"", y_str = "\"M11\"", z_str = "\"M12\"")
-        rows_layout.addWidget(row2)
-
-        row3, m20, m21, m22 = PathSegmentWidget.init_vect_3(parent, label_str="",\
-                              x_str = "\"M20\"", y_str = "\"M21\"", z_str = "\"M22\"")
-        rows_layout.addWidget(row3)
-
-        
-        mat_container.setLayout(rows_layout)
-        if label is not None:
-            layout.addWidget(label)
-        layout.addWidget(mat_container)
-        container.setLayout(layout)
-        return container, [m00, m01, m02, m10, m11, m12, m20, m21, m22]
-
-    
-    @staticmethod
-    def init_mat_4(parent: QWidget, label_str: str = "label") -> [QWidget, List[QLineEdit]]:
-        container = QWidget(parent)           # контейнер с вертикальным размещением
-        label     = None if len(label_str) == 0 else QLabel(f"{label_str} : ") # лейбл с заголовком элемента интерфейса
-        layout    = QVBoxLayout()
-        
-        mat_container = QWidget()
-        rows_layout   = QVBoxLayout()
-        
-        row1, m00, m01, m02, m03 = PathSegmentWidget.init_vect_4(parent, label_str="",\
-                                   x_str = "\"M00\"", y_str = "\"M01\"", z_str = "\"M02\"", w_str = "\"M03\"")
-        rows_layout.addWidget(row1)
-        
-        row2, m10, m11, m12, m13 = PathSegmentWidget.init_vect_4(parent, label_str="",\
-                                   x_str = "\"M10\"", y_str = "\"M11\"", z_str = "\"M12\"", w_str = "\"M13\"")
-        rows_layout.addWidget(row2)
-
-        row3, m20, m21, m22, m23 = PathSegmentWidget.init_vect_4(parent, label_str="",\
-                                   x_str = "\"M20\"", y_str = "\"M21\"", z_str = "\"M22\"", w_str = "\"M23\"")
-        rows_layout.addWidget(row3)
-        
-        row4, m30, m31, m32, m33 = PathSegmentWidget.init_vect_4(parent, label_str="",\
-                                   x_str = "\"M30\"", y_str = "\"M31\"", z_str = "\"M32\"", w_str = "\"M33\"")
-        rows_layout.addWidget(row4)
-        
-        mat_container.setLayout(rows_layout)
-        if label is not None:
-            layout.addWidget(label)
-        layout.addWidget(mat_container)
-        container.setLayout(layout)
-        return container, [m00, m01, m02, m03, m10, m11, m12, m13,  m20, m21, m22, m23, m30, m31, m32, m33]
-
-    
-    @staticmethod
-    def init_text_field(parent: QWidget, label_str: str = "text field",\
-                         start_value: str = "nothing") -> Tuple[QWidget, QLabel]:
-        container  = QWidget(parent)           # контейнер с горизонтальным размещением
-        label_name = QLabel(f"{label_str} : ") # лейбл с заголовком элемента интерфейса
-        label_text = QLabel(f"{start_value}")  # поле которое можно поменять из вне
-        layout     = QHBoxLayout()
-        layout.addWidget(label_name)
-        layout.addWidget(label_text)
-        container.setLayout(layout)
-        return container, label_text
-    
-    @staticmethod
-    def init_drop_down(parent: QWidget, label_str: str = "dorp down",\
-                       values: List[str] | None = None) -> Tuple[QWidget, QComboBox]:
-        container = QWidget(parent)           # контейнер с горизонтальным размещением
-        label     = QLabel(f"{label_str} : ") # лейбл с заголовком элемента интерфейса
-        drop_down = QComboBox()
-        layout    = QHBoxLayout()
-        layout.addWidget(label)
-        layout.addWidget(drop_down)
-        container.setLayout(layout)
-        drop_down.addItems(["item 1", "item 2", "item 3"] if values is None else values)
-        return container, drop_down
-    
-    @staticmethod
-    def buttons_group(parent: QWidget, label_str: str = "buttons-group",\
-                      buttons_str: List[str] | None = None, vert: bool = False) -> Tuple[QWidget, List[QPushButton]]:
-        container         = QWidget(parent)           # контейнер с вертикальным размещением
-        label             = QLabel(f"{label_str} : ") # лейбл с заголовком элемента интерфейса
-        layout            = QVBoxLayout()
-        buttons_container = QWidget()
-        buttons_layout    = QVBoxLayout() if vert else QHBoxLayout()
-        buttons = [QPushButton(name) for name in ("btn1", "btn2", "btn3")] if buttons_str is None else\
-                  [QPushButton(name) for name in buttons_str]
-        for b in buttons:
-            buttons_layout.addWidget(b)
-        buttons_container.setLayout(buttons_layout)
-        layout.addWidget(label)
-        layout.addWidget(buttons_container)
-        container.setLayout(layout)
-        return container, buttons
-    
-    
     def _init_layouts(self):
         # реализовать
         self._layout = ...        
         
         self._path_name_label = ...
-        self._ponts_count_label = ...
+        self._points_count_label = ...
         
         self._start_x = ...
         self._start_y = ...
@@ -318,52 +319,42 @@ class PathSegmentWidget(QWidget):
         
         self._start_btn   = ...
         self._stop_btn    = ...
-        self._reverce_btn = ...
-
+        self._reverse_btn = ...
 
     def _set_path_name(self, name: str):
         ...
-
 
     def _set_points_count(self, name: str):
         # реализовать
         ...
 
-
     def _set_start_pt(self, start_x: float, start_y: float, start_z: float):
         # реализовать
         ...
-
 
     def _set_end_pt(self, start_x: float, start_y: float, start_z: float):
         # реализовать
         ...
 
-
     def _on_decimate_value_changed(self):
         # реализовать
         ...
-
 
     def _on_smooth_value_changed(self):
         # реализовать
         ...
 
-
     def _on_go_to_start_clicked(self):
         # реализовать
         ...
-
 
     def _on_go_to_end_clicked(self):
         # реализовать
         ...
 
-
     def _on_go_clicked(self):
         # реализовать
         ...
-
 
     def _on_stop_clicked(self):
         # реализовать
@@ -392,7 +383,7 @@ class PathsContainer(QWidget):
         """
         return self._root
    
-    def regster_element(self, element: QWidget) -> int:
+    def register_element(self, element: QWidget) -> int:
         """
         Привязвыет элементы интерфейса к родителю
         """
@@ -403,7 +394,7 @@ class PathsContainer(QWidget):
         element.setParent(self)
         return unique_id
     
-    def unregster_element(self, element: QWidget | int) -> bool:
+    def unregister_element(self, element: QWidget | int) -> bool:
         """
         Отвязывает и удаляет элементы интерфейса от родителя
         """
@@ -419,12 +410,11 @@ class PathsContainer(QWidget):
         self._widgets[unique_id].deleteLater()
         del self._widgets[unique_id]
         return True
-        
 
 
-if __name__ == "__main__":
-
-    app = QApplication(sys.argv)
+def ui_example() -> QWidget:
+    # Инициализация виджета
+    # Начиная отсюда
     # path_container = PathsContainer()
     root = QWidget()
     root.resize(500, 125)
@@ -434,41 +424,48 @@ if __name__ == "__main__":
     # Начиная отсюда
     container, path_name_label = PathSegmentWidget.init_text_field(root, label_str="Path 0")
     layout.addWidget(container)
-    
-    container, ponts_count_label = PathSegmentWidget.init_text_field(root, label_str="Path points count")
+
+    container, points_count_label = PathSegmentWidget.init_text_field(root, label_str="Path points count")
     layout.addWidget(container)
-    
+
     container, start_x, start_y, start_z = PathSegmentWidget.init_vect_3(root, label_str="Start Point")
     layout.addWidget(container)
-    
+
     container, end_x, end_y = PathSegmentWidget.init_vect_2(root, label_str="End Point")
     layout.addWidget(container)
-    
+
     container, end_x, end_y, end_z = PathSegmentWidget.init_vect_3(root, label_str="End Point")
     layout.addWidget(container)
-    
+
     container, end_x, end_y, end_z, end_w = PathSegmentWidget.init_vect_4(root, label_str="Somthing")
     layout.addWidget(container)
-    
+
     container, elements = PathSegmentWidget.init_mat_4(root, label_str="Somthing")
     layout.addWidget(container)
-    
+
     container, decimate_drop_down = PathSegmentWidget.init_drop_down(root, label_str="Decimate")
     layout.addWidget(container)
-    
+
     container, smoothing_drop_down = PathSegmentWidget.init_drop_down(root, label_str="Path smoothing")
     layout.addWidget(container)
-    
-    container, direction_buttons = PathSegmentWidget.buttons_group(root, label_str="Movment direction", buttons_str=["go to start", "go to end"])
-    layout.addWidget(container)
-    
-    container, state_buttons = PathSegmentWidget.buttons_group(root, label_str="Movment state", buttons_str=["start", "pause", "reverse"])
-    layout.addWidget(container)
-    
-    root.setLayout(layout) 
-    # заканчивая тут перенести в класс PathSegmentWidget / _init_layouts(self)
-   
 
-    # app.setStyle("Fusion")
+    container, direction_buttons = PathSegmentWidget.buttons_group(root, label_str="Movment direction",
+                                                                   buttons_str=["go to start", "go to end"])
+    layout.addWidget(container)
+
+    container, state_buttons = PathSegmentWidget.buttons_group(root, label_str="Movment state",
+                                                               buttons_str=["start", "pause", "reverse"])
+    layout.addWidget(container)
+
+    root.setLayout(layout)
+    # заканчивая тут перенести в класс PathSegmentWidget / _init_layouts(self)
+    return root
+
+
+if __name__ == "__main__":
+    # НИКАКИХ ФУНКЦИЙ ПО ИНИЦИАЛИЗАЦИИ ВНУТРИ МЕЙН!
+    # ТОЛЬКО ОСНОВНАЯ ТОЧКА ВХОДА!
+    app = QApplication(sys.argv)
+    root = ui_example()
     root.show()
     sys.exit(app.exec_())

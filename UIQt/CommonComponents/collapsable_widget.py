@@ -3,12 +3,13 @@ from PyQt5.QtWidgets import (QPushButton, QDialog, QTreeWidget,
                              QTreeWidgetItem, QVBoxLayout,
                              QHBoxLayout, QFrame, QLabel,
                              QApplication)
-from paths_container import ui_example
+from paths_container import path_container_example
+
 
 class SectionExpandButton(QPushButton):
     """a QPushbutton that can expand or collapse its section
     """
-    def __init__(self, item, text = "", parent = None):
+    def __init__(self, item, text="", parent=None):
         super().__init__(text, parent)
         self.section = item
         self.clicked.connect(self.on_clicked)
@@ -37,8 +38,6 @@ class CollapsibleDialog(QDialog):
         self.setLayout(layout)
         self.tree.setIndentation(0)
         self.setFixedSize(340, 700)
-
-
         self.sections = []
         self.define_sections()
         self.add_sections()
@@ -58,7 +57,7 @@ class CollapsibleDialog(QDialog):
         """
         widget = QFrame(self.tree)
 
-        ui_example(widget)
+        path_container_example(widget)
 
         title = "Path Container"
         self.sections.append((title, widget))
@@ -69,7 +68,7 @@ class CollapsibleDialog(QDialog):
         """
         item = QTreeWidgetItem()
         self.tree.addTopLevelItem(item)
-        self.tree.setItemWidget(item, 0, SectionExpandButton(item, text = title))
+        self.tree.setItemWidget(item, 0, SectionExpandButton(item, text=title))
         return item
 
     def add_widget(self, button, widget):

@@ -29,8 +29,8 @@ def path_list_container_test():
     # win.setWindowTitle("Path segments")
     list_of_path = PathsListWidget()  # (win)
     list_of_path.register_element(path_container_example(list_of_path.list_widget))
-    list_of_path.register_element(path_container_example(list_of_path.list_widget))
-    list_of_path.register_element(path_container_example(list_of_path.list_widget))
+    # list_of_path.register_element(path_container_example(list_of_path.list_widget))
+    # list_of_path.register_element(path_container_example(list_of_path.list_widget))
     list_of_path.show()
     # path_container = path_container_example()
     # list_of_path.adjustSize()
@@ -41,6 +41,6 @@ def path_list_container_test():
 if __name__ == "__main__":
     # НИКАКИХ ФУНКЦИЙ ПО ИНИЦИАЛИЗАЦИИ ВНУТРИ МЕЙН!
     # ТОЛЬКО ОСНОВНАЯ ТОЧКА ВХОДА!
-    path_container_test()
-    # path_list_container_test()
+    # path_container_test()
+    path_list_container_test()
 

@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QListWidget, QListWidgetItem
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QListWidget, QListWidgetItem, QPushButton
 from typing import Dict
 
 
@@ -6,16 +6,30 @@ class PathsListWidget(QWidget):
     """
     Класс контейнер для элементов. Позволяет добавить элементы или удалить их.
     """
-    def __init__(self, parent: QWidget = None, width: int = 300, height: int = 600, window_name: str = "MainWindow"):
+    def __init__(self, parent: QWidget = None, width: int = 200, height: int = 600, window_name: str = "MainWindow"):
         assert isinstance(width, int)
         assert isinstance(height, int)
         assert isinstance(window_name, str)
         super(PathsListWidget, self).__init__(parent)
         self._widgets = {}
+        self._btn = QPushButton("Collapse Button")
         self._list_widget: QListWidget | None = QListWidget()
         self._layout:      QVBoxLayout | None = QVBoxLayout()
+        self._layout.addWidget(self._btn)
         self._layout.addWidget(self._list_widget)
+        self._clicked_flag: bool = False
+        self._list_widget.hide()
+        self._btn.clicked.connect(self.collapse)
         self.setLayout(self._layout)
+
+    def collapse(self):
+        if self._clicked_flag:
+            self._list_widget.hide()
+            self._clicked_flag = False
+        else:
+            self._list_widget.show()
+            self._clicked_flag = True
+
 
     @property
     def list_elements_widgets(self) -> Dict[int, QWidget]:

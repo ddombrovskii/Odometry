@@ -4,18 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="5ead7134-b374-42a1-8fdd-5ab1a6211af6" name="Changes" comment="path_view">
-      <change afterPath="$PROJECT_DIR$/UIQt/CommonComponents/path_segment_widget.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/UIQt/CommonComponents/paths_list_widget.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/UIQt/CommonComponents/qt_widgets_utils.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/UIQt/CommonComponents/ui_test.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/Odometry.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Odometry.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/qtui/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/CommonComponents/image_widget.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/qtui/collapsable_widget.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/CommonComponents/collapsable_widget.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/qtui/paths_container.py" beforeDir="false" />
-    </list>
+    <list default="true" id="5ead7134-b374-42a1-8fdd-5ab1a6211af6" name="Changes" comment="path_view" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />

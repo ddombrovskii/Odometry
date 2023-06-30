@@ -73,7 +73,7 @@ class TitleFrame(QFrame):
 
     def mousePressEvent(self, event):
         # TODO FIX
-        self.emit(QtCore.SIGNAL('clicked()'))
+        self.emit(SIGNAL('clicked()'))
         return super(TitleFrame, self).mousePressEvent(event)
 
     @property

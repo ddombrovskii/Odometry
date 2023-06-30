@@ -12,24 +12,10 @@ class PathsListWidget(QWidget):
         assert isinstance(window_name, str)
         super(PathsListWidget, self).__init__(parent)
         self._widgets = {}
-        self._btn = QPushButton("Collapse Button")
-        self._list_widget: QListWidget | None = QListWidget()
+        self._list_of_widgets: QListWidget | None = QListWidget()
         self._layout:      QVBoxLayout | None = QVBoxLayout()
-        self._layout.addWidget(self._btn)
-        self._layout.addWidget(self._list_widget)
-        self._clicked_flag: bool = False
-        self._list_widget.hide()
-        self._btn.clicked.connect(self.collapse)
+        self._layout.addWidget(self._list_of_widgets)
         self.setLayout(self._layout)
-
-    def collapse(self):
-        if self._clicked_flag:
-            self._list_widget.hide()
-            self._clicked_flag = False
-        else:
-            self._list_widget.show()
-            self._clicked_flag = True
-
 
     @property
     def list_elements_widgets(self) -> Dict[int, QWidget]:
@@ -47,7 +33,7 @@ class PathsListWidget(QWidget):
         """
         Контейнер с элементами
         """
-        return self._list_widget
+        return self._list_of_widgets
 
     def register_element(self, element: QWidget) -> int:
         """
@@ -57,10 +43,10 @@ class PathsListWidget(QWidget):
         if id(element) in self._widgets:
             return -1
         self._widgets.update({unique_id: element})
-        list_item_widget  = QListWidgetItem(self._list_widget)
+        list_item_widget = QListWidgetItem(self._list_of_widgets)
         list_item_widget.setSizeHint(element.sizeHint())
-        self._list_widget.addItem(list_item_widget)
-        self._list_widget.setItemWidget(list_item_widget, element)
+        self._list_of_widgets.addItem(list_item_widget)
+        self._list_of_widgets.setItemWidget(list_item_widget, element)
         return unique_id
 
     def unregister_element(self, element: QWidget | int) -> bool:
@@ -79,6 +65,6 @@ class PathsListWidget(QWidget):
             return False
         item = self._widgets[unique_id]
         item.deleteLater()
-        self._list_widget.removeItemWidget(item)
+        self._list_of_widgets.removeItemWidget(item)
         del self._widgets[unique_id]
         return True

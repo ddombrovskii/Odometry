@@ -1,8 +1,10 @@
-from PyQt5.QtWidgets import QWidget, QApplication, QMainWindow
+from PyQt5.QtWidgets import QWidget, QApplication
 from path_segment_widget import PathSegmentWidget
 from paths_list_widget import PathsListWidget
 from Utilities.Geometry import Vector3
 import sys
+
+from collapsible_widget import CollapsableWidget
 
 
 def path_container_example(parent: QWidget = None) -> PathSegmentWidget:
@@ -28,7 +30,9 @@ def path_list_container_test():
     # win = QMainWindow()
     # win.setWindowTitle("Path segments")
     list_of_path = PathsListWidget()  # (win)
-    list_of_path.register_element(path_container_example(list_of_path.list_widget))
+    temp = CollapsableWidget(path_container_example(list_of_path.list_widget))
+    temp.btn = "Collapse"
+    list_of_path.register_element(temp)
     # list_of_path.register_element(path_container_example(list_of_path.list_widget))
     # list_of_path.register_element(path_container_example(list_of_path.list_widget))
     list_of_path.show()
@@ -41,6 +45,6 @@ def path_list_container_test():
 if __name__ == "__main__":
     # НИКАКИХ ФУНКЦИЙ ПО ИНИЦИАЛИЗАЦИИ ВНУТРИ МЕЙН!
     # ТОЛЬКО ОСНОВНАЯ ТОЧКА ВХОДА!
-    path_container_test()
-    #  path_list_container_test()
+    # path_container_test()
+     path_list_container_test()
 

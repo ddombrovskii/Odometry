@@ -41,6 +41,6 @@ def path_list_container_test():
 if __name__ == "__main__":
     # НИКАКИХ ФУНКЦИЙ ПО ИНИЦИАЛИЗАЦИИ ВНУТРИ МЕЙН!
     # ТОЛЬКО ОСНОВНАЯ ТОЧКА ВХОДА!
-    # path_container_test()
-    path_list_container_test()
+    path_container_test()
+    #  path_list_container_test()
 

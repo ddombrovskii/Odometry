@@ -1,8 +1,7 @@
-from PyQt5 import QtCore
 from PyQt5.QtGui import QMouseEvent, QWheelEvent
-
-from Utilities import BitSet32
 from Utilities.Geometry import Vector2
+from Utilities import BitSet32
+from PyQt5 import QtCore
 
 LEFT_BTN   = QtCore.Qt.MouseButton.LeftButton
 RIGHT_BTN  = QtCore.Qt.MouseButton.RightButton

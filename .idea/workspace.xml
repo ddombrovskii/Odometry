@@ -5,13 +5,58 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5ead7134-b374-42a1-8fdd-5ab1a6211af6" name="Changes" comment="path_view">
+      <change afterPath="$PROJECT_DIR$/UIQt/CommonComponents/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/UIQt/GLUtilities/Input/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/UIQt/GLUtilities/Materials/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/UIQt/GLUtilities/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/UIQt/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Utilities/runnig_average.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/Odometry.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Odometry.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PathFinder/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/PathFinder/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PathFinder/path_finder.py" beforeDir="false" afterPath="$PROJECT_DIR$/PathFinder/path_finder.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/UIQt/CommonComponents/collapsable_widget.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/CommonComponents/collapsable_widget.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/UIQt/CommonComponents/image_widget.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/CommonComponents/image_widget.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/UIQt/CommonComponents/paths_list_widget.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/CommonComponents/paths_list_widget.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UIQt/CommonComponents/path_segment_widget.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/CommonComponents/path_segment_widget.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UIQt/CommonComponents/qt_widgets_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/CommonComponents/qt_widgets_utils.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/UIQt/CommonComponents/ui_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/CommonComponents/ui_test.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UIQt/GLUtilities/Resources/box.mtl" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/UIQt/GLUtilities/Resources/carbon.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/UIQt/GLUtilities/Resources/sphere.mtl" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/UIQt/GLUtilities/Scenes/Shaders/map_shader.frag" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/GLUtilities/Scenes/Shaders/map_shader.frag" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UIQt/GLUtilities/Shaders/map_shader.frag" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/GLUtilities/Shaders/map_shader.frag" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UIQt/GLUtilities/StartScene/Shaders/map_shader.frag" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/GLUtilities/StartScene/Shaders/map_shader.frag" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UIQt/GLUtilities/gl_buffer.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/GLUtilities/gl_buffer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UIQt/GLUtilities/gl_frame_buffer.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/GLUtilities/gl_frame_buffer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UIQt/GLUtilities/gl_globals.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/GLUtilities/gl_globals.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UIQt/GLUtilities/gl_material.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/GLUtilities/gl_material.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UIQt/GLUtilities/gl_mesh.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/GLUtilities/gl_mesh.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UIQt/GLUtilities/gl_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/GLUtilities/gl_model.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UIQt/GLUtilities/gl_scene.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/GLUtilities/gl_scene.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UIQt/GLUtilities/gl_shader.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/GLUtilities/gl_shader.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UIQt/GLUtilities/gl_texture.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/GLUtilities/gl_texture.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UIQt/GLUtilities/objects_pool.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/GLUtilities/gl_objects_pool.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UIQt/GLUtilities/triangle_mesh.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/GLUtilities/gl_tris_mesh.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UIQt/Input/keyboard_controller.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/GLUtilities/Input/keyboard_controller.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UIQt/Input/mouse_controller.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/GLUtilities/Input/mouse_controller.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UIQt/Scripts/Functionality/mouse_view_contoller.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/Scripts/Functionality/mouse_view_contoller.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UIQt/Scripts/Functionality/path_create_behaviour.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/Scripts/Functionality/path_create_behaviour.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UIQt/Scripts/Functionality/swich_view_behavior.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/Scripts/Functionality/swich_view_behavior.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UIQt/Scripts/map_renderers.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/Scripts/map_renderers.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UIQt/Scripts/viewer_behaviour.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/Scripts/viewer_behaviour.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UIQt/UI/MainWindow.ui" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/UI/MainWindow.ui" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UIQt/main_window.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/main_window.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UIQt/path_builder.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/path_builder.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UIQt/point_widget.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/point_widget.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UIQt/reference_view_widget.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/reference_view_widget.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UIQt/scene_viewer.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/scene_viewer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UIQt/scene_viewer_widget.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/scene_viewer_widget.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UIQt/test_scene.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/voxel.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/voxel.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/find_path_c.py" beforeDir="false" afterPath="$PROJECT_DIR$/find_path_c.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -37,20 +82,21 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "last_opened_file_path": "C:/Users/Илья/PycharmProjects/Odometry",
-    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/Илья/PycharmProjects/Odometry&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="E:\GitHub\Odometry\Odometry\UIQt\GLUtilities\Input" />
       <recent name="E:\GitHub\Odometry\Odometry\UIQt\CommonComponents" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.ui_test">
+  <component name="RunManager" selected="Python.main_window">
     <configuration name="collapsable_widget (1)" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="Odometry" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -72,7 +118,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="collapsable_widget" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="find_path_c" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="Odometry" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -80,11 +126,11 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/qtui" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="E:\GitHub\Odometry\Odometry\UIQt\CommonComponents\collapsable_widget.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/find_path_c.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -114,7 +160,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="paths_container (1)" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="main_window" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="Odometry" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -122,32 +168,11 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/qtui" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/UIQt" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/qtui/paths_container.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration name="paths_container" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="Odometry" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/paths_container.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/UIQt/main_window.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -179,11 +204,11 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.main_window" />
+        <item itemvalue="Python.find_path_c" />
         <item itemvalue="Python.ui_test" />
         <item itemvalue="Python.image_widget" />
         <item itemvalue="Python.collapsable_widget (1)" />
-        <item itemvalue="Python.paths_container" />
-        <item itemvalue="Python.paths_container (1)" />
       </list>
     </recent_temporary>
   </component>
@@ -222,14 +247,10 @@
     <option name="LAST_COMMIT_MESSAGE" value="path_view" />
   </component>
   <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/UIQt/GLUtilities/gl_shader.py</url>
-          <line>415</line>
-          <option name="timeStamp" value="12" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
+    <watches-manager>
+      <configuration name="PythonConfigurationType">
+        <watch expression="self._scene._gizmos" />
+      </configuration>
+    </watches-manager>
   </component>
 </project>

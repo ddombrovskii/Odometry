@@ -2,6 +2,7 @@ from PyQt5 import uic  # если пайчарм подсвечивает оши
 from PyQt5.QtWidgets import QWidget, QGroupBox, QLineEdit, QLabel, QSizePolicy, QStyle, QPushButton
 
 
+# UNUSED
 class PointWidget(QWidget):
     def __init__(self, number: int):
         super(PointWidget, self).__init__()

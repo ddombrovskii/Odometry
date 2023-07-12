@@ -1,8 +1,8 @@
-from UIQt.GLUtilities.triangle_mesh import TrisMesh, create_plane, create_box
+from .gl_tris_mesh import TrisMeshGL, create_plane, create_box
 from Utilities.Geometry import Transform, BoundingBox, Vector3
-from UIQt.GLUtilities.gl_decorators import gl_error_catch
-from UIQt.GLUtilities.objects_pool import ObjectsPool
-from UIQt.GLUtilities.gl_buffer import BufferGL
+from .gl_objects_pool import ObjectsPoolGL
+from .gl_decorators import gl_error_catch
+from .gl_buffer import BufferGL
 from Utilities import BitSet32
 from OpenGL.GL import *
 import numpy as np
@@ -15,7 +15,7 @@ class MeshGL:
     UVsAttribute = 3  # 8
     TrianglesAttribute = 4  # 16
 
-    meshes = ObjectsPool()
+    meshes = ObjectsPoolGL()
 
     @classmethod
     def create_box_gl(cls, side: float = 1.0, transform: Transform = None):
@@ -42,7 +42,7 @@ class MeshGL:
                f"\t\"source\" :\"{self.source}\"" \
                f"\n}}"
 
-    def __init__(self, mesh: TrisMesh = None):
+    def __init__(self, mesh: TrisMeshGL = None):
         self._name: str = ""
         self._source: str = ""
         self._bounds: BoundingBox = BoundingBox()
@@ -134,7 +134,7 @@ class MeshGL:
         self.bind()
 
     @gl_error_catch
-    def _create_gpu_buffers(self, mesh: TrisMesh) -> bool:
+    def _create_gpu_buffers(self, mesh: TrisMeshGL) -> bool:
         if mesh.vertices_count == 0:
             return False
         if mesh.faces_count == 0:

@@ -1,12 +1,12 @@
 from Utilities.Geometry import Matrix4, Vector3, Vector2, BoundingBox
-from UIQt.GLUtilities.triangle_mesh import read_obj_mesh, poly_strip
-from UIQt.GLUtilities.gl_frame_buffer import FrameBufferGL
-from UIQt.GLUtilities.gl_material import MaterialGL
-from UIQt.GLUtilities.gl_texture import TextureGL
-from UIQt.GLUtilities.gl_camera import CameraGL
-from UIQt.GLUtilities.gl_shader import ShaderGL
-from UIQt.GLUtilities.gl_model import ModelGL
-from UIQt.GLUtilities.gl_mesh import MeshGL
+from .gl_tris_mesh import read_obj_mesh, poly_strip
+from .gl_frame_buffer import FrameBufferGL
+from .gl_material import MaterialGL
+from .gl_texture import TextureGL
+from .gl_camera import CameraGL
+from .gl_shader import ShaderGL
+from .gl_model import ModelGL
+from .gl_mesh import MeshGL
 from UIQt.GLUtilities import gl_globals
 from Utilities import BitSet32
 from typing import List, Dict
@@ -229,7 +229,7 @@ class SceneGL:
         for e in self._entities.values():
             self._draw_any(e, override_material)
 
-    def _draw_any(self, model: ModelGL, override_material: MaterialGL = None):
+    def _draw_any(self, model: ModelGL, override_material=None):
         if not model.enable:
             return
         material = override_material if override_material is not None else model.material
@@ -252,7 +252,7 @@ GL_SCENE_MODELS = "Models"
 GL_SCENE_GIZMOS = "Gizmos"
 
 
-def merge_scene(scene: SceneGL, src_file: str, dont_destroy_on_load: bool = False) -> SceneGL:
+def merge_scene(scene: SceneGL, src_file: str) -> SceneGL:
     with open(f"{src_file}\\scene.json", 'rt') as input_file:
         raw_data = json.loads(input_file.read())
 
@@ -289,6 +289,8 @@ def merge_scene(scene: SceneGL, src_file: str, dont_destroy_on_load: bool = Fals
     if GL_SCENE_MATERIALS in raw_data:
         materials = raw_data[GL_SCENE_MATERIALS]
         for m in materials:
+            # if not MaterialGL.materials.check_if_name_valid(m["name"]):
+            #     continue
             shader = ShaderGL.shaders.get_by_name(m["shader"])
             if shader is None:
                 continue
@@ -386,9 +388,9 @@ def merge_scene(scene: SceneGL, src_file: str, dont_destroy_on_load: bool = Fals
     return scene
 
 
-def load_scene(src_file: str, dont_destroy_on_load: bool = False) -> SceneGL:
+def load_scene(src_file: str) -> SceneGL:
     scene: SceneGL = SceneGL()
-    merge_scene(scene, src_file, dont_destroy_on_load)
+    merge_scene(scene, src_file)
     return scene
 
 

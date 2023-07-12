@@ -1,4 +1,4 @@
-class ObjectsPool:
+class ObjectsPoolGL:
     def __init__(self):
         self._bounded_id: int = -1
         self._objects_by_id = {}

@@ -1,5 +1,5 @@
-from UIQt.GLUtilities.gl_decorators import gl_error_catch
-from UIQt.GLUtilities.objects_pool import ObjectsPool
+from .gl_objects_pool import ObjectsPoolGL
+from .gl_decorators import gl_error_catch
 from typing import Union, List
 from Utilities import Color
 from OpenGL.GL import *
@@ -10,7 +10,7 @@ import numpy as np
 
 class TextureGL:
 
-    textures = ObjectsPool()
+    textures = ObjectsPoolGL()
 
     def __init__(self, w: int = 16, h: int = 16, col: Color = Color(np.uint8(255), np.uint8(0), np.uint8(0)),
                  alpha=False):

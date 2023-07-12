@@ -1,7 +1,7 @@
 from Utilities.Geometry import Vector3, BoundingBox, Transform
-from Utilities.Geometry.voxel import Voxel
 from Utilities.Geometry import Vector2
 from typing import Tuple, List, Union
+from Utilities.Geometry import Voxel
 from collections import namedtuple
 import numpy as np
 import re
@@ -53,7 +53,7 @@ class Face(namedtuple('Face', 'p_1, uv1, n_1,'
         return self.p_3, self.n_3, self.uv3
 
 
-class TrisMesh:
+class TrisMeshGL:
     __slots__ = "name", "material", "source", "_vertices", "_normals", "_uvs", "_faces", "_bbox"
 
     def __init__(self):
@@ -237,7 +237,7 @@ class TrisMesh:
             self._vertices[i] = transform.transform_vect(self._vertices[i], 1.0)
 
         for i in range(len(self._normals)):
-            self._normals[i] = transform.transform_vect(self._normals[i], 0.0)
+            self._normals[i] = transform.transform_vect(self._normals[i], 0.0).normalized()
 
     def merge(self, other):
         v_offset  = self.vertices_count
@@ -263,22 +263,21 @@ class TrisMesh:
         return self
 
 
-def read_obj_mesh(path: str) -> List[TrisMesh]:
+def read_obj_mesh(path: str) -> List[TrisMeshGL]:
     try:
         with open(path, mode='r') as file:
 
             tmp:  List[str]
-            tmp2: List[str]
             id_: int
 
-            meshes: List[TrisMesh] = []
+            meshes: List[TrisMeshGL] = []
             uv_shift: int = 0
             v__shift: int = 0
             n__shift: int = 0
 
             for str_ in file:
 
-                line = (re.sub(r"[\n\t]*", "", str_))
+                line = re.sub(r"[\n\t]*", "", str_)
 
                 if len(line) == 0:
                     continue
@@ -297,7 +296,7 @@ def read_obj_mesh(path: str) -> List[TrisMesh]:
                     if not (tmp[1] == "object"):
                         continue
 
-                    mesh: TrisMesh = TrisMesh()
+                    mesh: TrisMeshGL = TrisMeshGL()
                     mesh.source = path
                     mesh.name = tmp[2]
                     meshes.append(mesh)
@@ -309,7 +308,7 @@ def read_obj_mesh(path: str) -> List[TrisMesh]:
                     continue
 
                 if tmp[0] == "o":
-                    mesh: TrisMesh = TrisMesh()
+                    mesh: TrisMeshGL = TrisMeshGL()
                     mesh.name = tmp[1]
                     meshes.append(mesh)
                     if len(meshes) == 1:
@@ -354,7 +353,7 @@ def read_obj_mesh(path: str) -> List[TrisMesh]:
         return []
 
 
-def write_obj_mesh(mesh: TrisMesh, path: str) -> None:
+def write_obj_mesh(mesh: TrisMeshGL, path: str) -> None:
     with open(path, "wt") as obj_file:
         print('# object 1')
         print('\n'.join("v {:.5f} {:.5f} {:.5f}".format(v.x, v.y, v.z) for v in mesh.vertices), file=obj_file)
@@ -362,12 +361,11 @@ def write_obj_mesh(mesh: TrisMesh, path: str) -> None:
         print('\n'.join("vn {:.5f} {:.5f} {:.5f}".format(v.x, v.y, v.z) for v in mesh.normals), file=obj_file)
         print('\n'.join("f {}/{}/{} {}/{}/{} {}/{}/{}".format(v.p_1 + 1, v.uv1 + 1, v.n_1 + 1,
                                                               v.p_2 + 1, v.uv2 + 1, v.n_2 + 1,
-                                                              v.p_3 + 1, v.uv3 + 1, v.n_3 + 1) for v in mesh.faces),
-              file=obj_file)
+                                                              v.p_3 + 1, v.uv3 + 1, v.n_3 + 1) for v in mesh.faces), file=obj_file)
 
 
 def create_plane(height: float = 1.0, width: float = 1.0, rows: int = 10,
-                 cols: int = 10, transform: Transform = None) -> TrisMesh:
+                 cols: int = 10, transform: Transform = None) -> TrisMeshGL:
     if rows < 2:
         rows = 2
     if cols < 2:
@@ -375,14 +373,14 @@ def create_plane(height: float = 1.0, width: float = 1.0, rows: int = 10,
     points_n: int = cols * rows
     x: float
     z: float
-    mesh: TrisMesh = TrisMesh()
+    mesh: TrisMeshGL = TrisMeshGL()
     normal: Vector3 = Vector3(0, 1, 0)
     for index in range(0, points_n):
         row, col = divmod(index, cols)
         x = width * ((cols - 1) * 0.5 - col) / (cols - 1.0)
         z = height * ((cols - 1) * 0.5 - row) / (cols - 1.0)
         mesh.append_vertex(Vector3(x, 0, z))
-        mesh.append_uv(Vector3(1.0 - col * 1.0 / (cols - 1), row * 1.0 / (cols - 1)))
+        mesh.append_uv(Vector2(1.0 - col * 1.0 / (cols - 1), row * 1.0 / (cols - 1)))
         mesh.append_normal(normal)
         if (index + 1) % cols == 0:
             continue  # пропускаем последнюю
@@ -397,8 +395,8 @@ def create_plane(height: float = 1.0, width: float = 1.0, rows: int = 10,
     return mesh
 
 
-def create_box(min_b: Vector3, max_b: Vector3, transform: Transform = None) -> TrisMesh:
-    mesh: TrisMesh = TrisMesh()
+def create_box(min_b: Vector3, max_b: Vector3, transform: Transform = None) -> TrisMeshGL:
+    mesh: TrisMeshGL = TrisMeshGL()
 
     mesh.append_vertex(Vector3(min_b.x, max_b.y, min_b.z))
     mesh.append_vertex(Vector3(min_b.x, max_b.y, max_b.z))
@@ -440,7 +438,7 @@ def create_box(min_b: Vector3, max_b: Vector3, transform: Transform = None) -> T
     return mesh
 
 
-def voxels_mesh(voxels: List[Voxel]) -> TrisMesh:
+def voxels_mesh(voxels: List[Voxel]) -> TrisMeshGL:
     mesh = None
     for voxel in voxels:
         if mesh is None:
@@ -451,23 +449,23 @@ def voxels_mesh(voxels: List[Voxel]) -> TrisMesh:
     return mesh
 
 
-def poly_strip(points: List[Vector2], strip_width: float = 0.5) -> TrisMesh:
+def poly_strip(points: List[Vector2], strip_width: float = 0.5) -> TrisMeshGL | None:
 
     n_pts = len(points)
 
     if n_pts == 0:
-        return create_plane(strip_width, strip_width, 1, 1)
+        return None  # create_plane(strip_width, strip_width, 1, 1)
+
+    if n_pts == 1:
+        t = Transform()
+        t.origin = Vector3(points[0].x, 0.0, points[0].y)
+        return None  # create_plane(strip_width, strip_width, 1, 1, t)
 
     u_length = 0.0
     for i in range(len(points)-1):
         u_length += (points[i] - points[i+1]).magnitude()
 
-    if n_pts == 1:
-        t = Transform()
-        t.origin = Vector3(points[0].x, 0.0, points[0].y)
-        return create_plane(strip_width, strip_width, 1, 1, t)
-
-    mesh = TrisMesh()
+    mesh = TrisMeshGL()
     u_coord = 0.0
     p0   = points[0]
     dp10 = points[1] - points[0]

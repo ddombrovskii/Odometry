@@ -1,9 +1,9 @@
 from PyQt5.QtGui import QOpenGLVersionProfile, QSurfaceFormat, QMouseEvent, QWheelEvent, QKeyEvent
-from UIQt.GLUtilities.gl_scene import SceneGL, load_scene, save_scene, merge_scene
 from UIQt.Scripts.Functionality.mouse_view_contoller import MouseViewController
-from UIQt.GLUtilities.gl_frame_buffer import FrameBufferGL
-from UIQt.GLUtilities.gl_decorators import gl_error_catch
+from UIQt.GLUtilities import SceneGL, load_scene, save_scene, merge_scene
 from UIQt.Scripts.viewer_behaviour import ViewerBehaviour
+from UIQt.GLUtilities import FrameBufferGL
+from UIQt.GLUtilities import gl_error_catch
 from UIQt.GLUtilities import gl_globals
 from Utilities.Geometry import Vector3
 from PyQt5 import QtOpenGL, QtCore
@@ -14,6 +14,7 @@ import OpenGL.GL as GL
 class SceneViewerWidget(QtOpenGL.QGLWidget):
     def __init__(self, parent=None):
         QtOpenGL.QGLWidget.__init__(self, parent)
+        self.makeCurrent()
         self.setFocusPolicy(QtCore.Qt.ClickFocus)
         self.parent = parent
         self._scene: SceneGL = SceneGL()
@@ -53,27 +54,18 @@ class SceneViewerWidget(QtOpenGL.QGLWidget):
         self._frame_buffer.clear_buffer()
         self._frame_buffer.unbind()
 
-    def clear_scene(self):
-        gl_globals.free()
-        gl_globals.init()
-        self._reset_frame_buffer()
-        self._scene = load_scene(r".\GLUtilities\StartScene")
-        gl_globals.MAIN_CAMERA.look_at(Vector3(0, 0, 0), self._scene.bounds.max * 0.6)
-
     def initializeGL(self):
         self._fmt = QOpenGLVersionProfile()
         self._fmt.setVersion(3, 3)
         self._fmt.setProfile(QSurfaceFormat.OpenGLContextProfile.CoreProfile)
         print(SceneViewerWidget._get_opengl_info())
-        self.clear_scene()
-        # gl_globals.init()
-        # self._reset_frame_buffer()
-        # self._scene = load_scene(r".\GLUtilities\StartScene")
-        # gl_globals.MAIN_CAMERA.look_at(Vector3(0, 0, 0), self._scene.bounds.max * 0.6)
+        gl_globals.init()
+        self._reset_frame_buffer()
+        self._scene = load_scene(r".\GLUtilities\StartScene")
+        gl_globals.MAIN_CAMERA.look_at(Vector3(0, 0, 0), self._scene.bounds.max * 0.6)
 
     def clean_up(self) -> None:
         self.makeCurrent()
-        save_scene("test_scene.json", self._scene)
         gl_globals.free()
         self.doneCurrent()
 

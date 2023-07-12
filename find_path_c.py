@@ -1,4 +1,4 @@
-from PathFinder.path_finder import PathFinderFigure
+from PathFinder import PathFinderFigure
 
 
 if __name__ == "__main__":

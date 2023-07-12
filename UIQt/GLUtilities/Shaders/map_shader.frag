@@ -62,18 +62,6 @@ vec3 heat_map(float v, float vmin, float vmax)
 
 void main()
 {
-	if(false)
-	{
 		float spec = height_map(vs_vert_in.position.y, vs_vert_in.min_bound.y, vs_vert_in.max_bound.y);
 		outColor = vec4(spec, spec, spec,  1.0);
-		return;
-	}
-	else
-	{
-		vec3 heat_color = heat_map(vs_vert_in.position.y, vs_vert_in.min_bound.y, vs_vert_in.max_bound.y);
-		outColor = vec4(heat_color.xyz,  1.0);
-		return;
-	}
-
-   /// outColor = vec4(1.0, 0.0, 1.0,  1.0);
 }

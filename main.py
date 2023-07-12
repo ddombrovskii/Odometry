@@ -10,7 +10,7 @@ import cv2 as cv
 # https://github.com/niconielsen32/ComputerVision/blob/master/VisualOdometry/visual_odometry.py
 # https://github.com/niconielsen32/ComputerVision/blob/master/LiveCameraTrajectory/liveCameraPoseEstimation.py
 # KITTI Camera
-from UIQt.GLUtilities.triangle_mesh import create_box, write_obj_mesh, TrisMesh
+from UIQt.GLUtilities.gl_tris_mesh import create_box, write_obj_mesh, TrisMesh
 from Utilities.Geometry import Matrix4, Vector3
 from Utilities.Geometry.voxel import Voxel
 

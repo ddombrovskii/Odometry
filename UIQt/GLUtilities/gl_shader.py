@@ -1,8 +1,8 @@
 from ctypes import addressof, POINTER, cast, c_float, c_ubyte, Structure
 from Utilities.Geometry import Matrix4, Matrix3, Vector3, Vector2
 from OpenGL.GL.shaders import compileProgram, compileShader
+from UIQt.GLUtilities.gl_objects_pool import ObjectsPoolGL
 from UIQt.GLUtilities.gl_decorators import gl_error_catch
-from UIQt.GLUtilities.objects_pool import ObjectsPool
 from collections import namedtuple
 from typing import Dict
 from OpenGL.GL import *
@@ -158,7 +158,7 @@ class ShaderGL:
             TextureArray: '\"TextureArray\"'
         }
 
-    shaders = ObjectsPool()
+    shaders = ObjectsPoolGL()
 
     @staticmethod
     def _read_all_code(code_src: str) -> str:

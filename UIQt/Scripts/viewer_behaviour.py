@@ -1,4 +1,4 @@
-from UIQt.GLUtilities.gl_scene import SceneGL
+from UIQt.GLUtilities import SceneGL
 
 
 class ViewerBehaviour:

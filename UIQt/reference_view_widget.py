@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import QWidget, QLabel, QPushButton, QStyle, QFileDialog, Q
 from PyQt5.QtGui import QPixmap
 
 
+# UNUSED
 class ReferenceViewWidget(QWidget):
     def __init__(self, number: int):
         super(ReferenceViewWidget, self).__init__()

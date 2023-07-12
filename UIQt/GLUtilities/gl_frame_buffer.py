@@ -1,5 +1,5 @@
-from UIQt.GLUtilities.gl_decorators import gl_error_catch
-from UIQt.GLUtilities.objects_pool import ObjectsPool
+from .gl_objects_pool import ObjectsPoolGL
+from .gl_decorators import gl_error_catch
 from collections import namedtuple
 from typing import Tuple, Dict
 from PIL import Image
@@ -59,7 +59,7 @@ class FrameBufferGL:
             GL_RGB32F: GL_RGB,
             GL_RGBA32F: GL_RGBA,
         }
-    frame_buffers = ObjectsPool()
+    frame_buffers = ObjectsPoolGL()
 
     MAIN_SCREEN_FRAME_BUFFER = "main-screen-frame-buffer"
 
@@ -165,6 +165,9 @@ class FrameBufferGL:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.unbind()
 
+    def __del__(self):
+        self.delete()
+
     @property
     def name(self) -> str:
         return self._name
@@ -264,11 +267,14 @@ class FrameBufferGL:
 
     @gl_error_catch
     def delete(self):
+        if self.bind_id == 0:
+            return
         glDeleteFramebuffers(1, (self.bind_id,))
         for attachment in self._fbo_attachments_by_id.values():
             glDeleteTextures(1, (attachment.bind_id,))
         glDeleteRenderbuffers(1, (self._fbo_depth_attachment,))
         FrameBufferGL.frame_buffers.unregister_object(self)
+        self._fbo = 0
 
     @gl_error_catch
     def __create_depth(self) -> None:

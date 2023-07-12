@@ -22,7 +22,7 @@ class Voxel(namedtuple('Voxel', 'position, size, color')):
     @property
     def points(self):
         c = self.center
-        s = self.v_size
+        s = 0.5 * self.v_size
         yield Vector3(c.x - s.x, c.y + s.y, c.z - s.z)
         yield Vector3(c.x + s.x, c.y - s.y, c.z - s.z)
         yield Vector3(c.x - s.x, c.y - s.y, c.z - s.z)

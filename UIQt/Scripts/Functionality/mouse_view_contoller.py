@@ -1,8 +1,8 @@
-from UIQt.GLUtilities.gl_frame_buffer import FrameBufferGL
 from UIQt.Scripts.viewer_behaviour import ViewerBehaviour
-from UIQt.GLUtilities.gl_scene import SceneGL
+from UIQt.GLUtilities import FrameBufferGL
 from UIQt.GLUtilities import gl_globals
 from Utilities.Geometry import Vector3
+from UIQt.GLUtilities import SceneGL
 
 
 class MouseViewController(ViewerBehaviour):

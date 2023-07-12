@@ -2,6 +2,7 @@ from ctypes import CDLL, Structure, c_int, c_float, POINTER
 from PIL import Image, ImageOps, ImageFilter
 from Utilities.Geometry import Vector2
 from matplotlib import pyplot as plt
+from Utilities import RunningAverage
 from typing import List
 import numpy as np
 import platform
@@ -34,7 +35,7 @@ def _load_library():
         elif platform.system() == 'Windows':
             if platform.architecture()[0] == '64bit':
                 # a_star_lib = CDLL('./PathFinder/x64/AStar.dll')
-                a_star_lib = CDLL(r'./PathFinder/x64/AStar.dll')
+                a_star_lib = CDLL(r'E:\GitHub\Odometry\Odometry/PathFinder/x64/AStar.dll')
                 return True
             else:
                 a_star_lib = CDLL('./PathFinder/x86/AStar.dll')
@@ -221,37 +222,6 @@ class Map3:
         return self.__array
 
 
-class RunningAverage:
-    def __init__(self, bucket_size: int = 8):
-        self._values     = []
-        self._values_sum = 0.0
-        self._capacity   = min(max(bucket_size, 2), 128)
-
-    def reset(self):
-        self._values     = []
-        self._values_sum = 0.0
-
-    @property
-    def window_size(self) -> int:
-        return self._capacity
-
-    @window_size.setter
-    def window_size(self, value: int) -> None:
-        assert isinstance(value, int)
-        self._capacity = min(max(value, 2), 128)
-
-    def __call__(self, x) -> float:
-        return self.update(x)
-
-    def update(self, x) -> float:
-        self._values.append(x)
-        self._values_sum += x
-        if len(self._values) == self._capacity:
-            self._values_sum -= self._values[0]
-            del self._values[0]
-        return self._values_sum / len(self._values)
-
-
 class PathFinder:
     def __init__(self, path_to_map: str = None, invert: bool = True, scale_ratio: float = 1.0,
                  size: Vector2 = None, origin: Vector2 = None):
@@ -296,28 +266,13 @@ class PathFinder:
         if _path_p.contents.n_points == 0:
             print("empty path...")
             return []
-
         path_points = []
-        x_smooth = RunningAverage(16)
-        y_smooth = RunningAverage(16)
         for i in range(_path_p.contents.n_points):
             p = _path_p.contents.path_points[i]
-            x = x_smooth(-p.row / (self._map.rows - 1) + 0.5)
-            y = y_smooth(-p.col / (self._map.cols - 1) + 0.5)
-            # if i % 4 != 0:
-            #     if i != _path_p.contents.n_points - 1:
-            #         continue
+            x = (-p.row / (self._map.rows - 1) + 0.5)
+            y = (-p.col / (self._map.cols - 1) + 0.5)
             point = Vector2(x, y) * self._physical_size - self._physical_origin
-
             path_points.append(point)
-
-            # if len(path_points) <= 3:
-            #     continue
-            # factor = abs(Vector2.cross((path_points[-3] - path_points[-2].normalized()),
-            #                            (path_points[-2] - path_points[-1].normalized())))
-            # if factor < 0.1:
-            #     del path_points[-2]
-
         return path_points
 
 

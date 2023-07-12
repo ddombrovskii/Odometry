@@ -8,9 +8,13 @@ from PyQt5.QtWidgets import (QPushButton, QDialog, QTreeWidget,
 from image_widget import ImageWidget
 
 
+"""
 #############################
 #           ARROW           #
 #############################
+"""
+
+
 class Arrow(QFrame):
     def __init__(self, parent=None, collapsed=False):
         super().__init__(parent=parent)
@@ -37,10 +41,13 @@ class Arrow(QFrame):
         painter.drawPolygon(*self._arrow)
         painter.end()
 
-
+"""
 ############################
 #           TITLE          #
 ############################
+"""
+
+
 class TitleFrame(QFrame):
     def __init__(self, parent=None, title="", collapsed=False):
         super().__init__(parent=parent)
@@ -73,7 +80,7 @@ class TitleFrame(QFrame):
 
     def mousePressEvent(self, event):
         # TODO FIX
-        self.emit(QtCore.SIGNAL('clicked()'))
+        self.emit(SIGNAL('clicked()'))
         return super(TitleFrame, self).mousePressEvent(event)
 
     @property

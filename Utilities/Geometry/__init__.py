@@ -6,4 +6,5 @@ from .vector3 import Vector3
 from .vector2 import Vector2
 from .matrix4 import Matrix4
 from .matrix3 import Matrix3
+from .voxel import Voxel
 from .common import *

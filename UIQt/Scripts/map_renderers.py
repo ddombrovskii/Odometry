@@ -1,8 +1,8 @@
-from UIQt.GLUtilities.gl_frame_buffer import FrameBufferGL
-from UIQt.GLUtilities.gl_material import MaterialGL
-from UIQt.GLUtilities.gl_camera import CameraGL
 from Utilities.Geometry import Vector3, Vector2
-from UIQt.GLUtilities.gl_scene import SceneGL
+from UIQt.GLUtilities import FrameBufferGL
+from UIQt.GLUtilities import MaterialGL
+from UIQt.GLUtilities import CameraGL
+from UIQt.GLUtilities import SceneGL
 
 
 class TextureRenderer:

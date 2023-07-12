@@ -5,6 +5,7 @@ from UIQt.point_widget import PointWidget
 from typing import Dict, Tuple, List
 
 
+# UNUSED
 class PathBuilder:
     def __init__(self, scene: SceneGL):
         self._free_keys = []

@@ -3,6 +3,7 @@ from .io_utils import clear_folder, create_dir, get_base_name, get_files_from_di
 from .pinhole_camera_model import PinholeCameraModel
 from .serial_utils import search_serial_ports
 from .real_time_filter import RealTimeFilter
+from .runnig_average import RunningAverage
 from .animated_plot import AnimatedPlot
 from .circ_buffer import CircBuffer
 from .loop_timer import LoopTimer

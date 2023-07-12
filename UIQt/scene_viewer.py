@@ -5,6 +5,7 @@ from PyQt5 import QtCore
 import sys
 
 
+# UNUSED
 class SceneViewer(QWidget):
     def __init__(self):
         super(SceneViewer, self).__init__()  # call the init for the parent class

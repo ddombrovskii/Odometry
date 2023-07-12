@@ -1,7 +1,7 @@
 from Utilities.Geometry import Matrix4, Matrix3, Vector3, Vector2, Vector4
-from UIQt.GLUtilities.objects_pool import ObjectsPool
-from UIQt.GLUtilities.gl_texture import TextureGL
-from UIQt.GLUtilities.gl_shader import ShaderGL
+from .gl_objects_pool import ObjectsPoolGL
+from .gl_texture import TextureGL
+from .gl_shader import ShaderGL
 from typing import Dict
 
 
@@ -79,7 +79,7 @@ class MaterialProperty:
 
 
 class MaterialGL:
-    materials = ObjectsPool()
+    materials = ObjectsPoolGL()
 
     def __init__(self, shader: ShaderGL = None):
         # todo name

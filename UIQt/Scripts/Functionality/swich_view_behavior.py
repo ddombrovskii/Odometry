@@ -1,8 +1,8 @@
 from UIQt.Scripts.viewer_behaviour import ViewerBehaviour
-from UIQt.GLUtilities.gl_material import MaterialGL
-from Utilities.Geometry import Vector3, Matrix4
-from UIQt.GLUtilities.gl_scene import SceneGL
+from UIQt.GLUtilities import MaterialGL
+from UIQt.GLUtilities import SceneGL
 from UIQt.GLUtilities import gl_globals
+from Utilities.Geometry import Vector3, Matrix4
 
 
 class SwitchViewBehaviour(ViewerBehaviour):

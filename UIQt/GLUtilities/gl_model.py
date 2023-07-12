@@ -1,13 +1,13 @@
-from UIQt.GLUtilities.objects_pool import ObjectsPool
 from Utilities.Geometry import Transform, BoundingBox
-from UIQt.GLUtilities.gl_material import MaterialGL
-from UIQt.GLUtilities.gl_mesh import MeshGL
+from .gl_objects_pool import ObjectsPoolGL
+from .gl_material import MaterialGL
+from .gl_mesh import MeshGL
 from UIQt.GLUtilities import gl_globals
 
 
 class ModelGL:
 
-    models = ObjectsPool()
+    models = ObjectsPoolGL()
 
     def __init__(self):
         self._id = id(self)
@@ -17,6 +17,12 @@ class ModelGL:
         self._transform: Transform = Transform()
         ModelGL.models.register_object(self)
         self.enable = True
+
+    def __del__(self):
+        self.delete()
+
+    def delete(self):
+        ModelGL.models.unregister_object(self)
 
     @property
     def bounds_local(self) -> BoundingBox:

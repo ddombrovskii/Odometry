@@ -1,5 +1,5 @@
-from UIQt.GLUtilities.gl_decorators import gl_error_catch
-from UIQt.GLUtilities.objects_pool import ObjectsPool
+from .gl_objects_pool import ObjectsPoolGL
+from .gl_decorators import gl_error_catch
 from OpenGL.GL import *
 import numpy as np
 # Буфер данных на GPU
@@ -9,7 +9,7 @@ import numpy as np
 
 class BufferGL:
     # MAX_BUFFER_AVAILABLE_SIZE: int = ???
-    buffers = ObjectsPool()
+    buffers = ObjectsPoolGL()
 
     __slots__ = "_id", "_bind_target", "_usage_target", "_filling", "_capacity", "_name", "_item_byte_size"
 

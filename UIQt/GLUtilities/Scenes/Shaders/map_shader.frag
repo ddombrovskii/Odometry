@@ -26,7 +26,7 @@ in VS_CAMERA_OUT
 
 float height_map(float v, float vmin, float vmax)
 {
-	return min(max((v - vmin)/(vmax - vmin), 0.0), 1.0);
+	return 1.0 - min(max((v - vmin)/(vmax - vmin), 0.0), 1.0);
 }
 
 vec3 heat_map(float v, float vmin, float vmax)

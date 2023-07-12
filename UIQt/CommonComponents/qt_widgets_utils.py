@@ -22,6 +22,7 @@ def style_for_q_line_edit(edit: QLineEdit):
 
 def init_immutable_text_field(parent: QWidget = None, label_str: str = "label", value_str: str = "label"):
     container = QWidget(parent)
+    # container.setStyleSheet("border:0px")
     layout = QHBoxLayout()
     layout.setContentsMargins(0, 0, 0, 0)
     text_field = QLineEdit()
@@ -38,6 +39,7 @@ def init_immutable_text_field(parent: QWidget = None, label_str: str = "label", 
 def init_vect_2(parent: QWidget = None, label_str: str = "label", x_str: str = "X",
                 y_str: str = "Y", vert: bool = False, as_group: bool = True) -> Tuple[QWidget, QLineEdit, QLineEdit]:
     container = QGroupBox(parent) if as_group else QWidget(parent)  # контейнер с вертикальным размещением
+    # container.setStyleSheet("border:0px")
     layout         = QVBoxLayout()
     layout.setContentsMargins(0, 0, 0, 0)
     # layout.addStretch(1)
@@ -63,6 +65,7 @@ def init_vect_3(parent: QWidget = None, label_str: str = "label", x_str: str = "
                 y_str: str = "Y", z_str: str = "Z", vert: bool = False, as_group: bool = True) ->\
         Tuple[QWidget, QLineEdit, QLineEdit, QLineEdit]:
     container      = QGroupBox(parent) if as_group else QWidget(parent)  # контейнер с вертикальным размещением
+    # container.setStyleSheet("border:0px")
     layout         = QVBoxLayout()
     layout.setContentsMargins(0, 0, 0, 0)
     # layout.addStretch(1)
@@ -92,6 +95,7 @@ def init_vect_4(parent: QWidget = None, label_str: str = "label", x_str: str = "
                 vert: bool = False, as_group: bool = True) -> \
         Tuple[QWidget, QLineEdit, QLineEdit, QLineEdit, QLineEdit]:
     container = QGroupBox(parent) if as_group else QWidget(parent)  # контейнер с вертикальным размещением
+    # container.setStyleSheet("border:0px")
     layout         = QVBoxLayout()
     layout.setContentsMargins(0, 0, 0, 0)
     # layout.addStretch(1)
@@ -121,6 +125,7 @@ def init_vect_4(parent: QWidget = None, label_str: str = "label", x_str: str = "
 
 def init_mat_2(parent: QWidget = None, label_str: str = "label") -> [QWidget, List[QLineEdit]]:
     container = QGroupBox(parent)  # контейнер с вертикальным размещением
+    # container.setStyleSheet("border:0px")
     label = None if len(label_str) == 0 else QLabel(f"{label_str} : ")  # лейбл с заголовком элемента интерфейса
     layout = QVBoxLayout()
     layout.setContentsMargins(0, 0, 0, 0)
@@ -146,6 +151,7 @@ def init_mat_2(parent: QWidget = None, label_str: str = "label") -> [QWidget, Li
 
 def init_mat_3(parent: QWidget = None, label_str: str = "label") -> [QWidget, List[QLineEdit]]:
     container = QGroupBox(parent)  # контейнер с вертикальным размещением
+    # container.setStyleSheet("border:0px")
     layout = QVBoxLayout()
     layout.setContentsMargins(0, 0, 0, 0)
     layout.addStretch(1)
@@ -177,6 +183,7 @@ def init_mat_3(parent: QWidget = None, label_str: str = "label") -> [QWidget, Li
 
 def init_mat_4(parent: QWidget = None, label_str: str = "label") -> [QWidget, List[QLineEdit]]:
     container = QGroupBox(parent)  # контейнер с вертикальным размещением
+    # container.setStyleSheet("border:0px")
     layout = QVBoxLayout()
     layout.setContentsMargins(0, 0, 0, 0)
     layout.addStretch(1)
@@ -216,7 +223,7 @@ def init_mat_4(parent: QWidget = None, label_str: str = "label") -> [QWidget, Li
 def init_text_field(parent: QWidget = None, label_str: str = "text field",
                     start_value: str = "nothing") -> Tuple[QWidget, QLabel]:
     container = QWidget(parent)  # контейнер с горизонтальным размещением
-    # container.setStyleSheet("border:0px")
+    # container.setStyleSheet("border:0px;}")
     label_name = QLabel(f"{label_str} : ")  # лейбл с заголовком элемента интерфейса
     label_text = QLabel(f"{start_value}")  # поле которое можно поменять из вне
     layout = QHBoxLayout()
@@ -230,6 +237,7 @@ def init_text_field(parent: QWidget = None, label_str: str = "text field",
 def init_drop_down(parent: QWidget = None, label_str: str = "drop down",
                    values: List[str] | None = None) -> Tuple[QWidget, QComboBox]:
     container = QWidget(parent)  # контейнер с горизонтальным размещением
+    # container.setStyleSheet("border:0px;}")
     label = QLabel(f"{label_str} : ")  # лейбл с заголовком элемента интерфейса
     drop_down = QComboBox()
     layout = QHBoxLayout()
@@ -244,6 +252,7 @@ def init_drop_down(parent: QWidget = None, label_str: str = "drop down",
 def buttons_group(parent: QWidget = None, label_str: str = "buttons group",
                   buttons_str: List[str] | None = None, vert: bool = False) -> Tuple[QWidget, List[QPushButton]]:
     container = QWidget(parent)  # контейнер с вертикальным размещением
+    # container.setStyleSheet(container.styleSheet() + "border:0px;")
     layout = QVBoxLayout()
     layout.setContentsMargins(0, 0, 0, 0)
     buttons_container = QWidget()

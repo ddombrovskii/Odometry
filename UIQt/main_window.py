@@ -1,9 +1,9 @@
 from PyQt5.QtWidgets import QMainWindow, QApplication, QPushButton, QVBoxLayout, QFileDialog, QTabWidget
-from UIQt.GLUtilities.gl_scene import merge_scene
 from UIQt.Scripts.Functionality.path_create_behaviour import PathCreateBehaviour
 from UIQt.Scripts.Functionality.swich_view_behavior import SwitchViewBehaviour
 from UIQt.Scripts.map_renderers import WeightsMapRenderer
 from UIQt.scene_viewer_widget import SceneViewerWidget
+from UIQt.GLUtilities import merge_scene
 from Utilities.Geometry import Vector2
 from point_widget import PointWidget
 from PyQt5.QtGui import QCloseEvent
@@ -14,6 +14,7 @@ from PyQt5 import uic  # если пайчарм подсвечивает оши
 import serial
 import sys
 import os
+
 UART_START_MESSAGE = b'$#'
 UART_END_MESSAGE = b'#$'
 
@@ -32,7 +33,7 @@ def send_to_uart(data: List[Vector2], port="COM5"):
 class MainWindowUI(QMainWindow):
     def __init__(self):
         super(MainWindowUI, self).__init__()
-        uic.loadUi("./UI/MainWindow.ui", self)
+        uic.loadUi(f"{os.getcwd()}/UI/MainWindow.ui", self)
         self._gl_widget: SceneViewerWidget | None = None
         self._way_points: List[Vector2] = []
         self._way_points_widgets: List[PointWidget] = []
@@ -69,7 +70,6 @@ class MainWindowUI(QMainWindow):
         # если сделать "карта" открытым табом по умолчанию, то приложение вылетит
         rightTabWidget: QTabWidget = self.findChild(QTabWidget, "rightTabWidget")
         rightTabWidget.setCurrentIndex(0)
-        
 
         # right tab (3D)
         mapLayout = self.findChild(QVBoxLayout, "mapTabVLayout")
@@ -89,22 +89,22 @@ class MainWindowUI(QMainWindow):
 
     def _init_buttons(self):
         # объявление кнопок в табе "карта"
-        setup_path:       QPushButton = self.findChild(QPushButton, "setupPathPointBtn")
-        start_movement:   QPushButton = self.findChild(QPushButton, "startMoveBtn")
-        stop_movement:    QPushButton = self.findChild(QPushButton, "stopMoveBtn")
-        perspective_prj:  QPushButton = self.findChild(QPushButton, "perspectiveProjectionBtn")
+        setup_path: QPushButton = self.findChild(QPushButton, "setupPathPointBtn")
+        start_movement: QPushButton = self.findChild(QPushButton, "startMoveBtn")
+        stop_movement: QPushButton = self.findChild(QPushButton, "stopMoveBtn")
+        perspective_prj: QPushButton = self.findChild(QPushButton, "perspectiveProjectionBtn")
         orthographic_prj: QPushButton = self.findChild(QPushButton, "orthoProjectionBtn")
-        add_view:         QPushButton = self.findChild(QPushButton, "addAngleBtn")
-        delete_view:      QPushButton = self.findChild(QPushButton, "deleteAngleBtn")
-        load_map:         QPushButton = self.findChild(QPushButton, "loadMapBtn")
-        delete_map:       QPushButton = self.findChild(QPushButton, "deleteMapBtn")
+        add_view: QPushButton = self.findChild(QPushButton, "addAngleBtn")
+        delete_view: QPushButton = self.findChild(QPushButton, "deleteAngleBtn")
+        load_map: QPushButton = self.findChild(QPushButton, "loadMapBtn")
+        delete_map: QPushButton = self.findChild(QPushButton, "deleteMapBtn")
 
-        setup_path.      clicked.connect(lambda: self._path_setup_mode())
-        start_movement.  clicked.connect(lambda: self._start_movement())
+        setup_path.clicked.connect(lambda: self._path_setup_mode())
+        start_movement.clicked.connect(lambda: self._start_movement())
         orthographic_prj.clicked.connect(lambda: self._projection_switcher.switch_view())
-        perspective_prj. clicked.connect(lambda: self._projection_switcher.switch_view())
-        load_map.        clicked.connect(lambda: self.load_map())
-        delete_map.      clicked.connect(lambda: self.clear_map())
+        perspective_prj.clicked.connect(lambda: self._projection_switcher.switch_view())
+        load_map.clicked.connect(lambda: self.load_map())
+        # delete_map.clicked.connect(lambda: self.clear_map())
 
     def _path_setup_mode(self):
         if self._path_builder is None:
@@ -113,9 +113,6 @@ class MainWindowUI(QMainWindow):
 
     def closeEvent(self, a0) -> None:
         self._gl_widget.clean_up()
-
-    def clear_map(self):
-        self._gl_widget.clear_scene()
 
     def load_map(self):
         directory = QFileDialog.getExistingDirectory(None, 'Open File', './')
@@ -126,15 +123,19 @@ class MainWindowUI(QMainWindow):
 
         if not os.path.isdir(f"{directory}/Maps/"):
             os.mkdir(f"{directory}/Maps/")
-        weights_renderer = WeightsMapRenderer(2048, 2048)
+        weights_renderer = WeightsMapRenderer(512, 512)
         weights_renderer.render_to_image(self._gl_widget.scene_gl, f"{directory}/Maps/weights_map.png")
-        # self._path_builder = PathCreateBehaviour(self._gl_widget.scene_gl, directory, self.points_layout)
-        # self._path_builder.enabled = False
-        # self._gl_widget.register_behaviour(self._path_builder)
+        self._path_builder = PathCreateBehaviour(self._gl_widget.scene_gl, directory, self.points_layout)
+        self._path_builder.enabled = False
+        self._gl_widget.register_behaviour(self._path_builder)
+
+
+def run_application():
+    app = QApplication(sys.argv)
+    main_window = MainWindowUI()
+    main_window.show()
+    sys.exit(app.exec_())
 
 
 if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    mainWindow = MainWindowUI()
-    mainWindow.show()
-    sys.exit(app.exec_())
+    run_application()

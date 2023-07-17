@@ -1,12 +1,8 @@
-import math
-import struct
+
 import time
-from collections import namedtuple
 
 import numpy as np
-import serial
 
-from Accelerometer.accelerometer_core.accelerometer_bno055 import write_package, read_package
 from Accelerometer.accelerometer_core.inertial_measurement_unit import IMU
 from Utilities.Geometry import Vector2
 from typing import List, Tuple

@@ -1,6 +1,6 @@
 from PyQt5.QtGui import QOpenGLVersionProfile, QSurfaceFormat, QMouseEvent, QWheelEvent, QKeyEvent
 from UIQt.Scripts.Functionality.mouse_view_contoller import MouseViewController
-from UIQt.GLUtilities import SceneGL, load_scene, save_scene, merge_scene
+from UIQt.GLUtilities import SceneGL, load_scene
 from UIQt.Scripts.viewer_behaviour import ViewerBehaviour
 from UIQt.GLUtilities import FrameBufferGL
 from UIQt.GLUtilities import gl_error_catch

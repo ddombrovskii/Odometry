@@ -2,7 +2,7 @@ import time
 
 from matplotlib import pyplot as plt
 from os.path import isfile, join
-from typing import List, Tuple, Dict
+from typing import List, Tuple
 from os import listdir
 import numpy as np
 import cv2 as cv

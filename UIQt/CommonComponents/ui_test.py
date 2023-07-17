@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QWidget, QApplication, QMainWindow
+from PyQt5.QtWidgets import QWidget, QApplication
 from .path_segment_widget import PathSegmentWidget
 from .paths_list_widget import PathsListWidget
 from Utilities.Geometry import Vector3

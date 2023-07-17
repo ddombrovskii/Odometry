@@ -1,5 +1,4 @@
-from Accelerometer.accelerometer_core.accelerometer_bno055 import AccelerometerBNO055
-from Accelerometer.accelerometer_core.accelerometer_integrator import AccelIntegrator
+
 
 # if __name__ == "__main__":
 #     integrator = AccelIntegrator("accelerometer_core/accelerometer_records/the newest/building_way.json")
@@ -7,10 +6,8 @@ from Accelerometer.accelerometer_core.accelerometer_integrator import AccelInteg
 #     integrator.integrate()
 #     integrator.show_results_xz()
 #     integrator.show_path()
-from Accelerometer.accelerometer_core.accelerometer_recording import record_imu_log
 
-from Accelerometer.accelerometer_core.inertial_measurement_unit import IMU, CALIBRATION_MODE
-from Utilities.Device import START_MODE
+from Accelerometer.accelerometer_core.inertial_measurement_unit import IMU
 from Utilities.Geometry import Vector2
 import time
 

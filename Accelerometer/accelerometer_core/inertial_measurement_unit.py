@@ -1,5 +1,5 @@
 from Utilities.Device.device import Device, START_MODE, BEGIN_MODE_MESSAGE, RUNNING_MODE_MESSAGE, END_MODE_MESSAGE, \
-    device_progres_bar, DISCARD_MODE_MESSAGE
+    device_progres_bar
 from .accelerometer_base import AccelerometerBase
 from .accelerometer_bno055 import AccelerometerBNO055
 from .accelerometer_settings import load_accelerometer_settings

@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QWidget, QLabel, QPushButton, QVBoxLayout, QLineEdit, QComboBox, QGroupBox, QHBoxLayout
-from .qt_widgets_utils import buttons_group, init_drop_down, init_vect_3, init_text_field, image_widget, init_mat_4
+from .qt_widgets_utils import buttons_group, init_drop_down, init_vect_3, init_text_field
 from Utilities.Geometry import Vector3
 
 

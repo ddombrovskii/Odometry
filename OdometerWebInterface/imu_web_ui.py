@@ -1,4 +1,4 @@
-from Accelerometer.accelerometer_core import GRAVITY_CONSTANT
+
 from Utilities.Geometry import Vector3
 from application import*
 from threading import Lock

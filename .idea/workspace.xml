@@ -5,18 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5ead7134-b374-42a1-8fdd-5ab1a6211af6" name="Changes" comment="path_view">
-      <change afterPath="$PROJECT_DIR$/Utilities/Geometry/mutils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/Odometry.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Odometry.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Accelerometer/accelerometer_core/inertial_measurement_unit.py" beforeDir="false" afterPath="$PROJECT_DIR$/Accelerometer/accelerometer_core/inertial_measurement_unit.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Accelerometer/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/Accelerometer/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/OdometerWebInterface/imu_web_ui.py" beforeDir="false" afterPath="$PROJECT_DIR$/OdometerWebInterface/imu_web_ui.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/UIQt/CommonComponents/path_segment_widget.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/CommonComponents/path_segment_widget.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/UIQt/CommonComponents/ui_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/CommonComponents/ui_test.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/UIQt/scene_viewer_widget.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/scene_viewer_widget.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/bounding_box.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/way_points.py" beforeDir="false" afterPath="$PROJECT_DIR$/way_points.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/color.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/color.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -42,14 +34,14 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "last_opened_file_path": "E:/GitHub/Odometry/Odometry/Utilities/Geometry",
-    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;E:/GitHub/Odometry/Odometry/Utilities/Geometry&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="E:\GitHub\Odometry\Odometry\Utilities\Geometry" />

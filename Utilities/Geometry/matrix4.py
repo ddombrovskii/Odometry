@@ -39,7 +39,7 @@ class Matrix4(namedtuple('Matrix4', 'm00, m01, m02, m03,'
                    0.0, 0.0, 0.0, 0.0)
 
     @classmethod
-    def look_at(cls, target: Vector3, eye: Vector3, up: Vector3 = Vector3(0, 1, 0)):
+    def look_at(cls, target: Vector3, eye: Vector3, up: Vector3 = Vector3(0.0, 1.0, 0.0)):
         """
         :param target: цель на которую смотрим
         :param eye: положение глаза в пространстве
@@ -56,7 +56,7 @@ class Matrix4(namedtuple('Matrix4', 'm00, m01, m02, m03,'
                    Vector3.dot(x_axis, -eye), Vector3.dot(y_axis, -eye), Vector3.dot(z_axis, -eye), 1.0)
 
     @classmethod
-    def transform_look_at(cls, target: Vector3, eye: Vector3, up: Vector3 = Vector3(0, 1, 0)):
+    def transform_look_at(cls, target: Vector3, eye: Vector3, up: Vector3 = Vector3(0.0, 1.0, 0.0)):
         """
         :param target: цель на которую смотрим
         :param eye: положение глаза в пространстве
@@ -73,7 +73,7 @@ class Matrix4(namedtuple('Matrix4', 'm00, m01, m02, m03,'
                    0.0, 0.0, 0.0, 1.0)
 
     @classmethod
-    def build_perspective_projection_matrix(cls, fov: float = 70, aspect: float = 1, z_near: float = 0.01, z_far: float = 1000):
+    def build_perspective_projection_matrix(cls, fov: float = 70.0, aspect: float = 1.0, z_near: float = 0.01, z_far: float = 1000):
         """
         :param fov: угол обзора
         :param aspect: соотношение сторон
@@ -81,7 +81,7 @@ class Matrix4(namedtuple('Matrix4', 'm00, m01, m02, m03,'
         :param z_far: дальняя плоскость отсечения
         :return: матрица перспективной проекции
         """
-        scale = max(1.0 / math.tan(fov * 0.5 * math.pi / 180), 0.01)
+        scale = max(1.0 / math.tan(fov * 0.5 * math.pi / 180.0), 0.01)
         #  scale * aspect  # scale the x coordinates of the projected point
         #  scale  # scale the y coordinates of the projected point
         #  z_far / (z_near - z_far)  # used to remap z to [0,1]
@@ -188,10 +188,10 @@ class Matrix4(namedtuple('Matrix4', 'm00, m01, m02, m03,'
         """
         :return: углы поворота по осям
         """
-        if math.fabs(self.m20 + 1) < NUMERICAL_ACCURACY:
+        if math.fabs(self.m20 + 1.0) < NUMERICAL_ACCURACY:
             return Vector3(0.0, math.pi * 0.5, math.atan2(self.m01, self.m02))
 
-        if math.fabs(self.m20 - 1) < NUMERICAL_ACCURACY:
+        if math.fabs(self.m20 - 1.0) < NUMERICAL_ACCURACY:
             return Vector3(0.0, -math.pi * 0.5, math.atan2(-self.m01, -self.m02))
 
         x1 = -math.asin(self.m20)

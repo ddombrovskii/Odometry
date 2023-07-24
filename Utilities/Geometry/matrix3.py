@@ -106,10 +106,10 @@ class Matrix3(namedtuple('Matrix3', 'm00, m01, m02,'
         """
         :return: углы поворота по осям
         """
-        if math.fabs(self.m20 + 1) < NUMERICAL_ACCURACY:
+        if math.fabs(self.m20 + 1.0) < NUMERICAL_ACCURACY:
             return Vector3(0.0, math.pi * 0.5, math.atan2(self.m01, self.m02))
 
-        if math.fabs(self.m20 - 1) < NUMERICAL_ACCURACY:
+        if math.fabs(self.m20 - 1.0) < NUMERICAL_ACCURACY:
             return Vector3(0.0, -math.pi * 0.5, math.atan2(-self.m01, -self.m02))
 
         x1 = -math.asin(self.m20)

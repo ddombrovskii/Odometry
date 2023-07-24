@@ -5,9 +5,9 @@ import numpy as np
 class PinholeCameraModel:
     def __init__(self, p, t):
         self._projection: np.ndarray = np.eye(3, dtype=np.float32) if p is None else p
-        assert(self._projection.shape == (3, 3))
-        self._transform:  np.ndarray = np.ones((3, 4,), dtype=np.float32) if t is None else t
-        assert(self._transform.shape == (3, 4))
+        assert (self._projection.shape == (3, 3))
+        self._transform: np.ndarray = np.ones((3, 4,), dtype=np.float32) if t is None else t
+        assert (self._transform.shape == (3, 4))
         self._i_projection: np.ndarray = np.linalg.inv(self._projection)
 
     @property

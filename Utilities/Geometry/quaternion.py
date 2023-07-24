@@ -158,7 +158,7 @@ class Quaternion(namedtuple('Quaternion', 'ew, ex, ey, ez')):
     @classmethod
     def from_axis_and_angle(cls, axis: Vector3, angle: float):
         angle *= 0.5
-        return cls(           math.cos(angle),
+        return cls(math.cos(angle),
                    -axis[1] * math.sin(angle),
                    -axis[2] * math.sin(angle),
                    -axis[3] * math.sin(angle))

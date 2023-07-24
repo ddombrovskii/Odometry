@@ -3,7 +3,7 @@
   "Meshes": [
     {
       "name": "big_map",
-      "source": "Meshes/map.obj"
+      "source": "Meshes/big_map.obj"
     }
   ],
   "Models": [

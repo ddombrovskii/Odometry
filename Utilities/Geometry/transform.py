@@ -23,11 +23,13 @@ class Transform:
                                     0.0, 0.0, 0.0, 1.0)
 
     def __str__(self) -> str:
-        return f"{{\n\t\"unique_id\"   :{self.unique_id},\n" \
-                   f"\t\"origin\"      :{self.origin},\n" \
-                   f"\t\"scale\"       :{self.scale},\n" \
-                   f"\t\"rotate\"      :{self.angles / math.pi * 180},\n" \
-                   f"\t\"transform_m\" :\n{self._transform_m}\n}}"
+        return f"{{\n" \
+               f"\t\"unique_id\"   :{self.unique_id},\n" \
+               f"\t\"origin\"      :{self.origin},\n" \
+               f"\t\"scale\"       :{self.scale},\n" \
+               f"\t\"rotate\"      :{self.angles / math.pi * 180.0},\n" \
+               f"\t\"transform_m\" :\n{self._transform_m}" \
+               f"\n}}"
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, Transform):
@@ -39,7 +41,7 @@ class Transform:
     def __hash__(self) -> int:
         return hash(self._transform_m)
 
-    def __build_basis(self, ex: Vector3, ey: Vector3, ez: Vector3) -> None:
+    def _build_basis(self, ex: Vector3, ey: Vector3, ez: Vector3) -> None:
         self._transform_m = Matrix4.build_transform(ex, ey, ez, self.origin)
 
     @property
@@ -66,9 +68,9 @@ class Transform:
         if length_ < 1e-9:
             raise ArithmeticError("Error transform front set")
         front_dir_ = front_ / length_
-        right_ = Vector3.cross(front_dir_, Vector3(0, 1, 0)).normalized()
+        right_ = Vector3.cross(front_dir_, Vector3(0.0, 1.0, 0.0)).normalized()
         up_ = Vector3.cross(right_, front_dir_).normalized()
-        self.__build_basis(right_ * self.sx, up_ * self.sy, front_)
+        self._build_basis(right_ * self.sx, up_ * self.sy, front_)
 
     @property
     def up(self) -> Vector3:
@@ -82,9 +84,9 @@ class Transform:
         if length_ < 1e-9:
             raise ArithmeticError("Error transform up set")
         up_dir_ = up_ / length_
-        front_ = Vector3.cross(up_dir_, Vector3(1, 0, 0)).normalized()
+        front_ = Vector3.cross(up_dir_, Vector3(1.0, 0.0, 0.0)).normalized()
         right_ = Vector3.cross(up_dir_, front_).normalized()
-        self.__build_basis(right_ * self.sx, up_, front_ * self.sz)
+        self._build_basis(right_ * self.sx, up_, front_ * self.sz)
 
     @property
     def right(self) -> Vector3:
@@ -98,9 +100,9 @@ class Transform:
         if length_ < 1e-9:
             raise ArithmeticError("Error transform up set")
         right_dir_ = right_ / length_
-        front_ = Vector3.cross(right_dir_, Vector3(0, 1, 0)).normalized()
+        front_ = Vector3.cross(right_dir_, Vector3(0.0, 1.0, 0.0)).normalized()
         up_ = Vector3.cross(front_, right_dir_).normalized()
-        self.__build_basis(right_, up_ * self.sy, front_ * self.sz)
+        self._build_basis(right_, up_ * self.sy, front_ * self.sz)
 
     @property
     def sx(self) -> float:
@@ -129,7 +131,7 @@ class Transform:
 
     @sx.setter
     def sx(self, s_x: float) -> None:
-        if s_x == 0:
+        if s_x == 0.0:
             return
         scl = self.sx
         self._transform_m = Matrix4.build_transform(self._transform_m.right * s_x / scl,
@@ -143,7 +145,7 @@ class Transform:
         :param s_y:
         :return:
         """
-        if s_y == 0:
+        if s_y == 0.0:
             return
         scl = self.sy
         self._transform_m = Matrix4.build_transform(self._transform_m.right,
@@ -153,7 +155,7 @@ class Transform:
     # установить масштаб по Z
     @sz.setter
     def sz(self, s_z: float) -> None:
-        if s_z == 0:
+        if s_z == 0.0:
             return
         scl = self.sz
         self._transform_m = Matrix4.build_transform(self._transform_m.right,
@@ -248,12 +250,12 @@ class Transform:
 
     def rotation_mat(self) -> Matrix4:
         scl = 1.0 / self.scale
-        return Matrix4(self._transform_m.m00 * scl.x, self._transform_m.m01 * scl.y, self._transform_m.m02 * scl.z, 0,
-                       self._transform_m.m10 * scl.x, self._transform_m.m11 * scl.y, self._transform_m.m12 * scl.z, 0,
-                       self._transform_m.m20 * scl.x, self._transform_m.m21 * scl.y, self._transform_m.m22 * scl.z, 0,
-                       0, 0, 0, 1)
+        return Matrix4(self._transform_m.m00 * scl.x, self._transform_m.m01 * scl.y, self._transform_m.m02 * scl.z, 0.0,
+                       self._transform_m.m10 * scl.x, self._transform_m.m11 * scl.y, self._transform_m.m12 * scl.z, 0.0,
+                       self._transform_m.m20 * scl.x, self._transform_m.m21 * scl.y, self._transform_m.m22 * scl.z, 0.0,
+                       0.0, 0.0, 0.0, 1.0)
 
-    def look_at(self, target: Vector3, eye: Vector3, up: Vector3 = Vector3(0, 1, 0)) -> None:
+    def look_at(self, target: Vector3, eye: Vector3, up: Vector3 = Vector3(0.0, 1.0, 0.0)) -> None:
         self._transform_m = Matrix4.transform_look_at(target, eye, up)
         self._angles = Matrix4.to_euler_angles(self._transform_m)
 
@@ -283,7 +285,7 @@ class Transform:
         """
         scl: Vector3 = self.scale
         scl = Vector3(1.0 / (scl.x * scl.x), 1.0 / (scl.y * scl.y), 1.0 / (scl.z * scl.z))
-        if w == 0:
+        if w == 0.0:
             return Vector3((self._transform_m.m00 * vec.x + self._transform_m.m10 * vec.y + self._transform_m.m20 * vec.z) * scl.x,
                            (self._transform_m.m01 * vec.x + self._transform_m.m11 * vec.y + self._transform_m.m21 * vec.z) * scl.y,
                            (self._transform_m.m02 * vec.x + self._transform_m.m12 * vec.y + self._transform_m.m22 * vec.z) * scl.z)

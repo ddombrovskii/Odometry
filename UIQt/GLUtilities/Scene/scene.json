@@ -19,3 +19,37 @@
       }
     }]
 }
+
+Iopatzabylparol163
+
+
+public static Vector3 Sph2Dec(float rho, float phi, float theta)
+{
+	// проверь
+	return new Vector3(rho * Mathf.Sin(theta) * Mathf.Сos(phi),
+					   rho * Mathf.Sin(theta) * Mathf.Sin(phi),
+					   rho * Mathf.Сos(theta));
+}
+
+
+public static float DistToLineOnSphere(
+					Vector3 point, // точка до которой ищем расстояние
+					Vector3 origin, // точка центра сферы
+					Vector2 thegaOmega1, // начальная широта и долгота точки на сфере
+					Vector2 thegaOmega2, // конечная широта и долгота точки на сфере
+					float radius = 1.0, // радиус сферы
+					int accuracy = 1e-5, // точность для которой ищем минимальное расстояние
+					int maxIterations = 128)
+{
+	Vector2 anglesDirection = (thegaOmega1 - thegaOmega0).normalized; // вектор e не должен быть нулевой длины!
+	Vector2 left = thegaOmega0;
+	Vector2 right = thegaOmega1;
+	float distanceLeft  = 1e32;
+	float distanceRight = 1e32;
+	// бинарный поиск:
+	for(int index = 0; index < maxIterations; index++)
+	{
+			distanceLeft  = (Sph2Dec(radius, left.x, left.y) + origin -  point).magnitude;
+			distanceRight = (Sph2Dec(radius, right.x, right.y) + origin -  point).magnitude;
+	}
+}

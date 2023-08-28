@@ -86,7 +86,7 @@ class Device:
         self._mode_times:       Dict[int, float]          = {}  # время существования в режимах
         self._messages:         Dict[int, DeviceMessage]  = {}  # список сообщений для переключения режимов
         self._callbacks:        Dict[int, SystemCallback] = {}  # список служебных функций
-        self._user_callbacks:   Set[int]                  = set()  # список пользовательских функций
+        self._user_callbacks_ids: Set[int]                  = set()  # список пользовательских функций
         self._d_time:           float                     = 0.0  # время между текущим и предыдущим вызовом метода self.update()
         self._update_time:      float                     = 0.1
         self._last_update_time: float                     = 0.0
@@ -392,9 +392,9 @@ class Device:
         """
         # assert isinstance(Callback, callback)
         callback_id = id(callback)
-        if callback_id in self._user_callbacks:
+        if callback_id in self._user_callbacks_ids:
             return -1
-        self._user_callbacks.update({callback_id})
+        self._user_callbacks_ids.update({callback_id})
         self._callbacks.update({callback_id: lambda message: self._callback_exec(message, callback)})
         return callback_id
 

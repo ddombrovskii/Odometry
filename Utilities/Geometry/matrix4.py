@@ -105,10 +105,10 @@ class Matrix4(namedtuple('Matrix4', 'm00, m01, m02, m03,'
 
     @classmethod
     def rotate_x(cls, angle: float, angle_in_rad: bool = True):
-        cos_a = math.cos(angle)
-        sin_a = math.sin(angle)
         if not angle_in_rad:
             angle *= DEG_TO_RAD
+        cos_a = math.cos(angle)
+        sin_a = math.sin(angle)
         return cls(1.0, 0.0, 0.0, 0.0,
                    0.0, cos_a, -sin_a, 0.0,
                    0.0, sin_a, cos_a, 0.0,

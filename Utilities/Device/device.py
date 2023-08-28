@@ -37,7 +37,7 @@ class DeviceMessage(namedtuple('DeviceMessage', 'mode, mode_arg')):
         return super().__new__(cls, int(mode), int(mode_arg))
 
     def __str__(self):
-        return f"{{\"mode_info\": {self.mode}, \"mode_arg\": {self.mode_arg}}}"
+        return f"{{\"mode_info\": {self.mode:3}, \"mode_arg\": {self.mode_arg:3}}}"
 
     @property
     def next(self) -> int:
@@ -387,10 +387,10 @@ class Device:
     def register_callback(self, callback: Callback) -> int:
         """
         Регистрация пользовательских функций
-        :param callback_id:
         :param callback:
         :return:
         """
+        # assert isinstance(Callback, callback)
         callback_id = id(callback)
         if callback_id in self._user_callbacks:
             return -1

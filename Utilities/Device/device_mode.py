@@ -1,9 +1,10 @@
-from Utilities import Device
 from Utilities.Device import BEGIN_MODE_MESSAGE, RUNNING_MODE_MESSAGE, END_MODE_MESSAGE
+from Utilities import Device
 
 
 class DeviceMode:
     def __init__(self, device: Device):
+        assert isinstance(Device, device)
         self._parent: Device = device
         self._handle = self._parent.register_callback(lambda message: self.__update(message))
 

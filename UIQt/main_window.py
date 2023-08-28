@@ -123,7 +123,7 @@ class MainWindowUI(QMainWindow):
 
         if not os.path.isdir(f"{directory}/Maps/"):
             os.mkdir(f"{directory}/Maps/")
-        weights_renderer = WeightsMapRenderer(512, 512)
+        weights_renderer = WeightsMapRenderer(2048, 2048)
         weights_renderer.render_to_image(self._gl_widget.scene_gl, f"{directory}/Maps/weights_map.png")
         self._path_builder = PathCreateBehaviour(self._gl_widget.scene_gl, directory, self.points_layout)
         self._path_builder.enabled = False

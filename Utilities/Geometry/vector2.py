@@ -110,9 +110,9 @@ class Vector2(namedtuple('Vector2', 'x, y')):
         :param v:
         :return: возвращает единичный вектор перпендикулярный заданному.
         """
-        if v.x == 0:
-            return cls(1.0 if v.y >= 0.0 else -1.0, 0)
-        if v.y == 0:
+        if v.x == 0.0:
+            return cls(1.0 if v.y >= 0.0 else -1.0, 0.0)
+        if v.y == 0.0:
             return cls(0, -1.0 if v.y >= 0.0 else 1.0)
         sign: float = 1.0 if v.x / v.y >= 0.0 else -1.0
         dx: float = 1.0 / v.x

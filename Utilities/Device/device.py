@@ -82,16 +82,16 @@ class Device:
     Базовое поведение для устройства, которое может работать в одном нескольких режимах единовременно
     """
     def __init__(self):
-        self._curr_modes:       Dict[int, int]            = {}  # текущие режимы и их состояния
-        self._mode_times:       Dict[int, float]          = {}  # время существования в режимах
-        self._messages:         Dict[int, DeviceMessage]  = {}  # список сообщений для переключения режимов
-        self._callbacks:        Dict[int, SystemCallback] = {}  # список служебных функций
-        self._user_callbacks_ids: Set[int]                  = set()  # список пользовательских функций
-        self._d_time:           float                     = 0.0  # время между текущим и предыдущим вызовом метода self.update()
-        self._update_time:      float                     = 0.1
-        self._last_update_time: float                     = 0.0
-        self.enable_logging:    bool                      = True
-        self._log_messages:     List[str]                 = []
+        self._curr_modes:             Dict[int, int]            = {}  # текущие режимы и их состояния
+        self._mode_times:             Dict[int, float]          = {}  # время существования в режимах
+        self._messages:               Dict[int, DeviceMessage]  = {}  # список сообщений для переключения режимов
+        self._callbacks:              Dict[int, SystemCallback] = {}  # список служебных функций
+        self._user_callbacks_ids:     Set[int]                  = set()  # список пользовательских функций
+        self._delta_update_call_time: float                     = 0.0  # время между текущим и предыдущим вызовом метода self.update()
+        self._update_rate_time:       float                     = 0.1
+        self._last_update_call_time:  float                     = 0.0
+        self.enable_logging:          bool                      = True
+        self._log_messages:           List[str]                 = []
         # Служебных функции
         self._callbacks.update({START_MODE:  self._start })
         self._callbacks.update({PAUSE_MODE:  self._pause })
@@ -124,7 +124,7 @@ class Device:
 
     def _on_mode_run(self, message: DeviceMessage):
         # сколько времени работает режим
-        self._mode_times[message.mode] += self._d_time
+        self._mode_times[message.mode] += self._delta_update_call_time
         # Если мы уже включили этот режим, то ничего не делаем. Нельзя переключить режим в предыдущее состояние.
         if message.mode_arg <= self._curr_modes[message.mode]:
             return
@@ -326,7 +326,7 @@ class Device:
         Время между соседними запусками функции Update.
         :return:
         """
-        return self._update_time  # _timer.timeout
+        return self._update_rate_time  # _timer.timeout
 
     @update_time.setter
     def update_time(self, value: float) -> None:
@@ -334,7 +334,7 @@ class Device:
         Время между соседними запусками функции Update.
         :return:
         """
-        self._update_time = value if value > 0.0 else self._update_time
+        self._update_rate_time = value if value > 0.0 else self._update_rate_time
 
     def send_message(self, mode, mode_state) -> None:
 
@@ -432,13 +432,15 @@ class Device:
 
     def update(self) -> bool:
         curr_t = time.perf_counter()
-        delta_t = curr_t - self._last_update_time
+        delta_t = curr_t - self._last_update_call_time
         if delta_t < self.update_time:
             return False
-        self._d_time = delta_t
-        self._last_update_time = curr_t
+        self._delta_update_call_time = delta_t
+
+        self._last_update_call_time = curr_t
 
         self.print_log_messages()
+
         self._wait_for_messages()
 
         messages, self._messages = self._messages, {}

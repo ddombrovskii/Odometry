@@ -1,4 +1,4 @@
-from .common import NUMERICAL_FORMAT_4F as _4F, NUMERICAL_ACCURACY
+from .common import NUMERICAL_FORMAT_4F as _4F
 from collections import namedtuple
 import math
 

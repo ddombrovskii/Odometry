@@ -5,8 +5,27 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5ead7134-b374-42a1-8fdd-5ab1a6211af6" name="Changes" comment="path_view">
+      <change afterPath="$PROJECT_DIR$/Utilities/Geometry/camera.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Utilities/Geometry/perspective_transform_2d.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Utilities/Geometry/plane.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Utilities/Geometry/ray.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Utilities/timer.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/planar_odometry.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UIQt/GLUtilities/gl_camera.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/GLUtilities/gl_camera.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Utilities/Device/device.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Device/device.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/Device/device_mode.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Device/device_mode.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/matrix3.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/matrix3.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/matrix4.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/matrix4.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/mutils.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/mutils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/transform.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/transform.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/vector2.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/vector2.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/vector4.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/vector4.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/voxel.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/voxel.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/circ_buffer.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/circ_buffer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/loop_timer.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/loop_timer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/async_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/async_test.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -32,46 +51,29 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;E:/GitHub/Odometry/Odometry&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "last_opened_file_path": "E:/GitHub/Odometry/Odometry",
+    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="E:\GitHub\Odometry\Odometry" />
+      <recent name="E:\GitHub\Odometry\Odometry\students" />
       <recent name="E:\GitHub\Odometry\Odometry\Utilities\Geometry" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="E:\GitHub\Odometry\Odometry\students" />
+      <recent name="E:\GitHub\Odometry\Odometry\Utilities" />
       <recent name="E:\GitHub\Odometry\Odometry\UIQt\GLUtilities\Input" />
       <recent name="E:\GitHub\Odometry\Odometry\UIQt\CommonComponents" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.find_path_c">
-    <configuration name="collapsable_widget (1)" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="Odometry" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/UIQt/CommonComponents" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/UIQt/CommonComponents/collapsable_widget.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration name="find_path_c" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+  <component name="RunManager" selected="Python.view_info_reader">
+    <configuration name="non_uniform_transfom" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="Odometry" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -83,7 +85,7 @@
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/find_path_c.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/non_uniform_transfom.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -92,7 +94,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="image_widget" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="students_data_set_builder" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="Odometry" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -100,11 +102,11 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/UIQt/CommonComponents" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/students" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/UIQt/CommonComponents/image_widget.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/students/students_data_set_builder.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -113,7 +115,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="main_window" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="students_reader (1)" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="Odometry" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -121,11 +123,11 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/UIQt" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/students" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/UIQt/main_window.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/students/students_reader.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -134,7 +136,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="ui_test" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="students_reader" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="Odometry" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -142,11 +144,32 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/UIQt/CommonComponents" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/UIQt/CommonComponents/ui_test.py" />
+      <option name="SCRIPT_NAME" value="E:\GitHub\Odometry\Odometry\students\students_reader.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="view_info_reader" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Odometry" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/view_info_reader.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -157,11 +180,11 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.find_path_c" />
-        <item itemvalue="Python.main_window" />
-        <item itemvalue="Python.ui_test" />
-        <item itemvalue="Python.image_widget" />
-        <item itemvalue="Python.collapsable_widget (1)" />
+        <item itemvalue="Python.view_info_reader" />
+        <item itemvalue="Python.non_uniform_transfom" />
+        <item itemvalue="Python.students_reader (1)" />
+        <item itemvalue="Python.students_data_set_builder" />
+        <item itemvalue="Python.students_reader" />
       </list>
     </recent_temporary>
   </component>
@@ -203,9 +226,28 @@
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/Utilities/Geometry/matrix3.py</url>
-          <line>8</line>
-          <option name="timeStamp" value="1" />
+          <url>file://$PROJECT_DIR$/Utilities/loop_timer.py</url>
+          <line>24</line>
+          <option name="timeStamp" value="3" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/async_test.py</url>
+          <line>51</line>
+          <option name="timeStamp" value="4" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/Utilities/loop_timer.py</url>
+          <line>30</line>
+          <option name="timeStamp" value="5" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/non_uniform_transfom.py</url>
+          <line>49</line>
+          <option name="timeStamp" value="8" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/Utilities/Geometry/perspective_transform_2d.py</url>
+          <option name="timeStamp" value="11" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

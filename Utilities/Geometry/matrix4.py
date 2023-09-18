@@ -13,6 +13,7 @@ class Matrix4(namedtuple('Matrix4', 'm00, m01, m02, m03,'
     """
     immutable Matrix 4d
     """
+    __slots__ = ()
 
     def __new__(cls, m00: float = 0.0, m01: float = 0.0, m02: float = 0.0, m03: float = 0.0,
                 m10: float = 0.0, m11: float = 0.0, m12: float = 0.0, m13: float = 0.0,

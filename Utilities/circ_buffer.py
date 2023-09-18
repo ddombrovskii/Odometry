@@ -46,8 +46,7 @@ class CircBuffer:
         if self.n_items != self.capacity:
             self._n_items += 1
         else:
-            self._indent += 1
-            self._indent %= self.capacity
+            self._indent = (self._indent + 1) % self.capacity
 
     def peek(self) -> float:
         """
@@ -55,8 +54,8 @@ class CircBuffer:
         """
         if self.n_items == 0:
             raise IndexError(f"CircBuffer :: pop :: items amount is {self.n_items}")
-        value = self._values[self._index(self.n_items - 1)]
-        return value
+        # value = self._values[self._index(self.n_items - 1)]
+        return self._values[self._index(self.n_items - 1)]
 
     def pop(self) -> float:
         """

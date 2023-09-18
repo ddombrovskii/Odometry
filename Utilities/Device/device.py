@@ -83,7 +83,7 @@ class Device:
     """
     def __init__(self):
         self._curr_modes:             Dict[int, int]            = {}  # текущие режимы и их состояния
-        self._mode_times:             Dict[int, float]          = {}  # время существования в режимах
+        # self._mode_times:             Dict[int, float]          = {}  # время существования в режимах
         self._messages:               Dict[int, DeviceMessage]  = {}  # список сообщений для переключения режимов
         self._callbacks:              Dict[int, SystemCallback] = {}  # список служебных функций
         self._user_callbacks_ids:     Set[int]                  = set()  # список пользовательских функций
@@ -112,7 +112,7 @@ class Device:
             return
         # регистрация времени режима и состояния режима (запуск)
         self._curr_modes[message.mode] = RUNNING_MODE_MESSAGE
-        self._mode_times[message.mode] = 0.0
+        # self._mode_times[message.mode] = 0.0
 
     def _on_mode_unregister(self, message: DeviceMessage):
         # что мертво, умереть не может
@@ -120,11 +120,11 @@ class Device:
             return
         # отписка времени режима и отписка режима
         del self._curr_modes[message.mode]
-        del self._mode_times[message.mode]
+        # del self._mode_times[message.mode]
 
     def _on_mode_run(self, message: DeviceMessage):
         # сколько времени работает режим
-        self._mode_times[message.mode] += self._delta_update_call_time
+        # self._mode_times[message.mode] += self._delta_update_call_time
         # Если мы уже включили этот режим, то ничего не делаем. Нельзя переключить режим в предыдущее состояние.
         if message.mode_arg <= self._curr_modes[message.mode]:
             return
@@ -422,13 +422,13 @@ class Device:
         """
         return mode in self._callbacks
 
-    def mode_active_time(self, mode: int) -> float:
-        """
-        Проверка работает ли указанный режим
-        :param mode:
-        :return:
-        """
-        return self._mode_times[mode] if self.mode_active(mode) else 0.0
+    # def mode_active_time(self, mode: int) -> float:
+    #    """
+    #    Проверка работает ли указанный режим
+    #    :param mode:
+    #    :return:
+    #    """
+    #    return self._mode_times[mode] if self.mode_active(mode) else 0.0
 
     def update(self) -> bool:
         curr_t = time.perf_counter()

@@ -8,5 +8,6 @@ from .animated_plot import AnimatedPlot
 from .circ_buffer import CircBuffer
 from .loop_timer import LoopTimer
 from .bitset32 import BitSet32
+from .timer import Timer
 from .color import Color
 

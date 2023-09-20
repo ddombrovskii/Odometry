@@ -3,7 +3,7 @@ import os.path
 
 import cv2
 
-from Utilities.Geometry import Matrix3, Vector2, PerspectiveTransform2d
+from Utilities.Geometry import Matrix3, Vector2, PerspectiveTransform2d, Camera, Vector4
 from matplotlib import pyplot as plt
 import numpy as np
 # Система уравнений для определения параметров матрицы искажения:
@@ -205,12 +205,29 @@ def image_index(img) -> int:
 
 
 if __name__ == "__main__":
-    perspective_transform_test()
+    # self._z_far: float = 1000
+    # self._z_near: float = 0.01
+    # self._fov: float = 70.0
+    # self._aspect: float = 10.0
+    # self._ortho_size: float = 10.0
+    camera = Camera()
+    camera.aspect = 1.0
+    camera.fov = 45
+    print(2.0 / math.tan(70 / 180 * math.pi))
+    directions_start = (Vector4(0, 1, 0.01, 1), Vector4(0, 1, 1000, 1))
+    # directions_end   = (Vector4(1, 1, 1, 1), Vector4(1, 1, 1, 1))
+    print(camera.inv_projection)
+    print(camera.projection)
+    for ps in directions_start:
+        print(f"{ps} | -> {camera.projection * ps}")
+    #  print(camera)
+    #  print()
+    #perspective_transform_test()
     exit()
     # build_test_data_for_image_track("salzburg_city_view_by_burtn-d61404o.jpg", "path_track")
     # exit()
     # directory  = "phantom_flight_1"
-    directory  = "path_track"
+    directory = "path_track"
     images = [f"{directory}\\{src}" for src in os.listdir(directory) if src.endswith('png') or src.endswith('JPG')]
     images = sorted(images, key=image_index)
     [print(t) for t in images]

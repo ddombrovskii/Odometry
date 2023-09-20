@@ -3,24 +3,27 @@ from .transform import Transform
 from .matrix4 import Matrix4
 from .vector3 import Vector3
 from .vector4 import Vector4
+from .ray import Ray
 
 PERSPECTIVE_PROJECTION_MODE = 0
 ORTHOGRAPHIC_PROJECTION_MODE = 1
 
 
 class Camera:
-    __slots__ = "_projection_mode", "_projection", "_transform", "_z_far", "_z_near", "_fov", "_aspect", "_ortho_size"
+    __slots__ = "_projection_mode", "_projection", "_inv_projection","_transform",\
+                "_z_far", "_z_near", "_fov", "_aspect", "_ortho_size"
 
     def __init__(self):
         self._projection_mode = PERSPECTIVE_PROJECTION_MODE
         self._projection: Matrix4 = Matrix4.identity()
+        self._inv_projection: Matrix4 = Matrix4.identity()
         self._transform: Transform = Transform()
         self._z_far: float = 1000
         self._z_near: float = 0.01
         self._fov: float = 70.0
         self._aspect: float = 10.0
         self._ortho_size: float = 10.0
-        self.__build_projection()
+        self._build_projection()
 
     def __str__(self) -> str:
         return f"{{\n\t\"unique_id\" :{self.unique_id},\n" \
@@ -41,9 +44,9 @@ class Camera:
         return True
 
     def __hash__(self) -> int:
-        return hash((self._transform, self._projection))
+        return hash((self._transform, self._projection, self._inv_projection))
 
-    def __build_projection(self):
+    def _build_projection(self):
         """
         Строит матрицу перспективного искажения.
         :return:
@@ -56,6 +59,7 @@ class Camera:
             self._projection = \
                 Matrix4.build_ortho_projection_matrix(-size * self.aspect, size * self.aspect,
                                                       -size, size, self._z_near, self._z_far)
+        self._inv_projection = self._projection.invert()
 
     def setting_from_json(self, camera):
         if "z_far" in camera:
@@ -109,13 +113,17 @@ class Camera:
         return self._projection
 
     @property
+    def inv_projection(self) -> Matrix4:
+        return self._inv_projection
+
+    @property
     def z_far(self) -> float:
         return self._z_far
 
     @z_far.setter
     def z_far(self, far_plane: float) -> None:
         self._z_far = far_plane
-        self.__build_projection()
+        self._build_projection()
 
     @property
     def z_near(self) -> float:
@@ -124,7 +132,7 @@ class Camera:
     @z_near.setter
     def z_near(self, near_plane: float) -> None:
         self._z_near = near_plane
-        self.__build_projection()
+        self._build_projection()
 
     @property
     def ortho_size(self) -> float:
@@ -133,7 +141,7 @@ class Camera:
     @ortho_size.setter
     def ortho_size(self, value: float) -> None:
         self._ortho_size = value
-        self.__build_projection()
+        self._build_projection()
 
     @property
     def perspective_mode(self) -> bool:
@@ -142,7 +150,7 @@ class Camera:
     @perspective_mode.setter
     def perspective_mode(self, value: bool) -> None:
         self._projection_mode = PERSPECTIVE_PROJECTION_MODE if value else ORTHOGRAPHIC_PROJECTION_MODE
-        self.__build_projection()
+        self._build_projection()
 
     @property
     def fov(self) -> float:
@@ -151,7 +159,7 @@ class Camera:
     @fov.setter
     def fov(self, fov_: float) -> None:
         self._fov = fov_
-        self.__build_projection()
+        self._build_projection()
 
     @property
     def aspect(self) -> float:
@@ -160,14 +168,14 @@ class Camera:
     @aspect.setter
     def aspect(self, aspect_: float) -> None:
         self._aspect = aspect_
-        self.__build_projection()
+        self._build_projection()
 
     @property
     def look_at_matrix(self) -> Matrix4:
         x_axis = self.transform.right
         y_axis = self.transform.up
         z_axis = self.transform.front
-        eye = -self.transform.origin
+        eye    = -self.transform.origin
         return Matrix4(x_axis.x, y_axis.x, z_axis.x, 0.0,
                        x_axis.y, y_axis.y, z_axis.y, 0.0,
                        x_axis.z, y_axis.z, z_axis.z, 0.0,
@@ -175,7 +183,7 @@ class Camera:
 
     def look_at(self, target: Vector3, eye: Vector3, up: Vector3 = Vector3(0, 1, 0)) -> None:
         """
-        Cтроит матрицу вида
+        Строит матрицу вида
         :param target:
         :param eye:
         :param up:
@@ -214,10 +222,12 @@ class Camera:
 
         return out
 
-    def screen_coord_to_camera_ray(self, x: float, y: float):
+    def screen_coord_to_camera_ray(self, x: float, y: float) -> Vector3:
         ray_eye = self.projection.invert() * Vector4(x, y, -1.0, 1.0)
         ray_eye = self.look_at_matrix.invert() * Vector4(ray_eye.x, ray_eye.y, -1.0, 0.0)
         return Vector3(ray_eye.x, ray_eye.y, ray_eye.z).normalized()
+
+    # def emit_ray(self, x: float, y: float):
 
     def cast_object(self, b_box: BoundingBox) -> bool:
         for pt in b_box.points:

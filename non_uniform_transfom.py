@@ -1,9 +1,12 @@
 import math
+import os.path
 
-from Utilities.Geometry import Matrix3, Vector3, Vector2
+import cv2
+
+from Utilities.Geometry import Matrix3, Vector2, PerspectiveTransform2d
 from matplotlib import pyplot as plt
 import numpy as np
-# система уравнений для определения параметров матрицы искажения:
+# Система уравнений для определения параметров матрицы искажения:
 # пусть у нас есть 4 точки на поверхности земли. Координаты каждой из этих точек соответствуют
 # координатам пересечения лучей совпадающих с рёбрами пирамиды видимости камеры
 # {p_x, p_y} - координаты мира
@@ -32,251 +35,203 @@ import numpy as np
 #   0  |  0  |  0  |-1.0 | 1.0 | 1.0 |  p_y | -p_y |
 
 
-def build_matrix_transform_matrix(ur: Vector2, dr: Vector2, dl: Vector2, ul: Vector2):
-    """
-    param: ur: up right point
-    param: dr: down right point
-    param: dl: down left point
-    param: ul: up left point
-    """
-    matrix = (1.0,  1.0, 1.0,  0.0,  0.0, 0.0, -ur.x, -ur.x,
-              0.0,  0.0, 0.0,  1.0,  1.0, 1.0, -ur.y, -ur.y,
-              1.0, -1.0, 1.0,  0.0,  0.0, 0.0, -dr.x,  dr.x,
-              0.0,  0.0, 0.0,  1.0, -1.0, 1.0, -dr.y,  dr.y,
-             -1.0, -1.0, 1.0,  0.0,  0.0, 0.0,  dl.x,  dl.x,
-              0.0,  0.0, 0.0, -1.0, -1.0, 1.0,  dl.y,  dl.y,
-             -1.0,  1.0, 1.0,  0.0,  0.0, 0.0,  ul.x, -ul.x,
-              0.0,  0.0, 0.0, -1.0,  1.0, 1.0,  ul.y, -ul.y)
-    b = np.array((ur.x, ur.y, dr.x, dr.y, dl.x, dl.y, ul.x, ul.y))
-    matrix = np.array(matrix).reshape((8, 8))
-    return Matrix3(*(np.linalg.inv(matrix) @ b).flat, 1.0)
+def perspective_transform_test():
+    transform_m = Matrix3( 1.0,   0.4, -0.120,
+                           0.1,   1.0,   0.50,
+                         -0.25, 0.125,    1.0)
+
+    transform = PerspectiveTransform2d(transform_m)
+    x_points = 13
+    y_points = 13
+
+    points_1 = (Vector2(1.4629, 1.8286), Vector2(0.768, -0.64),
+                Vector2(-1.3511, -0.5333), Vector2(-0.5236, 1.0182))
+
+    points_2 = (Vector2(1.9, 1.2), Vector2(0.28, -0.3),
+                Vector2(-1.5, -0.6), Vector2(-0.6, 1.4))
+
+    transform_between =  PerspectiveTransform2d.from_eight_points(*points_2, *points_1)
+    print('\n'.join(str(v)for v in transform_between.inv_transform_points(points_2)))
+
+    print(transform_between)
+
+    transform_from_points = PerspectiveTransform2d.from_four_points(*points_1)
+
+    positions = [Vector2((row / (y_points - 1)  - 0.5) * 2.0, (col /  (x_points - 1) - 0.5) * 2.0)
+                 for col in range(y_points) for row in range(x_points)]
+
+    positions_transformed = transform.inv_transform_points(positions)
+    positions_inv_transformed = transform_from_points.transform_points(positions_transformed)
+
+    x_points = np.array([v.x for v in positions])
+    y_points = np.array([v.y for v in positions])
+
+    x_points_transformed = np.array([v.x for v in positions_transformed])
+    y_points_transformed = np.array([v.y for v in positions_transformed])
+
+    x_points_inv_transformed = np.array([v.x for v in positions_inv_transformed])
+    y_points_inv_transformed = np.array([v.y for v in positions_inv_transformed])
+
+    fig, axs = plt.subplots(1)
+    axs.plot(x_points, y_points, '*r')
+    axs.plot(x_points_transformed, y_points_transformed, '.b')
+    axs.set_aspect('equal', 'box')
+    # plt.plot(x_points_inv_transformed, y_points_inv_transformed, 'og')
+    plt.show()
 
 
-class PerspectiveTransform2d:
-    def __init__(self, matrix: Matrix3 = None):
-        if matrix is None:
-            self._t_m: Matrix3 = Matrix3(1.0, 0.0, 0.0,
-                                         0.0, 1.0, 0.0,
-                                         0.0, 0.0, 1.0)
-            return
-        assert isinstance(matrix, Matrix3)
-        self._t_m: Matrix3 = matrix
-
-    @property
-    def scale_x(self) -> float:
-        return math.sqrt(self._t_m.m00 ** 2 + self._t_m.m10 ** 2)
-
-    @scale_x.setter
-    def scale_x(self, value: float) -> None:
-        assert isinstance(value, float)
-        assert value != 0.0
-        new_scl = value / self.scale_x
-        self._t_m = Matrix3(self._t_m.m00 * new_scl, self._t_m.m01, self._t_m.m02,
-                            self._t_m.m10 * new_scl, self._t_m.m11, self._t_m.m12,
-                            self._t_m.m20,           self._t_m.m21, self._t_m.m22)
-
-    @property
-    def scale_y(self) -> float:
-        return math.sqrt(self._t_m.m01 ** 2 + self._t_m.m11 ** 2)
-
-    @scale_y.setter
-    def scale_y(self, value: float) -> None:
-        assert isinstance(value, float)
-        assert value != 0.0
-        new_scl = value / self.scale_y
-        self._t_m = Matrix3(self._t_m.m00, self._t_m.m01 * new_scl, self._t_m.m02,
-                            self._t_m.m10, self._t_m.m11 * new_scl, self._t_m.m12,
-                            self._t_m.m20, self._t_m.m21,           self._t_m.m22)
-
-    @property
-    def scale(self) -> Vector2:
-        return Vector2(self.scale_x, self.scale_y)
-
-    @scale.setter
-    def scale(self, value: Vector2) -> None:
-        assert isinstance(value, Vector2)
-        new_scl_x = value.x / self.scale_x
-        new_scl_y = value.y / self.scale_y
-        self._t_m = Matrix3(self._t_m.m00 * new_scl_x, self._t_m.m01 * new_scl_y, self._t_m.m02,
-                            self._t_m.m10 * new_scl_x, self._t_m.m11 * new_scl_y, self._t_m.m12,
-                            self._t_m.m20,             self._t_m.m21,             self._t_m.m22)
-
-    @property
-    def right(self) -> Vector2:
-        return Vector2(self._t_m.m00, self._t_m.m10) / self.scale_x
-
-    @right.setter
-    def right(self, value: Vector2) -> None:
-        assert isinstance(value, Vector2)
-        self._t_m = Matrix3(value.x,       self._t_m.m01, self._t_m.m02,
-                            value.y,       self._t_m.m11, self._t_m.m12,
-                            self._t_m.m20, self._t_m.m21, self._t_m.m22)
-
-    @property
-    def up(self) -> Vector2:
-        return Vector2(self._t_m.m01, self._t_m.m11) / self.scale_y
-
-    @up.setter
-    def up(self, value: Vector2) -> None:
-        assert isinstance(value, Vector2)
-        self._t_m = Matrix3(self._t_m.m00, value.x,       self._t_m.m02,
-                            self._t_m.m10, value.y,       self._t_m.m12,
-                            self._t_m.m20, self._t_m.m21, self._t_m.m22)
-
-    @property
-    def center_x(self) -> float:
-        return self._t_m.m02
-
-    @center_x.setter
-    def center_x(self, value: float) -> None:
-        assert isinstance(value, float)
-        self._t_m = Matrix3(self._t_m.m00, self._t_m.m01, value,
-                            self._t_m.m10, self._t_m.m11, self._t_m.m12,
-                            self._t_m.m20, self._t_m.m21, self._t_m.m22)
-
-    @property
-    def center_y(self) -> float:
-        return self._t_m.m12
-
-    @center_y.setter
-    def center_y(self, value: float) -> None:
-        assert isinstance(value, float)
-        self._t_m = Matrix3(self._t_m.m00, self._t_m.m01, self._t_m.m02,
-                            self._t_m.m10, self._t_m.m11, value,
-                            self._t_m.m20, self._t_m.m21, self._t_m.m22)
-
-    @property
-    def center(self) -> Vector2:
-        return Vector2(self.center_x, self.center_y)
-
-    @center.setter
-    def center(self, value: Vector2) -> None:
-        assert isinstance(value, Vector2)
-        self._t_m = Matrix3(self._t_m.m00, self._t_m.m01, value.x,
-                            self._t_m.m10, self._t_m.m11, value.y,
-                            self._t_m.m20, self._t_m.m21, self._t_m.m22)
-
-    @property
-    def expand_x(self) -> float:
-        return 1.0 / (1.0 - self._t_m.m20) if self._t_m.m20 > 0 else -1.0 / (1.0 + self._t_m.m20)
-
-    @expand_x.setter
-    def expand_x(self, value: float) -> None:
-        assert isinstance(value, float)
-        self._t_m = Matrix3(self._t_m.m00, self._t_m.m01, self._t_m.m02,
-                            self._t_m.m10, self._t_m.m11, self._t_m.m12,
-                            (1.0 - 1.0 / value if value > 0 else -1.0 - 1.0 / value),
-                            self._t_m.m21, self._t_m.m22)
-
-    @property
-    def expand_y(self) -> float:
-        return 1.0 / (1.0 - self._t_m.m21) if self._t_m.m21 > 0 else -1.0 / (1.0 + self._t_m.m21)
-
-    @expand_y.setter
-    def expand_y(self, value: float) -> None:
-        assert isinstance(value, float)
-        self._t_m = Matrix3(self._t_m.m00, self._t_m.m01, self._t_m.m02,
-                            self._t_m.m10, self._t_m.m11, self._t_m.m12,
-                            self._t_m.m20, (1.0 - 1.0 / value if value > 0 else -1.0 - 1.0 / value),
-                            self._t_m.m22)
-
-    @property
-    def expand(self) -> Vector2:
-        return Vector2(self.expand_x, self.expand_y)
-
-    @expand.setter
-    def expand(self, value: Vector2) -> None:
-        assert isinstance(value, Vector2)
-        self._t_m = Matrix3(self._t_m.m00, self._t_m.m01, self._t_m.m02,
-                            self._t_m.m10, self._t_m.m11, self._t_m.m12,
-                            (1.0 - 1.0 / value.x if value.x > 0 else -1.0 - 1.0 / value.x),
-                            (1.0 - 1.0 / value.y if value.y > 0 else -1.0 - 1.0 / value.y),
-                            self._t_m.m22)
-
-    @classmethod
-    def from_four_points(cls, ur: Vector2, dr: Vector2, dl: Vector2, ul: Vector2):
-        assert isinstance(ur, Vector2)
-        assert isinstance(dr, Vector2)
-        assert isinstance(dl, Vector2)
-        assert isinstance(ul, Vector2)
-        matrix = (1.0, 1.0, 1.0, 0.0, 0.0, 0.0, -ur.x, -ur.x,
-                  0.0, 0.0, 0.0, 1.0, 1.0, 1.0, -ur.y, -ur.y,
-                  1.0, -1.0, 1.0, 0.0, 0.0, 0.0, -dr.x, dr.x,
-                  0.0, 0.0, 0.0, 1.0, -1.0, 1.0, -dr.y, dr.y,
-                  -1.0, -1.0, 1.0, 0.0, 0.0, 0.0, dl.x, dl.x,
-                  0.0, 0.0, 0.0, -1.0, -1.0, 1.0, dl.y, dl.y,
-                  -1.0, 1.0, 1.0, 0.0, 0.0, 0.0, ul.x, -ul.x,
-                  0.0, 0.0, 0.0, -1.0, 1.0, 1.0, ul.y, -ul.y)
-        b = np.array((ur.x, ur.y, dr.x, dr.y, dl.x, dl.y, ul.x, ul.y))
-        matrix = np.array(matrix).reshape((8, 8))
-        return cls(Matrix3(*(np.linalg.inv(matrix) @ b).flat, 1.0))
+def _flann_orb():
+    FLANN_INDEX_LSH = 6
+    index_params = {"algorithm": FLANN_INDEX_LSH, "table_number": 6, "key_size": 12, "multi_probe_level": 2}
+    search_params = {"checks": 50}
+    return cv2.FlannBasedMatcher(indexParams=index_params, searchParams=search_params)
 
 
-# transform = Matrix3(1.0,  0.4, -0.120,
-#                     0.1,  1.0,   0.50,
-#                    -0.25, 0.125, 1.0)
-
-transform = Matrix3(1.0, 0.0, 0.0,
-                    0.0, 1.0, 0.0,
-                    0.99, 0.0, 1.0)
-
-transform_inv = transform.invert()
-print(f"original transform:\n{transform}")
-# print()
-# print(f"inverse of transform:\n{transform_inv}")
-
-x_points = 13
-y_points = 13
-
-# ur = Vector3(1.4629, 1.8286, 1.0)  # (1, 1)
-# dr = Vector3(0.768, -0.64, 1.0)  # (1, -1)
-# dl = Vector3(-1.3511, -0.5333, 1.0)  # (-1, -1)
-# ul = Vector3(-0.5236, 1.0182, 1.0)  # (-1, 1)
-points_labels = ('ur', 'dr', 'dl', 'ul')
-points = (Vector3(1.4629, 1.8286, 1.0),
-          Vector3(0.768, -0.64, 1.0),
-          Vector3(-1.3511, -0.5333, 1.0),
-          Vector3(-0.5236, 1.0182, 1.0))
+def _flann_sift():
+    FLANN_INDEX_KDTREE = 1
+    index_params = {"algorithm": FLANN_INDEX_KDTREE, "trees": 5}
+    search_params = {"checks": 10}  # or pass empty dictionary
+    return cv2.FlannBasedMatcher(index_params, search_params)
 
 
-tt = build_matrix_transform_matrix(*points)
-itt = tt.invert()
-print(f"points based transform:\n{tt}")
-print(f"invert points based transform:\n{itt}")
-for pl, p in zip(points_labels, points):
-    p = itt * p
-    p /= p.z
-    print(f"{pl} : {p}")
+def _filter_matches(matches, threshold=0.5):
+    good_matches = []
+    for pair in matches:
+        if len(pair) != 2:
+            continue
+        if pair[0].distance > threshold * pair[1].distance:
+            continue
+        good_matches.append(pair[0])
+
+    return good_matches  # [pair[0] for pair in matches if pair[0].distance < threshold * pair[1].distance]
 
 
-positions = [Vector3((row / (y_points - 1)  - 0.5) * 2.0, (col /  (x_points - 1) - 0.5) * 2.0, 1.0)
-             for col in range(y_points) for row in range(x_points)]
+def _matches_mask(matches, threshold=0.5):
+    return [[1, 0] if m.distance < threshold * n.distance else [0, 0] for m, n in matches]
 
-positions_transformed = [transform * position for position in positions]
-positions_transformed = [v / v.z for v in positions_transformed]
-# print(positions)
-# print(positions_transformed)
-positions_inv_transformed = [tt * position for position in positions]
-positions_inv_transformed = [v / v.z for v in positions_inv_transformed]
-# for p1, p2 in zip(positions, positions_transformed):
-#     print(f"{p1}\t{p2}")
 
-x_points = np.array([v.x for v in positions])
-y_points = np.array([v.y for v in positions])
+def _draw_matches(image_1, kp_1, image_2, kp_2, matches, threshold=0.5, homography=None):
+    matches_mask = _matches_mask(matches, threshold=threshold)
+    draw_params = {"matchColor": (0, 255, 0), "singlePointColor": (255, 0, 0),
+                   "matchesMask": matches_mask, "flags": cv2.DrawMatchesFlags_DEFAULT}
+    img3 = cv2.drawMatchesKnn(image_1, kp_1, image_2, kp_2, matches, None, **draw_params)
+    if homography is not None:
+        h, w = image_1.shape
+        # saving all points in pts
+        pts = np.float32([[0, 0], [0, h], [w, h], [w, 0]]).reshape((-1, 1, 2))
+        for layer in pts:
+            layer[0][0] += w
+        dst = cv2.perspectiveTransform(pts, homography)
+        img3 = cv2.polylines(img3, [np.int32(dst)], True, (255, 0, 0), 3)
+    plt.imshow(img3, )
+    plt.show()
 
-x_points_transformed = np.array([v.x for v in positions_transformed])
-y_points_transformed = np.array([v.y for v in positions_transformed])
 
-x_points_inv_transformed = np.array([v.x for v in positions_inv_transformed])
-y_points_inv_transformed = np.array([v.y for v in positions_inv_transformed])
+def image_math_and_homography(image_1_src: str, image_2_src: str, sift_or_orb: bool = True):
+    assert isinstance(image_1_src, str)
+    assert isinstance(image_2_src, str)
+    assert os.path.exists(image_1_src)
+    assert os.path.exists(image_2_src)
 
-fig, axs = plt.subplots(1)
-axs.plot(x_points, y_points, '*r')
-axs.plot(x_points_transformed, y_points_transformed, '.b')
-axs.set_aspect('equal', 'box')
-# plt.plot(x_points_inv_transformed, y_points_inv_transformed, 'og')
-plt.show()
+    image_1 = cv2.imread(image_1_src, cv2.IMREAD_GRAYSCALE)
+    image_2 = cv2.imread(image_2_src, cv2.IMREAD_GRAYSCALE)
 
-p = (0.8077369, 0.02835679, 0.8077369)
+    if sift_or_orb:
+        _detector = cv2.SIFT_create()
+        _matcher = _flann_sift()
+    else:
+        _detector = cv2.ORB_create(1000)
+        _matcher = _flann_orb()
 
-print(sum(pi**2 for pi in p))
+    kp_1, des_1 = _detector.detectAndCompute(image_1, None)
+    kp_2, des_2 = _detector.detectAndCompute(image_2, None)
+
+    matches = _matcher.knnMatch(des_1, des_2, k=2)
+    # print(len(matches))
+    good_matches = _filter_matches(matches, 0.5)
+    # maintaining list of index of descriptors
+    # in query descriptors
+    pts_1 = np.float32([kp_1[m.queryIdx].pt for m in good_matches]).reshape(-1, 1, 2)
+
+    # maintaining list of index of descriptors
+    # in train descriptors
+    pts_2 = np.float32([kp_2[m.trainIdx].pt for m in good_matches]).reshape(-1, 1, 2)
+
+    # finding  perspective transformation
+    # between two planes
+    # print(f"len(pts_1) : {len(pts_1)} | len(pts_2) : {len(pts_2)}")
+    matrix, mask = cv2.findHomography(pts_1, pts_2, cv2.RANSAC, 5.0)
+
+    return Matrix3.from_np_array(matrix)
+    # print(np.array(m).reshape(9))
+
+    # _draw_matches(image_1, kp_1, image_2, kp_2, matches, threshold=0.5, homography=matrix)
+
+
+def image_sample(image, sample_transform: Matrix3, samples=256):
+    samples_half = samples // 2
+    sample_border = (Vector2(samples, samples), Vector2(samples, 0), Vector2(0, 0), Vector2(0, samples))
+    sample_border_center = sum(v for v in sample_border) / len(sample_border)
+    source_corners = [sample_transform.multiply_by_point(p - sample_border_center) for p in sample_border]
+    # for p1, p2 in zip(samples_points, sample_corners):
+    #     print(f"{p1} |=> {p2}")
+    source_corners = np.float32(source_corners)
+    sample_border = np.float32(sample_border)
+    matrix = cv2.getPerspectiveTransform(source_corners, sample_border)
+    # print(Matrix3.from_np_array(matrix))
+    dst = cv2.warpPerspective(image, matrix, (samples, samples))
+    return dst
+    # plt.subplot(121), plt.imshow(image), plt.title('Input')
+    # plt.subplot(122), plt.imshow(dst), plt.title('Output')
+    # plt.show()
+
+
+def build_test_data_for_image_track(image_src: str, target_dir: str):
+    image_1 = cv2.imread(image_src, cv2.IMREAD_GRAYSCALE)
+    w, h = image_1.shape
+    n_images = 64
+    dangle_ = 2 * math.pi / (n_images - 1)
+    transforms = [Matrix3.translate(Vector2(h//2, w//2)) *
+                  (Matrix3.rotate_z(dangle_ * i) * Matrix3.translate(Vector2(h//4, 0))) for i in range(n_images)]
+
+    transform = Matrix3.translate(Vector2(h//2, w//2)) * Matrix3.rotate_z(45, angle_in_rad=False)
+
+    [cv2.imwrite(f"{target_dir}\\image_{index}.png",
+                 image_sample(image_1, transform)) for index, transform in enumerate(transforms)]
+
+
+def image_index(img) -> int:
+    return int((img.split('_')[-1]).split('.')[0])
+
+
+if __name__ == "__main__":
+    perspective_transform_test()
+    exit()
+    # build_test_data_for_image_track("salzburg_city_view_by_burtn-d61404o.jpg", "path_track")
+    # exit()
+    # directory  = "phantom_flight_1"
+    directory  = "path_track"
+    images = [f"{directory}\\{src}" for src in os.listdir(directory) if src.endswith('png') or src.endswith('JPG')]
+    images = sorted(images, key=image_index)
+    [print(t) for t in images]
+    positions_x = []
+    positions_y = []
+
+    transforms = [image_math_and_homography(img_1, img_2) for img_1, img_2 in zip(images[:-1], images[1:])]
+    # [print(t) for t in transforms]
+    curr_t = transforms[0]
+    for next_t in transforms[1:]:
+        curr_t *= next_t
+        positions_x.append(curr_t.m02)
+        positions_y.append(curr_t.m12)
+    positions_x = np.array(positions_x)
+    positions_y = np.array(positions_y)
+
+    fig, axs = plt.subplots(1)
+    axs.plot(positions_x, positions_y, 'r')
+    axs.set_aspect('equal', 'box')
+    plt.show()
+
+    # build_test_data_for_image_track("tsukuba_r.png", "path_track")
+    # perspective_transform_test()
+    # image_math_and_homography("tsukuba_l.png", "tsukuba_r.png")

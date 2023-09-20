@@ -3,6 +3,7 @@ from collections import namedtuple
 from .vector4 import Vector4
 from .vector3 import Vector3
 from typing import Tuple
+import numpy as np
 import math
 
 
@@ -163,6 +164,12 @@ class Matrix4(namedtuple('Matrix4', 'm00, m01, m02, m03,'
                    ex[1], ey[1], ez[1], 0.0,
                    ex[2], ey[2], ez[2], 0.0,
                    0.0, 0.0, 0.0, 1.0)
+
+    @classmethod
+    def from_np_array(cls, array: np.ndarray):
+        assert isinstance(array, np.ndarray)
+        assert array.size == 16
+        return cls(*array.flat)
 
     @classmethod
     def build_transform(cls, right: Vector3, up: Vector3, front: Vector3, origin: Vector3 = None):
@@ -388,4 +395,7 @@ class Matrix4(namedtuple('Matrix4', 'm00, m01, m02, m03,'
         if isinstance(other, int) or isinstance(other, float):
             return Matrix4(*(other / s for s in self))
         raise RuntimeError(f"Matrix4::TrueDiv::wrong argument type {type(other)}")
+
+    def to_np_array(self) -> np.ndarray:
+        return np.array(self).reshape((4, 4))
 

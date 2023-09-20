@@ -5,27 +5,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5ead7134-b374-42a1-8fdd-5ab1a6211af6" name="Changes" comment="path_view">
-      <change afterPath="$PROJECT_DIR$/Utilities/Geometry/camera.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Utilities/Geometry/perspective_transform_2d.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Utilities/Geometry/plane.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Utilities/Geometry/ray.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Utilities/timer.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/planar_odometry.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/UIQt/GLUtilities/gl_camera.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/GLUtilities/gl_camera.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/Device/device.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Device/device.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/Device/device_mode.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Device/device_mode.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Utilities/Geometry/matrix3.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/matrix3.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Utilities/Geometry/matrix4.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/matrix4.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/mutils.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/mutils.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/transform.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/transform.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Utilities/Geometry/vector2.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/vector2.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/vector3.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/vector3.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Utilities/Geometry/vector4.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/vector4.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/voxel.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/voxel.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/circ_buffer.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/circ_buffer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/loop_timer.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/loop_timer.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/async_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/async_test.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/non_uniform_transfom.py" beforeDir="false" afterPath="$PROJECT_DIR$/non_uniform_transfom.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -51,14 +38,14 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "last_opened_file_path": "E:/GitHub/Odometry/Odometry",
-    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;E:/GitHub/Odometry/Odometry&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="E:\GitHub\Odometry\Odometry" />
@@ -72,7 +59,28 @@
       <recent name="E:\GitHub\Odometry\Odometry\UIQt\CommonComponents" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.view_info_reader">
+  <component name="RunManager" selected="Python.async_test">
+    <configuration name="async_test" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Odometry" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/async_test.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="non_uniform_transfom" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="Odometry" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -136,27 +144,6 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="students_reader" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="Odometry" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="E:\GitHub\Odometry\Odometry\students\students_reader.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
     <configuration name="view_info_reader" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="Odometry" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -180,11 +167,11 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.view_info_reader" />
+        <item itemvalue="Python.async_test" />
         <item itemvalue="Python.non_uniform_transfom" />
+        <item itemvalue="Python.view_info_reader" />
         <item itemvalue="Python.students_reader (1)" />
         <item itemvalue="Python.students_data_set_builder" />
-        <item itemvalue="Python.students_reader" />
       </list>
     </recent_temporary>
   </component>
@@ -231,23 +218,14 @@
           <option name="timeStamp" value="3" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/async_test.py</url>
-          <line>51</line>
-          <option name="timeStamp" value="4" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/Utilities/loop_timer.py</url>
-          <line>30</line>
-          <option name="timeStamp" value="5" />
+          <url>file://$PROJECT_DIR$/Utilities/Geometry/matrix3.py</url>
+          <line>98</line>
+          <option name="timeStamp" value="15" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/non_uniform_transfom.py</url>
-          <line>49</line>
-          <option name="timeStamp" value="8" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/Utilities/Geometry/perspective_transform_2d.py</url>
-          <option name="timeStamp" value="11" />
+          <line>162</line>
+          <option name="timeStamp" value="22" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

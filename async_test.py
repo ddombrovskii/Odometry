@@ -1,10 +1,11 @@
 import asyncio
+import sys
 import time
 
 # import aioconsole
 from contextvars import ContextVar
 
-from Utilities import LoopTimer
+from Utilities import LoopTimer, Timer
 
 commandContext = ContextVar('command', default=[])
 
@@ -41,7 +42,11 @@ async def run_tasks():
 #     asyncio.run(run_tasks())
 
 if __name__ == "__main__":
+    timer = Timer()
+    print(sys.getsizeof(timer))
+    print(timer)
     lt = LoopTimer(0.1)
+    print(sys.getsizeof(lt))
     print(lt)
     t = 0.0
     while not lt.is_loop:

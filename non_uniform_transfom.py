@@ -214,12 +214,12 @@ if __name__ == "__main__":
     camera.aspect = 1.0
     camera.fov = 45
     print(2.0 / math.tan(70 / 180 * math.pi))
-    directions_start = (Vector4(0, 1, 0.01, 1), Vector4(0, 1, 1000, 1))
+    directions_start = (Vector4(0, 0, camera.z_near, 1), Vector4(0, 0,  camera.z_far, 1))
     # directions_end   = (Vector4(1, 1, 1, 1), Vector4(1, 1, 1, 1))
     print(camera.inv_projection)
     print(camera.projection)
     for ps in directions_start:
-        print(f"{ps} | -> {camera.projection * ps}")
+        print(f"{ps} | -> {camera.projection.transpose() * ps}")
     #  print(camera)
     #  print()
     #perspective_transform_test()

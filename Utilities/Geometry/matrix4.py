@@ -90,14 +90,14 @@ class Matrix4(namedtuple('Matrix4', 'm00, m01, m02, m03,'
         #  z_far * z_near / (z_near - z_far)  # used to remap z [0,1]
         #  -1  # set w = -z
         #  0
-        # return cls(scale * aspect, 0.0,   0.0,                               0.0,
-        #            0.0,            scale, 0.0,                               0.0,
-        #            0.0,            0.0,   z_far / (z_near - z_far),         -1.0,
-        #            0.0,            0.0,   z_far * z_near / (z_near - z_far), 0.0)
-        return cls(scale * aspect, 0.0,   0.0,                                 0.0,
-                   0.0,            scale, 0.0,                                 0.0,
-                   0.0,            0.0,   (z_far + z_near) / (z_near - z_far), 2.0 * z_far * z_near / (z_near - z_far),
-                   0.0,            0.0,   -1,                                  0.0)
+        return cls(scale * aspect, 0.0,   0.0,                               0.0,
+                   0.0,            scale, 0.0,                               0.0,
+                   0.0,            0.0,   z_far / (z_near - z_far),         -1.0,
+                   0.0,            0.0,   z_far * z_near / (z_near - z_far), 0.0)
+        # return cls(scale * aspect, 0.0,   0.0,                                 0.0,
+        #            0.0,            scale, 0.0,                                 0.0,
+        #            0.0,            0.0,   z_far / (z_far - z_near), -z_far * z_near / (z_far - z_near),
+        #            0.0,            0.0,   1,                                  0.0)
 
     @classmethod
     def build_ortho_projection_matrix(cls,

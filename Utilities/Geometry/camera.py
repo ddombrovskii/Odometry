@@ -1,33 +1,38 @@
-from Utilities.Geometry import Transform, Matrix4, Vector3, BoundingBox, Vector4
+from .bounding_box import BoundingBox
+from .transform import Transform
+from .matrix4 import Matrix4
+from .vector3 import Vector3
+from .vector4 import Vector4
+
 PERSPECTIVE_PROJECTION_MODE = 0
 ORTHOGRAPHIC_PROJECTION_MODE = 1
 
 
-class CameraGL:
+class Camera:
     __slots__ = "_projection_mode", "_projection", "_transform", "_z_far", "_z_near", "_fov", "_aspect", "_ortho_size"
 
     def __init__(self):
         self._projection_mode = PERSPECTIVE_PROJECTION_MODE
         self._projection: Matrix4 = Matrix4.identity()
         self._transform: Transform = Transform()
-        self._z_far:  float = 1000
+        self._z_far: float = 1000
         self._z_near: float = 0.01
-        self._fov:    float = 70.0
+        self._fov: float = 70.0
         self._aspect: float = 10.0
         self._ortho_size: float = 10.0
         self.__build_projection()
 
     def __str__(self) -> str:
         return f"{{\n\t\"unique_id\" :{self.unique_id},\n" \
-                   f"\t\"z_far\"     :{self._z_far},\n" \
-                   f"\t\"z_near\"    :{self._z_near},\n" \
-                   f"\t\"fov\"       :{self.fov},\n" \
-                   f"\t\"aspect\"    :{self.aspect},\n" \
-                   f"\t\"projection\":\n{self._projection},\n" \
-                   f"\t\"transform\" :\n{self._transform}\n}}"
+               f"\t\"z_far\"     :{self._z_far},\n" \
+               f"\t\"z_near\"    :{self._z_near},\n" \
+               f"\t\"fov\"       :{self.fov},\n" \
+               f"\t\"aspect\"    :{self.aspect},\n" \
+               f"\t\"projection\":\n{self._projection},\n" \
+               f"\t\"transform\" :\n{self._transform}\n}}"
 
     def __eq__(self, other) -> bool:
-        if not isinstance(other, CameraGL):
+        if not isinstance(other, Camera):
             return False
         if not (self._transform == other._transform):
             return False
@@ -77,7 +82,8 @@ class CameraGL:
             try:
                 self.ortho_size = float(camera["orthographic_size"])
             except ValueError as er:
-                print(f"CameraGL :: from_json :: incorrect orthographic_size : {camera['orthographic_size']}\n{er.args}")
+                print(
+                    f"CameraGL :: from_json :: incorrect orthographic_size : {camera['orthographic_size']}\n{er.args}")
         if "is_orthographic" in camera:
             try:
                 self.perspective_mode = bool(camera["is_orthographic"])
@@ -101,7 +107,7 @@ class CameraGL:
     @property
     def projection(self) -> Matrix4:
         return self._projection
-    
+
     @property
     def z_far(self) -> float:
         return self._z_far
@@ -161,7 +167,7 @@ class CameraGL:
         x_axis = self.transform.right
         y_axis = self.transform.up
         z_axis = self.transform.front
-        eye    = -self.transform.origin
+        eye = -self.transform.origin
         return Matrix4(x_axis.x, y_axis.x, z_axis.x, 0.0,
                        x_axis.y, y_axis.y, z_axis.y, 0.0,
                        x_axis.z, y_axis.z, z_axis.z, 0.0,
@@ -200,7 +206,7 @@ class CameraGL:
             self._projection.m11 + v.z * self._projection.m21 + self._projection.m31,
             v.x * self._projection.m02 + v.y *
             self._projection.m12 + v.z * self._projection.m22 + self._projection.m32)
-        w = v.x * self._projection.m03 + v.y *\
+        w = v.x * self._projection.m03 + v.y * \
             self._projection.m13 + v.z * self._projection.m23 + self._projection.m33
         if w != 1 and abs(w) > 1e-6:  # normalize if w is different from 1
             # (convert from homogeneous to Cartesian coordinates)

@@ -13,7 +13,7 @@ def deg_to_rad(deg: float) -> float:
 
 class Transform:
 
-    __slots__ = "_transform_m", "_angles"
+    __slots__ = ("_transform_m", "_angles")
 
     def __init__(self):
         self._angles: Vector3 = Vector3(0.0, 0.0, 0.0)

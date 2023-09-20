@@ -1,6 +1,6 @@
+from numpy.linalg import LinAlgError
 from typing import Tuple
 import numpy as np
-from numpy.linalg import LinAlgError
 
 
 def linear_regression(x: np.ndarray, y: np.ndarray) -> Tuple[float, float]:

@@ -2,7 +2,9 @@
 from .common import NUMERICAL_FORMAT_4F as _4F, DEG_TO_RAD, NUMERICAL_ACCURACY
 from collections import namedtuple
 from .vector3 import Vector3
+from .vector2 import Vector2
 from typing import Tuple
+import numpy as np
 import math
 
 
@@ -12,6 +14,8 @@ class Matrix3(namedtuple('Matrix3', 'm00, m01, m02,'
     """
     immutable Matrix 4d
     """
+    __slots__ = ()
+
     def __new__(cls,
                 m00: float = 0.0, m01: float = 0.0, m02: float = 0.0,
                 m10: float = 0.0, m11: float = 0.0, m12: float = 0.0,
@@ -88,6 +92,19 @@ class Matrix3(namedtuple('Matrix3', 'm00, m01, m02,'
         return cls(ex[0], ey[0], ez[0],
                    ex[1], ey[1], ez[1],
                    ex[2], ey[2], ez[2])
+
+    @classmethod
+    def from_np_array(cls, array: np.ndarray):
+        assert isinstance(array, np.ndarray)
+        assert array.size == 9
+        return cls(*array.flat)
+
+    @classmethod
+    def translate(cls, position: Vector2):
+        assert isinstance(position, Vector2)
+        return cls(1.0, 0.0, position.x,
+                   0.0, 1.0, position.y,
+                   0.0, 0.0, 1.0)
 
     @classmethod
     def build_transform(cls, right: Vector3, up: Vector3, front: Vector3):
@@ -167,7 +184,7 @@ class Matrix3(namedtuple('Matrix3', 'm00, m01, m02,'
     def __str__(self) -> str:
         return f"{{\n\t\"m00\": {self.m00:{_4F}}, \"m01\": {self.m01:{_4F}}, \"m02\": {self.m02:{_4F}},\n" \
                f"\t\"m10\": {self.m10:{_4F}}, \"m11\": {self.m11:{_4F}}, \"m12\": {self.m12:{_4F}},\n" \
-               f"\t\"m20\": {self.m20:{_4F}}, \"m21\": {self.m21:{_4F}}, \"m22\": {self.m22:{_4F}}\n}}\n"
+               f"\t\"m20\": {self.m20:{_4F}}, \"m21\": {self.m21:{_4F}}, \"m22\": {self.m22:{_4F}}\n}}"
 
     def __neg__(self):
         return Matrix3(*(-val for val in self))
@@ -253,3 +270,16 @@ class Matrix3(namedtuple('Matrix3', 'm00, m01, m02,'
         if isinstance(other, int) or isinstance(other, float):
             return Matrix3(*(other / s for s in self))
         raise RuntimeError(f"Matrix3::TrueDiv::wrong argument type {type(other)}")
+
+    def multiply_by_point(self, point: Vector2) -> Vector2:
+        assert isinstance(point, Vector2)
+        return Vector2(self.m00 * point.x + self.m01 * point.y + self.m02,
+                       self.m10 * point.x + self.m11 * point.y + self.m12)
+
+    def multiply_by_direction(self, point: Vector2) -> Vector2:
+        assert isinstance(point, Vector2)
+        return Vector2(self.m00 * point.x + self.m01 * point.y,
+                       self.m10 * point.x + self.m11 * point.y)
+
+    def to_np_array(self) -> np.ndarray:
+        return np.array(self).reshape((3, 3))

@@ -1,5 +1,6 @@
 from .common import NUMERICAL_FORMAT_4F as _4F
 from collections import namedtuple
+import numpy as np
 import math
 
 
@@ -111,3 +112,12 @@ class Vector3(namedtuple('Vector3', 'x, y, z')):
     @property
     def zyx(self):
         return Vector3(self.z, self.y, self.x)
+
+    @classmethod
+    def from_np_array(cls, array: np.ndarray):
+        assert isinstance(array, np.ndarray)
+        assert array.size == 3
+        return cls(*array.flat)
+
+    def to_np_array(self) -> np.ndarray:
+        return np.array(self)

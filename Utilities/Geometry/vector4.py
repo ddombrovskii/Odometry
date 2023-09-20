@@ -1,5 +1,6 @@
 from .common import NUMERICAL_FORMAT_4F as _4F
 from collections import namedtuple
+import numpy as np
 import math
 
 
@@ -99,3 +100,12 @@ class Vector4(namedtuple('Vector4', 'x, y, z w')):
     @classmethod
     def min(cls, a, b):
         return cls(min(a.x, b.x), min(a.y, b.y), min(a.z, b.z), min(a.w, b.w))
+
+    @classmethod
+    def from_np_array(cls, array: np.ndarray):
+        assert isinstance(array, np.ndarray)
+        assert array.size == 4
+        return cls(*array.flat)
+
+    def to_np_array(self) -> np.ndarray:
+        return np.array(self)

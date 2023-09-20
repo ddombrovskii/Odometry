@@ -1,5 +1,6 @@
-from .common import NUMERICAL_FORMAT_4F as _4F, NUMERICAL_ACCURACY
+from .common import NUMERICAL_FORMAT_4F as _4F
 from collections import namedtuple
+import numpy as np
 import math
 
 
@@ -152,3 +153,13 @@ class Vector2(namedtuple('Vector2', 'x, y')):
         x = Vector2.cross(pt1, da)
         y = Vector2.cross(pt3, db)
         return cls((y * da.x - x * db.x) * det, (y * da.y - x * db.y) * det)
+
+    @classmethod
+    def from_np_array(cls, array: np.ndarray):
+        assert isinstance(array, np.ndarray)
+        assert array.size == 2
+        return cls(*array.flat)
+
+    def to_np_array(self) -> np.ndarray:
+        return np.array(self)
+

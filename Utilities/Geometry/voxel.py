@@ -4,6 +4,7 @@ from ..color import Color
 
 
 class Voxel(namedtuple('Voxel', 'position, size, color')):
+    __slots__ = ()
 
     def __new__(cls, position: Vector3, size: float = 1.0, color: Color = None):
         return super().__new__(cls, position, size, color if color is not None else Color(125, 125, 125))

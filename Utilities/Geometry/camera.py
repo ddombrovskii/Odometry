@@ -1,3 +1,5 @@
+import math
+
 from .bounding_box import BoundingBox
 from .transform import Transform
 from .matrix4 import Matrix4
@@ -227,7 +229,25 @@ class Camera:
         ray_eye = self.look_at_matrix.invert() * Vector4(ray_eye.x, ray_eye.y, -1.0, 0.0)
         return Vector3(ray_eye.x, ray_eye.y, ray_eye.z).normalized()
 
-    # def emit_ray(self, x: float, y: float):
+    def emit_ray(self, x: float, y: float) -> Ray:
+        # s_size / z_near = tan(a * 0.5)
+        # x_size_min = z_near * tan(a * 0.5) / aspect
+        # y_size_min = z_near * tan(a * 0.5)
+
+        # x_size_max = z_far * tan(a * 0.5) / aspect
+        # y_size_max = z_far * tan(a * 0.5)
+        x = max(-1.0, min(x, 1.0))
+        y = max(-1.0, min(y, 1.0))
+        if self.perspective_mode:
+            tan_a_half = math.tan(self.fov * 0.5 * math.pi / 180.0)
+            pt1 = Vector3(tan_a_half * x * self.z_near, tan_a_half * y / self.aspect * self.z_near, self.z_near)
+            pt2 = Vector3(tan_a_half * x * self.z_far,  tan_a_half * y / self.aspect * self.z_far,  self.z_far)
+            print(f"{pt1} | {pt2}")
+            return Ray((pt2 - pt1).normalized(), pt1)
+        return Ray(Vector3(0, 0, 1), Vector3(x * 0.5 * self.ortho_size, y * 0.5 * self.ortho_size / self.aspect, 0))
+
+
+
 
     def cast_object(self, b_box: BoundingBox) -> bool:
         for pt in b_box.points:

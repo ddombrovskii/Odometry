@@ -211,18 +211,23 @@ if __name__ == "__main__":
     # self._aspect: float = 10.0
     # self._ortho_size: float = 10.0
     camera = Camera()
-    camera.aspect = 1.0
-    camera.fov = 45
-    print(2.0 / math.tan(70 / 180 * math.pi))
-    directions_start = (Vector4(0, 1, 0.01, 1), Vector4(0, 1, 1000, 1))
+    camera.aspect = 2.0
+    camera.fov = 90
+    print(camera.emit_ray(0, 0))
+    print(camera.emit_ray(1, 1))
+    print(camera.emit_ray(1, -1))
+    print(camera.emit_ray(-1, -1))
+    print(camera.emit_ray(-1, 1))
+    # print(2.0 / math.tan(70 / 180 * math.pi))
+    # directions_start = (Vector4(0, 1, 0.01, 1), Vector4(0, 1, 1000, 1))
     # directions_end   = (Vector4(1, 1, 1, 1), Vector4(1, 1, 1, 1))
-    print(camera.inv_projection)
-    print(camera.projection)
-    for ps in directions_start:
-        print(f"{ps} | -> {camera.projection * ps}")
-    #  print(camera)
-    #  print()
-    #perspective_transform_test()
+    # print(camera.inv_projection)
+    # print(camera.projection)
+    # for ps in directions_start:
+    #     print(f"{ps} | -> {camera.projection * ps}")
+    # print(camera)
+    # print()
+    # perspective_transform_test()
     exit()
     # build_test_data_for_image_track("salzburg_city_view_by_burtn-d61404o.jpg", "path_track")
     # exit()

@@ -1,3 +1,4 @@
+from Utilities.Geometry import Camera
 from .Materials import GridMaterial
 from .Materials import MapMaterial
 from .Materials import ObjMaterial
@@ -7,7 +8,6 @@ from .gl_tris_mesh import read_obj_mesh
 from UIQt.GLUtilities.Input.mouse_controller import MouseController
 from .gl_texture import TextureGL
 from .gl_shader import ShaderGL
-from .gl_camera import CameraGL
 from .gl_mesh import MeshGL
 from Utilities import Color
 import numpy as np
@@ -142,7 +142,7 @@ def _init_materials():
 ####################################
 #             CAMERAS              #
 ####################################
-MAIN_CAMERA: CameraGL | None = None
+MAIN_CAMERA: Camera | None = None
 
 ####################################
 #              MOUSE               #
@@ -164,7 +164,7 @@ def init():
     if KEYBOARD_CONTROLLER is None:
         KEYBOARD_CONTROLLER = KeyboardController()
     if MAIN_CAMERA is None:
-        MAIN_CAMERA = CameraGL()
+        MAIN_CAMERA = Camera()
     _init_textures()
     _init_shaders()
     _init_meshes()

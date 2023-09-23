@@ -1,7 +1,6 @@
-from Utilities.Geometry import Vector3, Vector2
+from Utilities.Geometry import Vector3, Vector2, Camera
 from UIQt.GLUtilities import FrameBufferGL
 from UIQt.GLUtilities import MaterialGL
-from UIQt.GLUtilities import CameraGL
 from UIQt.GLUtilities import SceneGL
 
 
@@ -11,7 +10,7 @@ class TextureRenderer:
         assert isinstance(h, int)
         self._frame_buffer: FrameBufferGL = None
         self._override_material: MaterialGL = None
-        self._camera: CameraGL = CameraGL()
+        self._camera: Camera = Camera()
         self._camera.aspect = w * 1.0 / h
         self._fb_persistent = persistent_frame_buffer
         self._init_frame_buffer(w, h)
@@ -60,7 +59,7 @@ class TextureRenderer:
         self._override_material = value
 
     @property
-    def camera(self) -> CameraGL:
+    def camera(self) -> Camera:
         return self._camera
 
     @property

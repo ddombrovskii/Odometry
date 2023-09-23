@@ -1,3 +1,4 @@
+from .transform import Transform
 from .vector3 import Vector3
 
 
@@ -79,3 +80,12 @@ class Ray:
     @property
     def end_point(self) -> Vector3:
         return self.origin + self.direction * self.length
+
+    def transform_ray(self, t: Transform):
+        self._direction = t.transform_vect(self.direction, 0.0).normalized()
+        self._origin    = t.transform_vect(self.origin,    1.0)
+        return self
+
+    def transformed_ray(self, t: Transform):
+        r = Ray(self.direction, self.origin)
+        return r.transform_ray(t)

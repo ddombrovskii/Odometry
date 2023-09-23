@@ -1,11 +1,11 @@
-import math
-
+from .common import NUMERICAL_ACCURACY
 from .bounding_box import BoundingBox
 from .transform import Transform
 from .matrix4 import Matrix4
 from .vector3 import Vector3
 from .vector4 import Vector4
 from .ray import Ray
+import math
 
 PERSPECTIVE_PROJECTION_MODE = 0
 ORTHOGRAPHIC_PROJECTION_MODE = 1
@@ -174,14 +174,7 @@ class Camera:
 
     @property
     def look_at_matrix(self) -> Matrix4:
-        x_axis = self.transform.right
-        y_axis = self.transform.up
-        z_axis = self.transform.front
-        eye    = -self.transform.origin
-        return Matrix4(x_axis.x, y_axis.x, z_axis.x, 0.0,
-                       x_axis.y, y_axis.y, z_axis.y, 0.0,
-                       x_axis.z, y_axis.z, z_axis.z, 0.0,
-                       Vector3.dot(x_axis, eye), Vector3.dot(y_axis, eye), Vector3.dot(z_axis, eye), 1.0)
+        return self.transform.inv_transform_matrix.transpose()
 
     def look_at(self, target: Vector3, eye: Vector3, up: Vector3 = Vector3(0, 1, 0)) -> None:
         """
@@ -209,20 +202,14 @@ class Camera:
         :return:
         """
         v = self.to_camera_space(vect)
-        out = Vector3(
-            v.x * self._projection.m00 + v.y *
-            self._projection.m10 + v.z * self._projection.m20 + self._projection.m30,
-            v.x * self._projection.m01 + v.y *
-            self._projection.m11 + v.z * self._projection.m21 + self._projection.m31,
-            v.x * self._projection.m02 + v.y *
-            self._projection.m12 + v.z * self._projection.m22 + self._projection.m32)
-        w = v.x * self._projection.m03 + v.y * \
-            self._projection.m13 + v.z * self._projection.m23 + self._projection.m33
-        if w != 1 and abs(w) > 1e-6:  # normalize if w is different from 1
+        out: Vector4 = self.projection * Vector4(v.x, v.y, v.z, 1.0)
+        # print(out)
+        if abs(out.w) > NUMERICAL_ACCURACY:  # normalize if w is different from 1
             # (convert from homogeneous to Cartesian coordinates)
-            return out / w
-
-        return out
+            # танцы с бубном
+            dist = 1.0 / (self.z_far + self.z_near)
+            return Vector3(out.x * dist, out.y * dist, out.z * dist + dist)
+        return Vector3(out.x, out.y, out.z)
 
     def screen_coord_to_camera_ray(self, x: float, y: float) -> Vector3:
         ray_eye = self.projection.invert() * Vector4(x, y, -1.0, 1.0)
@@ -231,6 +218,7 @@ class Camera:
 
     def emit_ray(self, x: float, y: float) -> Ray:
         # s_size / z_near = tan(a * 0.5)
+
         # x_size_min = z_near * tan(a * 0.5) / aspect
         # y_size_min = z_near * tan(a * 0.5)
 
@@ -242,12 +230,13 @@ class Camera:
             tan_a_half = math.tan(self.fov * 0.5 * math.pi / 180.0)
             pt1 = Vector3(tan_a_half * x * self.z_near, tan_a_half * y / self.aspect * self.z_near, self.z_near)
             pt2 = Vector3(tan_a_half * x * self.z_far,  tan_a_half * y / self.aspect * self.z_far,  self.z_far)
-            print(f"{pt1} | {pt2}")
-            return Ray((pt2 - pt1).normalized(), pt1)
-        return Ray(Vector3(0, 0, 1), Vector3(x * 0.5 * self.ortho_size, y * 0.5 * self.ortho_size / self.aspect, 0))
+            # print(f"{pt1} | {pt2}")
+            return Ray(self.transform.transform_vect((pt2 - pt1).normalized(), 0.0),
+                       self.transform.transform_vect(pt1, 1.0))
 
-
-
+        return Ray(self.transform.transform_vect(Vector3(0, 0, 1), 0.0),
+                   self.transform.transform_vect(Vector3(x * 0.5 * self.ortho_size,
+                                                         y * 0.5 * self.ortho_size / self.aspect, 0), 1.0))
 
     def cast_object(self, b_box: BoundingBox) -> bool:
         for pt in b_box.points:
@@ -262,7 +251,7 @@ class Camera:
                 continue
             if pt.z < -1.0:
                 continue
-            if pt.z > 1.0:
+            if pt.z > 0.0:
                 continue
             return True
         return False

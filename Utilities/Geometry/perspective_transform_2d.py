@@ -201,11 +201,9 @@ class PerspectiveTransform2d:
         return [self.inv_transform_point(p) for p in points]
 
     @classmethod
-    def from_four_points(cls, ur: Vector2, dr: Vector2, dl: Vector2, ul: Vector2):
-        assert isinstance(ur, Vector2)
-        assert isinstance(dr, Vector2)
-        assert isinstance(dl, Vector2)
-        assert isinstance(ul, Vector2)
+    def from_four_points(cls, *args):
+        assert (all(isinstance(item, Vector2) for item in args) and len(args) == 4)
+        ur, dr, dl, ul = args
         matrix = ( 1.0,  1.0, 1.0,  0.0,  0.0, 0.0, -ur.x, -ur.x,
                    0.0,  0.0, 0.0,  1.0,  1.0, 1.0, -ur.y, -ur.y,
                    1.0, -1.0, 1.0,  0.0,  0.0, 0.0, -dr.x,  dr.x,
@@ -219,16 +217,9 @@ class PerspectiveTransform2d:
         return cls(Matrix3(*(np.linalg.inv(matrix) @ b).flat, 1.0))
 
     @classmethod
-    def from_eight_points(cls, dr_1: Vector2, dl_1: Vector2, ul_1: Vector2, ur_1: Vector2,
-                          ur_2: Vector2, dr_2: Vector2, dl_2: Vector2, ul_2: Vector2):
-        assert isinstance(dr_1, Vector2)
-        assert isinstance(dl_1, Vector2)
-        assert isinstance(ul_1, Vector2)
-        assert isinstance(ur_1, Vector2)
-        assert isinstance(dr_2, Vector2)
-        assert isinstance(dl_2, Vector2)
-        assert isinstance(ul_2, Vector2)
-        assert isinstance(ur_2, Vector2)
+    def from_eight_points(cls, *args):
+        assert (all(isinstance(item, Vector2) for item in args) and len(args) == 8)
+        dr_1, dl_1, ul_1, ur_1, ur_2, dr_2, dl_2, ul_2 = args
         # m00 | m01 | m02 | m10 | m11 | m12 |     m20    |     m21    |
         # c_x | c_y |  1  |  0  |  0  |  0  | -p_x * c_x | -p_x * c_y |
         #  0  |  0  |  0  | c_x | c_y |  1  | -p_y * c_x | -p_y * c_y |

@@ -1,9 +1,10 @@
 import math
 import os.path
+from typing import Tuple
 
 import cv2
 
-from Utilities.Geometry import Matrix3, Vector2, PerspectiveTransform2d, Camera, Vector4
+from Utilities.Geometry import Matrix3, Vector2, PerspectiveTransform2d, Camera, Vector4, Vector3, Transform, Plane
 from matplotlib import pyplot as plt
 import numpy as np
 # Система уравнений для определения параметров матрицы искажения:
@@ -33,6 +34,7 @@ import numpy as np
 
 # -1.0 | 1.0 | 1.0 |  0  |  0  |  0  |  p_x | -p_x |
 #   0  |  0  |  0  |-1.0 | 1.0 | 1.0 |  p_y | -p_y |
+from Utilities.image_matcher import ImageMatcher
 
 
 def perspective_transform_test():
@@ -80,94 +82,6 @@ def perspective_transform_test():
     plt.show()
 
 
-def _flann_orb():
-    FLANN_INDEX_LSH = 6
-    index_params = {"algorithm": FLANN_INDEX_LSH, "table_number": 6, "key_size": 12, "multi_probe_level": 2}
-    search_params = {"checks": 50}
-    return cv2.FlannBasedMatcher(indexParams=index_params, searchParams=search_params)
-
-
-def _flann_sift():
-    FLANN_INDEX_KDTREE = 1
-    index_params = {"algorithm": FLANN_INDEX_KDTREE, "trees": 5}
-    search_params = {"checks": 10}  # or pass empty dictionary
-    return cv2.FlannBasedMatcher(index_params, search_params)
-
-
-def _filter_matches(matches, threshold=0.5):
-    good_matches = []
-    for pair in matches:
-        if len(pair) != 2:
-            continue
-        if pair[0].distance > threshold * pair[1].distance:
-            continue
-        good_matches.append(pair[0])
-
-    return good_matches  # [pair[0] for pair in matches if pair[0].distance < threshold * pair[1].distance]
-
-
-def _matches_mask(matches, threshold=0.5):
-    return [[1, 0] if m.distance < threshold * n.distance else [0, 0] for m, n in matches]
-
-
-def _draw_matches(image_1, kp_1, image_2, kp_2, matches, threshold=0.5, homography=None):
-    matches_mask = _matches_mask(matches, threshold=threshold)
-    draw_params = {"matchColor": (0, 255, 0), "singlePointColor": (255, 0, 0),
-                   "matchesMask": matches_mask, "flags": cv2.DrawMatchesFlags_DEFAULT}
-    img3 = cv2.drawMatchesKnn(image_1, kp_1, image_2, kp_2, matches, None, **draw_params)
-    if homography is not None:
-        h, w = image_1.shape
-        # saving all points in pts
-        pts = np.float32([[0, 0], [0, h], [w, h], [w, 0]]).reshape((-1, 1, 2))
-        for layer in pts:
-            layer[0][0] += w
-        dst = cv2.perspectiveTransform(pts, homography)
-        img3 = cv2.polylines(img3, [np.int32(dst)], True, (255, 0, 0), 3)
-    plt.imshow(img3, )
-    plt.show()
-
-
-def image_math_and_homography(image_1_src: str, image_2_src: str, sift_or_orb: bool = True):
-    assert isinstance(image_1_src, str)
-    assert isinstance(image_2_src, str)
-    assert os.path.exists(image_1_src)
-    assert os.path.exists(image_2_src)
-
-    image_1 = cv2.imread(image_1_src, cv2.IMREAD_GRAYSCALE)
-    image_2 = cv2.imread(image_2_src, cv2.IMREAD_GRAYSCALE)
-
-    if sift_or_orb:
-        _detector = cv2.SIFT_create()
-        _matcher = _flann_sift()
-    else:
-        _detector = cv2.ORB_create(1000)
-        _matcher = _flann_orb()
-
-    kp_1, des_1 = _detector.detectAndCompute(image_1, None)
-    kp_2, des_2 = _detector.detectAndCompute(image_2, None)
-
-    matches = _matcher.knnMatch(des_1, des_2, k=2)
-    # print(len(matches))
-    good_matches = _filter_matches(matches, 0.5)
-    # maintaining list of index of descriptors
-    # in query descriptors
-    pts_1 = np.float32([kp_1[m.queryIdx].pt for m in good_matches]).reshape(-1, 1, 2)
-
-    # maintaining list of index of descriptors
-    # in train descriptors
-    pts_2 = np.float32([kp_2[m.trainIdx].pt for m in good_matches]).reshape(-1, 1, 2)
-
-    # finding  perspective transformation
-    # between two planes
-    # print(f"len(pts_1) : {len(pts_1)} | len(pts_2) : {len(pts_2)}")
-    matrix, mask = cv2.findHomography(pts_1, pts_2, cv2.RANSAC, 5.0)
-
-    return Matrix3.from_np_array(matrix)
-    # print(np.array(m).reshape(9))
-
-    # _draw_matches(image_1, kp_1, image_2, kp_2, matches, threshold=0.5, homography=matrix)
-
-
 def image_sample(image, sample_transform: Matrix3, samples=256):
     samples_half = samples // 2
     sample_border = (Vector2(samples, samples), Vector2(samples, 0), Vector2(0, 0), Vector2(0, samples))
@@ -204,34 +118,64 @@ def image_index(img) -> int:
     return int((img.split('_')[-1]).split('.')[0])
 
 
-if __name__ == "__main__":
-    # self._z_far: float = 1000
-    # self._z_near: float = 0.01
-    # self._fov: float = 70.0
-    # self._aspect: float = 10.0
-    # self._ortho_size: float = 10.0
+def camera_view_frustum_rays():
     camera = Camera()
-    camera.aspect = 2.0
-    camera.fov = 90
+    camera.aspect = 1.0
+    camera.fov = 45
+    camera.z_far = 1000
+    camera.z_near = 0.1
+    # camera.transform.ax = 45
     print(camera.emit_ray(0, 0))
     print(camera.emit_ray(1, 1))
     print(camera.emit_ray(1, -1))
     print(camera.emit_ray(-1, -1))
     print(camera.emit_ray(-1, 1))
-    # print(2.0 / math.tan(70 / 180 * math.pi))
-    # directions_start = (Vector4(0, 1, 0.01, 1), Vector4(0, 1, 1000, 1))
-    # directions_end   = (Vector4(1, 1, 1, 1), Vector4(1, 1, 1, 1))
-    # print(camera.inv_projection)
-    # print(camera.projection)
-    # for ps in directions_start:
-    #     print(f"{ps} | -> {camera.projection * ps}")
+    print(2.0 / math.tan(70 / 180 * math.pi))
+    directions_start = (Vector3(0, 0, -camera.z_near), Vector3(0, 0, 0.5 * (camera.z_far + camera.z_near)))
+    print(camera.projection)
+    for ps in directions_start:
+        v = camera.to_clip_space(ps)
+        print(f"{ps} | -> {v}")
     # print(camera)
-    # print()
-    # perspective_transform_test()
+
+
+def camera_frustum_ground_border(camera: Camera, ground_level: float = 0.0) -> Tuple[Vector3, ...]:
+    p = Plane(origin=Vector3(0, ground_level, 0))
+    # {1.0, 1.0} | {1.0, -1.0} | {-1.0, -1.0} | {-1.0, 1.0}
+    return (p.intersect_by_ray(camera.emit_ray( 1.0,  1.0)).end_point,
+            p.intersect_by_ray(camera.emit_ray( 1.0, -1.0)).end_point,
+            p.intersect_by_ray(camera.emit_ray(-1.0, -1.0)).end_point,
+            p.intersect_by_ray(camera.emit_ray(-1.0,  1.0)).end_point)
+
+
+def camera_tilt_movement():
+    camera = Camera()
+    camera.aspect = 1.0
+    # camera.z_near = 0.00001
+    # camera.ortho_size = 10
+    # camera.perspective_mode = False
+    fig, axs = plt.subplots(1)
+    axs.set_aspect('equal', 'box')
+    for i in range(8):
+        camera.transform.origin = Vector3(0, 100, 5.0 * i)
+        camera.transform.angles = Vector3(90 + 10 * math.cos(4 * i / math.pi), 0.0, 10 * math.sin(4 * i / math.pi))
+        # print(camera.transform.transform_matrix)
+        # [print(v) for v in ]
+        border = camera_frustum_ground_border(camera)
+        positions_x = [v.x for v in border]
+        positions_y = [v.z for v in border]
+        positions_x.append(positions_x[0])
+        positions_y.append(positions_y[0])
+        positions_x = np.array(positions_x)
+        positions_y = np.array(positions_y)
+        axs.plot(positions_x, positions_y)
+    plt.show()
+
+
+if __name__ == "__main__":
+    camera_tilt_movement()
     exit()
-    # build_test_data_for_image_track("salzburg_city_view_by_burtn-d61404o.jpg", "path_track")
-    # exit()
-    # directory  = "phantom_flight_1"
+    img_matcher = ImageMatcher()
     directory = "path_track"
     images = [f"{directory}\\{src}" for src in os.listdir(directory) if src.endswith('png') or src.endswith('JPG')]
     images = sorted(images, key=image_index)
@@ -239,7 +183,7 @@ if __name__ == "__main__":
     positions_x = []
     positions_y = []
 
-    transforms = [image_math_and_homography(img_1, img_2) for img_1, img_2 in zip(images[:-1], images[1:])]
+    transforms = [img_matcher.match_images_from_file(img_1, img_2) for img_1, img_2 in zip(images[:-1], images[1:])]
     # [print(t) for t in transforms]
     curr_t = transforms[0]
     for next_t in transforms[1:]:

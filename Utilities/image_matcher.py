@@ -1,5 +1,5 @@
 from typing import Union
-from Utilities.Geometry import Matrix3
+from Utilities.Geometry import Matrix3, Vector2, PerspectiveTransform2d
 from matplotlib import pyplot as plt
 import numpy as np
 import os
@@ -77,7 +77,9 @@ class ImageMatcher:
             self._detector = cv2.ORB_create(1000)
             self._matcher = _flann_orb()
 
-    def match_images(self, image_1: np.ndarray, image_2: np.ndarray) -> Matrix3:
+    def match_images(self, image_1: np.ndarray, image_2: np.ndarray,
+                     proj_transform_1: Matrix3 = None,
+                     proj_transform_2: Matrix3 = None) -> Matrix3:
 
         self._img_1 = image_1
         self._img_2 = image_2
@@ -87,26 +89,45 @@ class ImageMatcher:
 
         self._matches = self._matcher.knnMatch(self._des_1, self._des_2, k=2)
         self._good_matches = _filter_matches(self._matches, self._threshold)
+
         # maintaining list of index of descriptors
         # in query descriptors
-        pts_1 = np.float32([self._kp_1[m.queryIdx].pt for m in self._good_matches]).reshape(-1, 1, 2)
+        if proj_transform_1 is None:
+            pts_1 = np.float32([self._kp_1[m.queryIdx].pt for m in self._good_matches]).reshape(-1, 1, 2)
+        else:
+            pts_1 = np.float32([proj_transform_1.perspective_multiply(
+                Vector2(*self._kp_1[m.queryIdx].pt)) for m in self._good_matches]).reshape(-1, 1, 2)
+
         # maintaining list of index of descriptors
         # in train descriptors
-        pts_2 = np.float32([self._kp_2[m.trainIdx].pt for m in self._good_matches]).reshape(-1, 1, 2)
+        if proj_transform_2 is None:
+            pts_2 = np.float32([self._kp_2[m.trainIdx].pt for m in self._good_matches]).reshape(-1, 1, 2)
+        else:
+            pts_2 = np.float32([proj_transform_2.perspective_multiply(
+                Vector2(*self._kp_2[m.trainIdx].pt)) for m in self._good_matches]).reshape(-1, 1, 2)
+
         # finding  perspective transformation
         # between two planes
         matrix, mask = cv2.findHomography(pts_1, pts_2, cv2.RANSAC, 5.0)
+        # print(matrix)
         self._homography = Matrix3.from_np_array(matrix)
         return self.homography_matrix
 
-    def match_images_from_file(self, image_1_src: str, image_2_src: str) -> Matrix3:
+    def match_images_from_file(self, image_1_src: str, image_2_src: str,
+                               proj_transform_1: Matrix3 = None,
+                               proj_transform_2: Matrix3 = None) -> Matrix3:
         assert isinstance(image_1_src, str)
         assert isinstance(image_2_src, str)
         assert os.path.exists(image_1_src)
         assert os.path.exists(image_2_src)
+        try:
+            return self.match_images(cv2.imread(image_1_src, cv2.IMREAD_GRAYSCALE),
+                                     cv2.imread(image_2_src, cv2.IMREAD_GRAYSCALE), proj_transform_1, proj_transform_2)
+        except Exception as ex:
+            print(f"Error occurs while image {image_1_src} and image {image_2_src} matching...\n Error:\n{ex}")
+            return self.homography_matrix
 
-        return self.match_images(cv2.imread(image_1_src, cv2.IMREAD_GRAYSCALE),
-                                 cv2.imread(image_2_src, cv2.IMREAD_GRAYSCALE))
+
 
     def draw_matches(self):
         if not all(v is not None for v in (self._img_1, self._kp_1, self._img_2, self._kp_2, self._matches,

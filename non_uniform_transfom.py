@@ -221,7 +221,6 @@ def _load_pose_data(poses_file: str) -> List[Tuple[Matrix3, Matrix4]]:
         for node in raw_json['poses']:
             try:
                 proj = Matrix3(*tuple(map(float, node['projection'].values())))
-                print(proj)
                 trans = Matrix4(*tuple(map(float, node['transform'].values())))
                 poses.append((proj, trans))
             except Exception as ex:
@@ -243,6 +242,8 @@ def odometry_movement_test(directory):
         transforms = [img_matcher.match_images_from_file(img_1, img_2) for img_1, img_2 in zip(images[:-1], images[1:])]
     else:
         for img_1, img_2, (proj_1, trans_1), (proj_2, trans_2) in zip(images[:-1], images[1:], poses[:-1], poses[1:]):
+            # print(f"proj_1:\n{proj_1}")
+            # print(f"proj_1.invert():\n{proj_1.invert()}")
             transforms.append(img_matcher.match_images_from_file(img_1, img_2, proj_1.invert(), proj_2.invert()))
     # [print(t) for t in transforms]
     curr_t = transforms[0]
@@ -256,7 +257,13 @@ def odometry_movement_test(directory):
     positions_x = np.array(positions_x)
     positions_y = np.array(positions_y)
 
+    b_max = Vector2(np.max(positions_x), np.max(positions_y))
+    b_min = Vector2(np.min(positions_x), np.min(positions_y))
+    print(f"border_min    : {b_min}\nborder_max    : {b_max}")
+    print(f"border_size   : {b_max - b_min}\n")
+
     fig, axs = plt.subplots(1)
+    # axs.plot(2.49 * positions_x, 2.49 * positions_y, 'r')
     axs.plot(positions_x, positions_y, 'r')
     axs.set_aspect('equal', 'box')
     plt.show()
@@ -296,8 +303,9 @@ def generate_trajectory_simulation(image_src: str,
         for p in border:
             border_min = Vector2.min(border_min, p)
             border_max = Vector2.max(border_max, p)
-    print(f"border_min    : {border_min}\n"
-          f"border_max    : {border_max}\n")
+    print(f"border_min    : {border_min}\nborder_max    : {border_max}")
+    print(f"border_size   : {border_max - border_min}\n")
+    print(f"i_border_size : {1.0/(border_max - border_min)}\n")
     # трансформация с сохранением соотношений сторон в область [-1, 1] x [-1, 1]
     borders_size   = (border_max - border_min)  # + Vector3(0, 1, 0) to handle zero division error...
     borders_scale =  Vector2(borders_size.x / borders_size.y, 1) / borders_size
@@ -309,9 +317,8 @@ def generate_trajectory_simulation(image_src: str,
                                      0.0, 1.0, -(border_min.y + border_max.y) * 0.5,
                                      0.0, 0.0,              1.0)
 
-    print(f"to_unit_scale:\n{to_unit_scale}")
-    print(f"to_unit_shift:\n{to_unit_shift}")
-    print(f"to_unit_transform:\n{to_unit_scale * to_unit_shift}")
+    print(f"to_unit_scale:\n{to_unit_scale}\nto_unit_shift:\n{to_unit_shift}\n"
+          f"to_unit_transform:\n{to_unit_scale * to_unit_shift}")
     image = cv2.imread(image_src, cv2.IMREAD_GRAYSCALE)
     image_w, image_h = image.shape
     image_w, image_h = image_w // 2, image_h // 2
@@ -361,6 +368,10 @@ def generate_trajectory_simulation(image_src: str,
         centers_x.append(positions_x.sum()/positions_x.size)
         centers_y.append(positions_y.sum() / positions_y.size)
     axs[0].plot(centers_x, centers_y, 'r')
+    b_max = Vector2(np.max(centers_x), np.max(centers_y))
+    b_min = Vector2(np.min(centers_x), np.min(centers_y))
+    print(f"border_min    : {b_min}\nborder_max    : {b_max}")
+    print(f"border_size   : {b_max - b_min}\n")
 
     axs[1].set_aspect('equal', 'box')
     centers_x = []
@@ -373,7 +384,7 @@ def generate_trajectory_simulation(image_src: str,
         positions_x = np.array(positions_x)
         positions_y = np.array(positions_y)
         # axs[1].plot(positions_x, positions_y)
-        centers_x.append(positions_x.sum()/positions_x.size)
+        centers_x.append(positions_x.sum() / positions_x.size)
         centers_y.append(positions_y.sum() / positions_y.size)
     axs[1].plot(centers_x, centers_y, 'r')
     plt.show()
@@ -382,6 +393,17 @@ def generate_trajectory_simulation(image_src: str,
 if __name__ == "__main__":
     #
     # generate_trajectory_simulation("salzburg_city_view_by_burtn-d61404o.jpg")
+
+    # border_min: {"x": 0.6902, "y": 5.3590}
+    # border_max: {"x": 10.0491, "y": 59.8060}
+    # border_size: {"x": 9.3589, "y": 54.4470}
+
+    # border_min: {"x": -2.3342, "y": -21.9142}
+    # border_max: {"x": 1.4719, "y": -0.4109}
+    # border_size: {"x": 3.8061, "y": 21.5033}
+
+    # alpha_x = 2.45892
+    # alpha_y = 2.53202
 
     odometry_movement_test("path_track\\camera_tilt")
     # odometry_movement_test("path_track")

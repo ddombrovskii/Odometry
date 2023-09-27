@@ -1,3 +1,5 @@
+from .common import DEG_TO_RAD, RAD_TO_DEG
+from .quaternion import Quaternion
 from .vector3 import Vector3
 from .matrix4 import Matrix4
 import math
@@ -146,6 +148,7 @@ class Transform:
 
     @sx.setter
     def sx(self, s_x: float) -> None:
+        assert isinstance(s_x, float)
         if s_x == 0.0:
             return
         scl = s_x / self.sx
@@ -159,6 +162,7 @@ class Transform:
         :param s_y:
         :return:
         """
+        assert isinstance(s_y, float)
         if s_y == 0.0:
             return
         scl = s_y / self.sy
@@ -168,6 +172,7 @@ class Transform:
     # установить масштаб по Z
     @sz.setter
     def sz(self, s_z: float) -> None:
+        assert isinstance(s_z, float)
         if s_z == 0.0:
             return
         scl = s_z / self.sz
@@ -180,6 +185,7 @@ class Transform:
 
     @scale.setter
     def scale(self, xyz: Vector3):
+        assert isinstance(xyz, Vector3)
         scl = xyz / self.scale
         self._t_m = Matrix4.build_transform(self._t_m.right * scl.x, self._t_m.up * scl.y, self._t_m.front * scl.z,
                                             self.origin)
@@ -199,14 +205,17 @@ class Transform:
 
     @x.setter
     def x(self, x: float) -> None:
+        assert isinstance(x, float)
         self.origin = Vector3(x, self.y, self.z)
 
     @y.setter
     def y(self, y: float) -> None:
+        assert isinstance(y, float)
         self.origin = Vector3(self.x, y, self.z)
 
     @z.setter
     def z(self, z: float) -> None:
+        assert isinstance(z, float)
         self.origin = Vector3(self.x, self.y, z)
 
     @property
@@ -215,7 +224,24 @@ class Transform:
 
     @origin.setter
     def origin(self, xyz: Vector3) -> None:
+        assert isinstance(xyz, Vector3)
         self._t_m = Matrix4.build_transform(self._t_m.right, self._t_m.up, self._t_m.front, xyz)
+        self._build_i_t_m()
+
+    @property
+    def rotation(self) -> Quaternion:
+        return Quaternion.from_euler_angles(self._angles.x * DEG_TO_RAD,
+                                            self._angles.y * DEG_TO_RAD,
+                                            self._angles.z * DEG_TO_RAD)
+
+    @rotation.setter
+    def rotation(self, q: Quaternion) -> None:
+        assert isinstance(q, Quaternion)
+        i = q.to_rotation_matrix()
+        scl  = self.scale
+        orig = self.origin
+        self._angles = q.to_euler_angles() * RAD_TO_DEG
+        self._t_m = Matrix4.build_transform(i.right * scl.x, i.up * scl.y, i.front * scl.z, orig)
         self._build_i_t_m()
 
     @property
@@ -224,6 +250,7 @@ class Transform:
 
     @angles.setter
     def angles(self, xyz: Vector3) -> None:
+        assert isinstance(xyz, Vector3)
         self._angles = xyz
         i: Matrix4 = Matrix4.rotate_x(xyz.x)
         i = Matrix4.rotate_y(xyz.y) * i
@@ -247,16 +274,19 @@ class Transform:
 
     @ax.setter
     def ax(self, x: float) -> None:
+        assert isinstance(x, float)
         _angles = self.angles
         self.angles = Vector3(deg_to_rad(x), _angles.y, _angles.z)
 
     @ay.setter
     def ay(self, y: float) -> None:
+        assert isinstance(y, float)
         _angles = self.angles
         self.angles = Vector3(_angles.x, deg_to_rad(y), _angles.z)
 
     @az.setter
     def az(self, z: float) -> None:
+        assert isinstance(z, float)
         _angles = self.angles
         self.angles = Vector3(_angles.x, _angles.y, deg_to_rad(z))
 

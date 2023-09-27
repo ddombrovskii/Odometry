@@ -6,10 +6,9 @@
   <component name="ChangeListManager">
     <list default="true" id="5ead7134-b374-42a1-8fdd-5ab1a6211af6" name="Changes" comment="path_view">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/quaternion.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/quaternion.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/transform.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/transform.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Utilities/flight_odometer.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/flight_odometer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/pinhole_camera_model.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/non_uniform_transfom.py" beforeDir="false" afterPath="$PROJECT_DIR$/non_uniform_transfom.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

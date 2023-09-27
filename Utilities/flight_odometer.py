@@ -3,7 +3,7 @@ from typing import Tuple, Union
 import cv2
 
 from . import Timer
-from .Geometry import Camera, Matrix3, Vector3, Plane, PerspectiveTransform2d, Vector2, Matrix4
+from .Geometry import Camera, Matrix3, Vector3, Plane, PerspectiveTransform2d, Vector2, Matrix4, Quaternion
 from .image_matcher import ImageMatcher
 import numpy as np
 
@@ -48,11 +48,11 @@ class FlightOdometer:
         # timer to measure time =)
         self._timer: Timer = Timer()
 
-    def _update_camera_transform_transforms(self, ax: float, ay: float, az: float,
-                                            altitude, image_w: int, image_h: int) -> None:
+    def _update_camera_transform_transforms(self, rotation: Quaternion, altitude, image_w: int, image_h: int) -> None:
         # Geometric camera position an orientation updating
-        self._camera.transform.origin = Vector3(0, altitude, 0)
-        self._camera.transform.angles = Vector3(90 + ax, ay, az)
+        self._camera.transform.origin   = Vector3(0, altitude, 0)
+        self._camera.transform.rotation = Quaternion.from_euler_angles(90, 0, 0, False) * rotation
+        # Vector3(90 + ax, ay, az)
         # Ground level camera frustum border updating
         _border = FlightOdometer._camera_frustum_ground_border(self._camera)
         _image_border = (Vector2(image_w, image_h), Vector2(image_w, 0), Vector2(0, 0), Vector2(0, image_h))
@@ -86,27 +86,25 @@ class FlightOdometer:
         self._prev_acceleration = self.acceleration
         self._curr_acceleration = (self.velocity - self.prev_velocity ) * delta_time
 
-    def _compute(self, image: np.ndarray, ax: float, ay: float, az: float, altitude) -> None:
+    def _compute(self, image: np.ndarray, rotation: Quaternion, altitude) -> None:
         image_w, image_h = image.shape[1], image.shape[0]
-        self._update_camera_transform_transforms(ax, ay, az, altitude, image_w, image_h)
+        self._update_camera_transform_transforms(rotation, altitude, image_w, image_h)
         self._prev_frame = self._curr_frame
         if self._prev_frame is None:
             return
         self._image_matcher.match_images(self._prev_frame, self._curr_frame, self._prev_proj_mat, self._curr_proj_mat)
         self._build_transforms()
 
-    def compute(self, image: np.ndarray, ax: float, ay: float, az: float, altitude) -> None:
+    def compute(self, image: np.ndarray, rotation: Quaternion, altitude) -> None:
         """
         Основной метод, который вызывается для расчёта одометрии
         :param image: изображение, полученное с камеры (np.ndarray)
          должно быть полутоновым (cv2.imread(image_1_src, cv2.IMREAD_GRAYSCALE))
-        :param ax: угол наклона камеры по оси х
-        :param ay: угол наклона камеры по оси y
-        :param az: угол наклона камеры по оси z
+        :param rotation: кватернион системы координат акселерометра
         :param altitude: текущая высота полёта
         """
         with self._timer:
-            self._compute(image, ax, ay, az, altitude)
+            self._compute(image, rotation, altitude)
 
     @property
     def velocity(self) -> Vector3:

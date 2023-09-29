@@ -1,11 +1,9 @@
-import math
-import os.path
-
-import cv2
-
 from Utilities.Geometry import Matrix3, Vector2, PerspectiveTransform2d, Camera, Vector4
 from matplotlib import pyplot as plt
 import numpy as np
+import os.path
+import math
+import cv2
 # Система уравнений для определения параметров матрицы искажения:
 # пусть у нас есть 4 точки на поверхности земли. Координаты каждой из этих точек соответствуют
 # координатам пересечения лучей совпадающих с рёбрами пирамиды видимости камеры

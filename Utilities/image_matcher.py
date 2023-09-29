@@ -127,8 +127,6 @@ class ImageMatcher:
             print(f"Error occurs while image {image_1_src} and image {image_2_src} matching...\n Error:\n{ex}")
             return self.homography_matrix
 
-
-
     def draw_matches(self):
         if not all(v is not None for v in (self._img_1, self._kp_1, self._img_2, self._kp_2, self._matches,
                                            self._threshold, self._homography)):

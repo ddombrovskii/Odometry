@@ -181,65 +181,29 @@ class PerspectiveTransform2d:
                             self._t_m.m22)
         self._update_invert_transform()
 
-    @staticmethod
-    def _transform_pt(transform_matrix: Matrix3, point: Vector2) -> Vector2:
-        p = transform_matrix * Vector3(point.x, point.y, 1.0)
-        return Vector2(p.x / p.z, p.y / p.z)
+    # @staticmethod
+    # def _transform_pt(transform_matrix: Matrix3, point: Vector2) -> Vector2:
+    #     p = transform_matrix * Vector3(point.x, point.y, 1.0)
+    #     return Vector2(p.x / p.z, p.y / p.z)
 
     def transform_point(self, point: Vector2) -> Vector2:
         assert isinstance(point, Vector2)
-        return PerspectiveTransform2d._transform_pt(self.transform_matrix, point)
+        return Matrix3.perspective_multiply(self.transform_matrix, point)
 
     def transform_points(self, points: List[Vector2]) -> List[Vector2]:
         return [self.transform_point(p) for p in points]
 
     def inv_transform_point(self, point: Vector2) -> Vector2:
         assert isinstance(point, Vector2)
-        return PerspectiveTransform2d._transform_pt(self.inv_transform_matrix, point)
+        return Matrix3.perspective_multiply(self.inv_transform_matrix, point)
 
     def inv_transform_points(self, points: List[Vector2]) -> List[Vector2]:
         return [self.inv_transform_point(p) for p in points]
 
     @classmethod
-    def from_four_points(cls, ur: Vector2, dr: Vector2, dl: Vector2, ul: Vector2):
-        assert isinstance(ur, Vector2)
-        assert isinstance(dr, Vector2)
-        assert isinstance(dl, Vector2)
-        assert isinstance(ul, Vector2)
-        matrix = ( 1.0,  1.0, 1.0,  0.0,  0.0, 0.0, -ur.x, -ur.x,
-                   0.0,  0.0, 0.0,  1.0,  1.0, 1.0, -ur.y, -ur.y,
-                   1.0, -1.0, 1.0,  0.0,  0.0, 0.0, -dr.x,  dr.x,
-                   0.0,  0.0, 0.0,  1.0, -1.0, 1.0, -dr.y,  dr.y,
-                  -1.0, -1.0, 1.0,  0.0,  0.0, 0.0,  dl.x,  dl.x,
-                   0.0,  0.0, 0.0, -1.0, -1.0, 1.0,  dl.y,  dl.y,
-                  -1.0,  1.0, 1.0,  0.0,  0.0, 0.0,  ul.x, -ul.x,
-                   0.0,  0.0, 0.0, -1.0,  1.0, 1.0,  ul.y, -ul.y)
-        b = np.array((ur.x, ur.y, dr.x, dr.y, dl.x, dl.y, ul.x, ul.y))
-        matrix = np.array(matrix).reshape((8, 8))
-        return cls(Matrix3(*(np.linalg.inv(matrix) @ b).flat, 1.0))
+    def from_four_points(cls, *args):
+        return cls(Matrix3.perspective_transform_from_four_points(*args))
 
     @classmethod
-    def from_eight_points(cls, dr_1: Vector2, dl_1: Vector2, ul_1: Vector2, ur_1: Vector2,
-                          ur_2: Vector2, dr_2: Vector2, dl_2: Vector2, ul_2: Vector2):
-        assert isinstance(dr_1, Vector2)
-        assert isinstance(dl_1, Vector2)
-        assert isinstance(ul_1, Vector2)
-        assert isinstance(ur_1, Vector2)
-        assert isinstance(dr_2, Vector2)
-        assert isinstance(dl_2, Vector2)
-        assert isinstance(ul_2, Vector2)
-        assert isinstance(ur_2, Vector2)
-        # m00 | m01 | m02 | m10 | m11 | m12 |     m20    |     m21    |
-        # c_x | c_y |  1  |  0  |  0  |  0  | -p_x * c_x | -p_x * c_y |
-        #  0  |  0  |  0  | c_x | c_y |  1  | -p_y * c_x | -p_y * c_y |
-        matrix = (ur_2.x,  ur_2.y, 1.0,  0.0,     0.0,    0.0, -ur_1.x * ur_2.x, -ur_1.x * ur_2.y,
-                  0.0,     0.0,    0.0,  ur_2.x,  ur_2.y, 1.0, -ur_1.y * ur_2.x, -ur_1.y * ur_2.y,
-                  dr_2.x,  dr_2.y, 1.0,  0.0,     0.0,    0.0, -dr_1.x * dr_2.x, -dr_1.x * dr_2.y,
-                  0.0,     0.0,    0.0,  dr_2.x,  dr_2.y, 1.0, -dr_1.y * dr_2.x, -dr_1.y * dr_2.y,
-                  dl_2.x,  dl_2.y, 1.0,  0.0,     0.0,    0.0, -dl_1.x * dl_2.x, -dl_1.x * dl_2.y,
-                  0.0,     0.0,    0.0,  dl_2.x,  dl_2.y, 1.0, -dl_1.y * dl_2.x, -dl_1.y * dl_2.y,
-                  ul_2.x,  ul_2.y, 1.0,  0.0,     0.0,    0.0, -ul_1.x * ul_2.x, -ul_1.x * ul_2.y,
-                  0.0,     0.0,    0.0,  ul_2.x,  ul_2.y, 1.0, -ul_1.y * ul_2.x, -ul_1.y * ul_2.y)
-        b = np.array((ur_1.x, ur_1.y, dr_1.x, dr_1.y, dl_1.x, dl_1.y, ul_1.x, ul_1.y))
-        matrix = np.array(matrix).reshape((8, 8))
-        return cls(Matrix3(*(np.linalg.inv(matrix) @ b).flat, 1.0))
+    def from_eight_points(cls, *args):
+        return cls(Matrix3.perspective_transform_from_eight_points(*args))

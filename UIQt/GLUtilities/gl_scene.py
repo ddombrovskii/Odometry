@@ -239,7 +239,7 @@ class SceneGL:
             material.set_property_val("cam_position", self._cam_position)
             # material.set_property_val("model", model.transform.transform_matrix.transpose())
 
-        material.shader.send_mat_4("model", model.transform.transform_matrix.transpose())
+        material.shader.send_mat_4("model", model.transform.transform_matrix)  # .transpose())
         model.mesh.draw()
 
 

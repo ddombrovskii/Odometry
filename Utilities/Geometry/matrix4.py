@@ -84,20 +84,12 @@ class Matrix4(namedtuple('Matrix4', 'm00, m01, m02, m03,'
         :return: матрица перспективной проекции
         """
         scale = max(1.0 / math.tan(fov * 0.5 * math.pi / 180.0), 0.01)
-        #  scale * aspect  # scale the x coordinates of the projected point
-        #  scale  # scale the y coordinates of the projected point
-        #  z_far / (z_near - z_far)  # used to remap z to [0,1]
-        #  z_far * z_near / (z_near - z_far)  # used to remap z [0,1]
-        #  -1  # set w = -z
-        #  0
-        return cls(scale * aspect, 0.0,   0.0,                               0.0,
-                   0.0,            scale, 0.0,                               0.0,
-                   0.0,            0.0,   z_far / (z_near - z_far),         -1.0,
-                   0.0,            0.0,   z_far * z_near / (z_near - z_far), 0.0)
-        # return cls(scale * aspect, 0.0,   0.0,                                 0.0,
-        #            0.0,            scale, 0.0,                                 0.0,
-        #            0.0,            0.0,   z_far / (z_far - z_near), -z_far * z_near / (z_far - z_near),
-        #            0.0,            0.0,   1,                                  0.0)
+        depth_scale = z_far / (z_far - z_near)
+        # z remapped in range of [0,1]
+        return cls(scale * aspect, 0.0,   0.0,                   0.0,
+                   0.0,            scale, 0.0,                   0.0,
+                   0.0,            0.0,   -depth_scale,          -1,
+                   0.0,            0.0,   -depth_scale * z_near, 0.0)
 
     @classmethod
     def build_ortho_projection_matrix(cls,
@@ -110,7 +102,7 @@ class Matrix4(namedtuple('Matrix4', 'm00, m01, m02, m03,'
                    (right + left) / (left - right), (top + bottom) / (bottom - top), (far + near) / (near - far), 1.0)
 
     @classmethod
-    def rotate_x(cls, angle: float, angle_in_rad: bool = True):
+    def rotate_x(cls, angle: float, angle_in_rad: bool = False):
         if not angle_in_rad:
             angle *= DEG_TO_RAD
         cos_a = math.cos(angle)
@@ -121,7 +113,7 @@ class Matrix4(namedtuple('Matrix4', 'm00, m01, m02, m03,'
                    0.0, 0.0, 0.0, 1.0)
 
     @classmethod
-    def rotate_y(cls, angle: float, angle_in_rad: bool = True):
+    def rotate_y(cls, angle: float, angle_in_rad: bool = False):
         if not angle_in_rad:
             angle *= DEG_TO_RAD
         cos_a = math.cos(angle)
@@ -132,7 +124,7 @@ class Matrix4(namedtuple('Matrix4', 'm00, m01, m02, m03,'
                    0.0, 0.0, 0.0, 1.0)
 
     @classmethod
-    def rotate_z(cls, angle: float, angle_in_rad: bool = True):
+    def rotate_z(cls, angle: float, angle_in_rad: bool = False):
         if not angle_in_rad:
             angle *= DEG_TO_RAD
         cos_a = math.cos(angle)
@@ -399,6 +391,18 @@ class Matrix4(namedtuple('Matrix4', 'm00, m01, m02, m03,'
         if isinstance(other, int) or isinstance(other, float):
             return Matrix4(*(other / s for s in self))
         raise RuntimeError(f"Matrix4::TrueDiv::wrong argument type {type(other)}")
+
+    def multiply_by_point(self, point: Vector3) -> Vector3:
+        assert isinstance(point, Vector3)
+        return Vector3(self.m00 * point.x + self.m01 * point.y + self.m02 * point.z + self.m03,
+                       self.m10 * point.x + self.m11 * point.y + self.m12 * point.z + self.m13,
+                       self.m20 * point.x + self.m21 * point.y + self.m22 * point.z + self.m23)
+
+    def multiply_by_direction(self, point: Vector3) -> Vector3:
+        assert isinstance(point, Vector3)
+        return Vector3(self.m00 * point.x + self.m01 * point.y + self.m02 * point.z,
+                       self.m10 * point.x + self.m11 * point.y + self.m12 * point.z,
+                       self.m20 * point.x + self.m21 * point.y + self.m22 * point.z)
 
     def to_np_array(self) -> np.ndarray:
         return np.array(self).reshape((4, 4))

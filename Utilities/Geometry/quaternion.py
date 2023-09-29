@@ -1,4 +1,4 @@
-from .common import NUMERICAL_FORMAT_4F as _4F
+from .common import NUMERICAL_FORMAT_4F as _4F, DEG_TO_RAD
 from collections import namedtuple
 from .matrix4 import Matrix4
 from .vector3 import Vector3
@@ -141,14 +141,22 @@ class Quaternion(namedtuple('Quaternion', 'ew, ex, ey, ez')):
                        0.0, 0.0, 0.0, 1.0)
 
     @classmethod
-    def from_euler_angles(cls, roll, pitch, yaw):
+    def from_euler_angles(cls, roll, pitch, yaw, in_radians: bool = True):
         # работает
-        cr: float = math.cos(roll * 0.5)
-        sr: float = math.sin(roll * 0.5)
-        cp: float = math.cos(pitch * 0.5)
-        sp: float = math.sin(pitch * 0.5)
-        cy: float = math.cos(yaw * 0.5)
-        sy: float = math.sin(yaw * 0.5)
+        if in_radians:
+            cr: float = math.cos(roll * 0.5)
+            sr: float = math.sin(roll * 0.5)
+            cp: float = math.cos(pitch * 0.5)
+            sp: float = math.sin(pitch * 0.5)
+            cy: float = math.cos(yaw * 0.5)
+            sy: float = math.sin(yaw * 0.5)
+        else:
+            cr: float = math.cos(DEG_TO_RAD * roll * 0.5)
+            sr: float = math.sin(DEG_TO_RAD * roll * 0.5)
+            cp: float = math.cos(DEG_TO_RAD * pitch * 0.5)
+            sp: float = math.sin(DEG_TO_RAD * pitch * 0.5)
+            cy: float = math.cos(DEG_TO_RAD * yaw * 0.5)
+            sy: float = math.sin(DEG_TO_RAD * yaw * 0.5)
 
         return cls(cr * cp * cy + sr * sp * sy,
                    sr * cp * cy - cr * sp * sy,

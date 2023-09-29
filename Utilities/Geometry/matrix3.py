@@ -283,3 +283,42 @@ class Matrix3(namedtuple('Matrix3', 'm00, m01, m02,'
 
     def to_np_array(self) -> np.ndarray:
         return np.array(self).reshape((3, 3))
+
+    def perspective_multiply(self,  point: Vector2) -> Vector2:
+        p = self * Vector3(point.x, point.y, 1.0)
+        return Vector2(p.x / p.z, p.y / p.z)
+
+    @classmethod
+    def perspective_transform_from_four_points(cls, *args):
+        assert (all(isinstance(item, Vector2) for item in args) and len(args) == 4)
+        ur, dr, dl, ul = args
+        matrix = ( 1.0,  1.0, 1.0,  0.0,  0.0, 0.0, -ur.x, -ur.x,
+                   0.0,  0.0, 0.0,  1.0,  1.0, 1.0, -ur.y, -ur.y,
+                   1.0, -1.0, 1.0,  0.0,  0.0, 0.0, -dr.x,  dr.x,
+                   0.0,  0.0, 0.0,  1.0, -1.0, 1.0, -dr.y,  dr.y,
+                  -1.0, -1.0, 1.0,  0.0,  0.0, 0.0,  dl.x,  dl.x,
+                   0.0,  0.0, 0.0, -1.0, -1.0, 1.0,  dl.y,  dl.y,
+                  -1.0,  1.0, 1.0,  0.0,  0.0, 0.0,  ul.x, -ul.x,
+                   0.0,  0.0, 0.0, -1.0,  1.0, 1.0,  ul.y, -ul.y)
+        b = np.array((ur.x, ur.y, dr.x, dr.y, dl.x, dl.y, ul.x, ul.y))
+        matrix = np.array(matrix).reshape((8, 8))
+        return cls(*(np.linalg.inv(matrix) @ b).flat, 1.0)
+
+    @classmethod
+    def perspective_transform_from_eight_points(cls, *args):
+        assert (all(isinstance(item, Vector2) for item in args) and len(args) == 8)
+        ur_1, dr_1, dl_1, ul_1, ur_2, dr_2, dl_2, ul_2 = args
+        # m00 | m01 | m02 | m10 | m11 | m12 |     m20    |     m21    |
+        # c_x | c_y |  1  |  0  |  0  |  0  | -p_x * c_x | -p_x * c_y |
+        #  0  |  0  |  0  | c_x | c_y |  1  | -p_y * c_x | -p_y * c_y |
+        matrix = (ur_2.x,  ur_2.y, 1.0,  0.0,     0.0,    0.0, -ur_1.x * ur_2.x, -ur_1.x * ur_2.y,
+                  0.0,     0.0,    0.0,  ur_2.x,  ur_2.y, 1.0, -ur_1.y * ur_2.x, -ur_1.y * ur_2.y,
+                  dr_2.x,  dr_2.y, 1.0,  0.0,     0.0,    0.0, -dr_1.x * dr_2.x, -dr_1.x * dr_2.y,
+                  0.0,     0.0,    0.0,  dr_2.x,  dr_2.y, 1.0, -dr_1.y * dr_2.x, -dr_1.y * dr_2.y,
+                  dl_2.x,  dl_2.y, 1.0,  0.0,     0.0,    0.0, -dl_1.x * dl_2.x, -dl_1.x * dl_2.y,
+                  0.0,     0.0,    0.0,  dl_2.x,  dl_2.y, 1.0, -dl_1.y * dl_2.x, -dl_1.y * dl_2.y,
+                  ul_2.x,  ul_2.y, 1.0,  0.0,     0.0,    0.0, -ul_1.x * ul_2.x, -ul_1.x * ul_2.y,
+                  0.0,     0.0,    0.0,  ul_2.x,  ul_2.y, 1.0, -ul_1.y * ul_2.x, -ul_1.y * ul_2.y)
+        b = np.array((ur_1.x, ur_1.y, dr_1.x, dr_1.y, dl_1.x, dl_1.y, ul_1.x, ul_1.y))
+        matrix = np.array(matrix).reshape((8, 8))
+        return cls(*(np.linalg.inv(matrix) @ b).flat, 1.0)

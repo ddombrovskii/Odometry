@@ -1,11 +1,12 @@
+from Accelerometer.accelerometer_core.accelerometer_integrator import AccelIntegrator
 
-
-# if __name__ == "__main__":
-#     integrator = AccelIntegrator("accelerometer_core/accelerometer_records/the newest/building_way.json")
-#     # integrator = AccelIntegrator("accelerometer_core/accelerometer_records/record_bno_test.json")
-#     integrator.integrate()
-#     integrator.show_results_xz()
-#     integrator.show_path()
+if __name__ == "__main__":
+    integrator = AccelIntegrator("accelerometer_core/accelerometer_records/the newest/building_walk_drunk.json")
+    # integrator = AccelIntegrator("accelerometer_core/accelerometer_records/record_bno_test.json")
+    integrator.integrate()
+    integrator.show_results_xz()
+    integrator.show_path()
+    exit()
 
 from Accelerometer.accelerometer_core.inertial_measurement_unit import IMU
 from Utilities.Geometry import Vector2

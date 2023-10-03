@@ -255,22 +255,24 @@ class AccelIntegrator:
         """
         if self._mode != INTEGRATE_MODE:
             return False
-        dt = point.dtime
+        dt    = point.dtime
         omega = point.angles_velocity
-        self._omegas.append(omega)
-        self._angles.append(self._angles[-1] + (point.angles_velocity - self._calib_omega) * dt)
         basis = self._accel_basis[-1]
-        f = (basis.front + Vector3.cross(omega, basis.front) * dt).normalized()
-        u = (basis.up + Vector3.cross(omega, basis.up) * dt).normalized()
+        self._omegas.append(omega)
         #  комплиментарная фильтрация и привязка u к направлению g
+        kkk = 0.999
+        u: Vector3 = (basis.up + kkk * Vector3.cross(omega, basis.up) * dt).normalized()
         u = (u * (1.0 - self._accel_k) + self._accel_k * self._curr_accel.normalized()).normalized()
+        f: Vector3 = (basis.front + kkk * Vector3.cross(omega, basis.front) * dt)
         r = Vector3.cross(f, u).normalized()
         f = Vector3.cross(u, r).normalized()
+        # f = f.normalized()
+        # u = u.normalized()
+        # r = r.normalized()
         # получим ускорение в мировой системе координат за вычетом ускорения свободного падения
-        a: Vector3 = Vector3(
-            self._curr_accel.x - (r.x * self._calib_accel.x + u.x * self._calib_accel.y + f.x * self._calib_accel.z),
-            self._curr_accel.y - (r.y * self._calib_accel.x + u.y * self._calib_accel.y + f.y * self._calib_accel.z),
-            self._curr_accel.z - (r.z * self._calib_accel.x + u.z * self._calib_accel.y + f.z * self._calib_accel.z))
+        a: Vector3 = Vector3(self._curr_accel.x - (r.x * self._calib_accel.x + u.x * self._calib_accel.y + f.x * self._calib_accel.z),
+                             self._curr_accel.y - (r.y * self._calib_accel.x + u.y * self._calib_accel.y + f.y * self._calib_accel.z),
+                             self._curr_accel.z - (r.z * self._calib_accel.x + u.z * self._calib_accel.y + f.z * self._calib_accel.z))
         """
         Проверка наличия весомых изменений в векторе ускорения в течении времени
         """
@@ -280,9 +282,14 @@ class AccelIntegrator:
             self._time = 0
 
         self._accel_basis.append(Matrix4.build_transform(r, u, f, a))
-        v = self._velocities[-1] + ((r * a.x + u * a.y + f * a.z) * dt) \
+
+        # v = (self._velocities[-1] + (r * a.x + u * a.y + f * a.z) * dt) \
+        #     if self._time <= self._trust_t else Vector3(0.0, 0.0, 0.0)
+        v = 0.50 * Vector3(0.0, 0.0, 1.0) \
             if self._time <= self._trust_t else Vector3(0.0, 0.0, 0.0)
+        self._angles.append(self._angles[-1] + (point.angles_velocity - self._calib_omega) * dt)
         self._velocities.append(v)
+        # self._positions.append(self._positions[-1] + (r * v.x + u * v.y + f * v.y) * dt)
         self._positions.append(self._positions[-1] + (r * v.x + u * v.y + f * v.z) * dt)
         self._time_values.append(self._time_values[-1] + dt)
         return True
@@ -329,45 +336,45 @@ class AccelIntegrator:
         plt.show()
 
     def show_results_xz(self):
-        fig, axes = plt.subplots(6)
+        fig, axes = plt.subplots(4)
         axes[0].plot(self.time_values, [a.x for a in self.omegas], 'r')
         axes[0].plot(self.time_values, [a.y for a in self.omegas], 'g')
         axes[0].plot(self.time_values, [a.z for a in self.omegas], 'b')
         axes[0].set_xlabel("t, [sec]")
         axes[0].set_ylabel("$omega(t), [rad/sec]$")
-        axes[0].set_title("angles")
+        # axes[0].set_title("angles")
 
         axes[1].plot(self.time_values, [a.x for a in self.angles], 'r')
         axes[1].plot(self.time_values, [a.y for a in self.angles], 'g')
         axes[1].plot(self.time_values, [a.z for a in self.angles], 'b')
         axes[1].set_xlabel("t, [sec]")
         axes[1].set_ylabel("$angle(t), [rad]$")
-        axes[1].set_title("angles")
+        # axes[1].set_title("angles")
 
         axes[2].plot(self.time_values, [a.origin.x for a in self.accel_basis], 'r')
         axes[2].plot(self.time_values, [a.origin.z for a in self.accel_basis], 'b')
         axes[2].set_xlabel("t, [sec]")
         axes[2].set_ylabel("$a(t), [m/sec^2]$")
-        axes[2].set_title("accelerations - world space")
+        # axes[2].set_title("accelerations - world space")
 
         axes[3].plot(self.time_values, [v.x for v in self.velocities], 'r')
         axes[3].plot(self.time_values, [v.z for v in self.velocities], 'b')
         axes[3].set_xlabel("t, [sec]")
         axes[3].set_ylabel("$v(t), [m/sec]$")
-        axes[3].set_title("velocities - world space")
+        # axes[3].set_title("velocities - world space")
 
-        axes[4].plot(self.time_values, [p.x for p in self.positions], 'r')
-        axes[4].plot(self.time_values, [p.z for p in self.positions], 'b')
-        axes[4].set_xlabel("t, [sec]")
-        axes[4].set_ylabel("$S(t), [m]$")
-        axes[4].set_title("positions - world space")
+        # axes[4].plot(self.time_values, [p.x for p in self.positions], 'r')
+        # axes[4].plot(self.time_values, [p.z for p in self.positions], 'b')
+        # axes[4].set_xlabel("t, [sec]")
+        # axes[4].set_ylabel("$S(t), [m]$")
+        # axes[4].set_title("positions - world space")
 
-        axes[5].plot([p.x for p in self.positions], [p.z for p in self.positions], 'r')
-        axes[5].set_aspect('equal', 'box')
-        axes[5].set_xlabel("Sx, [m]")
-        axes[5].set_ylabel("Sz, [m]")
-        axes[5].set_title("positions - world space")
-        plt.show()
+       # axes[5].plot([p.x for p in self.positions], [p.z for p in self.positions], 'r')
+       # axes[5].set_aspect('equal', 'box')
+       # axes[5].set_xlabel("Sx, [m]")
+       # axes[5].set_ylabel("Sz, [m]")
+       # axes[5].set_title("positions - world space")
+       # plt.show()
 
     def show_path(self):
         fig, axes = plt.subplots(1)

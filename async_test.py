@@ -42,6 +42,9 @@ async def run_tasks():
 #     asyncio.run(run_tasks())
 
 if __name__ == "__main__":
+    from Utilities.CV import Camera
+    c = Camera()
+    c.run("trololo")
     timer = Timer()
     print(sys.getsizeof(timer))
     print(timer)

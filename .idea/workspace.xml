@@ -5,11 +5,27 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5ead7134-b374-42a1-8fdd-5ab1a6211af6" name="Changes" comment="path_view">
-      <change afterPath="$PROJECT_DIR$/uart_command.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/Odometry.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Odometry.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Utilities/CV/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Utilities/CV/camera.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Utilities/CV/camera_calibration.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Utilities/CV/camera_constants.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Utilities/Geometry/transform_2d.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/uart_image.py" beforeDir="false" afterPath="$PROJECT_DIR$/uart_image.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Cameras/camera_cv.py" beforeDir="false" afterPath="$PROJECT_DIR$/Cameras/camera_cv.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Cameras/utilities.py" beforeDir="false" afterPath="$PROJECT_DIR$/Cameras/utilities.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UIQt/GLUtilities/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/GLUtilities/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UIQt/GLUtilities/gl_camera.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/UIQt/GLUtilities/gl_mesh.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/GLUtilities/gl_mesh.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UIQt/GLUtilities/gl_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/GLUtilities/gl_model.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UIQt/GLUtilities/gl_tris_mesh.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/GLUtilities/gl_tris_mesh.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UIQt/Scripts/Functionality/path_create_behaviour.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/Scripts/Functionality/path_create_behaviour.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/bounding_box.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/bounding_box.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/camera.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/camera.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/ray.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/ray.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/transform.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/transform_3d.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/io_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/io_utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/async_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/async_test.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -35,28 +51,51 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;E:/GitHub/Odometry/Odometry&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "last_opened_file_path": "E:/GitHub/Odometry/Odometry/Utilities/cv",
+    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="E:\GitHub\Odometry\Odometry\Utilities\cv" />
       <recent name="E:\GitHub\Odometry\Odometry" />
       <recent name="E:\GitHub\Odometry\Odometry\students" />
       <recent name="E:\GitHub\Odometry\Odometry\Utilities\Geometry" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="E:\GitHub\Odometry\Odometry\Utilities\cv" />
       <recent name="E:\GitHub\Odometry\Odometry\students" />
       <recent name="E:\GitHub\Odometry\Odometry\Utilities" />
       <recent name="E:\GitHub\Odometry\Odometry\UIQt\GLUtilities\Input" />
       <recent name="E:\GitHub\Odometry\Odometry\UIQt\CommonComponents" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.camera_calibration">
+  <component name="RunManager" selected="Python.async_test">
+    <configuration name="async_test" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Odometry" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/async_test.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="camera_calibration" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="Odometry" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -78,7 +117,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="find_path_c" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="camera_calibration" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="Odometry" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -90,7 +129,7 @@
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/find_path_c.py" />
+      <option name="SCRIPT_NAME" value="E:\GitHub\Odometry\Odometry\Utilities\cv\camera_calibration.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -99,7 +138,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="main" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="console_print_test" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="Odometry" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -107,32 +146,11 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Accelerometer" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Utilities" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Accelerometer/main.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration name="non_uniform_transfom" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="Odometry" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/non_uniform_transfom.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Utilities/console_print_test.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -164,11 +182,11 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.async_test" />
+        <item itemvalue="Python.console_print_test" />
+        <item itemvalue="Python.camera_calibration (1)" />
         <item itemvalue="Python.camera_calibration" />
         <item itemvalue="Python.uart_image" />
-        <item itemvalue="Python.find_path_c" />
-        <item itemvalue="Python.main" />
-        <item itemvalue="Python.non_uniform_transfom" />
       </list>
     </recent_temporary>
   </component>
@@ -256,6 +274,16 @@
           <url>file://$PROJECT_DIR$/uart_image.py</url>
           <line>184</line>
           <option name="timeStamp" value="57" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/Utilities/CV/camera_calibration.py</url>
+          <line>105</line>
+          <option name="timeStamp" value="62" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/Utilities/CV/camera.py</url>
+          <line>188</line>
+          <option name="timeStamp" value="66" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

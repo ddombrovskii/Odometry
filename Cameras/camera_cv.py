@@ -26,13 +26,13 @@ class CameraCV(Device):
         try:
             if len(CameraCV._FREE_CAMERA_PORTS) != 0:
                 self._camera_port = CameraCV._FREE_CAMERA_PORTS.pop()
-                # if win 10 :: self._camera_stream = cv.VideoCapture(self._camera_port)
+                # if win 10 :: self._camera_stream = CV.VideoCapture(self._camera_port)
                 self._camera_stream = cv.VideoCapture(self._camera_port, constants.CAP_DSHOW)
             else:
                 if CameraCV._MAX_CAMERA_PORTS_SUPPORT < CameraCV._LAST_CAMERA_PORT:
                     raise RuntimeError("CV Camera exceed max amount of instances...")
                 self._camera_port = CameraCV._LAST_CAMERA_PORT
-                # if win 10 :: self._camera_stream = cv.VideoCapture(self._camera_port)
+                # if win 10 :: self._camera_stream = CV.VideoCapture(self._camera_port)
                 self._camera_stream = cv.VideoCapture(self._camera_port, constants.CAP_DSHOW)
 
                 CameraCV._LAST_CAMERA_PORT += 1
@@ -165,7 +165,7 @@ class CameraCV(Device):
     def camera_cv(self) -> cv.VideoCapture:
         """
         Cv камера
-        :return: cv.VideoCapture
+        :return: CV.VideoCapture
         """
         return self._camera_stream
 

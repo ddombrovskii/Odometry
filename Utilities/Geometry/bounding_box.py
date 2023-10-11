@@ -1,4 +1,4 @@
-from .transform import Transform
+from .transform_3d import Transform3d
 from .vector3 import Vector3
 from .common import *
 
@@ -43,13 +43,13 @@ class BoundingBox:
         self._max = Vector3.max(self._max, v.max)
         self._min = Vector3.min(self._min, v.min)
 
-    def transform_bbox(self, transform: Transform):
+    def transform_bbox(self, transform: Transform3d):
         bounds = BoundingBox()
         for pt in self.points:
             bounds.encapsulate(transform.transform_vect(pt))
         return bounds
 
-    def inv_transform_bbox(self, transform: Transform):
+    def inv_transform_bbox(self, transform: Transform3d):
         bounds = BoundingBox()
         for pt in self.points:
             bounds.encapsulate(transform.inv_transform_vect(pt))

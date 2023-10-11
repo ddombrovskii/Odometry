@@ -1,6 +1,6 @@
 from .common import NUMERICAL_ACCURACY
 from .bounding_box import BoundingBox
-from .transform import Transform
+from .transform_3d import Transform3d
 from .matrix4 import Matrix4
 from .vector3 import Vector3
 from .vector4 import Vector4
@@ -19,7 +19,7 @@ class Camera:
         self._projection_mode = PERSPECTIVE_PROJECTION_MODE
         self._projection: Matrix4 = Matrix4.identity()
         self._inv_projection: Matrix4 = Matrix4.identity()
-        self._transform: Transform = Transform()
+        self._transform: Transform3d = Transform3d()
         self._z_far: float = 1000
         self._z_near: float = 0.01
         self._fov: float = 70.0
@@ -107,7 +107,7 @@ class Camera:
         return id(self)
 
     @property
-    def transform(self) -> Transform:
+    def transform(self) -> Transform3d:
         return self._transform
 
     @property

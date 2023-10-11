@@ -13,7 +13,7 @@ def deg_to_rad(deg: float) -> float:
     return deg / 180.0 * math.pi
 
 
-class Transform:
+class Transform3d:
 
     __slots__ = ("_t_m", "_i_t_m", "_angles")
 
@@ -50,7 +50,7 @@ class Transform:
                f"\n}}"
 
     def __eq__(self, other) -> bool:
-        if not isinstance(other, Transform):
+        if not isinstance(other, Transform3d):
             return False
         if not(self._t_m == other._t_m):
             return False

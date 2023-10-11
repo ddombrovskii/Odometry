@@ -1,5 +1,6 @@
 from .perspective_transform_2d import PerspectiveTransform2d
-from .transform import Transform, deg_to_rad
+from .transform_3d import Transform3d, deg_to_rad
+from .transform_2d import Transform2d
 from .bounding_box import BoundingBox
 from .quaternion import Quaternion
 from .vector4 import Vector4

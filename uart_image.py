@@ -10,7 +10,7 @@ from serial import SerialException
 from collections import namedtuple
 from typing import List, Union
 import serial
-
+from threading import Thread
 
 def gather_com_ports() -> List[ListPortInfo]:
     return [p for p in comports()]
@@ -45,6 +45,7 @@ DATA_KEY_B = b'data'
 RESPONSE_KEY = 'response'
 RESPONSE_KEY_B = b'response'
 NEW_LINE = ',\n'
+SIZE_OF_INT = 4
 
 
 def read_message(serial_port: serial.Serial) -> bytes:
@@ -60,24 +61,27 @@ def read_message(serial_port: serial.Serial) -> bytes:
 
 
 def image_info_message(image_name: str, image_w: int, image_h: int, bpp: int = 1) -> bytes:
-    return f"{MESSAGE_START}{IMAGE_KEY} {image_name} {image_w} {image_h} {bpp}{MESSAGE_END}".encode()
+    return struct.pack(f"2s5s{len(image_name)}siii2s", MESSAGE_START_B, IMAGE_KEY_B, image_name.encode('utf-8'),
+                       image_w, image_h, bpp, MESSAGE_END_B)
+    # return f"{MESSAGE_START}{IMAGE_KEY} {image_name} {image_w} {image_h} {bpp}{MESSAGE_END}".encode()
 
 
 def image_data_message(data: bytes) -> bytes:
-    data_len = str(len(data)).encode('utf-8')
-    return struct.pack(f"2s{len(data_len)}s1s{len(data)}s2s", MESSAGE_START_B, data_len, b' ', data, MESSAGE_END_B)
+    # data_len = str(len(data)).encode('utf-8')
+    return struct.pack(f"2s4s{len(data)}s2s", MESSAGE_START_B, DATA_KEY_B, data, MESSAGE_END_B)
 
 
-def message_data(message: bytes) -> List[bytes]:
+def message_data(message: bytes) -> bytes:
     if message.startswith(MESSAGE_START_B):
         message = message[2:]
     if message.endswith(MESSAGE_END_B):
         message = message[:-2]
-    return message.split(b' ')
+    return message  # .split(b' ')
 
 
 def response_message(success: bool) -> bytes:
-    return f"{MESSAGE_START}{RESPONSE_KEY} {1 if success else 0}{MESSAGE_END}".encode()
+    return struct.pack(f'2s6si2s', MESSAGE_START_B, RESPONSE_KEY_B, 1 if success else 0, MESSAGE_END)
+    # return f"{MESSAGE_START}{RESPONSE_KEY} {1 if success else 0}{MESSAGE_END}".encode()
 
 
 class ImageInfo(namedtuple('ImageInfo', 'image_name, width, height, bpp')):
@@ -87,7 +91,7 @@ class ImageInfo(namedtuple('ImageInfo', 'image_name, width, height, bpp')):
 
     def __str__(self):
         return f"{{\n" \
-               f"\t\"image_name\": {self.image_name},\n" \
+               f"\t\"image_name\": \"{self.image_name}\",\n" \
                f"\t\"width\"     : {self.width},\n" \
                f"\t\"height\"    : {self.height},\n" \
                f"\t\"bpp\"       : {self.bpp}\n" \
@@ -95,14 +99,20 @@ class ImageInfo(namedtuple('ImageInfo', 'image_name, width, height, bpp')):
 
     @classmethod
     def from_message(cls, message: bytes):
+        # f"2s4sis{len(data)}s2s"
         m_data = message_data(message)
-        # image image_name image_width image_height image_bytes_per_pixel
-        if m_data[0] != IMAGE_KEY_B or len(m_data) != 5:
+        if not m_data.startswith(IMAGE_KEY_B):
+            # image image_name image_width image_height image_bytes_per_pixel
             raise ValueError(f"ImageInfo::from_message::incorrect message::message: {' '.join(str(v)for v in m_data)}")
-        return cls(m_data[1].decode('utf-8'),
-                   int(m_data[2].decode('utf-8')),
-                   int(m_data[3].decode('utf-8')),
-                   int(m_data[4].decode('utf-8')))
+        # return cls(m_data[1].decode('utf-8'),
+        #            int(m_data[2].decode('utf-8')),
+        #            int(m_data[3].decode('utf-8')),
+        #            int(m_data[4].decode('utf-8')))
+        m_size = len(m_data)
+        return cls(m_data[len(IMAGE_KEY_B): 1 + m_size - SIZE_OF_INT * 4].decode('utf-8'),
+                   *struct.unpack('i', m_data[m_size - 12: m_size - 8]),
+                   *struct.unpack('i', m_data[m_size - 8:  m_size - 4]),
+                   *struct.unpack('i', m_data[m_size - 4:  m_size]))
 
     def to_message(self) -> bytes:
         return image_info_message(self.image_name, self.width, self.height, self.bpp)
@@ -110,6 +120,7 @@ class ImageInfo(namedtuple('ImageInfo', 'image_name, width, height, bpp')):
 
 class ImageData(namedtuple('ImageData', 'image_mem_dump')):
     # Сообщение с частью данных изображения
+    #
     def __new__(cls, image_mem_bytes: bytes):
         return super().__new__(cls, image_mem_bytes)
 
@@ -125,9 +136,9 @@ class ImageData(namedtuple('ImageData', 'image_mem_dump')):
     @classmethod
     def from_message(cls, message: bytes):
         m_data = message_data(message)
-        if m_data[0] != DATA_KEY_B or len(m_data) != 3:  # data bytes_count_in_message bytes_in_message
+        if not m_data.startswith(DATA_KEY_B):  # data bytes_count_in_message bytes_in_message
             raise ValueError(f"ImageData::from_message::incorrect message::message: {' '.join(str(v)for v in m_data)}")
-        return cls(m_data[2])
+        return cls(m_data[len(DATA_KEY_B):])
 
     def to_message(self) -> bytes:
         return image_data_message(self.image_mem_dump)
@@ -183,29 +194,30 @@ class UARTPort(namedtuple('UARTPort', 'port')):
         # print(message)
         # Пишет сообщение, а после ожидает подтверждения, что сообщение было получено
         write_amount = self.port.write(message)
-        if write_amount is None:
+        if write_amount is None or write_amount != len(message):
             return Response(False)
-        if write_amount != len(message):
-            return Response(False)
-        # return Response(True)
-        start_t = time.perf_counter()
-        while time.perf_counter() - start_t < self.port.timeout:
-            try:
-                return Response.from_message(self.read())
-            except ValueError as _:
-                continue
-        return Response(False)
+        time.sleep(0.005)
+        # start_t = time.perf_counter()
+        # while time.perf_counter() - start_t > self.port.timeout:
+        #     try:
+        #         return Response.from_message(self.read())
+        #     except ValueError as _:
+        #         continue
+        return Response(True)
 
     def read(self) -> bytes:
         if self.port.in_waiting == 0:
+            # print('self.port.in_waiting')
             return b''
         start_t = time.perf_counter()
-        while self.port.read(2) != MESSAGE_START_B:
-            if time.perf_counter() - start_t < self.port.timeout:
+        while self.port.in_waiting != 1:
+            if self.port.read(2) == MESSAGE_START_B:
+                break
+            if time.perf_counter() - start_t > self.port.timeout:
                 return b''
             if self.port.in_waiting != 0:
                 continue
-            return b''
+        # print('***')
         return self.port.read_until(MESSAGE_END_B)[:-2]
 
     def clear(self):
@@ -214,49 +226,51 @@ class UARTPort(namedtuple('UARTPort', 'port')):
 
 
 def _try_to_send_data(port: UARTPort, data: bytes, send_tries_amount: int = 32) -> Response:
-    for _ in range(send_tries_amount):
-        sending_status = port.write(data)
-        if sending_status:
-            return Response(True)
-    return Response(False)
+    # for _ in range(send_tries_amount):
+    #     time.sleep(0.001)
+    #     if port.write(data):
+    #         return Response(True)
+    return port.write(data)  # Response(False)
 
 
-def send_image(port: UARTPort, image_src: str, image_chunk_size: int = 4096, send_tries_amount: int = 32) -> Response:
+def send_image(port: UARTPort, image_src: str, image_chunk_size: int = 128, send_tries_amount: int = 32) -> Response:
     if not os.path.exists(image_src):
         return Response(False)
     port.clear()
     image_info = PIL.Image.open(image_src)
     with open(image_src, 'rb') as input_image:
-        im_info_message = ImageInfo(image_src,
-                                    *image_info.size,
+        im_info_message = ImageInfo(image_src, *image_info.size,
                                     image_info.layers if "layes" in image_info.__dict__ else 1).to_message()
         # пытаемся отправить информацию о передаваемой картинке
-        sending_status = _try_to_send_data(port, im_info_message, send_tries_amount)
+        sending_status = port.write(im_info_message).status  # _try_to_send_data(port,
+        # im_info_message, send_tries_amount)
         # не получилось
         if not sending_status:
-            print("Image chunk sending exceed maximum amount of tries")
+            print("Image info sending exceed maximum amount of tries")
             return sending_status
         # получилось
         while True:
             # читаем файл по кускам, до тех пор пока читается
             data = input_image.read(image_chunk_size)
+            # print(data)
             if data == b'':
+                print('it\'s all')
+                sending_status |= port.write(b"$#END#$").status
                 break
             # пытаемся отправить прочитанный кусок
-            sending_status = _try_to_send_data(port, data, send_tries_amount)
+            sending_status |= port.write(image_data_message(data)).status  # , send_tries_amount)
             # не получилось
             if not sending_status:
                 print("Image chunk sending exceed maximum amount of tries")
                 return sending_status
             # получилось
-        sending_status = _try_to_send_data(port, b"$#END#$", send_tries_amount)
         return sending_status
 
 
-def read_image(port: UARTPort, image_dst: str, read_tries_amount: int = 32, image_read_max_time: float = 10):
+def read_image(port: UARTPort, image_dst: str, read_tries_amount: int = 32, image_read_max_time: float = 5.0):
     im_info: Union[ImageInfo, None] = None
     im_done: bool = False
-    with open(image_src, 'wb') as output_image:
+    with open(image_dst, 'wb') as output_image:
         t_start = time.perf_counter()
         while not im_done:
             for _ in range(read_tries_amount):
@@ -269,32 +283,49 @@ def read_image(port: UARTPort, image_dst: str, read_tries_amount: int = 32, imag
                     break
                 if message.startswith(DATA_KEY_B):
                     im_data = ImageData.from_message(message)
+                    # print(im_data)
                     if len(im_data) != output_image.write(im_data.image_mem_dump):
+                        # port.write(Response(False).to_message())
                         raise IOError(f"image_dst: {image_dst} write error")
                     break
-            if time.perf_counter() - t_start > image_read_max_time:
-                raise RuntimeError(f"Image reading time exceeds...")
+            #if time.perf_counter() - t_start > image_read_max_time:
+                #  print(im_info)
+            #    raise RuntimeError(f"Image reading time exceeds...")
     return im_info
 
 
-port: UARTPort = UARTPort(port='COM3', baudrate=115200, timeout=0.1)
-port.clear()
-image_src = "image_0.png"
-image_bytes = b''
-chunk_size = 4096
+sender_port: UARTPort = UARTPort(port='COM7', baudrate=19200, timeout=0.1)
+sender_port.clear()
+receiver_port: UARTPort = UARTPort(port='COM3', baudrate=19200, timeout=0.1)
+receiver_port.clear()
+chunk_size = 64
 
-    #  image_bytes = input_image.read()
+#  image_src = "image_0.png"
+#  image_bytes = b''
+#  status = sender_port.write(image_data_message(f"{'r' * 128}".encode()))
+#  print(status)
+#  time.sleep(0.001)
+#  status = receiver_port.read()
+#  print(len(status))
+#  print(status)
+#  exit()
+sender   = Thread(target=send_image, args=(sender_port,   "tsukuba_r.png", chunk_size))
+receiver = Thread(target=read_image, args=(receiver_port, "tsukuba_copy.png"))
+sender.start()
+receiver.start()
+sender.join()
+receiver.join()
 
 
-print(port.write(image_data_message(b"sdfjsfjwjerhjbajvdjvsjakfjvrjh")))
-time.sleep(0.10)
-print(port.read())
 
-# print(message_data(image_info_message("image_test.png", 800, 600)))
+#  print(image_data_message(b"sdfjsfjwjerhjbajvdjvsjakfjvrjh"))
 
-# print(ImageInfo.from_message(image_info_message("image_test.png", 800, 600)))
+# ime.sleep(0.10)
+# rint(message_data(image_info_message("image_test.png", 800, 600, 3)))
 
-# print(image_data_message(b"sdfjsfjwjerhjbajvdjvsjakfjvrjh"))
+# rint(ImageInfo.from_message(image_info_message("image_test.png", 800, 600, 3)))
 
-# image_header = "image:image_1.png w:100 h:200 d:1"
-# image_data   = "t:run data_length:30 data:sdfjsfjwjerhjbajvdjvsjakfjvrjh"
+# rint(image_data_message(b"sdfjsfjwjerhjbajvdjvsjakfjvrjh"))
+
+# rint(ImageData.from_message(image_data_message(b"sdfjsfjwjerhjbajvdjvsjakfjvrjh")))
+

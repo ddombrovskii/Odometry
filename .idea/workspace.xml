@@ -5,29 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5ead7134-b374-42a1-8fdd-5ab1a6211af6" name="Changes" comment="path_view">
-      <change afterPath="$PROJECT_DIR$/Utilities/ActionsLoop/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Utilities/ActionsLoop/action.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Utilities/ActionsLoop/actions_loop.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Utilities/CV/Camera/CameraActions/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Utilities/CV/Camera/CameraActions/camera_action.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Utilities/CV/Camera/CameraActions/camera_action_utils.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Utilities/CV/Camera/CameraActions/camera_cv_controller.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Utilities/CV/Camera/CameraActions/camera_frame_graber.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Utilities/CV/Camera/CameraActions/camera_frame_saver.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Utilities/CV/Camera/CameraActions/camera_frames_recorder.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Utilities/CV/Camera/CameraActions/camera_video_recorder.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Utilities/CV/Camera/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Utilities/CV/Camera/camera.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Utilities/CV/Camera/camera_handle.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Utilities/CV/Camera/camera_ui.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Utilities/CV/Camera/image_widget.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/CV/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/CV/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/CV/camera.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/CV/camera_calibration.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/CV/Camera/camera_calibration.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/CV/camera_constants.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/CV/Camera/camera_constants.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/Device/device_mode.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Device/device_mode.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/async_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/camera_cv_run_test.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/CV/Camera/camera.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/CV/Camera/camera.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/CV/Camera/camera_handle.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/CV/Camera/camera_handle.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/CV/Camera/camera_ui.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/CV/Camera/camera_ui.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/camera_cv_run_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/camera_cv_run_test.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -321,8 +303,13 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/Utilities/CV/Camera/camera.py</url>
-          <line>71</line>
+          <line>75</line>
           <option name="timeStamp" value="125" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/Utilities/CV/Camera/camera_ui.py</url>
+          <line>136</line>
+          <option name="timeStamp" value="127" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

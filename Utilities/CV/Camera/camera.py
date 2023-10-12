@@ -25,6 +25,7 @@ class Camera(ActionsLoop):
     def __init__(self, port: int = 0):
         super().__init__()
         self._camera_cv: CameraHandle = CameraHandle(port)
+        self.update_time = self._camera_cv.frame_time
         self._frames_grabber  = CameraFrameGrabber(self)
         self._frame_saver     = CameraFrameSaver(self)
         self._frames_recorder = CameraFramesRecorder(self)
@@ -51,6 +52,9 @@ class Camera(ActionsLoop):
         :return:
         """
         return self.camera_cv.is_open
+
+    def camera_read_only(self):
+        self.stop_all_except(self._frames_grabber)
 
     def record_video(self, video_path: str = _DEFAULT_VIDEO_RECORDS_DIR_NAME, ext: str = 'mp4') -> bool:
         if self.action_active(self._video_recorder):

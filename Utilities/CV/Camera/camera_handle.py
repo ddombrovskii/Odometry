@@ -1,4 +1,4 @@
-from .camera_calibration import load_camera_calib_info, undistort_image
+from .camera_calibration import load_camera_calib_info, undistort_image, save_camera_calib_info
 from .camera_calibration import CameraCalibrationInfo
 from typing import Union, TextIO
 from . import camera_constants
@@ -134,6 +134,15 @@ class CameraHandle:
             self.make_log_message(f"Unable to load camera calibration params. File path {file_path} does not exist...")
             return False
         self._calib_params = load_camera_calib_info(file_path)
+        return True
+
+    def save_calib_params(self, file_path: str) -> bool:
+        if not isinstance(file_path, str):
+            self.make_log_message(f"Unable to load camera calibration params. File path {file_path} is not string...")
+            return False
+        if self._calib_params is None:
+            return False
+        save_camera_calib_info(file_path, self._calib_params)
         return True
 
     @property

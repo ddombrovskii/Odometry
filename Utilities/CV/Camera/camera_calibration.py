@@ -1,10 +1,10 @@
-import json
-import time
 from collections import namedtuple
-from typing import List, Tuple, Union
+from typing import List, Union
 import numpy as np
+import json
 import cv2
 import os
+
 IMAGE_TYPES = {'bmp', 'png', 'jpg', 'tga'}
 
 

@@ -5,9 +5,24 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5ead7134-b374-42a1-8fdd-5ab1a6211af6" name="Changes" comment="path_view">
-      <change afterPath="$PROJECT_DIR$/Utilities/CV/calibration_args.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Utilities/CV/calibration_results.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UIQt/GLUtilities/gl_buffer.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/GLUtilities/gl_buffer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UIQt/GLUtilities/gl_mesh.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/GLUtilities/gl_mesh.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UIQt/GLUtilities/gl_scene.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/GLUtilities/gl_scene.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UIQt/GLUtilities/gl_tris_mesh.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/GLUtilities/gl_tris_mesh.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UIQt/Scripts/Functionality/mouse_view_contoller.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/Scripts/Functionality/mouse_view_contoller.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/camera.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/camera.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/matrix3.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/matrix3.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/matrix4.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/matrix4.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/perspective_transform_2d.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/perspective_transform_2d.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/quaternion.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/quaternion.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/ray.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/ray.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/transform_2d.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/transform_2d.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/transform_3d.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/transform_3d.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/vector2.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/vector2.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/vector3.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/vector3.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/vector4.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/vector4.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -57,8 +72,8 @@
       <recent name="E:\GitHub\Odometry\Odometry\UIQt\GLUtilities\Input" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.camera_cv_run_test (1)">
-    <configuration name="camera_cv_run_test (1)" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+  <component name="RunManager" selected="Python.scene_viewer">
+    <configuration name="geometry_test" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="Odometry" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -70,7 +85,7 @@
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/camera_cv_run_test.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/geometry_test.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -79,7 +94,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="camera_cv_run_test" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="matrix4" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="Odometry" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -87,11 +102,11 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Utilities/Geometry" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="E:\GitHub\Odometry\Odometry\camera_cv_run_test.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Utilities/Geometry/matrix4.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -100,7 +115,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="camera_ui (1)" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="quaternion" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="Odometry" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -108,11 +123,11 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Utilities/CV/Camera" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Utilities/Geometry" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Utilities/CV/Camera/camera_ui.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Utilities/Geometry/quaternion.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -121,7 +136,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="camera_ui" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="scene_viewer" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="Odometry" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -129,11 +144,11 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Utilities/CV" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/UIQt" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="E:\GitHub\Odometry\Odometry\Utilities\CV\Camera\camera_ui.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/UIQt/scene_viewer.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -142,7 +157,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="students_reader" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="vector4" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="Odometry" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -150,11 +165,11 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/students" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Utilities/Geometry" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/students/students_reader.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Utilities/Geometry/vector4.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -165,11 +180,11 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.camera_cv_run_test (1)" />
-        <item itemvalue="Python.students_reader" />
-        <item itemvalue="Python.camera_ui (1)" />
-        <item itemvalue="Python.camera_cv_run_test" />
-        <item itemvalue="Python.camera_ui" />
+        <item itemvalue="Python.scene_viewer" />
+        <item itemvalue="Python.geometry_test" />
+        <item itemvalue="Python.matrix4" />
+        <item itemvalue="Python.vector4" />
+        <item itemvalue="Python.quaternion" />
       </list>
     </recent_temporary>
   </component>
@@ -220,13 +235,8 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/Utilities/Geometry/matrix3.py</url>
-          <line>115</line>
+          <line>212</line>
           <option name="timeStamp" value="15" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/Utilities/Geometry/camera.py</url>
-          <line>210</line>
-          <option name="timeStamp" value="30" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/Utilities/image_matcher.py</url>
@@ -292,6 +302,11 @@
           <url>file://$PROJECT_DIR$/students/students_reader.py</url>
           <line>424</line>
           <option name="timeStamp" value="129" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/Utilities/Geometry/vector3.py</url>
+          <line>166</line>
+          <option name="timeStamp" value="134" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

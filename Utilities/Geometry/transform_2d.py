@@ -6,9 +6,10 @@ import math
 
 class Transform2d:
 
-    __slots__ = ("_t_m", "_i_t_m")
+    __slots__ = ("_raw_i_t_m", "_t_m", "_i_t_m")
 
     def __init__(self):
+        self._raw_i_t_m: bool = False
         self._t_m = Matrix3(1.0, 0.0, 0.0,
                             0.0, 1.0, 0.0,
                             0.0, 0.0, 1.0)
@@ -17,14 +18,7 @@ class Transform2d:
                               0.0, 0.0, 1.0)
 
     def _build_i_t_m(self) -> None:
-        s = self.scale
-        s = 1.0 / s
-        r = Vector2(self._t_m.m00 * s.x, self._t_m.m10 * s.x, )
-        u = Vector2(self._t_m.m01 * s.y, self._t_m.m11 * s.y)
-        o = self.origin
-        self._i_t_m = Matrix3(r.x * s.x, r.y * s.x, -Vector2.dot(o, r) * s.x,
-                              u.x * s.y, u.y * s.y, -Vector2.dot(o, u) * s.y,
-                              0.0,           0.0,           1.0)
+        self._raw_i_t_m = True
 
     def __str__(self) -> str:
         return f"{{\n\t\"unique_id\"   :{self.unique_id},\n" \
@@ -44,7 +38,9 @@ class Transform2d:
         return hash(self._t_m)
 
     def _build_basis(self, ex: Vector2, ey: Vector2) -> None:
-        self._t_m = Matrix3.build_transform(ex, ey, self.origin)
+        self._t_m = Matrix3(ex.x, ey.x, self._t_m.m02,
+                            ex.y, ey.y, self._t_m.m12,
+                            0.0,  0.0,  1.0)
         self._build_i_t_m()
 
     @property
@@ -53,28 +49,21 @@ class Transform2d:
 
     @property
     def inv_transform_matrix(self) -> Matrix3:
+        if self._raw_i_t_m:
+            self._raw_i_t_m = False
+            s = self.scale
+            s = 1.0 / s
+            r = Vector2(self._t_m.m00 * s.x, self._t_m.m10 * s.x, )
+            u = Vector2(self._t_m.m01 * s.y, self._t_m.m11 * s.y)
+            o = self.origin
+            self._i_t_m = Matrix3(r.x * s.x, r.y * s.x, -Vector2.dot(o, r) * s.x,
+                                  u.x * s.y, u.y * s.y, -Vector2.dot(o, u) * s.y,
+                                  0.0, 0.0, 1.0)
         return self._i_t_m
 
     @property
     def transform_matrix(self) -> Matrix3:
         return self._t_m
-
-    # @transform_matrix.setter
-    # def transform_matrix(self, m: Matrix3) -> None:
-    #     self._t_m.m00 = m.m00
-    #     self._t_m.m10 = m.m10
-    #     self._t_m.m01 = m.m01
-    #     self._t_m.m11 = m.m11
-    #     self._t_m.m02 = m.m02
-    #     self._t_m.m12 = m.m12
-
-    # @property
-    # def axis_x(self) -> Vector2:
-    #     return Vector2(self._t_m.m00, self._t_m.m10)
-    #
-    # @property
-    # def axis_y(self) -> Vector2:
-    #     return Vector2(self._t_m.m01, self._t_m.m11)
 
     @property
     def front(self) -> Vector2:
@@ -109,30 +98,36 @@ class Transform2d:
     @sx.setter
     def sx(self, s_x: float) -> None:
         """
-        установить масштаб по Х
+        Установить масштаб по Х
         """
         if s_x == 0:
             return
         scl = s_x / self.sx
-        self._t_m = Matrix3.build_transform(self._t_m.right * scl, self._t_m.up, self.origin)
+        self._t_m.m00 *= scl
+        self._t_m.m10 *= scl
         self._build_i_t_m()
 
     @sy.setter
     def sy(self, s_y: float) -> None:
         """
-        установить масштаб по Y
+        Установить масштаб по Y
         """
         if s_y == 0:
             return
         scl = s_y / self.sy
-        self._t_m = Matrix3.build_transform(self._t_m.right, self._t_m.up * scl, self.origin)
+        self._t_m.m01 *= scl
+        self._t_m.m11 *= scl
         self._build_i_t_m()
 
     @scale.setter
     def scale(self, sxy: Vector2) -> None:
         assert isinstance(sxy, Vector2)
         scl = sxy / self.scale
-        self._t_m = Matrix3.build_transform(self._t_m.right * scl.x, self._t_m.up * scl.y, self.origin)
+        self._t_m.m00 *= scl.x
+        self._t_m.m10 *= scl.x
+
+        self._t_m.m01 *= scl.y
+        self._t_m.m11 *= scl.y
         self._build_i_t_m()
 
     @property
@@ -149,18 +144,17 @@ class Transform2d:
 
     @x.setter
     def x(self, x: float) -> None:
-        assert isinstance(x, float)
-        self.origin = Vector2(x, self.y)
+        self._t_m.m02 = x
 
     @y.setter
     def y(self, y: float) -> None:
-        assert isinstance(y, float)
-        self.origin = Vector2(self.x, y)
+        self._t_m.m12 = y
 
     @origin.setter
     def origin(self, xy: Vector2) -> None:
         assert isinstance(xy, Vector2)
-        self._t_m = Matrix3.build_transform(self._t_m.right, self._t_m.up, xy)
+        self._t_m.m02 = xy.x
+        self._t_m.m12 = xy.y
         self._build_i_t_m()
 
     @property
@@ -179,8 +173,10 @@ class Transform2d:
                     -sin_a, cos_a, 0.0,
                      0.0,     0.0, 1.0)
         scl  = self.scale
-        orig = self.origin
-        self._t_m = Matrix3.build_transform(i.right * scl.x, i.up * scl.y, orig)
+        self._t_m = Matrix3(i.m00 * scl.x, i.m01 * scl.y, self._t_m.m02,
+                            i.m10 * scl.x, i.m11 * scl.y, self._t_m.m12,
+                            0.0,           0.0,           1.0)
+        # Matrix3.build_transform(i.right * scl.x, i.up * scl.y, orig)
         self._build_i_t_m()
 
     def transform_vect(self, vec: Vector2, w=1.0) -> Vector2:
@@ -202,3 +198,23 @@ class Transform2d:
         """
         return self.inv_transform_matrix.multiply_by_direction(vec) if w == 0 else \
             self.inv_transform_matrix.multiply_by_point(vec)
+
+
+def transform_2d_test():
+    t = Transform2d()
+    t.x = 1.2
+    t.y = -3.44
+
+    t.sx = 0.2
+    t.sy = 0.44
+
+    # t.ax = 41.2
+    # t.ay = 14.44
+    # t.az = 51.5
+
+    v = Vector2(1, 2)
+    vt = t.transform_vect(v)
+    print(v)
+    print(vt)
+    print(t.inv_transform_vect(vt))
+    print(t)

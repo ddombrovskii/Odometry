@@ -1,6 +1,5 @@
-# from accelerometer_core.Utilities.vector3 import Vector3
 from .common import NUMERICAL_FORMAT_4F as _4F, DEG_TO_RAD, NUMERICAL_ACCURACY
-from collections import namedtuple
+from dataclasses import dataclass
 from .vector3 import Vector3
 from .vector2 import Vector2
 from typing import Tuple
@@ -8,22 +7,119 @@ import numpy as np
 import math
 
 
-class Matrix3(namedtuple('Matrix3', 'm00, m01, m02,'
-                                    'm10, m11, m12,'
-                                    'm20, m21, m22')):
+@dataclass
+class Matrix3:
     """
-    immutable Matrix 4d
+    mutable Matrix 4d
     """
-    __slots__ = ()
+    __slots__ = ('_m00', '_m01', '_m02',
+                 '_m10', '_m11', '_m12',
+                 '_m20', '_m21', '_m22')
 
-    def __new__(cls,
-                m00: float = 0.0, m01: float = 0.0, m02: float = 0.0,
-                m10: float = 0.0, m11: float = 0.0, m12: float = 0.0,
-                m20: float = 0.0, m21: float = 0.0, m22: float = 0.0):
-        return super().__new__(cls,
-                               float(m00), float(m01), float(m02),
-                               float(m10), float(m11), float(m12),
-                               float(m20), float(m21), float(m22))
+    def __iter__(self):
+        yield self._m00
+        yield self._m01
+        yield self._m02
+
+        yield self._m10
+        yield self._m11
+        yield self._m12
+
+        yield self._m20
+        yield self._m21
+        yield self._m22
+
+    # row 0 getters
+    @property
+    def m00(self) -> float:
+        return self._m00
+
+    @property
+    def m01(self) -> float:
+        return self._m01
+
+    @property
+    def m02(self) -> float:
+        return self._m02
+
+    # row 1 getters
+    @property
+    def m10(self) -> float:
+        return self._m10
+
+    @property
+    def m11(self) -> float:
+        return self._m11
+
+    @property
+    def m12(self) -> float:
+        return self._m12
+
+    # row 2 getters
+    @property
+    def m20(self) -> float:
+        return self._m20
+
+    @property
+    def m21(self) -> float:
+        return self._m21
+
+    @property
+    def m22(self) -> float:
+        return self._m22
+
+    # row 0 setters
+    @m00.setter
+    def m00(self, value: float) -> None:
+        self._m00 = float(value)
+
+    @m01.setter
+    def m01(self, value: float) -> None:
+        self._m01 = float(value)
+
+    @m02.setter
+    def m02(self, value: float) -> None:
+        self._m02 = float(value)
+
+    # row 1 setters
+    @m10.setter
+    def m10(self, value: float) -> None:
+        self._m10 = float(value)
+
+    @m11.setter
+    def m11(self, value: float) -> None:
+        self._m11 = float(value)
+
+    @m12.setter
+    def m12(self, value: float) -> None:
+        self._m12 = float(value)
+
+    # row 2 setters
+    @m20.setter
+    def m20(self, value: float) -> None:
+        self._m20 = float(value)
+
+    @m21.setter
+    def m21(self, value: float) -> None:
+        self._m21 = float(value)
+
+    @m22.setter
+    def m22(self, value: float) -> None:
+        self._m22 = float(value)
+
+    def __init__(self, *args):
+        assert len(args) == 9
+        self._m00 = float(args[0])
+        self._m01 = float(args[1])
+        self._m02 = float(args[2])
+
+        self._m10 = float(args[3])
+        self._m11 = float(args[4])
+        self._m12 = float(args[5])
+
+        self._m20 = float(args[6])
+        self._m21 = float(args[7])
+        self._m22 = float(args[8])
 
     @classmethod
     def identity(cls):
@@ -81,17 +177,18 @@ class Matrix3(namedtuple('Matrix3', 'm00, m01, m02,'
 
     @classmethod
     def build_basis(cls, ey: Vector3, ez: Vector3 = None):
+        assert isinstance(ey, Vector2)
         if ez is None:
             ez = Vector3(0.0, 0.0, 1.0)
+        assert isinstance(ez, Vector2)
+        ey = ey.normalize()
+        ez = ez.normalize()
+        ex = Vector3.cross(ez, ey).normalize()
+        ez = Vector3.cross(ey, ex).normalize()
 
-        ey = ey.normalized()
-        ez = ez.normalized()
-        ex = Vector3.cross(ez, ey).normalized()
-        ez = Vector3.cross(ey, ex).normalized()
-
-        return cls(ex[0], ey[0], ez[0],
-                   ex[1], ey[1], ez[1],
-                   ex[2], ey[2], ez[2])
+        return cls(ex.x, ey.x, ez.x,
+                   ex.y, ey.y, ez.y,
+                   ex.z, ey.z, ez.z)
 
     @classmethod
     def from_np_array(cls, array: np.ndarray):
@@ -115,9 +212,9 @@ class Matrix3(namedtuple('Matrix3', 'm00, m01, m02,'
         :param right:
         :return:
         """
-        return cls(right[0], up[0], front[0],
-                   right[1], up[1], front[1],
-                   right[2], up[2], front[2])
+        return cls(right.x, up.x, front.x,
+                   right.y, up.y, front.y,
+                   right.z, up.z, front.z)
 
     def to_euler_angles(self) -> Vector3:
         """
@@ -155,9 +252,14 @@ class Matrix3(namedtuple('Matrix3', 'm00, m01, m02,'
         return Vector3(self.m02, self.m12, self.m22)
 
     def transpose(self):
-        return Matrix3(self.m00, self.m10, self.m20,
-                       self.m01, self.m11, self.m21,
-                       self.m02, self.m12, self.m22)
+        self._m01, self._m10 = self._m10, self._m01
+        self._m02, self._m20 = self._m20, self._m02
+        self._m21, self._m12 = self._m12, self._m21
+        return self
+
+    @property
+    def transposed(self):
+        return Matrix3.__copy__(self).transpose()
 
     @property
     def right_up_front(self) -> Tuple[Vector3, Vector3, Vector3]:
@@ -171,23 +273,41 @@ class Matrix3(namedtuple('Matrix3', 'm00, m01, m02,'
             raise ArithmeticError("Mat3 :: singular matrix")
         det = 1.0 / det
 
-        return Matrix3((self.m11 * self.m22 - self.m21 * self.m12) * det,
-                       (self.m02 * self.m21 - self.m01 * self.m22) * det,
-                       (self.m01 * self.m12 - self.m02 * self.m11) * det,
-                       (self.m12 * self.m20 - self.m10 * self.m22) * det,
-                       (self.m00 * self.m22 - self.m02 * self.m20) * det,
-                       (self.m10 * self.m02 - self.m00 * self.m12) * det,
-                       (self.m10 * self.m21 - self.m20 * self.m11) * det,
-                       (self.m20 * self.m01 - self.m00 * self.m21) * det,
-                       (self.m00 * self.m11 - self.m10 * self.m01) * det)
+        _m00 = self._m00
+        _m01 = self._m10
+        _m02 = self._m20
+        _m10 = self._m01
+        _m11 = self._m11
+        _m12 = self._m21
+        _m20 = self._m02
+        _m21 = self._m12
+        _m22 = self._m22
+
+        self._m00 = (_m11 * _m22 - _m21 * _m12) * det
+        self._m10 = (_m02 * _m21 - _m01 * _m22) * det
+        self._m20 = (_m01 * _m12 - _m02 * _m11) * det
+        self._m01 = (_m12 * _m20 - _m10 * _m22) * det
+        self._m11 = (_m00 * _m22 - _m02 * _m20) * det
+        self._m21 = (_m10 * _m02 - _m00 * _m12) * det
+        self._m02 = (_m10 * _m21 - _m20 * _m11) * det
+        self._m12 = (_m20 * _m01 - _m00 * _m21) * det
+        self._m22 = (_m00 * _m11 - _m10 * _m01) * det
+        return self
+
+    @property
+    def inverted(self):
+        return self.__copy__().invert()
 
     def __str__(self) -> str:
         return f"{{\n\t\"m00\": {self.m00:{_4F}}, \"m01\": {self.m01:{_4F}}, \"m02\": {self.m02:{_4F}},\n" \
                f"\t\"m10\": {self.m10:{_4F}}, \"m11\": {self.m11:{_4F}}, \"m12\": {self.m12:{_4F}},\n" \
                f"\t\"m20\": {self.m20:{_4F}}, \"m21\": {self.m21:{_4F}}, \"m22\": {self.m22:{_4F}}\n}}"
 
+    def __copy__(self):
+        return Matrix3(*(val for val in self))
+
     def __neg__(self):
-        return Matrix3(*(-val for val in self))
+        return self.__imul__(-1)
 
     def __add__(self, other):
         if isinstance(other, Matrix3):
@@ -196,9 +316,32 @@ class Matrix3(namedtuple('Matrix3', 'm00, m01, m02,'
             return Matrix3(*(s + other for s in self))
         raise RuntimeError(f"Matrix3::Add::wrong argument type {type(other)}")
 
-    __iadd__ = __add__
-
     __radd__ = __add__
+
+    def __iadd__(self, other):
+        if isinstance(other, Matrix3):
+            self._m00 += other._m00
+            self._m01 += other._m10
+            self._m02 += other._m20
+            self._m10 += other._m01
+            self._m11 += other._m11
+            self._m12 += other._m21
+            self._m20 += other._m02
+            self._m21 += other._m12
+            self._m22 += other._m22
+            return self
+        if isinstance(other, int) or isinstance(other, float):
+            self._m00 += other
+            self._m01 += other
+            self._m02 += other
+            self._m10 += other
+            self._m11 += other
+            self._m12 += other
+            self._m20 += other
+            self._m21 += other
+            self._m22 += other
+            return self
+        raise RuntimeError(f"Matrix3::Add::wrong argument type {type(other)}")
 
     def __sub__(self, other):
         if isinstance(other, Matrix3):
@@ -214,7 +357,30 @@ class Matrix3(namedtuple('Matrix3', 'm00, m01, m02,'
             return Matrix3(*(other - s for s in self))
         raise RuntimeError(f"Matrix3::Sub::wrong argument type {type(other)}")
 
-    __isub__ = __sub__
+    def __isub__(self, other):
+        if isinstance(other, Matrix3):
+            self._m00 -= other._m00
+            self._m01 -= other._m10
+            self._m02 -= other._m20
+            self._m10 -= other._m01
+            self._m11 -= other._m11
+            self._m12 -= other._m21
+            self._m20 -= other._m02
+            self._m21 -= other._m12
+            self._m22 -= other._m22
+            return self
+        if isinstance(other, int) or isinstance(other, float):
+            self._m00 -= other
+            self._m01 -= other
+            self._m02 -= other
+            self._m10 -= other
+            self._m11 -= other
+            self._m12 -= other
+            self._m20 -= other
+            self._m21 -= other
+            self._m22 -= other
+            return self
+        raise RuntimeError(f"Matrix3::Add::wrong argument type {type(other)}")
 
     def __mul__(self, other):
         if isinstance(other, Matrix3):
@@ -255,21 +421,60 @@ class Matrix3(namedtuple('Matrix3', 'm00, m01, m02,'
         raise RuntimeError(f"Matrix3::Mul::wrong argument type {type(other)}")
 
     def __imul__(self, other):
-        return Matrix3.__mul__(self, other)
+        if isinstance(other, Matrix3):
+            _m00 = self._m00
+            _m01 = self._m01
+            _m02 = self._m02
+            _m10 = self._m10
+            _m11 = self._m11
+            _m12 = self._m12
+            _m20 = self._m20
+            _m21 = self._m21
+            _m22 = self._m22
+
+            self._m00 = _m00 * other.m00 + _m01 * other.m10 + _m02 * other.m20
+            self._m01 = _m00 * other.m01 + _m01 * other.m11 + _m02 * other.m21
+            self._m02 = _m00 * other.m02 + _m01 * other.m12 + _m02 * other.m22
+            self._m10 = _m10 * other.m00 + _m11 * other.m10 + _m12 * other.m20
+            self._m11 = _m10 * other.m01 + _m11 * other.m11 + _m12 * other.m21
+            self._m12 = _m10 * other.m02 + _m11 * other.m12 + _m12 * other.m22
+            self._m20 = _m20 * other.m00 + _m21 * other.m10 + _m22 * other.m20
+            self._m21 = _m20 * other.m01 + _m21 * other.m11 + _m22 * other.m21
+            self._m22 = _m20 * other.m02 + _m21 * other.m12 + _m22 * other.m22
+            return self
+        if isinstance(other, int) or isinstance(other, float):
+            self._m00 *= other
+            self._m01 *= other
+            self._m02 *= other
+            self._m10 *= other
+            self._m11 *= other
+            self._m12 *= other
+            self._m20 *= other
+            self._m21 *= other
+            self._m22 *= other
+            return self
+        raise RuntimeError(f"Matrix3::Mul::wrong argument type {type(other)}")
 
     def __truediv__(self, other):
         if isinstance(other, Matrix3):
-            return Matrix3.__mul__(self, other.invert())
+            return Matrix3.__mul__(self, other.inverted)
         if isinstance(other, int) or isinstance(other, float):
             return Matrix3(*(s / other for s in self))
         raise RuntimeError(f"Matrix3::TrueDiv::wrong argument type {type(other)}")
 
     def __rtruediv__(self, other):
         if isinstance(other, Matrix3):
-            return Matrix3.__mul__(self.invert(), other)
+            return Matrix3.__mul__(self.inverted, other)
         if isinstance(other, int) or isinstance(other, float):
             return Matrix3(*(other / s for s in self))
         raise RuntimeError(f"Matrix3::TrueDiv::wrong argument type {type(other)}")
+
+    def __idiv__(self, other):
+        if isinstance(other, Matrix3):
+            return Matrix3.__imul__(self, other.inverted)
+        if isinstance(other, int) or isinstance(other, float):
+            return Matrix3.__imul__(self, 1.0 / other)
+        raise RuntimeError(f"Matrix3::IDiv::wrong argument type {type(other)}")
 
     def multiply_by_point(self, point: Vector2) -> Vector2:
         assert isinstance(point, Vector2)
@@ -322,3 +527,32 @@ class Matrix3(namedtuple('Matrix3', 'm00, m01, m02,'
         b = np.array((ur_1.x, ur_1.y, dr_1.x, dr_1.y, dl_1.x, dl_1.y, ul_1.x, ul_1.y))
         matrix = np.array(matrix).reshape((8, 8))
         return cls(*(np.linalg.inv(matrix) @ b).flat, 1.0)
+
+
+def matrix_3_test():
+    m1 = Matrix3(1, 2, 3,
+                 5, 6, 7,
+                 9, 1, 9)
+    m2 = Matrix3(1, 2, 3,
+                 5, 6, 7,
+                 9, 1, 9)
+    # m2.m00 = 1.1234
+    print(f"Matrix3 test")
+    print(f"m1:\n{m1}")
+    print(f"m2:\n{m2}")
+    print(f"m1.transposed =\n{m2.transposed}")
+    print(f"m1.inverted   =\n{m2.inverted}")
+    print(f" m1 + m2  =\n {m1 + m2}\n")
+    print(f" m1 - m2  =\n {m1 - m2}\n")
+    print(f" m1 / m2  =\n {m1 / m2}\n")
+    print(f" m1 * m2  =\n {m1 * m2}\n")
+    print()
+    m1 += m2
+    print(f" m1 += m2 =\n{m1}\n")
+    m1 -= m2
+    print(f" m1 -= m2 =\n{m1}\n")
+    m1 /= m2
+    print(f" m1 /= m2 =\n{m1}\n")
+    m1 *= m2
+    print(f" m1 *= m2 =\n{m1}\n")
+    print()

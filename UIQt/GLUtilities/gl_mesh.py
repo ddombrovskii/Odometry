@@ -157,7 +157,7 @@ class MeshGL:
     def delete(self):
         if self._vao == 0:
             return
-        glDeleteVertexArrays(1, np.ndarray([self._vao]))
+        glDeleteVertexArrays(1, (self._vao,)) #np.ndarray([]))
         self._vbo.delete()
         self._ibo.delete()
         MeshGL.meshes.unregister_object(self)

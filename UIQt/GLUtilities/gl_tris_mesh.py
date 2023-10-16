@@ -237,7 +237,7 @@ class TrisMeshGL:
             self._vertices[i] = transform.transform_vect(self._vertices[i], 1.0)
 
         for i in range(len(self._normals)):
-            self._normals[i] = transform.transform_vect(self._normals[i], 0.0).normalized()
+            self._normals[i] = transform.transform_vect(self._normals[i], 0.0).normalize()
 
     def merge(self, other):
         v_offset  = self.vertices_count
@@ -463,7 +463,7 @@ def poly_strip(points: List[Vector2], strip_width: float = 0.5) -> TrisMeshGL | 
 
     u_length = 0.0
     for i in range(len(points)-1):
-        u_length += (points[i] - points[i+1]).magnitude()
+        u_length += (points[i] - points[i+1]).magnitude
 
     mesh = TrisMeshGL()
     u_coord = 0.0
@@ -479,7 +479,7 @@ def poly_strip(points: List[Vector2], strip_width: float = 0.5) -> TrisMeshGL | 
     f_index = 2
     for p1, p2 in zip(points[:-1], points[1:]):
         dp10 = p1 - p0
-        du = dp10.magnitude()
+        du = dp10.magnitude
         if du < 1e-6:
             p0 = p1
             continue

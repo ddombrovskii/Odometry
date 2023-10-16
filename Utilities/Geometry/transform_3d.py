@@ -15,9 +15,10 @@ def deg_to_rad(deg: float) -> float:
 
 class Transform3d:
 
-    __slots__ = ("_t_m", "_i_t_m", "_angles")
+    __slots__ = ("_raw_i_t_m", "_t_m", "_i_t_m", "_angles")
 
     def __init__(self):
+        self._raw_i_t_m: bool = False
         self._angles: Vector3 = Vector3(0.0, 0.0, 0.0)
         self._t_m = Matrix4(1.0, 0.0, 0.0, 0.0,
                             0.0, 1.0, 0.0, 0.0,
@@ -29,16 +30,7 @@ class Transform3d:
                               0.0, 0.0, 0.0, 1.0)
 
     def _build_i_t_m(self) -> None:
-        s = self.scale
-        s = 1.0 / s
-        r = Vector3(self._t_m.m00 * s.x, self._t_m.m10 * s.x, self._t_m.m20 * s.x)
-        u = Vector3(self._t_m.m01 * s.y, self._t_m.m11 * s.y, self._t_m.m21 * s.y)
-        f = Vector3(self._t_m.m02 * s.z, self._t_m.m12 * s.z, self._t_m.m22 * s.z)
-        o = self.origin
-        self._i_t_m = Matrix4(r.x * s.x, r.y * s.x, r.z * s.x, -Vector3.dot(o, r) * s.x,
-                              u.x * s.y, u.y * s.y, u.z * s.y, -Vector3.dot(o, u) * s.y,
-                              f.x * s.z, f.y * s.z, f.z * s.z, -Vector3.dot(o, f) * s.z,
-                              0.0,           0.0,           0.0,            1.0)
+        self._raw_i_t_m = True
 
     def __str__(self) -> str:
         return f"{{\n" \
@@ -60,7 +52,10 @@ class Transform3d:
         return hash(self._t_m)
 
     def _build_basis(self, ex: Vector3, ey: Vector3, ez: Vector3) -> None:
-        self._t_m = Matrix4.build_transform(ex, ey, ez, self.origin)
+        self._t_m = Matrix4(ex.x, ey.x, ez.x, self._t_m.m03,
+                            ex.y, ey.y, ez.y, self._t_m.m13,
+                            ex.z, ey.z, ez.z, self._t_m.m23,
+                            0.0, 0.0, 0.0, 1.0)
         self._build_i_t_m()
 
     @property
@@ -69,6 +64,17 @@ class Transform3d:
 
     @property
     def inv_transform_matrix(self) -> Matrix4:
+        if self._raw_i_t_m:
+            self._raw_i_t_m = False
+            s = 1.0 / self.scale
+            r = Vector3(self._t_m.m00 * s.x, self._t_m.m10 * s.x, self._t_m.m20 * s.x)
+            u = Vector3(self._t_m.m01 * s.y, self._t_m.m11 * s.y, self._t_m.m21 * s.y)
+            f = Vector3(self._t_m.m02 * s.z, self._t_m.m12 * s.z, self._t_m.m22 * s.z)
+            o = self.origin
+            self._i_t_m = Matrix4(r.x * s.x, r.y * s.x, r.z * s.x, -Vector3.dot(o, r) * s.x,
+                                  u.x * s.y, u.y * s.y, u.z * s.y, -Vector3.dot(o, u) * s.y,
+                                  f.x * s.z, f.y * s.z, f.z * s.z, -Vector3.dot(o, f) * s.z,
+                                  0.0, 0.0, 0.0, 1.0)
         return self._i_t_m
 
     @property
@@ -77,11 +83,15 @@ class Transform3d:
 
     @transform_matrix.setter
     def transform_matrix(self, t: Matrix4) -> None:
-        self._t_m = Matrix4.build_transform(t.right, t.up, t.front, t.origin)
+        self._t_m = Matrix4(t.m00, t.m01, t.m02, t.m03,
+                            t.m10, t.m11, t.m12, t.m13,
+                            t.m20, t.m21, t.m22, t.m23,
+                            0.0,   0.0,   0.0,   1.0)
+        self._build_i_t_m()
 
     @property
     def front(self) -> Vector3:
-        return Vector3(self._t_m.m02, self._t_m.m12, self._t_m.m22).normalized()
+        return Vector3(self._t_m.m02, self._t_m.m12, self._t_m.m22).normalize()
 
     @front.setter
     def front(self, front_: Vector3) -> None:
@@ -89,13 +99,19 @@ class Transform3d:
         if length_ < 1e-9:
             raise ArithmeticError("Error transform front set")
         front_dir_ = front_ / length_
-        right_ = Vector3.cross(front_dir_, Vector3(0.0, 1.0, 0.0)).normalized()
-        up_ = Vector3.cross(right_, front_dir_).normalized()
-        self._build_basis(right_ * self.sx, up_ * self.sy, front_)
+        right_ = Vector3.cross(front_dir_, Vector3(0.0, 1.0, 0.0)).normalize()
+        up_ = Vector3.cross(right_, front_dir_).normalize()
+        sx = self.sx
+        sy = self.sy
+        self._t_m = Matrix4(right_.x * sx, up_.x * sy, front_.x, self._t_m.m03,
+                            right_.y * sx, up_.y * sy, front_.y, self._t_m.m13,
+                            right_.z * sx, up_.z * sy, front_.z, self._t_m.m23,
+                            0.0,   0.0,   0.0,   1.0)
+        self._build_i_t_m()
 
     @property
     def up(self) -> Vector3:
-        return Vector3(self._t_m.m01, self._t_m.m11, self._t_m.m21).normalized()
+        return Vector3(self._t_m.m01, self._t_m.m11, self._t_m.m21).normalize()
 
     @up.setter
     def up(self, up_: Vector3) -> None:
@@ -103,13 +119,19 @@ class Transform3d:
         if length_ < 1e-9:
             raise ArithmeticError("Error transform up set")
         up_dir_ = up_ / length_
-        front_ = Vector3.cross(up_dir_, Vector3(1.0, 0.0, 0.0)).normalized()
-        right_ = Vector3.cross(up_dir_, front_).normalized()
-        self._build_basis(right_ * self.sx, up_, front_ * self.sz)
+        front_ = Vector3.cross(up_dir_, Vector3(1.0, 0.0, 0.0)).normalize()
+        right_ = Vector3.cross(up_dir_, front_).normalize()
+        sx = self.sx
+        sz = self.sz
+        self._t_m = Matrix4(right_.x * sx, up_.x, front_.x * sz, self._t_m.m03,
+                            right_.y * sx, up_.y, front_.y * sz, self._t_m.m13,
+                            right_.z * sx, up_.z, front_.z * sz, self._t_m.m23,
+                            0.0,   0.0,   0.0,   1.0)
+        self._build_i_t_m()
 
     @property
     def right(self) -> Vector3:
-        return Vector3(self._t_m.m00, self._t_m.m10, self._t_m.m20).normalized()
+        return Vector3(self._t_m.m00, self._t_m.m10, self._t_m.m20).normalize()
 
     @right.setter
     def right(self, right_: Vector3) -> None:
@@ -117,9 +139,15 @@ class Transform3d:
         if length_ < 1e-9:
             raise ArithmeticError("Error transform up set")
         right_dir_ = right_ / length_
-        front_ = Vector3.cross(right_dir_, Vector3(0.0, 1.0, 0.0)).normalized()
-        up_ = Vector3.cross(front_, right_dir_).normalized()
-        self._build_basis(right_, up_ * self.sy, front_ * self.sz)
+        front_ = Vector3.cross(right_dir_, Vector3(0.0, 1.0, 0.0)).normalize()
+        up_ = Vector3.cross(front_, right_dir_).normalize()
+        sy = self.sy
+        sz = self.sz
+        self._t_m = Matrix4(right_.x, up_.x * sy, front_.x * sz, self._t_m.m03,
+                            right_.y, up_.y * sy, front_.y * sz, self._t_m.m13,
+                            right_.z, up_.z * sy, front_.z * sz, self._t_m.m23,
+                            0.0,   0.0,   0.0,   1.0)
+        self._build_i_t_m()
 
     @property
     def sx(self) -> float:
@@ -152,7 +180,9 @@ class Transform3d:
         if s_x == 0.0:
             return
         scl = s_x / self.sx
-        self._t_m = Matrix4.build_transform(self._t_m.right * scl, self._t_m.up, self._t_m.front, self.origin)
+        self._t_m.m00 *= scl
+        self._t_m.m10 *= scl
+        self._t_m.m20 *= scl
         self._build_i_t_m()
 
     @sy.setter
@@ -166,7 +196,9 @@ class Transform3d:
         if s_y == 0.0:
             return
         scl = s_y / self.sy
-        self._t_m = Matrix4.build_transform(self._t_m.right, self._t_m.up * scl, self._t_m.front, self.origin)
+        self._t_m.m01 *= scl
+        self._t_m.m11 *= scl
+        self._t_m.m21 *= scl
         self._build_i_t_m()
 
     # установить масштаб по Z
@@ -176,7 +208,9 @@ class Transform3d:
         if s_z == 0.0:
             return
         scl = s_z / self.sz
-        self._t_m = Matrix4.build_transform(self._t_m.right, self._t_m.up, self._t_m.front *  scl, self.origin)
+        self._t_m.m02 *= scl
+        self._t_m.m12 *= scl
+        self._t_m.m22 *= scl
         self._build_i_t_m()
 
     @property
@@ -187,8 +221,17 @@ class Transform3d:
     def scale(self, xyz: Vector3):
         assert isinstance(xyz, Vector3)
         scl = xyz / self.scale
-        self._t_m = Matrix4.build_transform(self._t_m.right * scl.x, self._t_m.up * scl.y, self._t_m.front * scl.z,
-                                            self.origin)
+        self._t_m.m00 *= scl.z
+        self._t_m.m10 *= scl.z
+        self._t_m.m20 *= scl.z
+
+        self._t_m.m01 *= scl.z
+        self._t_m.m11 *= scl.z
+        self._t_m.m21 *= scl.z
+
+        self._t_m.m02 *= scl.z
+        self._t_m.m12 *= scl.z
+        self._t_m.m22 *= scl.z
         self._build_i_t_m()
 
     @property
@@ -205,18 +248,18 @@ class Transform3d:
 
     @x.setter
     def x(self, x: float) -> None:
-        assert isinstance(x, float)
-        self.origin = Vector3(x, self.y, self.z)
+        self._t_m.m03 = x
+        self._build_i_t_m()
 
     @y.setter
     def y(self, y: float) -> None:
-        assert isinstance(y, float)
-        self.origin = Vector3(self.x, y, self.z)
+        self._t_m.m13 = y
+        self._build_i_t_m()
 
     @z.setter
     def z(self, z: float) -> None:
-        assert isinstance(z, float)
-        self.origin = Vector3(self.x, self.y, z)
+        self._t_m.m23 = z
+        self._build_i_t_m()
 
     @property
     def origin(self) -> Vector3:
@@ -225,7 +268,9 @@ class Transform3d:
     @origin.setter
     def origin(self, xyz: Vector3) -> None:
         assert isinstance(xyz, Vector3)
-        self._t_m = Matrix4.build_transform(self._t_m.right, self._t_m.up, self._t_m.front, xyz)
+        self._t_m.m03 = xyz.x
+        self._t_m.m13 = xyz.y
+        self._t_m.m23 = xyz.z
         self._build_i_t_m()
 
     @property
@@ -239,14 +284,16 @@ class Transform3d:
         assert isinstance(q, Quaternion)
         i = q.to_rotation_matrix()
         scl  = self.scale
-        orig = self.origin
         self._angles = q.to_euler_angles() * RAD_TO_DEG
-        self._t_m = Matrix4.build_transform(i.right * scl.x, i.up * scl.y, i.front * scl.z, orig)
+        self._t_m =  Matrix4(i.m00 * scl.x, i.m01 * scl.y, i.m02 * scl.z, self._t_m.m03,
+                             i.m10 * scl.x, i.m11 * scl.y, i.m12 * scl.z, self._t_m.m13,
+                             i.m20 * scl.x, i.m21 * scl.y, i.m22 * scl.z, self._t_m.m23,
+                             0.0,   0.0,   0.0,   1.0)
         self._build_i_t_m()
 
     @property
     def angles(self) -> Vector3:
-        return self._angles  # Matrix4.to_euler_angles(self.rotation_mat())
+        return self._angles
 
     @angles.setter
     def angles(self, xyz: Vector3) -> None:
@@ -256,8 +303,10 @@ class Transform3d:
         i = Matrix4.rotate_y(xyz.y) * i
         i = Matrix4.rotate_z(xyz.z) * i
         scl  = self.scale
-        orig = self.origin
-        self._t_m = Matrix4.build_transform(i.right * scl.x, i.up * scl.y, i.front * scl.z, orig)
+        self._t_m =  Matrix4(i.m00 * scl.x, i.m01 * scl.y, i.m02 * scl.z, self._t_m.m03,
+                             i.m10 * scl.x, i.m11 * scl.y, i.m12 * scl.z, self._t_m.m13,
+                             i.m20 * scl.x, i.m21 * scl.y, i.m22 * scl.z, self._t_m.m23,
+                             0.0,   0.0,   0.0,   1.0)
         self._build_i_t_m()
 
     @property
@@ -321,3 +370,25 @@ class Transform3d:
         """
         return self.inv_transform_matrix.multiply_by_direction(vec) if w == 0 else \
             self.inv_transform_matrix.multiply_by_point(vec)
+
+
+def transform_3d_test():
+    t = Transform3d()
+    t.x = 1.2
+    t.y = -3.44
+    t.z = 12.1
+
+    t.sx = 0.2
+    t.sy = 0.44
+    t.sz = 1.5
+
+    # t.ax = 41.2
+    # t.ay = 14.44
+    # t.az = 51.5
+
+    v = Vector3(1, 2, 3)
+    vt = t.transform_vect(v)
+    print(v)
+    print(vt)
+    print(t.inv_transform_vect(vt))
+    print(t)

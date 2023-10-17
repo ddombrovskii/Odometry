@@ -6,56 +6,59 @@ import numpy as np
 import math
 
 
+_EW = '_ew'
+_EX = '_ex'
+_EY = '_ey'
+_EZ = '_ez'
+
+
 @dataclass
 class Quaternion:
     """
     immutable Quaternion
     """
-    __slots__ = ('_ew', '_ex', '_ey', '_ez')
-
-    def __iter__(self):
-        yield self._ew
-        yield self._ex
-        yield self._ey
-        yield self._ez
+    __slots__ = (_EW, _EX, _EY, _EZ)
 
     @property
     def ex(self) -> float:
-        return self._ex
+        return self.__getattribute__(_EX)
 
     @property
     def ey(self) -> float:
-        return self._ey
+        return self.__getattribute__(_EY)
 
     @property
     def ez(self) -> float:
-        return self._ez
+        return self.__getattribute__(_EZ)
 
     @property
     def ew(self) -> float:
-        return self._ew
+        return self.__getattribute__(_EW)
 
     @ex.setter
     def ex(self, value: float) -> None:
-        self._ex = float(value)
+        self.__setattr__(_EX, float(value))
 
     @ey.setter
     def ey(self, value: float) -> None:
-        self._ey = float(value)
+        self.__setattr__(_EY, float(value))
 
     @ez.setter
     def ez(self, value: float) -> None:
-        self._ez = float(value)
+        self.__setattr__(_EZ, float(value))
 
     @ew.setter
     def ew(self, value: float) -> None:
-        self._ew = float(value)
+        self.__setattr__(_EW, float(value))
 
-    def __init__(self, w: float = 0.0, x: float = 0.0, y: float = 0.0,  z: float = 0.0):
-        self.ex = x
-        self.ey = y
-        self.ez = z
-        self.ew = w
+    def __init__(self, *args):
+        assert len(args) == 4
+        for attr, val in zip(Quaternion.__slots__, args):
+            self.__setattr__(attr, float(val))
+
+    def __iter__(self):
+        for attr in Quaternion.__slots__:
+            yield self.__getattribute__(attr)
 
     def conj(self):
         self.ex *= -1
@@ -81,10 +84,10 @@ class Quaternion:
         """
         try:
             n2 = 1.0 / self.magnitude
-            self._ew *= n2
-            self._ex *= n2
-            self._ey *= n2
-            self._ez *= n2
+            self.ew *= n2
+            self.ex *= n2
+            self.ey *= n2
+            self.ez *= n2
             return self
         except ZeroDivisionError as _:
             return self
@@ -110,10 +113,10 @@ class Quaternion:
     def invert(self):
         try:
             n2 = 1.0 / self.magnitude
-            self._ew *= n2
-            self._ex *= -n2
-            self._ey *= -n2
-            self._ez *= -n2
+            self.ew *= n2
+            self.ex *= -n2
+            self.ey *= -n2
+            self.ez *= -n2
             return self
         except ZeroDivisionError as _:
             return self
@@ -134,72 +137,54 @@ class Quaternion:
 
     def __add__(self, other):
         if isinstance(other, Quaternion):
-            return Quaternion(self.ex + other.ex,
-                              self.ey + other.ey,
-                              self.ez + other.ez,
-                              self.ew + other.ew)
+            return Quaternion(self.ex + other.ex, self.ey + other.ey, self.ez + other.ez, self.ew + other.ew)
         if isinstance(other, int) or isinstance(other, float):
-            return Quaternion(self.ex + other,
-                              self.ey + other,
-                              self.ez + other,
-                              self.ew + other)
+            return Quaternion(self.ex + other, self.ey + other, self.ez + other, self.ew + other)
         raise RuntimeError(f"Quaternion::Add::wrong argument type {type(other)}")
 
     __radd__ = __add__
 
     def __iadd__(self, other):
         if isinstance(other, Quaternion):
-            self._ex += other.ex
-            self._ey += other.ey
-            self._ez += other.ez
-            self._ew += other.ew
+            self.ex += other.ex
+            self.ey += other.ey
+            self.ez += other.ez
+            self.ew += other.ew
             return self
         if isinstance(other, int) or isinstance(other, float):
-            self._ex += other
-            self._ey += other
-            self._ez += other
-            self._ew += other
+            self.ex += other
+            self.ey += other
+            self.ez += other
+            self.ew += other
             return self
         raise RuntimeError(f"Quaternion::IAdd::wrong argument type {type(other)}")
 
     def __sub__(self, other):
         if isinstance(other, Quaternion):
-            return Quaternion(self.ex - other.ex,
-                              self.ey - other.ey,
-                              self.ez - other.ez,
-                              self.ew - other.ew)
+            return Quaternion(self.ex - other.ex, self.ey - other.ey, self.ez - other.ez, self.ew - other.ew)
         if isinstance(other, int) or isinstance(other, float):
-            return Quaternion(self.ex - other,
-                              self.ey - other,
-                              self.ez - other,
-                              self.ew - other)
+            return Quaternion(self.ex - other, self.ey - other, self.ez - other, self.ew - other)
         raise RuntimeError(f"Quaternion::Sub::wrong argument type {type(other)}")
 
     def __rsub__(self, other):
         if isinstance(other, Quaternion):
-            return Quaternion(other.ex - self.ex,
-                              other.ey - self.ey,
-                              other.ez - self.ez,
-                              other.ew - self.ew)
+            return Quaternion(other.ex - self.ex, other.ey - self.ey, other.ez - self.ez, other.ew - self.ew)
         if isinstance(other, int) or isinstance(other, float):
-            return Quaternion(other - self.ex,
-                              other - self.ey,
-                              other - self.ez,
-                              other - self.ew)
+            return Quaternion(other - self.ex, other - self.ey, other - self.ez, other - self.ew)
         raise RuntimeError(f"Quaternion::RSub::wrong argument type {type(other)}")
 
     def __isub__(self, other):
         if isinstance(other, Quaternion):
-            self._ex -= other.ex
-            self._ey -= other.ey
-            self._ez -= other.ez
-            self._ew -= other.ew
+            self.ex -= other.ex
+            self.ey -= other.ey
+            self.ez -= other.ez
+            self.ew -= other.ew
             return self
         if isinstance(other, int) or isinstance(other, float):
-            self._ex -= other
-            self._ey -= other
-            self._ez -= other
-            self._ew -= other
+            self.ex -= other
+            self.ey -= other
+            self.ez -= other
+            self.ew -= other
             return self
         raise RuntimeError(f"Quaternion::ISub::wrong argument type {type(other)}")
 
@@ -210,10 +195,7 @@ class Quaternion:
                               self.ew * other.ey + self.ex * other.ez + self.ey * other.ew - self.ez * other.ex,
                               self.ew * other.ez - self.ex * other.ey + self.ey * other.ex + self.ez * other.ew)
         if isinstance(other, int) or isinstance(other, float):
-            return Quaternion(other * self.ex,
-                              other * self.ey,
-                              other * self.ez,
-                              other * self.ew)
+            return Quaternion(other * self.ex, other * self.ey, other * self.ez, other * self.ew)
         raise RuntimeError(f"Quaternion::Mul::wrong argument type {type(other)}")
 
     def __rmul__(self, other):
@@ -223,10 +205,7 @@ class Quaternion:
                               other.ew * self.ey + other.ex * self.ez + other.ey * self.ew - other.ez * self.ex,
                               other.ew * self.ez - other.ex * self.ey + other.ey * self.ex + other.ez * self.ew)
         if isinstance(other, int) or isinstance(other, float):
-            return Quaternion(other * self.ex,
-                              other * self.ey,
-                              other * self.ez,
-                              other * self.ew)
+            return Quaternion(other * self.ex, other * self.ey, other * self.ez, other * self.ew)
         raise RuntimeError(f"Quaternion::Mul::wrong argument type {type(other)}")
 
     def __imul__(self, other):
@@ -252,19 +231,13 @@ class Quaternion:
         if isinstance(other, Quaternion):
             return self.__mul__(other.reciprocal())
         if isinstance(other, int) or isinstance(other, float):
-            return Quaternion(self.ex / other,
-                              self.ey / other,
-                              self.ez / other,
-                              self.ew / other)
+            return Quaternion(self.ex / other, self.ey / other, self.ez / other, self.ew / other)
 
     def __rtruediv__(self, other):
         if isinstance(other, Quaternion):
             return other.__mul__(self.reciprocal())
         if isinstance(other, int) or isinstance(other, float):
-            return Quaternion(other / self.ex,
-                              other / self.ey,
-                              other / self.ez,
-                              other / self.ew)
+            return Quaternion(other / self.ex, other / self.ey, other / self.ez, other / self.ew)
 
     def __idiv__(self, other):
         if isinstance(other, Quaternion):

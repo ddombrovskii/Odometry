@@ -6,23 +6,18 @@
   <component name="ChangeListManager">
     <list default="true" id="5ead7134-b374-42a1-8fdd-5ab1a6211af6" name="Changes" comment="path_view">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/UIQt/GLUtilities/gl_buffer.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/GLUtilities/gl_buffer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/UIQt/GLUtilities/gl_mesh.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/GLUtilities/gl_mesh.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/UIQt/GLUtilities/gl_scene.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/GLUtilities/gl_scene.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/UIQt/GLUtilities/gl_tris_mesh.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/GLUtilities/gl_tris_mesh.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/UIQt/Scripts/Functionality/mouse_view_contoller.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/Scripts/Functionality/mouse_view_contoller.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/ActionsLoop/action.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/ActionsLoop/action.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Utilities/Geometry/camera.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/camera.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Utilities/Geometry/matrix3.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/matrix3.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Utilities/Geometry/matrix4.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/matrix4.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/perspective_transform_2d.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/perspective_transform_2d.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Utilities/Geometry/quaternion.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/quaternion.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/ray.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/ray.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Utilities/Geometry/transform_2d.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/transform_2d.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Utilities/Geometry/transform_3d.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/transform_3d.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Utilities/Geometry/vector2.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/vector2.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Utilities/Geometry/vector3.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/vector3.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Utilities/Geometry/vector4.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/vector4.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/non_uniform_transfom.py" beforeDir="false" afterPath="$PROJECT_DIR$/non_uniform_transfom.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -73,6 +68,27 @@
     </key>
   </component>
   <component name="RunManager" selected="Python.scene_viewer">
+    <configuration name="camera_cv_run_test" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Odometry" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/camera_cv_run_test.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="geometry_test" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="Odometry" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -115,7 +131,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="quaternion" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="non_uniform_transfom" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="Odometry" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -123,11 +139,11 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Utilities/Geometry" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Utilities/Geometry/quaternion.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/non_uniform_transfom.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -157,34 +173,13 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="vector4" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="Odometry" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Utilities/Geometry" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Utilities/Geometry/vector4.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
     <recent_temporary>
       <list>
         <item itemvalue="Python.scene_viewer" />
+        <item itemvalue="Python.camera_cv_run_test" />
+        <item itemvalue="Python.non_uniform_transfom" />
         <item itemvalue="Python.geometry_test" />
         <item itemvalue="Python.matrix4" />
-        <item itemvalue="Python.vector4" />
-        <item itemvalue="Python.quaternion" />
       </list>
     </recent_temporary>
   </component>
@@ -235,7 +230,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/Utilities/Geometry/matrix3.py</url>
-          <line>212</line>
+          <line>207</line>
           <option name="timeStamp" value="15" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
@@ -305,8 +300,18 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/Utilities/Geometry/vector3.py</url>
-          <line>166</line>
+          <line>169</line>
           <option name="timeStamp" value="134" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/Utilities/Geometry/matrix4.py</url>
+          <line>690</line>
+          <option name="timeStamp" value="135" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/Utilities/Geometry/matrix3.py</url>
+          <line>332</line>
+          <option name="timeStamp" value="137" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

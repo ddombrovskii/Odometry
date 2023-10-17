@@ -6,196 +6,179 @@ from typing import Tuple
 import numpy as np
 import math
 
+_M00 = '_m00'
+_M01 = '_m01'
+_M02 = '_m02'
+_M03 = '_m03'
+_M10 = '_m10'
+_M11 = '_m11'
+_M12 = '_m12'
+_M13 = '_m13'
+_M20 = '_m20'
+_M21 = '_m21'
+_M22 = '_m22'
+_M23 = '_m23'
+_M30 = '_m30'
+_M31 = '_m31'
+_M32 = '_m32'
+_M33 = '_m33'
+
 
 @dataclass
 class Matrix4:
     """
     mutable Matrix 4d
     """
-    __slots__ = ('_m00', '_m01', '_m02', '_m03',
-                 '_m10', '_m11', '_m12', '_m13',
-                 '_m20', '_m21', '_m22', '_m23',
-                 '_m30', '_m31', '_m32', '_m33')
 
-    def __iter__(self):
-        # row 0
-        yield self._m00
-        yield self._m01
-        yield self._m02
-        yield self._m03
-        # row 1
-        yield self._m10
-        yield self._m11
-        yield self._m12
-        yield self._m13
-        # row 2
-        yield self._m20
-        yield self._m21
-        yield self._m22
-        yield self._m23
-        # row 3
-        yield self._m30
-        yield self._m31
-        yield self._m32
-        yield self._m33
+    __slots__ = (_M00, _M01, _M02, _M03,
+                 _M10, _M11, _M12, _M13,
+                 _M20, _M21, _M22, _M23,
+                 _M30, _M31, _M32, _M33)
 
     # row 0 getters
     @property
     def m00(self) -> float:
-        return self._m00
+        return self.__getattribute__(_M00)
 
     @property
     def m01(self) -> float:
-        return self._m01
+        return self.__getattribute__(_M01)
 
     @property
     def m02(self) -> float:
-        return self._m02
+        return self.__getattribute__(_M02)
 
     @property
     def m03(self) -> float:
-        return self._m03
+        return self.__getattribute__(_M03)
 
     # row 1 getters
     @property
     def m10(self) -> float:
-        return self._m10
+        return self.__getattribute__(_M10)
 
     @property
     def m11(self) -> float:
-        return self._m11
+        return self.__getattribute__(_M11)
 
     @property
     def m12(self) -> float:
-        return self._m12
+        return self.__getattribute__(_M12)
 
     @property
     def m13(self) -> float:
-        return self._m13
+        return self.__getattribute__(_M13)
 
     # row 2 getters
     @property
     def m20(self) -> float:
-        return self._m20
+        return self.__getattribute__(_M20)
 
     @property
     def m21(self) -> float:
-        return self._m21
+        return self.__getattribute__(_M21)
 
     @property
     def m22(self) -> float:
-        return self._m22
+        return self.__getattribute__(_M22)
 
     @property
     def m23(self) -> float:
-        return self._m23
+        return self.__getattribute__(_M23)
 
     # row 3 getters
     @property
     def m30(self) -> float:
-        return self._m30
+        return self.__getattribute__(_M30)
 
     @property
     def m31(self) -> float:
-        return self._m31
+        return self.__getattribute__(_M31)
 
     @property
     def m32(self) -> float:
-        return self._m32
+        return self.__getattribute__(_M32)
 
     @property
     def m33(self) -> float:
-        return self._m33
+        return self.__getattribute__(_M33)
 
-    # row 0 setters
+    # row 0 getters
     @m00.setter
     def m00(self, value: float) -> None:
-        self._m00 = float(value)
+        self.__setattr__(_M00, float(value))
 
     @m01.setter
     def m01(self, value: float) -> None:
-        self._m01 = float(value)
+        self.__setattr__(_M01, float(value))
 
     @m02.setter
     def m02(self, value: float) -> None:
-        self._m02 = float(value)
+        self.__setattr__(_M02, float(value))
 
     @m03.setter
     def m03(self, value: float) -> None:
-        self._m03 = float(value)
+        self.__setattr__(_M03, float(value))
 
-    # row 1 setters
+    # row 1 getters
     @m10.setter
     def m10(self, value: float) -> None:
-        self._m10 = float(value)
+        self.__setattr__(_M10, float(value))
 
     @m11.setter
     def m11(self, value: float) -> None:
-        self._m11 = float(value)
+        self.__setattr__(_M11, float(value))
 
     @m12.setter
     def m12(self, value: float) -> None:
-        self._m12 = float(value)
+        self.__setattr__(_M12, float(value))
 
     @m13.setter
     def m13(self, value: float) -> None:
-        self._m13 = float(value)
+        self.__setattr__(_M13, float(value))
 
-    # row 2 setters
+    # row 2 getters
     @m20.setter
     def m20(self, value: float) -> None:
-        self._m20 = float(value)
+        self.__setattr__(_M20, float(value))
 
     @m21.setter
     def m21(self, value: float) -> None:
-        self._m21 = float(value)
+        self.__setattr__(_M21, float(value))
 
     @m22.setter
     def m22(self, value: float) -> None:
-        self._m22 = float(value)
+        self.__setattr__(_M22, float(value))
 
     @m23.setter
     def m23(self, value: float) -> None:
-        self._m23 = float(value)
+        self.__setattr__(_M23, float(value))
 
-    # row 3 setters
+    # row 3 getters
     @m30.setter
     def m30(self, value: float) -> None:
-        self._m30 = float(value)
+        self.__setattr__(_M30, float(value))
 
     @m31.setter
     def m31(self, value: float) -> None:
-        self._m31 = float(value)
+        self.__setattr__(_M31, float(value))
 
     @m32.setter
     def m32(self, value: float) -> None:
-        self._m32 = float(value)
+        self.__setattr__(_M32, float(value))
 
     @m33.setter
     def m33(self, value: float) -> None:
-        self._m33 = float(value)
+        self.__setattr__(_M33, float(value))
 
     def __init__(self, *args):
         assert len(args) == 16
-        self._m00 = float(args[0])
-        self._m01 = float(args[1])
-        self._m02 = float(args[2])
-        self._m03 = float(args[3])
+        for attr, val in zip(Matrix4.__slots__, args):
+            self.__setattr__(attr, float(val))
 
-        self._m10 = float(args[4])
-        self._m11 = float(args[5])
-        self._m12 = float(args[6])
-        self._m13 = float(args[7])
-
-        self._m20 = float(args[8])
-        self._m21 = float(args[9])
-        self._m22 = float(args[10])
-        self._m23 = float(args[11])
-
-        self._m30 = float(args[12])
-        self._m31 = float(args[13])
-        self._m32 = float(args[14])
-        self._m33 = float(args[15])
+    def __iter__(self):
+        for attr in Matrix4.__slots__:
+            yield self.__getattribute__(attr)
 
     @classmethod
     def identity(cls):
@@ -415,12 +398,12 @@ class Matrix4:
         return self.right, self.up, self.front
 
     def transpose(self):
-        self._m01, self._m10 = self._m10, self._m01
-        self._m02, self._m20 = self._m20, self._m02
-        self._m03, self._m30 = self._m30, self._m03
-        self._m21, self._m12 = self._m12, self._m21
-        self._m31, self._m13 = self._m13, self._m31
-        self._m32, self._m23 = self._m23, self._m32
+        self.m01, self.m10 = self.m10, self.m01
+        self.m02, self.m20 = self.m20, self.m02
+        self.m03, self.m30 = self.m30, self.m03
+        self.m21, self.m12 = self.m12, self.m21
+        self.m31, self.m13 = self.m13, self.m31
+        self.m32, self.m23 = self.m23, self.m32
         return self
 
     @property
@@ -523,7 +506,7 @@ class Matrix4:
         return Matrix4(*(val for val in self))
 
     def __neg__(self):
-        return self.__imul__(-1)
+        return self.__mul__(-1.0)
 
     def __add__(self, other):
         if isinstance(other, Matrix4):
@@ -534,47 +517,12 @@ class Matrix4:
 
     def __iadd__(self, other):
         if isinstance(other, Matrix4):
-            self._m00 += other._m00
-            self._m01 += other._m01
-            self._m02 += other._m02
-            self._m03 += other._m03
-
-            self._m10 += other._m10
-            self._m11 += other._m11
-            self._m12 += other._m12
-            self._m13 += other._m13
-
-            self._m20 += other._m20
-            self._m21 += other._m21
-            self._m22 += other._m22
-            self._m23 += other._m23
-
-            self._m30 += other._m30
-            self._m31 += other._m31
-            self._m32 += other._m32
-            self._m33 += other._m33
+            for attr, value in zip(Matrix4.__slots__, other):
+                self.__setattr__(attr, self.__getattribute__(attr) + value)
             return self
         if isinstance(other, int) or isinstance(other, float):
-            self._m00 += other
-            self._m01 += other
-            self._m02 += other
-            self._m03 += other
-
-            self._m10 += other
-            self._m11 += other
-            self._m12 += other
-            self._m13 += other
-
-            self._m20 += other
-            self._m21 += other
-            self._m22 += other
-            self._m23 += other
-
-            self._m30 += other
-            self._m31 += other
-            self._m32 += other
-            self._m33 += other
-            return self
+            for attr in Matrix4.__slots__:
+                self.__setattr__(attr, self.__getattribute__(attr) + other)
         raise RuntimeError(f"Matrix4::Add::wrong argument type {type(other)}")
 
     __radd__ = __add__
@@ -595,48 +543,13 @@ class Matrix4:
 
     def __isub__(self, other):
         if isinstance(other, Matrix4):
-            self._m00 -= other._m00
-            self._m01 -= other._m01
-            self._m02 -= other._m02
-            self._m03 -= other._m03
-
-            self._m10 -= other._m10
-            self._m11 -= other._m11
-            self._m12 -= other._m12
-            self._m13 -= other._m13
-
-            self._m20 -= other._m20
-            self._m21 -= other._m21
-            self._m22 -= other._m22
-            self._m23 -= other._m23
-
-            self._m30 -= other._m30
-            self._m31 -= other._m31
-            self._m32 -= other._m32
-            self._m33 -= other._m33
+            for attr, value in zip(Matrix4.__slots__, other):
+                self.__setattr__(attr, self.__getattribute__(attr) - value)
             return self
         if isinstance(other, int) or isinstance(other, float):
-            self._m00 -= other
-            self._m01 -= other
-            self._m02 -= other
-            self._m03 -= other
-
-            self._m10 -= other
-            self._m11 -= other
-            self._m12 -= other
-            self._m13 -= other
-
-            self._m20 -= other
-            self._m21 -= other
-            self._m22 -= other
-            self._m23 -= other
-
-            self._m30 -= other
-            self._m31 -= other
-            self._m32 -= other
-            self._m33 -= other
-            return self
-        raise RuntimeError(f"Matrix4::Add::wrong argument type {type(other)}")
+            for attr in Matrix4.__slots__:
+                self.__setattr__(attr, self.__getattribute__(attr) - other)
+        raise RuntimeError(f"Matrix4::ISub::wrong argument type {type(other)}")
 
     def __mul__(self, other):
         if isinstance(other, Matrix4):
@@ -728,25 +641,8 @@ class Matrix4:
             self._m33 = _m30 * other.m03 + _m31 * other.m13 + _m32 * other.m23 + _m33 * other.m33
             return self
         if isinstance(other, int) or isinstance(other, float):
-            self._m00 *= other
-            self._m01 *= other
-            self._m02 *= other
-            self._m03 *= other
-
-            self._m10 *= other
-            self._m11 *= other
-            self._m12 *= other
-            self._m13 *= other
-
-            self._m20 *= other
-            self._m21 *= other
-            self._m22 *= other
-            self._m23 *= other
-
-            self._m30 *= other
-            self._m31 *= other
-            self._m32 *= other
-            self._m33 *= other
+            for attr in Matrix4.__slots__:
+                self.__setattr__(attr, self.__getattribute__(attr) * other)
             return self
         raise RuntimeError(f"Matrix4::IMul::wrong argument type {type(other)}")
 

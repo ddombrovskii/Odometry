@@ -4,42 +4,47 @@ import numpy as np
 import math
 
 
+_X = '_x'
+_Y = '_y'
+
+
 @dataclass
 class Vector2:
     """
-    mutable vector 3d
+    mutable vector 4d
     """
-    __slots__ = ('_x', '_y')
-
-    def __iter__(self):
-        yield self._x
-        yield self._y
+    __slots__ = (_X, _Y)
 
     @property
     def x(self) -> float:
-        return self._x
+        return self.__getattribute__(_X)
 
     @property
     def y(self) -> float:
-        return self._y
+        return self.__getattribute__(_Y)
 
     @x.setter
     def x(self, value: float) -> None:
-        self._x = float(value)
+        self.__setattr__(_X, float(value))
 
     @y.setter
     def y(self, value: float) -> None:
-        self._y = float(value)
+        self.__setattr__(_Y, float(value))
 
-    def __init__(self, x: float = 0.0, y: float = 0.0):
-        self.x = x
-        self.y = y
+    def __init__(self, *args):
+        assert len(args) == 2
+        for attr, val in zip(Vector2.__slots__, args):
+            self.__setattr__(attr, float(val))
+
+    def __iter__(self):
+        for attr in Vector2.__slots__:
+            yield self.__getattribute__(attr)
 
     def __str__(self):
         return f"{{\"x\": {self.x:{_4F}}, \"y\": {self.y:{_4F}}}}"
 
     def __neg__(self):
-        return Vector2(-self.x, -self.y)
+        return self.__mul__(-1.0)
 
     def __abs__(self):
         return Vector2(abs(self.x), abs(self.y))
@@ -55,12 +60,12 @@ class Vector2:
 
     def __iadd__(self, other):
         if isinstance(other, Vector2):
-            self._x += other.x
-            self._y += other.y
+            self.x += other.x
+            self.y += other.y
             return self
         if isinstance(other, int) or isinstance(other, float):
-            self._x += other
-            self._y += other
+            self.x += other
+            self.y += other
             return self
         raise RuntimeError(f"Vector2::IAdd::wrong argument type {type(other)}")
 
@@ -86,12 +91,12 @@ class Vector2:
 
     def __isub__(self, other):
         if isinstance(other, Vector2):
-            self._x -= other.x
-            self._y -= other.y
+            self.x -= other.x
+            self.y -= other.y
             return self
         if isinstance(other, int) or isinstance(other, float):
-            self._x -= other
-            self._y -= other
+            self.x -= other
+            self.y -= other
             return self
         raise RuntimeError(f"Vector2::ISub::wrong argument type {type(other)}")
 
@@ -137,12 +142,12 @@ class Vector2:
 
     def __idiv__(self, other):
         if isinstance(other, Vector2):
-            self._x /= other.x
-            self._y /= other.y
+            self.x /= other.x
+            self.y /= other.y
             return self
         if isinstance(other, int) or isinstance(other, float):
-            self._x /= other
-            self._y /= other
+            self.x /= other
+            self.y /= other
             return self
         raise RuntimeError(f"Vector2::IDiv::wrong argument type {type(other)}")
 

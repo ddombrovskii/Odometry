@@ -125,14 +125,14 @@ class SceneGL:
     def update_camera_state(self, camera: Camera = None):
         if camera is None:
             self._cam_view_matrix = gl_globals.MAIN_CAMERA.look_at_matrix
-            self._cam_projection = gl_globals.MAIN_CAMERA.projection
-            self._cam_position = gl_globals.MAIN_CAMERA.transform.origin
-            self._perspective = gl_globals.MAIN_CAMERA.perspective_mode
+            self._cam_projection  = gl_globals.MAIN_CAMERA.projection
+            self._cam_position    = gl_globals.MAIN_CAMERA.transform.origin
+            self._perspective     = gl_globals.MAIN_CAMERA.perspective_mode
             return
         self._cam_view_matrix = camera.look_at_matrix
-        self._cam_projection = camera.projection
-        self._cam_position = camera.transform.origin
-        self._perspective = camera.perspective_mode
+        self._cam_projection  = camera.projection
+        self._cam_position    = camera.transform.origin
+        self._perspective     = camera.perspective_mode
 
     def create_grid(self, transform: Matrix4 = None) -> ModelGL:
         model_gl = ModelGL()
@@ -233,11 +233,10 @@ class SceneGL:
             return
         material = override_material if override_material is not None else model.material
         if material.bind():
-            material.set_property_val("view", self._cam_view_matrix)
-            material.set_property_val("projection", self._cam_projection)
+            material.set_property_val("view",         self._cam_view_matrix)
+            material.set_property_val("projection",   self._cam_projection)
             material.set_property_val("cam_position", self._cam_position)
             # material.set_property_val("model", model.transform.transform_matrix.transpose())
-
         material.shader.send_mat_4("model", model.transform.transform_matrix)  # .transpose())
         model.mesh.draw()
 

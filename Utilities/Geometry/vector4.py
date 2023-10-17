@@ -4,62 +4,65 @@ import numpy as np
 import math
 
 
+_X = '_x'
+_Y = '_y'
+_Z = '_z'
+_W = '_w'
+
+
 @dataclass
 class Vector4:
     """
     mutable vector 4d
     """
-    __slots__ = ('_x', '_y', '_z', '_w')
-
-    def __iter__(self):
-        yield self._x
-        yield self._y
-        yield self._z
-        yield self._w
+    __slots__ = (_X, _Y, _Z, _W)
 
     @property
     def x(self) -> float:
-        return self._x
+        return self.__getattribute__(_X)
 
     @property
     def y(self) -> float:
-        return self._y
+        return self.__getattribute__(_Y)
 
     @property
     def z(self) -> float:
-        return self._z
+        return self.__getattribute__(_Z)
 
     @property
     def w(self) -> float:
-        return self._w
+        return self.__getattribute__(_W)
 
     @x.setter
     def x(self, value: float) -> None:
-        self._x = float(value)
+        self.__setattr__(_X, float(value))
 
     @y.setter
     def y(self, value: float) -> None:
-        self._y = float(value)
+        self.__setattr__(_Y, float(value))
 
     @z.setter
     def z(self, value: float) -> None:
-        self._z = float(value)
+        self.__setattr__(_Z, float(value))
 
     @w.setter
     def w(self, value: float) -> None:
-        self._w = float(value)
+        self.__setattr__(_W, float(value))
 
-    def __init__(self, x: float = 0.0, y: float = 0.0, z: float = 0.0,  w: float = 0.0):
-        self.x = x
-        self.y = y
-        self.z = z
-        self.w = w
+    def __init__(self, *args):
+        assert len(args) == 4
+        for attr, val in zip(Vector4.__slots__, args):
+            self.__setattr__(attr, float(val))
+
+    def __iter__(self):
+        for attr in Vector4.__slots__:
+            yield self.__getattribute__(attr)
 
     def __str__(self):
         return f"{{\"x\": {self.x:{_4F}}, \"y\": {self.y:{_4F}}, \"z\": {self.z:{_4F}}, \"w\": {self.w:{_4F}}}}"
 
     def __neg__(self):
-        return Vector4(-self.x, -self.y, -self.z, -self.w)
+        return self.__mul__(-1.0)  # -self.x, -self.y, -self.z, -self.w)
 
     def __abs__(self):
         return Vector4(abs(self.x), abs(self.y), abs(self.z), abs(self.w))
@@ -81,16 +84,16 @@ class Vector4:
 
     def __iadd__(self, other):
         if isinstance(other, Vector4):
-            self._x += other.x
-            self._y += other.y
-            self._z += other.z
-            self._w += other.w
+            self.x += other.x
+            self.y += other.y
+            self.z += other.z
+            self.w += other.w
             return self
         if isinstance(other, int) or isinstance(other, float):
-            self._x += other
-            self._y += other
-            self._z += other
-            self._w += other
+            self.x += other
+            self.y += other
+            self.z += other
+            self.w += other
             return self
         raise RuntimeError(f"Vector4::IAdd::wrong argument type {type(other)}")
 
@@ -122,16 +125,16 @@ class Vector4:
 
     def __isub__(self, other):
         if isinstance(other, Vector4):
-            self._x -= other.x
-            self._y -= other.y
-            self._z -= other.z
-            self._w -= other.w
+            self.x -= other.x
+            self.y -= other.y
+            self.z -= other.z
+            self.w -= other.w
             return self
         if isinstance(other, int) or isinstance(other, float):
-            self._x -= other
-            self._y -= other
-            self._z -= other
-            self._w -= other
+            self.x -= other
+            self.y -= other
+            self.z -= other
+            self.w -= other
             return self
         raise RuntimeError(f"Vector4::ISub::wrong argument type {type(other)}")
 
@@ -150,16 +153,16 @@ class Vector4:
 
     def __imul__(self, other):
         if isinstance(other, Vector4):
-            self._x *= other.x
-            self._y *= other.y
-            self._z *= other.z
-            self._w *= other.w
+            self.x *= other.x
+            self.y *= other.y
+            self.z *= other.z
+            self.w *= other.w
             return self
         if isinstance(other, int) or isinstance(other, float):
-            self._x *= other
-            self._y *= other
-            self._z *= other
-            self._w *= other
+            self.x *= other
+            self.y *= other
+            self.z *= other
+            self.w *= other
             return self
         raise RuntimeError(f"Vector4::IMul::wrong argument type {type(other)}")
                  
@@ -193,16 +196,16 @@ class Vector4:
 
     def __idiv__(self, other):
         if isinstance(other, Vector4):
-            self._x /= other.x
-            self._y /= other.y
-            self._z /= other.z
-            self._w /= other.z
+            self.x /= other.x
+            self.y /= other.y
+            self.z /= other.z
+            self.w /= other.z
             return self
         if isinstance(other, int) or isinstance(other, float):
-            self._x /= other
-            self._y /= other
-            self._z /= other
-            self._w /= other
+            self.x /= other
+            self.y /= other
+            self.z /= other
+            self.w /= other
             return self
         raise RuntimeError(f"Vector3::IDiv::wrong argument type {type(other)}")
 

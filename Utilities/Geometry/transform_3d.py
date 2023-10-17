@@ -392,3 +392,4 @@ def transform_3d_test():
     print(vt)
     print(t.inv_transform_vect(vt))
     print(t)
+    print(f'[{", ".join(str(v)for v in t.transform_matrix)}]')

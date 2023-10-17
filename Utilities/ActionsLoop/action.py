@@ -13,7 +13,11 @@ class Action:
     def __init__(self):
         self._curr_state: int = STANDBY_MODE_MESSAGE
         self._prev_state: int = STANDBY_MODE_MESSAGE
-        # self._modes = (self._on_start, self._on_run, self._on_end)
+        # self._modes = {BEGIN_MODE_MESSAGE: self._on_start,
+        #                RUN_MODE_MESSAGE: self._on_run,
+        #                END_MODE_MESSAGE: self._on_end,
+        #                PAUSE_MODE_MESSAGE: self._on_pause,
+        #                STANDBY_MODE_MESSAGE: self._on_pause}
         self._life_time_timer: Timer = Timer()
 
     def _on_start(self) -> bool:
@@ -34,6 +38,9 @@ class Action:
 
     def __update(self):
         # TODO refactor update logic
+        # if self.action_state not in self._modes:
+        #     return
+        # self.__set_action_state(COMPLETE_MODE_MESSAGE if self._modes[self.action_state]() else self.action_state)
         if self.action_state == PAUSE_MODE_MESSAGE or self.action_state == STANDBY_MODE_MESSAGE:
             self._on_pause()
             return

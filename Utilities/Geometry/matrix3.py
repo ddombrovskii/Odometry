@@ -7,119 +7,114 @@ import numpy as np
 import math
 
 
+_M00 = '_m00'
+_M01 = '_m01'
+_M02 = '_m02'
+
+_M10 = '_m10'
+_M11 = '_m11'
+_M12 = '_m12'
+
+_M20 = '_m20'
+_M21 = '_m21'
+_M22 = '_m22'
+
+
 @dataclass
 class Matrix3:
     """
-    mutable Matrix 4d
+    mutable Matrix 3d
     """
-    __slots__ = ('_m00', '_m01', '_m02',
-                 '_m10', '_m11', '_m12',
-                 '_m20', '_m21', '_m22')
-
-    def __iter__(self):
-        yield self._m00
-        yield self._m01
-        yield self._m02
-
-        yield self._m10
-        yield self._m11
-        yield self._m12
-
-        yield self._m20
-        yield self._m21
-        yield self._m22
+    __slots__ = (_M00, _M01, _M02,
+                 _M10, _M11, _M12,
+                 _M20, _M21, _M22)
 
     # row 0 getters
     @property
     def m00(self) -> float:
-        return self._m00
+        return self.__getattribute__(_M00)
 
     @property
     def m01(self) -> float:
-        return self._m01
+        return self.__getattribute__(_M01)
 
     @property
     def m02(self) -> float:
-        return self._m02
+        return self.__getattribute__(_M02)
 
     # row 1 getters
     @property
     def m10(self) -> float:
-        return self._m10
+        return self.__getattribute__(_M10)
 
     @property
     def m11(self) -> float:
-        return self._m11
+        return self.__getattribute__(_M11)
 
     @property
     def m12(self) -> float:
-        return self._m12
+        return self.__getattribute__(_M12)
 
     # row 2 getters
     @property
     def m20(self) -> float:
-        return self._m20
+        return self.__getattribute__(_M20)
 
     @property
     def m21(self) -> float:
-        return self._m21
+        return self.__getattribute__(_M21)
 
     @property
     def m22(self) -> float:
-        return self._m22
+        return self.__getattribute__(_M22)
 
-    # row 0 setters
+    # row 0 getters
     @m00.setter
     def m00(self, value: float) -> None:
-        self._m00 = float(value)
+        self.__setattr__(_M00, float(value))
 
     @m01.setter
     def m01(self, value: float) -> None:
-        self._m01 = float(value)
+        self.__setattr__(_M01, float(value))
 
     @m02.setter
     def m02(self, value: float) -> None:
-        self._m02 = float(value)
+        self.__setattr__(_M02, float(value))
 
-    # row 1 setters
+    # row 1 getters
     @m10.setter
     def m10(self, value: float) -> None:
-        self._m10 = float(value)
+        self.__setattr__(_M10, float(value))
 
     @m11.setter
     def m11(self, value: float) -> None:
-        self._m11 = float(value)
+        self.__setattr__(_M11, float(value))
 
     @m12.setter
     def m12(self, value: float) -> None:
-        self._m12 = float(value)
+        self.__setattr__(_M12, float(value))
 
-    # row 2 setters
+    # row 2 getters
     @m20.setter
     def m20(self, value: float) -> None:
-        self._m20 = float(value)
+        self.__setattr__(_M20, float(value))
 
     @m21.setter
     def m21(self, value: float) -> None:
-        self._m21 = float(value)
+        self.__setattr__(_M21, float(value))
 
     @m22.setter
     def m22(self, value: float) -> None:
-        self._m22 = float(value)
+        self.__setattr__(_M22, float(value))
 
     def __init__(self, *args):
         assert len(args) == 9
-        self._m00 = float(args[0])
-        self._m01 = float(args[1])
-        self._m02 = float(args[2])
+        for attr, val in zip(Matrix3.__slots__, args):
+            self.__setattr__(attr, float(val))
 
-        self._m10 = float(args[3])
-        self._m11 = float(args[4])
-        self._m12 = float(args[5])
-
-        self._m20 = float(args[6])
-        self._m21 = float(args[7])
-        self._m22 = float(args[8])
+    def __iter__(self):
+        for attr in Matrix3.__slots__:
+            yield self.__getattribute__(attr)
 
     @classmethod
     def identity(cls):
@@ -181,8 +176,8 @@ class Matrix3:
         if ez is None:
             ez = Vector3(0.0, 0.0, 1.0)
         assert isinstance(ez, Vector2)
-        ey = ey.normalize()
-        ez = ez.normalize()
+        ey = ey.normalized
+        ez = ez.normalized
         ex = Vector3.cross(ez, ey).normalize()
         ez = Vector3.cross(ey, ex).normalize()
 
@@ -252,9 +247,9 @@ class Matrix3:
         return Vector3(self.m02, self.m12, self.m22)
 
     def transpose(self):
-        self._m01, self._m10 = self._m10, self._m01
-        self._m02, self._m20 = self._m20, self._m02
-        self._m21, self._m12 = self._m12, self._m21
+        self.m01, self.m10 = self.m10, self.m01
+        self.m02, self.m20 = self.m20, self.m02
+        self.m21, self.m12 = self.m12, self.m21
         return self
 
     @property
@@ -273,25 +268,25 @@ class Matrix3:
             raise ArithmeticError("Mat3 :: singular matrix")
         det = 1.0 / det
 
-        _m00 = self._m00
-        _m01 = self._m10
-        _m02 = self._m20
-        _m10 = self._m01
-        _m11 = self._m11
-        _m12 = self._m21
-        _m20 = self._m02
-        _m21 = self._m12
-        _m22 = self._m22
+        _m00 = self.m00
+        _m01 = self.m10
+        _m02 = self.m20
+        _m10 = self.m01
+        _m11 = self.m11
+        _m12 = self.m21
+        _m20 = self.m02
+        _m21 = self.m12
+        _m22 = self.m22
 
-        self._m00 = (_m11 * _m22 - _m21 * _m12) * det
-        self._m10 = (_m02 * _m21 - _m01 * _m22) * det
-        self._m20 = (_m01 * _m12 - _m02 * _m11) * det
-        self._m01 = (_m12 * _m20 - _m10 * _m22) * det
-        self._m11 = (_m00 * _m22 - _m02 * _m20) * det
-        self._m21 = (_m10 * _m02 - _m00 * _m12) * det
-        self._m02 = (_m10 * _m21 - _m20 * _m11) * det
-        self._m12 = (_m20 * _m01 - _m00 * _m21) * det
-        self._m22 = (_m00 * _m11 - _m10 * _m01) * det
+        self.m00 = (_m11 * _m22 - _m21 * _m12) * det
+        self.m10 = (_m02 * _m21 - _m01 * _m22) * det
+        self.m20 = (_m01 * _m12 - _m02 * _m11) * det
+        self.m01 = (_m12 * _m20 - _m10 * _m22) * det
+        self.m11 = (_m00 * _m22 - _m02 * _m20) * det
+        self.m21 = (_m10 * _m02 - _m00 * _m12) * det
+        self.m02 = (_m10 * _m21 - _m20 * _m11) * det
+        self.m12 = (_m20 * _m01 - _m00 * _m21) * det
+        self.m22 = (_m00 * _m11 - _m10 * _m01) * det
         return self
 
     @property
@@ -307,7 +302,7 @@ class Matrix3:
         return Matrix3(*(val for val in self))
 
     def __neg__(self):
-        return self.__imul__(-1)
+        return self.__mul__(-1.0)
 
     def __add__(self, other):
         if isinstance(other, Matrix3):
@@ -320,27 +315,12 @@ class Matrix3:
 
     def __iadd__(self, other):
         if isinstance(other, Matrix3):
-            self._m00 += other._m00
-            self._m01 += other._m10
-            self._m02 += other._m20
-            self._m10 += other._m01
-            self._m11 += other._m11
-            self._m12 += other._m21
-            self._m20 += other._m02
-            self._m21 += other._m12
-            self._m22 += other._m22
+            for attr, value in zip(Matrix3.__slots__, other):
+                self.__setattr__(attr, self.__getattribute__(attr) + value)
             return self
         if isinstance(other, int) or isinstance(other, float):
-            self._m00 += other
-            self._m01 += other
-            self._m02 += other
-            self._m10 += other
-            self._m11 += other
-            self._m12 += other
-            self._m20 += other
-            self._m21 += other
-            self._m22 += other
-            return self
+            for attr in Matrix3.__slots__:
+                self.__setattr__(attr, self.__getattribute__(attr) + other)
         raise RuntimeError(f"Matrix3::Add::wrong argument type {type(other)}")
 
     def __sub__(self, other):
@@ -359,27 +339,12 @@ class Matrix3:
 
     def __isub__(self, other):
         if isinstance(other, Matrix3):
-            self._m00 -= other._m00
-            self._m01 -= other._m10
-            self._m02 -= other._m20
-            self._m10 -= other._m01
-            self._m11 -= other._m11
-            self._m12 -= other._m21
-            self._m20 -= other._m02
-            self._m21 -= other._m12
-            self._m22 -= other._m22
+            for attr, value in zip(Matrix3.__slots__, other):
+                self.__setattr__(attr, self.__getattribute__(attr) - value)
             return self
         if isinstance(other, int) or isinstance(other, float):
-            self._m00 -= other
-            self._m01 -= other
-            self._m02 -= other
-            self._m10 -= other
-            self._m11 -= other
-            self._m12 -= other
-            self._m20 -= other
-            self._m21 -= other
-            self._m22 -= other
-            return self
+            for attr in Matrix3.__slots__:
+                self.__setattr__(attr, self.__getattribute__(attr) - other)
         raise RuntimeError(f"Matrix3::Add::wrong argument type {type(other)}")
 
     def __mul__(self, other):
@@ -422,36 +387,29 @@ class Matrix3:
 
     def __imul__(self, other):
         if isinstance(other, Matrix3):
-            _m00 = self._m00
-            _m01 = self._m01
-            _m02 = self._m02
-            _m10 = self._m10
-            _m11 = self._m11
-            _m12 = self._m12
-            _m20 = self._m20
-            _m21 = self._m21
-            _m22 = self._m22
+            _m00 = self.m00
+            _m01 = self.m01
+            _m02 = self.m02
+            _m10 = self.m10
+            _m11 = self.m11
+            _m12 = self.m12
+            _m20 = self.m20
+            _m21 = self.m21
+            _m22 = self.m22
 
-            self._m00 = _m00 * other.m00 + _m01 * other.m10 + _m02 * other.m20
-            self._m01 = _m00 * other.m01 + _m01 * other.m11 + _m02 * other.m21
-            self._m02 = _m00 * other.m02 + _m01 * other.m12 + _m02 * other.m22
-            self._m10 = _m10 * other.m00 + _m11 * other.m10 + _m12 * other.m20
-            self._m11 = _m10 * other.m01 + _m11 * other.m11 + _m12 * other.m21
-            self._m12 = _m10 * other.m02 + _m11 * other.m12 + _m12 * other.m22
-            self._m20 = _m20 * other.m00 + _m21 * other.m10 + _m22 * other.m20
-            self._m21 = _m20 * other.m01 + _m21 * other.m11 + _m22 * other.m21
-            self._m22 = _m20 * other.m02 + _m21 * other.m12 + _m22 * other.m22
+            self.m00 = _m00 * other.m00 + _m01 * other.m10 + _m02 * other.m20
+            self.m01 = _m00 * other.m01 + _m01 * other.m11 + _m02 * other.m21
+            self.m02 = _m00 * other.m02 + _m01 * other.m12 + _m02 * other.m22
+            self.m10 = _m10 * other.m00 + _m11 * other.m10 + _m12 * other.m20
+            self.m11 = _m10 * other.m01 + _m11 * other.m11 + _m12 * other.m21
+            self.m12 = _m10 * other.m02 + _m11 * other.m12 + _m12 * other.m22
+            self.m20 = _m20 * other.m00 + _m21 * other.m10 + _m22 * other.m20
+            self.m21 = _m20 * other.m01 + _m21 * other.m11 + _m22 * other.m21
+            self.m22 = _m20 * other.m02 + _m21 * other.m12 + _m22 * other.m22
             return self
         if isinstance(other, int) or isinstance(other, float):
-            self._m00 *= other
-            self._m01 *= other
-            self._m02 *= other
-            self._m10 *= other
-            self._m11 *= other
-            self._m12 *= other
-            self._m20 *= other
-            self._m21 *= other
-            self._m22 *= other
+            for attr in Matrix3.__slots__:
+                self.__setattr__(attr, self.__getattribute__(attr) * other)
             return self
         raise RuntimeError(f"Matrix3::Mul::wrong argument type {type(other)}")
 
@@ -490,6 +448,7 @@ class Matrix3:
         return np.array(self).reshape((3, 3))
 
     def perspective_multiply(self,  point: Vector2) -> Vector2:
+        assert isinstance(point, Vector2)
         p = self * Vector3(point.x, point.y, 1.0)
         return Vector2(p.x / p.z, p.y / p.z)
 

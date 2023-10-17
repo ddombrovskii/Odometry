@@ -3,53 +3,56 @@ from dataclasses import dataclass
 import numpy as np
 import math
 
+_X = '_x'
+_Y = '_y'
+_Z = '_z'
+
 
 @dataclass
 class Vector3:
     """
-    mutable vector 3d
+    mutable vector 4d
     """
-    __slots__ = ('_x', '_y', '_z')
-
-    def __iter__(self):
-        yield self._x
-        yield self._y
-        yield self._z
+    __slots__ = (_X, _Y, _Z)
 
     @property
     def x(self) -> float:
-        return self._x
+        return self.__getattribute__(_X)
 
     @property
     def y(self) -> float:
-        return self._y
+        return self.__getattribute__(_Y)
 
     @property
     def z(self) -> float:
-        return self._z
+        return self.__getattribute__(_Z)
 
     @x.setter
     def x(self, value: float) -> None:
-        self._x = float(value)
+        self.__setattr__(_X, float(value))
 
     @y.setter
     def y(self, value: float) -> None:
-        self._y = float(value)
+        self.__setattr__(_Y, float(value))
 
     @z.setter
     def z(self, value: float) -> None:
-        self._z = float(value)
+        self.__setattr__(_Z, float(value))
 
-    def __init__(self, x: float = 0.0, y: float = 0.0, z: float = 0.0):
-        self.x = x
-        self.y = y
-        self.z = z
+    def __init__(self, *args):
+        assert len(args) == 3
+        for attr, val in zip(Vector3.__slots__, args):
+            self.__setattr__(attr, float(val))
+
+    def __iter__(self):
+        for attr in Vector3.__slots__:
+            yield self.__getattribute__(attr)
 
     def __str__(self):
         return f"{{\"x\": {self.x:{_4F}}, \"y\": {self.y:{_4F}}, \"z\": {self.z:{_4F}}}}"
 
     def __neg__(self):
-        return Vector3(-self.x, -self.y, -self.z)
+        return self.__mul__(-1.0)
 
     def __abs__(self):
         return Vector3(abs(self.x), abs(self.y), abs(self.z))
@@ -65,14 +68,14 @@ class Vector3:
 
     def __iadd__(self, other):
         if isinstance(other, Vector3):
-            self._x += other.x
-            self._y += other.y
-            self._z += other.z
+            self.x += other.x
+            self.y += other.y
+            self.z += other.z
             return self
         if isinstance(other, int) or isinstance(other, float):
-            self._x += other
-            self._y += other
-            self._z += other
+            self.x += other
+            self.y += other
+            self.z += other
             return self
         raise RuntimeError(f"Vector3::IAdd::wrong argument type {type(other)}")
 
@@ -92,14 +95,14 @@ class Vector3:
 
     def __isub__(self, other):
         if isinstance(other, Vector3):
-            self._x -= other.x
-            self._y -= other.y
-            self._z -= other.z
+            self.x -= other.x
+            self.y -= other.y
+            self.z -= other.z
             return self
         if isinstance(other, int) or isinstance(other, float):
-            self._x -= other
-            self._y -= other
-            self._z -= other
+            self.x -= other
+            self.y -= other
+            self.z -= other
             return self
         raise RuntimeError(f"Vector3::ISub::wrong argument type {type(other)}")
 
@@ -112,14 +115,14 @@ class Vector3:
 
     def __imul__(self, other):
         if isinstance(other, Vector3):
-            self._x *= other.x
-            self._y *= other.y
-            self._z *= other.z
+            self.x *= other.x
+            self.y *= other.y
+            self.z *= other.z
             return self
         if isinstance(other, int) or isinstance(other, float):
-            self._x *= other
-            self._y *= other
-            self._z *= other
+            self.x *= other
+            self.y *= other
+            self.z *= other
             return self
         raise RuntimeError(f"Vector3::IMul::wrong argument type {type(other)}")
                  
@@ -141,14 +144,14 @@ class Vector3:
 
     def __idiv__(self, other):
         if isinstance(other, Vector3):
-            self._x /= other.x
-            self._y /= other.y
-            self._z /= other.z
+            self.x /= other.x
+            self.y /= other.y
+            self.z /= other.z
             return self
         if isinstance(other, int) or isinstance(other, float):
-            self._x /= other
-            self._y /= other
-            self._z /= other
+            self.x /= other
+            self.y /= other
+            self.z /= other
             return self
         raise RuntimeError(f"Vector3::IDiv::wrong argument type {type(other)}")
 

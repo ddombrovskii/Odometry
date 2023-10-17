@@ -217,4 +217,4 @@ def transform_2d_test():
     print(v)
     print(vt)
     print(t.inv_transform_vect(vt))
-    print(t)
+    print(f'[{", ".join(str(v)for v in t.transform_matrix)}]')

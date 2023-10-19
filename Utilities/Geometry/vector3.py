@@ -44,6 +44,11 @@ class Vector3:
         for attr, val in zip(Vector3.__slots__, args):
             self.__setattr__(attr, float(val))
 
+    def __eq__(self, other):
+        if not isinstance(other, Vector3):
+            return False
+        return not any(v1 != v2 for v1, v2 in zip(self, other))
+
     def __iter__(self):
         for attr in Vector3.__slots__:
             yield self.__getattribute__(attr)
@@ -52,7 +57,7 @@ class Vector3:
         return f"{{\"x\": {self.x:{_4F}}, \"y\": {self.y:{_4F}}, \"z\": {self.z:{_4F}}}}"
 
     def __neg__(self):
-        return self.__mul__(-1.0)
+        return Vector3(-self.x, -self.y, -self.z)
 
     def __abs__(self):
         return Vector3(abs(self.x), abs(self.y), abs(self.z))
@@ -113,6 +118,8 @@ class Vector3:
             return Vector3(other * self.x, other * self.y, other * self.z)
         raise RuntimeError(f"Vector3::Mul::wrong argument type {type(other)}")
 
+    __rmul__ = __mul__
+
     def __imul__(self, other):
         if isinstance(other, Vector3):
             self.x *= other.x
@@ -125,8 +132,6 @@ class Vector3:
             self.z *= other
             return self
         raise RuntimeError(f"Vector3::IMul::wrong argument type {type(other)}")
-                 
-    __rmul__ = __mul__
 
     def __truediv__(self, other):
         if isinstance(other, Vector3):
@@ -158,11 +163,11 @@ class Vector3:
     __div__, __rdiv__ = __truediv__, __rtruediv__
 
     @property
-    def magnitude_sqr(self):
-        return sum(x * x for x in self)
+    def magnitude_sqr(self) -> float:
+        return self.x * self.x + self.y * self.y + self.z * self.z
 
     @property
-    def magnitude(self):
+    def magnitude(self) -> float:
         return math.sqrt(self.magnitude_sqr)
 
     @property

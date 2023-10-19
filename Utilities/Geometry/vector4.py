@@ -58,26 +58,25 @@ class Vector4:
         for attr in Vector4.__slots__:
             yield self.__getattribute__(attr)
 
+    def __eq__(self, other):
+        if not isinstance(other, Vector4):
+            return False
+        return not any(v1 != v2 for v1, v2 in zip(self, other))
+
     def __str__(self):
         return f"{{\"x\": {self.x:{_4F}}, \"y\": {self.y:{_4F}}, \"z\": {self.z:{_4F}}, \"w\": {self.w:{_4F}}}}"
 
     def __neg__(self):
-        return self.__mul__(-1.0)  # -self.x, -self.y, -self.z, -self.w)
+        return Vector4(-self.x, -self.y, -self.z, -self.w)
 
     def __abs__(self):
         return Vector4(abs(self.x), abs(self.y), abs(self.z), abs(self.w))
 
     def __add__(self, other):
         if isinstance(other, Vector4):
-            return Vector4(self.x + other.x,
-                           self.y + other.y,
-                           self.z + other.z,
-                           self.w + other.w)
+            return Vector4(self.x + other.x, self.y + other.y, self.z + other.z, self.w + other.w)
         if isinstance(other, int) or isinstance(other, float):
-            return Vector4(self.x + other,
-                           self.y + other,
-                           self.z + other,
-                           self.w + other)
+            return Vector4(self.x + other, self.y + other, self.z + other, self.w + other)
         raise RuntimeError(f"Vector4::Add::wrong argument type {type(other)}")
 
     __radd__ = __add__
@@ -99,28 +98,16 @@ class Vector4:
 
     def __sub__(self, other):
         if isinstance(other, Vector4):
-            return Vector4(self.x - other.x,
-                           self.y - other.y,
-                           self.z - other.z,
-                           self.w - other.w)
+            return Vector4(self.x - other.x, self.y - other.y, self.z - other.z, self.w - other.w)
         if isinstance(other, int) or isinstance(other, float):
-            return Vector4(self.x - other,
-                           self.y - other,
-                           self.z - other,
-                           self.w - other)
+            return Vector4(self.x - other, self.y - other, self.z - other, self.w - other)
         raise RuntimeError(f"Vector4::Sub::wrong argument type {type(other)}")
 
     def __rsub__(self, other):
         if isinstance(other, Vector4):
-            return Vector4(other.x - self.x,
-                           other.y - self.y,
-                           other.z - self.z,
-                           other.w - self.w)
+            return Vector4(other.x - self.x, other.y - self.y, other.z - self.z, other.w - self.w)
         if isinstance(other, int) or isinstance(other, float):
-            return Vector4(other - self.x,
-                           other - self.y,
-                           other - self.z,
-                           other - self.w)
+            return Vector4(other - self.x, other - self.y, other - self.z, other - self.w)
         raise RuntimeError(f"Vector4::RSub::wrong argument type {type(other)}")
 
     def __isub__(self, other):
@@ -140,15 +127,9 @@ class Vector4:
 
     def __mul__(self, other):
         if isinstance(other, Vector4):
-            return Vector4(self.x * other.x,
-                           self.y * other.y,
-                           self.z * other.z,
-                           self.w * other.w)
+            return Vector4(self.x * other.x, self.y * other.y, self.z * other.z, self.w * other.w)
         if isinstance(other, int) or isinstance(other, float):
-            return Vector4(self.x * other,
-                           self.y * other,
-                           self.z * other,
-                           self.w * other)
+            return Vector4(self.x * other, self.y * other, self.z * other, self.w * other)
         raise RuntimeError(f"Vector4::Mul::wrong argument type {type(other)}")
 
     def __imul__(self, other):
@@ -170,28 +151,16 @@ class Vector4:
 
     def __truediv__(self, other):
         if isinstance(other, Vector4):
-            return Vector4(self.x / other.x,
-                           self.y / other.y,
-                           self.z / other.z,
-                           self.w / other.w)
+            return Vector4(self.x / other.x, self.y / other.y, self.z / other.z, self.w / other.w)
         if isinstance(other, int) or isinstance(other, float):
-            return Vector4(self.x / other,
-                           self.y / other,
-                           self.z / other,
-                           self.w / other)
+            return Vector4(self.x / other, self.y / other, self.z / other, self.w / other)
         raise RuntimeError(f"Vector4::Div::wrong argument type {type(other)}")
 
     def __rtruediv__(self, other):
         if isinstance(other, Vector4):
-            return Vector4(other.x / self.x,
-                           other.y / self.y,
-                           other.z / self.z,
-                           other.w / self.w)
+            return Vector4(other.x / self.x, other.y / self.y, other.z / self.z, other.w / self.w)
         if isinstance(other, int) or isinstance(other, float):
-            return Vector4(other / self.x,
-                           other / self.y,
-                           other / self.z,
-                           other / self.w)
+            return Vector4(other / self.x, other / self.y, other / self.z, other / self.w)
         raise RuntimeError(f"Vector4::RDiv::wrong argument type {type(other)}")
 
     def __idiv__(self, other):
@@ -212,11 +181,11 @@ class Vector4:
     __div__, __rdiv__ = __truediv__, __rtruediv__
 
     @property
-    def magnitude_sqr(self):
-        return sum(x * x for x in self)
+    def magnitude_sqr(self) -> float:
+        return self.x * self.x + self.y * self.y + self.z * self.z + self.w * self.w
 
     @property
-    def magnitude(self):
+    def magnitude(self) -> float:
         return math.sqrt(self.magnitude_sqr)
 
     @property

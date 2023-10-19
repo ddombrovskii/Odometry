@@ -1,6 +1,7 @@
 from .transform_3d import Transform3d
 from .vector3 import Vector3
 from .common import *
+__license__ = "GNU Lesser General Public License v3"
 
 
 class BoundingBox:

@@ -6,6 +6,7 @@ from typing import Tuple
 import numpy as np
 import math
 
+__license__ = "GNU Lesser General Public License v3"
 
 _M00 = '_m00'
 _M01 = '_m01'
@@ -115,6 +116,11 @@ class Matrix3:
     def __iter__(self):
         for attr in Matrix3.__slots__:
             yield self.__getattribute__(attr)
+
+    def __eq__(self, other):
+        if not isinstance(other, Matrix3):
+            return False
+        return not any(v1 != v2 for v1, v2 in zip(self, other))
 
     @classmethod
     def identity(cls):
@@ -233,6 +239,45 @@ class Matrix3:
         if (abs(x1) + abs(y1) + abs(z1)) <= (abs(x2) + abs(y2) + abs(z2)):
             return Vector3(y1, x1, z1)
         return Vector3(y2, x2, z2)
+
+    @classmethod
+    def from_euler_angles(cls, roll: float = 0.0, pitch: float = 0.0, yaw: float = 0.0, angles_in_rad: bool = True):
+        """
+        fill the matrix from Euler angles in radians
+        """
+        assert all(isinstance(v, float) for v in (roll, pitch, yaw))
+        if angles_in_rad:
+            cp = math.cos(pitch)
+            sp = math.sin(pitch)
+            sr = math.sin(roll)
+            cr = math.cos(roll)
+            sy = math.sin(yaw)
+            cy = math.cos(yaw)
+        else:
+            cp = math.cos(pitch * DEG_TO_RAD)
+            sp = math.sin(pitch * DEG_TO_RAD)
+            sr = math.sin(roll * DEG_TO_RAD)
+            cr = math.cos(roll * DEG_TO_RAD)
+            sy = math.sin(yaw * DEG_TO_RAD)
+            cy = math.cos(yaw * DEG_TO_RAD)
+
+        return cls(cp * cy, (sr * sp * cy) - (cr * sy), (cr * sp * cy) + (sr * sy),
+                   cp * sy, (sr * sp * sy) + (cr * cy), (cr * sp * sy) - (sr * cy),
+                   -sp, sr * cp, cr * cp)
+
+    # def to_euler_321(self) -> Vector3:
+    #     """
+    #     find Euler angles (321 convention) for the matrix
+    #     """
+    #     if self.c.x >= 1.0:
+    #         pitch = math.pi
+    #     elif self.c.x <= -1.0:
+    #         pitch = -math.pi
+    #     else:
+    #         pitch = -math.asin(self.m02)
+    #     roll = math.atan2(self.m12, self.m22)
+    #     yaw = math.atan2(self.m01, self.m00)
+    #     return Vector3(roll, pitch, yaw)
 
     @property
     def right(self) -> Vector3:

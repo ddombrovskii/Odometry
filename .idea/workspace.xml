@@ -5,19 +5,24 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5ead7134-b374-42a1-8fdd-5ab1a6211af6" name="Changes" comment="path_view">
+      <change afterPath="$PROJECT_DIR$/Utilities/CV/Camera/CameraActions/calibration_action.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/pixhawk_read_test.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/UIQt/GLUtilities/gl_scene.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/GLUtilities/gl_scene.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Utilities/ActionsLoop/action.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/ActionsLoop/action.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/camera.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/camera.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/CV/Camera/camera.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/CV/Camera/camera.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/CV/Camera/camera_ui.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/CV/Camera/camera_ui.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/bounding_box.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/bounding_box.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/common.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/common.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Utilities/Geometry/matrix3.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/matrix3.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Utilities/Geometry/matrix4.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/matrix4.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/plane.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/plane.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Utilities/Geometry/quaternion.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/quaternion.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/transform_2d.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/transform_2d.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/ray.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/ray.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Utilities/Geometry/transform_3d.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/transform_3d.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Utilities/Geometry/vector2.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/vector2.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Utilities/Geometry/vector3.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/vector3.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Utilities/Geometry/vector4.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/vector4.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/non_uniform_transfom.py" beforeDir="false" afterPath="$PROJECT_DIR$/non_uniform_transfom.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -67,7 +72,7 @@
       <recent name="E:\GitHub\Odometry\Odometry\UIQt\GLUtilities\Input" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.scene_viewer">
+  <component name="RunManager" selected="Python.pixhawk_read_test">
     <configuration name="camera_cv_run_test" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="Odometry" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -110,27 +115,6 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="matrix4" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="Odometry" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Utilities/Geometry" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Utilities/Geometry/matrix4.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
     <configuration name="non_uniform_transfom" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="Odometry" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -144,6 +128,27 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/non_uniform_transfom.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="pixhawk_read_test" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Odometry" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/pixhawk_read_test.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -175,11 +180,11 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.scene_viewer" />
+        <item itemvalue="Python.pixhawk_read_test" />
         <item itemvalue="Python.camera_cv_run_test" />
+        <item itemvalue="Python.scene_viewer" />
         <item itemvalue="Python.non_uniform_transfom" />
         <item itemvalue="Python.geometry_test" />
-        <item itemvalue="Python.matrix4" />
       </list>
     </recent_temporary>
   </component>
@@ -230,7 +235,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/Utilities/Geometry/matrix3.py</url>
-          <line>207</line>
+          <line>213</line>
           <option name="timeStamp" value="15" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
@@ -270,7 +275,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/Utilities/CV/Camera/camera_ui.py</url>
-          <line>76</line>
+          <line>80</line>
           <option name="timeStamp" value="102" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
@@ -285,12 +290,12 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/Utilities/CV/Camera/camera.py</url>
-          <line>75</line>
+          <line>96</line>
           <option name="timeStamp" value="125" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/Utilities/CV/Camera/camera_ui.py</url>
-          <line>135</line>
+          <line>139</line>
           <option name="timeStamp" value="127" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
@@ -300,18 +305,28 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/Utilities/Geometry/vector3.py</url>
-          <line>169</line>
+          <line>174</line>
           <option name="timeStamp" value="134" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/Utilities/Geometry/matrix4.py</url>
-          <line>690</line>
+          <line>695</line>
           <option name="timeStamp" value="135" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/Utilities/Geometry/matrix3.py</url>
-          <line>332</line>
+          <line>377</line>
           <option name="timeStamp" value="137" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/Utilities/Geometry/quaternion.py</url>
+          <line>113</line>
+          <option name="timeStamp" value="144" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/pixhawk_read_test.py</url>
+          <line>49</line>
+          <option name="timeStamp" value="146" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

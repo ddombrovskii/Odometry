@@ -13,11 +13,11 @@ class Action:
     def __init__(self):
         self._curr_state: int = STANDBY_MODE_MESSAGE
         self._prev_state: int = STANDBY_MODE_MESSAGE
-        # self._modes = {BEGIN_MODE_MESSAGE: self._on_start,
-        #                RUN_MODE_MESSAGE: self._on_run,
-        #                END_MODE_MESSAGE: self._on_end,
-        #                PAUSE_MODE_MESSAGE: self._on_pause,
-        #                STANDBY_MODE_MESSAGE: self._on_pause}
+        self._modes = {BEGIN_MODE_MESSAGE: self.__on_start,
+                       RUN_MODE_MESSAGE: self.__on_run,
+                       END_MODE_MESSAGE: self.__on_end,
+                       PAUSE_MODE_MESSAGE: self._on_pause,
+                       STANDBY_MODE_MESSAGE: self._on_pause}
         self._life_time_timer: Timer = Timer()
 
     def _on_start(self) -> bool:
@@ -36,23 +36,20 @@ class Action:
         # True if mode step complete
         return True
 
+    def __on_start(self) -> None:
+        self.__set_action_state(RUN_MODE_MESSAGE if self._on_start() else self.action_state)
+
+    def __on_run(self) -> None:
+        self.__set_action_state(END_MODE_MESSAGE if not self._on_run() else self.action_state)
+
+    def __on_end(self) -> None:
+        self.__set_action_state(COMPLETE_MODE_MESSAGE if self._on_end() else self.action_state)
+
     def __update(self):
         # TODO refactor update logic
-        # if self.action_state not in self._modes:
-        #     return
-        # self.__set_action_state(COMPLETE_MODE_MESSAGE if self._modes[self.action_state]() else self.action_state)
-        if self.action_state == PAUSE_MODE_MESSAGE or self.action_state == STANDBY_MODE_MESSAGE:
-            self._on_pause()
+        if self.action_state not in self._modes:
             return
-        if self.action_state == BEGIN_MODE_MESSAGE:
-            self.__set_action_state(RUN_MODE_MESSAGE if self._on_start() else self.action_state)
-            return
-        if self.action_state == RUN_MODE_MESSAGE:
-            self.__set_action_state(END_MODE_MESSAGE if not self._on_run() else self.action_state)
-            return
-        if self.action_state == END_MODE_MESSAGE:
-            self.__set_action_state(COMPLETE_MODE_MESSAGE if self._on_end() else self.action_state)
-            return
+        self._modes[self.action_state]()
 
     def __set_action_state(self, state: int) -> bool:
         if state <= self._curr_state:

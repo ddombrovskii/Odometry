@@ -11,6 +11,7 @@ _DEFAULT_DIR_NAME = "camera_records\\"
 _DEFAULT_VIDEO_RECORDS_DIR_NAME = "camera_records\\recorded_videos\\"
 _DEFAULT_FRAMES_RECORDS_DIR_NAME = "camera_records\\recorded_frames\\"
 _DEFAULT_FRAMES_DIR_NAME = "camera_records\\saved_frames\\"
+_DEFAULT_CALIBRATION_TEMP_DIR_NAME = "camera_records\\calibration_frames\\"
 
 
 # TODO specify calib params path / frames saving directory path / frames recording directory path / video recording path
@@ -36,6 +37,26 @@ class Camera(ActionsLoop):
         self.register_action(self._frame_saver    )
         self.register_action(self._frames_recorder)
         self.register_action(self._video_recorder )
+
+    @property
+    def is_saving_frame(self) -> bool:
+        return self.action_active(self._frame_saver)
+
+    @property
+    def is_recording_frames(self) -> bool:
+        return self.action_active(self._frames_recorder)
+
+    @property
+    def is_recording_video(self) -> bool:
+        return self.action_active(self._video_recorder)
+
+    @property
+    def is_cv_controlled(self) -> bool:
+        return self.action_active(self._video_recorder)
+
+    @property
+    def is_grabbing(self) -> bool:
+        return self.action_active(self._frames_grabber)
 
     @property
     def camera_cv(self) -> CameraHandle:

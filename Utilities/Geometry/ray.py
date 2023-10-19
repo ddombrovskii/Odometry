@@ -1,7 +1,6 @@
-import dataclasses
-
 from .transform_3d import Transform3d
 from .vector3 import Vector3
+import dataclasses
 
 
 @dataclasses.dataclass

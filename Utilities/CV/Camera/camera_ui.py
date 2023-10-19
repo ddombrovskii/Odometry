@@ -1,3 +1,7 @@
+import math
+
+import cv2
+import numpy as np
 from PyQt5.QtWidgets import QApplication, QMainWindow, QStatusBar, QLabel, QLineEdit, QPushButton, QFileDialog
 from Utilities.CV.Camera.image_widget import ImageWidget
 from Utilities.CV.Camera import Camera
@@ -157,10 +161,34 @@ class CameraIU(QMainWindow):
             return False
         return self._camera_cv.is_open
 
+    def _draw_camara_data(self, frame: np.ndarray) -> np.ndarray:
+        # w_, h_ = 900, 600
+
+        fnt_sz = 0.6 # max(0.50, 0.0005 * math.sqrt(w_**2 + h_**2))
+
+        # col_1_pos = int(0.05 * w_)
+
+        # dh: int = int(0.04 * h_)
+        # h: int = dh
+        col = (255, 255, 255)
+        frame = cv2.putText(frame, f"camera fps : {int(1.0 / self._camera_cv.update_time)}",  (10, 20),
+                            cv2.FONT_HERSHEY_SIMPLEX, fnt_sz, col, 2, cv2.LINE_AA)
+        mode = "video"
+        if self._camera_cv.is_paused:
+            mode = "paused"
+        if self._camera_cv.is_recording_frames:
+            mode = "recording frames"
+        if self._camera_cv.is_recording_video:
+            mode = "recording video"
+        frame = cv2.putText(frame, f"camera mode : {mode}",  (10, 50),
+                            cv2.FONT_HERSHEY_SIMPLEX, fnt_sz, col, 2, cv2.LINE_AA)
+        return frame
+
     def update_image(self) -> None:
         if self.camera_available:
             try:
-                self._image.setPixmap(self._camera_cv.camera_cv.undistorted_frame)
+                # frame = self._camera_cv.camera_cv.undistorted_frame
+                self._image.setPixmap(self._draw_camara_data (self._camera_cv.camera_cv.undistorted_frame))
             except Exception as _:
                 self.status_bar.showMessage('Camera status :: failed to read frame')
 

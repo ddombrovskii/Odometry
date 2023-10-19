@@ -20,12 +20,12 @@ class Plane:
         if origin is None:
             isinstance(normal, Vector3)
             self._origin: Vector3 = Vector3(0, 0, 0)
-            self._normal: Vector3 = normal
+            self._normal: Vector3 = normal.normalized
             return
 
         isinstance(normal, Vector3)
         isinstance(origin, Vector3)
-        self._normal: Vector3 = normal
+        self._normal: Vector3 = normal.normalized
         self._origin: Vector3 = origin
 
     def __str__(self) -> str:

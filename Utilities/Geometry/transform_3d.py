@@ -95,7 +95,7 @@ class Transform3d:
 
     @front.setter
     def front(self, front_: Vector3) -> None:
-        length_ = front_.magnitude()
+        length_ = front_.magnitude
         if length_ < 1e-9:
             raise ArithmeticError("Error transform front set")
         front_dir_ = front_ / length_
@@ -115,7 +115,7 @@ class Transform3d:
 
     @up.setter
     def up(self, up_: Vector3) -> None:
-        length_ = up_.magnitude()
+        length_ = up_.magnitude
         if length_ < 1e-9:
             raise ArithmeticError("Error transform up set")
         up_dir_ = up_ / length_
@@ -135,7 +135,7 @@ class Transform3d:
 
     @right.setter
     def right(self, right_: Vector3) -> None:
-        length_ = right_.magnitude()
+        length_ = right_.magnitude
         if length_ < 1e-9:
             raise ArithmeticError("Error transform up set")
         right_dir_ = right_ / length_

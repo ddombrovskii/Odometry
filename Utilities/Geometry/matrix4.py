@@ -473,27 +473,32 @@ class Matrix4:
         _m32 = self._m32
         _m33 = self._m33
 
-        self._m00 = det *  (_m11 * a2323 - _m12 * a1323 + _m13 * a1223)
-        self._m01 = det * -(_m01 * a2323 - _m02 * a1323 + _m03 * a1223)
-        self._m02 = det *  (_m01 * a2313 - _m02 * a1313 + _m03 * a1213)
-        self._m03 = det * -(_m01 * a2312 - _m02 * a1312 + _m03 * a1212)
-        self._m10 = det * -(_m10 * a2323 - _m12 * a0323 + _m13 * a0223)
-        self._m11 = det *  (_m00 * a2323 - _m02 * a0323 + _m03 * a0223)
-        self._m12 = det * -(_m00 * a2313 - _m02 * a0313 + _m03 * a0213)
-        self._m13 = det *  (_m00 * a2312 - _m02 * a0312 + _m03 * a0212)
-        self._m20 = det *  (_m10 * a1323 - _m11 * a0323 + _m13 * a0123)
-        self._m21 = det * -(_m00 * a1323 - _m01 * a0323 + _m03 * a0123)
-        self._m22 = det *  (_m00 * a1313 - _m01 * a0313 + _m03 * a0113)
-        self._m23 = det * -(_m00 * a1312 - _m01 * a0312 + _m03 * a0112)
-        self._m30 = det * -(_m10 * a1223 - _m11 * a0223 + _m12 * a0123)
-        self._m31 = det *  (_m00 * a1223 - _m01 * a0223 + _m02 * a0123)
-        self._m32 = det * -(_m00 * a1213 - _m01 * a0213 + _m02 * a0113)
-        self._m33 = det *  (_m00 * a1212 - _m01 * a0212 + _m02 * a0112)
+        self.m00 = det *  (_m11 * a2323 - _m12 * a1323 + _m13 * a1223)
+        self.m01 = det * -(_m01 * a2323 - _m02 * a1323 + _m03 * a1223)
+        self.m02 = det *  (_m01 * a2313 - _m02 * a1313 + _m03 * a1213)
+        self.m03 = det * -(_m01 * a2312 - _m02 * a1312 + _m03 * a1212)
+        self.m10 = det * -(_m10 * a2323 - _m12 * a0323 + _m13 * a0223)
+        self.m11 = det *  (_m00 * a2323 - _m02 * a0323 + _m03 * a0223)
+        self.m12 = det * -(_m00 * a2313 - _m02 * a0313 + _m03 * a0213)
+        self.m13 = det *  (_m00 * a2312 - _m02 * a0312 + _m03 * a0212)
+        self.m20 = det *  (_m10 * a1323 - _m11 * a0323 + _m13 * a0123)
+        self.m21 = det * -(_m00 * a1323 - _m01 * a0323 + _m03 * a0123)
+        self.m22 = det *  (_m00 * a1313 - _m01 * a0313 + _m03 * a0113)
+        self.m23 = det * -(_m00 * a1312 - _m01 * a0312 + _m03 * a0112)
+        self.m30 = det * -(_m10 * a1223 - _m11 * a0223 + _m12 * a0123)
+        self.m31 = det *  (_m00 * a1223 - _m01 * a0223 + _m02 * a0123)
+        self.m32 = det * -(_m00 * a1213 - _m01 * a0213 + _m02 * a0113)
+        self.m33 = det *  (_m00 * a1212 - _m01 * a0212 + _m02 * a0112)
         return self
 
     @property
     def inverted(self):
         return self.__copy__().invert()
+
+    def __eq__(self, other):
+        if not isinstance(other, Matrix4):
+            return False
+        return not any(v1 != v2 for v1, v2 in zip(self, other))
 
     def __str__(self):
         return "" \
@@ -607,22 +612,22 @@ class Matrix4:
 
     def __imul__(self, other):
         if isinstance(other, Matrix4):
-            _m00 = self._m00
-            _m01 = self._m01
-            _m02 = self._m02
-            _m03 = self._m03
-            _m10 = self._m10
-            _m11 = self._m11
-            _m12 = self._m12
-            _m13 = self._m13
-            _m20 = self._m20
-            _m21 = self._m21
-            _m22 = self._m22
-            _m23 = self._m23
-            _m30 = self._m30
-            _m31 = self._m31
-            _m32 = self._m32
-            _m33 = self._m33
+            _m00 = self.m00
+            _m01 = self.m01
+            _m02 = self.m02
+            _m03 = self.m03
+            _m10 = self.m10
+            _m11 = self.m11
+            _m12 = self.m12
+            _m13 = self.m13
+            _m20 = self.m20
+            _m21 = self.m21
+            _m22 = self.m22
+            _m23 = self.m23
+            _m30 = self.m30
+            _m31 = self.m31
+            _m32 = self.m32
+            _m33 = self.m33
             self._m00 = _m00 * other.m00 + _m01 * other.m10 + _m02 * other.m20 + _m03 * other.m30
             self._m01 = _m00 * other.m01 + _m01 * other.m11 + _m02 * other.m21 + _m03 * other.m31
             self._m02 = _m00 * other.m02 + _m01 * other.m12 + _m02 * other.m22 + _m03 * other.m32

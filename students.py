@@ -182,34 +182,60 @@ def read_views_info(path_2_file: str) -> Union[List[ViewInfo], None]:
 
 
 def xor(left: int, right: int) -> int:
-    return int((left and (not right)) or ((not left) and right))
+    return (left & ~right) | (~left & right)
 
 
-def semi_adder(left: int, right: int) -> Tuple[int, int]:
-    summ = xor(left, right)
-    carry = int(left and right)
-    return summ, carry
+def half_adder(left: int, right: int) -> Tuple[int, int]:
+    return xor(left, right), left & right
 
 
 def full_adder(left: int, right: int, carray_in: int) -> Tuple[int, int]:
-    summ_1, carry_1 = semi_adder(left, right)
-    summ_2, carry_2 = semi_adder(summ_1, carray_in)
-    return summ_2, int(carry_1 or carry_2)
+    summ_1, carry_1 = half_adder(left, right)
+    summ_2, carry_2 = half_adder(summ_1, carray_in)
+    return summ_2, carry_1 | carry_2
 
 
 def is_bit_set(bytes_: int, bit_: int) -> bool:
     return (bytes_ & (1 << bit_)) != 0
 
 
+INT_BITS_COUNT = 32
+
+
+def int_to_bin(value: int) -> Tuple[int, ...]:
+    return tuple(1 if is_bit_set(value, i) else 0 for i in range(INT_BITS_COUNT))
+
+
+def bin_to_int(values) -> int:
+    return sum(2 ** index for index, bit in enumerate(values) if bit != 0)
+
+
 def adder(left: int, right: int) -> int:
-    left_binary  = [1 if is_bit_set(left, i) else 0 for i in range(32)]
-    right_binary = [1 if is_bit_set(right, i) else 0 for i in range(32)]
     carry = 0
     summ_res = []
-    for l, r in zip(left_binary, right_binary):
-        summ, carry = full_adder(l, r, carry)
+    for lft, rgt in zip(int_to_bin(left), int_to_bin(right)):
+        summ, carry = full_adder(lft, rgt, carry)
         summ_res.append(summ)
-    return sum(2 ** index for index, bit in enumerate(summ_res) if bit != 0)
+    return bin_to_int(summ_res)  # sum(2 ** index for index, bit in enumerate(summ_res) if bit != 0)
+
+
+def _adder(left: Tuple[int, ...], right: Tuple[int, ...]) -> Tuple[int, ...]:
+    carry = 0
+    summ_res = []
+    for lft, rgt in zip(left, right):
+        summ, carry = full_adder(lft, rgt, carry)
+        summ_res.append(summ)
+    return tuple(summ_res)
+
+
+def multiplicator(left: int, right: int) -> int:
+    l_bin = int_to_bin(left)
+    r_bin = int_to_bin(right)
+    m_bin = int_to_bin(0)
+    for shift in range(INT_BITS_COUNT):
+        _mul  = int_to_bin(bin_to_int(tuple(r_bin[shift] & v for v in l_bin)) << shift)
+        m_bin = _adder(m_bin, _mul)
+    return bin_to_int(m_bin)
 
 
 if __name__ == "__main__":
@@ -218,14 +244,6 @@ if __name__ == "__main__":
           f"1     0 | {xor(1, 0)}\n"
           f"0     1 | {xor(0, 1)}\n"
           f"0     0 | {xor(0, 0)}")
-    print(f"33 + 19 = {33 + 19} == adder(33, 19) = {adder(33, 19)}")
-    exit()
-    views = read_views_info('views.json')
-    for v in views:
-        print(v)
-    # students = read_students("students.txt")
-    # create_csv_file("students", students)
-    # create_json_file("students", students)
-    # for s in students:
-    #     print(s)
+    print(f"33 + 19 = {122 + 19:6} => adder(33, 19)         = {adder(122, 19):6}")
+    print(f"33 * 19 = {122 * 19:6} => multiplicator(33, 19) = {multiplicator(122, 19):6}")
 

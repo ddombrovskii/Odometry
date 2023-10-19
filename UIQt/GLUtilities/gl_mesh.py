@@ -1,5 +1,5 @@
 from .gl_tris_mesh import TrisMeshGL, create_plane, create_box
-from Utilities.Geometry import Transform, BoundingBox, Vector3
+from Utilities.Geometry import Transform3d, BoundingBox, Vector3
 from .gl_objects_pool import ObjectsPoolGL
 from .gl_decorators import gl_error_catch
 from .gl_buffer import BufferGL
@@ -18,13 +18,13 @@ class MeshGL:
     meshes = ObjectsPoolGL()
 
     @classmethod
-    def create_box_gl(cls, side: float = 1.0, transform: Transform = None):
+    def create_box_gl(cls, side: float = 1.0, transform: Transform3d = None):
         return cls(create_box(Vector3(-side * 0.5, -side * 0.5, -side * 0.5),
                               Vector3(side * 0.5, side * 0.5, side * 0.5), transform))
 
     @classmethod
     def create_plane_gl(cls, height: float = 1.0, width: float = 1.0, rows: int = 10, cols: int = 10,
-                        transform: Transform = None):
+                        transform: Transform3d = None):
         return cls(create_plane(height, width, rows, cols, transform))
 
     def __repr__(self):
@@ -157,7 +157,7 @@ class MeshGL:
     def delete(self):
         if self._vao == 0:
             return
-        glDeleteVertexArrays(1, np.ndarray([self._vao]))
+        glDeleteVertexArrays(1, (self._vao,)) #np.ndarray([]))
         self._vbo.delete()
         self._ibo.delete()
         MeshGL.meshes.unregister_object(self)

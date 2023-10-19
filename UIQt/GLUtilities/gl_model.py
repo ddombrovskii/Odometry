@@ -1,4 +1,4 @@
-from Utilities.Geometry import Transform, BoundingBox
+from Utilities.Geometry import Transform3d, BoundingBox
 from .gl_objects_pool import ObjectsPoolGL
 from .gl_material import MaterialGL
 from .gl_mesh import MeshGL
@@ -14,7 +14,7 @@ class ModelGL:
         self._mesh: MeshGL = gl_globals.BOX_MESH
         self._name = self._mesh.name
         self._material: MaterialGL = gl_globals.DEFAULT_MATERIAL
-        self._transform: Transform = Transform()
+        self._transform: Transform3d = Transform3d()
         ModelGL.models.register_object(self)
         self.enable = True
 
@@ -66,5 +66,5 @@ class ModelGL:
         self._material = gl_globals.DEFAULT_MATERIAL if m is None else m
 
     @property
-    def transform(self) -> Transform:
+    def transform(self) -> Transform3d:
         return self._transform

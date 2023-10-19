@@ -8,7 +8,7 @@ from .gl_objects_pool import ObjectsPoolGL
 from .gl_decorators import gl_error_catch
 from .gl_texture import TextureGL
 from .gl_buffer import BufferGL
-from .gl_camera import CameraGL
+# from .gl_camera import CameraGL
 from .gl_model import ModelGL
 from .gl_mesh import MeshGL
 from .gl_globals import SAMPLE_SHADER, MAP_SHADER, GRID_SHADER, FRAME_BUFFER_BLIT_SHADER

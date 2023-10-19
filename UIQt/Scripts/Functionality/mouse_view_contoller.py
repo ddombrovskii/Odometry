@@ -29,7 +29,7 @@ class MouseViewController(ViewerBehaviour):
     @staticmethod
     def _wheel_ortho(scene_gl: SceneGL):
         size = gl_globals.MAIN_CAMERA.ortho_size - gl_globals.MOUSE_CONTROLLER.wheel_delta / 120.0
-        max_size = scene_gl.bounds.size.magnitude()
+        max_size = scene_gl.bounds.size.magnitude
         gl_globals.MAIN_CAMERA.ortho_size = min(max(0.1, size), max_size)
 
     @staticmethod
@@ -41,7 +41,7 @@ class MouseViewController(ViewerBehaviour):
             return
 
         if gl_globals.MOUSE_CONTROLLER.middle_btn.is_hold:
-            scale = gl_globals.MAIN_CAMERA.transform.origin.magnitude()
+            scale = gl_globals.MAIN_CAMERA.transform.origin.magnitude
             delta = gl_globals.MOUSE_CONTROLLER.middle_btn.delta_pos
             w, h = FrameBufferGL.get_main_frame_buffer().shape
             gl_globals.MAIN_CAMERA.transform.origin += \

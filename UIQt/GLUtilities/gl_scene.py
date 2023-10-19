@@ -1,9 +1,8 @@
-from Utilities.Geometry import Matrix4, Vector3, Vector2, BoundingBox
+from Utilities.Geometry import Matrix4, Vector3, Vector2, BoundingBox, Camera
 from .gl_tris_mesh import read_obj_mesh, poly_strip
 from .gl_frame_buffer import FrameBufferGL
 from .gl_material import MaterialGL
 from .gl_texture import TextureGL
-from .gl_camera import CameraGL
 from .gl_shader import ShaderGL
 from .gl_model import ModelGL
 from .gl_mesh import MeshGL
@@ -123,17 +122,17 @@ class SceneGL:
     def models_bounds(self) -> BoundingBox:
         return self._models_bounds
 
-    def update_camera_state(self, camera: CameraGL = None):
+    def update_camera_state(self, camera: Camera = None):
         if camera is None:
             self._cam_view_matrix = gl_globals.MAIN_CAMERA.look_at_matrix
-            self._cam_projection = gl_globals.MAIN_CAMERA.projection
-            self._cam_position = gl_globals.MAIN_CAMERA.transform.origin
-            self._perspective = gl_globals.MAIN_CAMERA.perspective_mode
+            self._cam_projection  = gl_globals.MAIN_CAMERA.projection
+            self._cam_position    = gl_globals.MAIN_CAMERA.transform.origin
+            self._perspective     = gl_globals.MAIN_CAMERA.perspective_mode
             return
         self._cam_view_matrix = camera.look_at_matrix
-        self._cam_projection = camera.projection
-        self._cam_position = camera.transform.origin
-        self._perspective = camera.perspective_mode
+        self._cam_projection  = camera.projection
+        self._cam_position    = camera.transform.origin
+        self._perspective     = camera.perspective_mode
 
     def create_grid(self, transform: Matrix4 = None) -> ModelGL:
         model_gl = ModelGL()
@@ -205,7 +204,7 @@ class SceneGL:
         self.gizmos_bounds.encapsulate(bbox.min)
         self.gizmos_bounds.encapsulate(bbox.max)
 
-    def draw_scene(self, frame_buffer: FrameBufferGL = None, camera: CameraGL = None):
+    def draw_scene(self, frame_buffer: FrameBufferGL = None, camera: Camera = None):
         self.update_camera_state(camera)
         if frame_buffer is None:
             if self.draw_gizmos:
@@ -234,11 +233,10 @@ class SceneGL:
             return
         material = override_material if override_material is not None else model.material
         if material.bind():
-            material.set_property_val("view", self._cam_view_matrix)
-            material.set_property_val("projection", self._cam_projection)
+            material.set_property_val("view",         self._cam_view_matrix)
+            material.set_property_val("projection",   self._cam_projection)
             material.set_property_val("cam_position", self._cam_position)
             # material.set_property_val("model", model.transform.transform_matrix.transpose())
-
         material.shader.send_mat_4("model", model.transform.transform_matrix)  # .transpose())
         model.mesh.draw()
 

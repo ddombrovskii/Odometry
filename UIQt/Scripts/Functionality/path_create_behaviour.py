@@ -1,6 +1,6 @@
 from UIQt.CommonComponents.path_segment_widget import PathSegmentWidget
 from UIQt.Scripts.viewer_behaviour import ViewerBehaviour
-from Utilities.Geometry import Vector3, Vector2, Transform
+from Utilities.Geometry import Vector3, Vector2, Transform3d
 from UIQt.GLUtilities.gl_frame_buffer import FrameBufferGL
 from PathFinder.path_finder import PathFinder
 from UIQt.GLUtilities import ModelGL
@@ -66,7 +66,7 @@ class PathCreateBehaviour(ViewerBehaviour):
 
         if len(_points) == 0:
             return None, None
-        t = Transform()
+        t = Transform3d()
         t.x = -delta_x
         t.y = -50
         t.z = -delta_z

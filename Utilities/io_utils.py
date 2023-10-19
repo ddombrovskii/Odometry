@@ -6,7 +6,7 @@ import io
 import os
 import re
 
-ImageFilesList = ['jpg', 'jpeg', 'png', 'bmp']
+ImageFilesList = ('jpg', 'jpeg', 'png', 'bmp')
 
 
 def clear_folder(folder):

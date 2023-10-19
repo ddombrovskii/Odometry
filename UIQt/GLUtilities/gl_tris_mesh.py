@@ -1,4 +1,4 @@
-from Utilities.Geometry import Vector3, BoundingBox, Transform
+from Utilities.Geometry import Vector3, BoundingBox, Transform3d
 from Utilities.Geometry import Vector2
 from typing import Tuple, List, Union
 from Utilities.Geometry import Voxel
@@ -232,12 +232,12 @@ class TrisMeshGL:
         self._normals.clear()
         self._faces.clear()
 
-    def transform_mesh(self, transform: Transform = None) -> None:
+    def transform_mesh(self, transform: Transform3d = None) -> None:
         for i in range(len(self._vertices)):
             self._vertices[i] = transform.transform_vect(self._vertices[i], 1.0)
 
         for i in range(len(self._normals)):
-            self._normals[i] = transform.transform_vect(self._normals[i], 0.0).normalized()
+            self._normals[i] = transform.transform_vect(self._normals[i], 0.0).normalize()
 
     def merge(self, other):
         v_offset  = self.vertices_count
@@ -365,7 +365,7 @@ def write_obj_mesh(mesh: TrisMeshGL, path: str) -> None:
 
 
 def create_plane(height: float = 1.0, width: float = 1.0, rows: int = 10,
-                 cols: int = 10, transform: Transform = None) -> TrisMeshGL:
+                 cols: int = 10, transform: Transform3d = None) -> TrisMeshGL:
     if rows < 2:
         rows = 2
     if cols < 2:
@@ -395,7 +395,7 @@ def create_plane(height: float = 1.0, width: float = 1.0, rows: int = 10,
     return mesh
 
 
-def create_box(min_b: Vector3, max_b: Vector3, transform: Transform = None) -> TrisMeshGL:
+def create_box(min_b: Vector3, max_b: Vector3, transform: Transform3d = None) -> TrisMeshGL:
     mesh: TrisMeshGL = TrisMeshGL()
 
     mesh.append_vertex(Vector3(min_b.x, max_b.y, min_b.z))
@@ -457,13 +457,13 @@ def poly_strip(points: List[Vector2], strip_width: float = 0.5) -> TrisMeshGL | 
         return None  # create_plane(strip_width, strip_width, 1, 1)
 
     if n_pts == 1:
-        t = Transform()
+        t = Transform3d()
         t.origin = Vector3(points[0].x, 0.0, points[0].y)
         return None  # create_plane(strip_width, strip_width, 1, 1, t)
 
     u_length = 0.0
     for i in range(len(points)-1):
-        u_length += (points[i] - points[i+1]).magnitude()
+        u_length += (points[i] - points[i+1]).magnitude
 
     mesh = TrisMeshGL()
     u_coord = 0.0
@@ -479,7 +479,7 @@ def poly_strip(points: List[Vector2], strip_width: float = 0.5) -> TrisMeshGL | 
     f_index = 2
     for p1, p2 in zip(points[:-1], points[1:]):
         dp10 = p1 - p0
-        du = dp10.magnitude()
+        du = dp10.magnitude
         if du < 1e-6:
             p0 = p1
             continue

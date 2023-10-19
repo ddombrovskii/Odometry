@@ -8,6 +8,9 @@ class DeviceMode:
         self._life_time_timer: Timer = Timer()
         self._parent: Device = device
         self._handle = self._parent.register_callback(lambda message: self.__update(message))
+        self._actions = {BEGIN_MODE_MESSAGE:   self._on_start,
+                         RUNNING_MODE_MESSAGE: self._on_run,
+                         END_MODE_MESSAGE:     self._on_end}
 
     def start(self) -> bool:
         return self._parent.begin_mode(self.handle)
@@ -18,10 +21,6 @@ class DeviceMode:
     @property
     def is_active(self) -> bool:
         return self._parent.mode_active(self.handle)
-
-    # @property
-    # def active_time(self) -> float:
-    #     return self._parent.mode_active_time(self.handle)
 
     @property
     def handle(self) -> int:
@@ -50,10 +49,13 @@ class DeviceMode:
         return flag
 
     def __update__(self, message: int) -> bool:
-        if message == BEGIN_MODE_MESSAGE:
-            return self._on_start(message)
-        if message == RUNNING_MODE_MESSAGE:
-            return self._on_run(message)
-        if message == END_MODE_MESSAGE:
-            return self._on_end(message)
+        if message in self._actions:
+            return self._actions[message].__call__(message)
         return False
+        # if message == BEGIN_MODE_MESSAGE:
+        #     return self._on_start(message)
+        # if message == RUNNING_MODE_MESSAGE:
+        #     return self._on_run(message)
+        # if message == END_MODE_MESSAGE:
+        #     return self._on_end(message)
+        # return False

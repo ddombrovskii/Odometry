@@ -1,15 +1,14 @@
-from .vector3 import Vector3
 from .matrix3 import Matrix3
 from .vector2 import Vector2
 from typing import List
-import numpy as np
 import math
 
 
 class PerspectiveTransform2d:
-    __slots__ = "_t_m", "_i_t_m"
+    __slots__ = "_raw_i_t_m", "_t_m", "_i_t_m"
 
     def __init__(self, matrix: Matrix3 = None):
+        self._raw_i_t_m: bool = False
         if matrix is None:
             self._t_m: Matrix3 = Matrix3(1.0, 0.0, 0.0,
                                          0.0, 1.0, 0.0,
@@ -20,7 +19,7 @@ class PerspectiveTransform2d:
             return
         assert isinstance(matrix, Matrix3)
         self._t_m: Matrix3 = matrix
-        self._i_t_m: Matrix3 = matrix.invert()
+        self._i_t_m: Matrix3 = matrix.inverted
 
     def __str__(self) -> str:
         return f"{{\n" \
@@ -29,7 +28,7 @@ class PerspectiveTransform2d:
                f"}}"
 
     def _update_invert_transform(self):
-        self._i_t_m = self._t_m.invert()
+        self._raw_i_t_m = True
 
     @property
     def transform_matrix(self) -> Matrix3:
@@ -37,6 +36,8 @@ class PerspectiveTransform2d:
 
     @property
     def inv_transform_matrix(self) -> Matrix3:
+        if self._raw_i_t_m:
+            self._i_t_m = self._t_m.inverted
         return self._i_t_m
 
     @property
@@ -48,9 +49,8 @@ class PerspectiveTransform2d:
         assert isinstance(value, float)
         assert value != 0.0
         new_scl = value / self.scale_x
-        self._t_m = Matrix3(self._t_m.m00 * new_scl, self._t_m.m01, self._t_m.m02,
-                            self._t_m.m10 * new_scl, self._t_m.m11, self._t_m.m12,
-                            self._t_m.m20,           self._t_m.m21, self._t_m.m22)
+        self._t_m.m00 *= new_scl
+        self._t_m.m10 *= new_scl
         self._update_invert_transform()
 
     @property
@@ -62,9 +62,8 @@ class PerspectiveTransform2d:
         assert isinstance(value, float)
         assert value != 0.0
         new_scl = value / self.scale_y
-        self._t_m = Matrix3(self._t_m.m00, self._t_m.m01 * new_scl, self._t_m.m02,
-                            self._t_m.m10, self._t_m.m11 * new_scl, self._t_m.m12,
-                            self._t_m.m20, self._t_m.m21,           self._t_m.m22)
+        self._t_m.m01 *= new_scl
+        self._t_m.m11 *= new_scl
         self._update_invert_transform()
 
     @property
@@ -76,9 +75,10 @@ class PerspectiveTransform2d:
         assert isinstance(value, Vector2)
         new_scl_x = value.x / self.scale_x
         new_scl_y = value.y / self.scale_y
-        self._t_m = Matrix3(self._t_m.m00 * new_scl_x, self._t_m.m01 * new_scl_y, self._t_m.m02,
-                            self._t_m.m10 * new_scl_x, self._t_m.m11 * new_scl_y, self._t_m.m12,
-                            self._t_m.m20,             self._t_m.m21,             self._t_m.m22)
+        self._t_m.m00 *= new_scl_x
+        self._t_m.m10 *= new_scl_x
+        self._t_m.m01 *= new_scl_y
+        self._t_m.m11 *= new_scl_y
         self._update_invert_transform()
 
     @property
@@ -88,9 +88,8 @@ class PerspectiveTransform2d:
     @right.setter
     def right(self, value: Vector2) -> None:
         assert isinstance(value, Vector2)
-        self._t_m = Matrix3(value.x,       self._t_m.m01, self._t_m.m02,
-                            value.y,       self._t_m.m11, self._t_m.m12,
-                            self._t_m.m20, self._t_m.m21, self._t_m.m22)
+        self._t_m.m00 = value.x
+        self._t_m.m10 = value.y
         self._update_invert_transform()
 
     @property
@@ -100,9 +99,8 @@ class PerspectiveTransform2d:
     @up.setter
     def up(self, value: Vector2) -> None:
         assert isinstance(value, Vector2)
-        self._t_m = Matrix3(self._t_m.m00, value.x,       self._t_m.m02,
-                            self._t_m.m10, value.y,       self._t_m.m12,
-                            self._t_m.m20, self._t_m.m21, self._t_m.m22)
+        self._t_m.m01 = value.x
+        self._t_m.m11 = value.y
         self._update_invert_transform()
 
     @property
@@ -111,10 +109,7 @@ class PerspectiveTransform2d:
 
     @center_x.setter
     def center_x(self, value: float) -> None:
-        assert isinstance(value, float)
-        self._t_m = Matrix3(self._t_m.m00, self._t_m.m01, value,
-                            self._t_m.m10, self._t_m.m11, self._t_m.m12,
-                            self._t_m.m20, self._t_m.m21, self._t_m.m22)
+        self._t_m.m02 = value
         self._update_invert_transform()
 
     @property
@@ -123,10 +118,7 @@ class PerspectiveTransform2d:
 
     @center_y.setter
     def center_y(self, value: float) -> None:
-        assert isinstance(value, float)
-        self._t_m = Matrix3(self._t_m.m00, self._t_m.m01, self._t_m.m02,
-                            self._t_m.m10, self._t_m.m11, value,
-                            self._t_m.m20, self._t_m.m21, self._t_m.m22)
+        self._t_m.m12 = value
         self._update_invert_transform()
 
     @property
@@ -136,9 +128,8 @@ class PerspectiveTransform2d:
     @center.setter
     def center(self, value: Vector2) -> None:
         assert isinstance(value, Vector2)
-        self._t_m = Matrix3(self._t_m.m00, self._t_m.m01, value.x,
-                            self._t_m.m10, self._t_m.m11, value.y,
-                            self._t_m.m20, self._t_m.m21, self._t_m.m22)
+        self._t_m.m02 = value.x
+        self._t_m.m12 = value.y
         self._update_invert_transform()
 
     @property
@@ -148,10 +139,7 @@ class PerspectiveTransform2d:
     @expand_x.setter
     def expand_x(self, value: float) -> None:
         assert isinstance(value, float)
-        self._t_m = Matrix3(self._t_m.m00, self._t_m.m01, self._t_m.m02,
-                            self._t_m.m10, self._t_m.m11, self._t_m.m12,
-                            (1.0 - 1.0 / value if value > 0 else -1.0 - 1.0 / value),
-                            self._t_m.m21, self._t_m.m22)
+        self._t_m.m20 = 1.0 - 1.0 / value if value > 0 else -1.0 - 1.0 / value
         self._update_invert_transform()
 
     @property
@@ -161,10 +149,7 @@ class PerspectiveTransform2d:
     @expand_y.setter
     def expand_y(self, value: float) -> None:
         assert isinstance(value, float)
-        self._t_m = Matrix3(self._t_m.m00, self._t_m.m01, self._t_m.m02,
-                            self._t_m.m10, self._t_m.m11, self._t_m.m12,
-                            self._t_m.m20, (1.0 - 1.0 / value if value > 0 else -1.0 - 1.0 / value),
-                            self._t_m.m22)
+        self._t_m.m21 = 1.0 - 1.0 / value if value > 0 else -1.0 - 1.0 / value
         self._update_invert_transform()
 
     @property
@@ -174,17 +159,9 @@ class PerspectiveTransform2d:
     @expand.setter
     def expand(self, value: Vector2) -> None:
         assert isinstance(value, Vector2)
-        self._t_m = Matrix3(self._t_m.m00, self._t_m.m01, self._t_m.m02,
-                            self._t_m.m10, self._t_m.m11, self._t_m.m12,
-                            (1.0 - 1.0 / value.x if value.x > 0 else -1.0 - 1.0 / value.x),
-                            (1.0 - 1.0 / value.y if value.y > 0 else -1.0 - 1.0 / value.y),
-                            self._t_m.m22)
+        self._t_m.m20 = 1.0 - 1.0 / value.x if value.x > 0 else -1.0 - 1.0 / value.x
+        self._t_m.m21 = 1.0 - 1.0 / value.y if value.y > 0 else -1.0 - 1.0 / value.y
         self._update_invert_transform()
-
-    # @staticmethod
-    # def _transform_pt(transform_matrix: Matrix3, point: Vector2) -> Vector2:
-    #     p = transform_matrix * Vector3(point.x, point.y, 1.0)
-    #     return Vector2(p.x / p.z, p.y / p.z)
 
     def transform_point(self, point: Vector2) -> Vector2:
         assert isinstance(point, Vector2)
@@ -207,3 +184,13 @@ class PerspectiveTransform2d:
     @classmethod
     def from_eight_points(cls, *args):
         return cls(Matrix3.perspective_transform_from_eight_points(*args))
+
+
+def perspective_transform_test():
+    t = PerspectiveTransform2d.from_four_points(Vector2(1, 1), Vector2(1, -1), Vector2(-1, -1), Vector2(-1.5, 1.4))
+    v = Vector2(1, 2)
+    vt = t.transform_point(v)
+    print(v)
+    print(vt)
+    print(t.inv_transform_point(vt))
+    print(t)

@@ -1,6 +1,6 @@
 from .common import NUMERICAL_ACCURACY
 from .bounding_box import BoundingBox
-from .transform import Transform
+from .transform_3d import Transform3d
 from .matrix4 import Matrix4
 from .vector3 import Vector3
 from .vector4 import Vector4
@@ -12,19 +12,20 @@ ORTHOGRAPHIC_PROJECTION_MODE = 1
 
 
 class Camera:
-    __slots__ = "_projection_mode", "_projection", "_inv_projection","_transform",\
-                "_z_far", "_z_near", "_fov", "_aspect", "_ortho_size"
+    __slots__ = "_projection_mode", "_projection", "_inv_projection", "_transform",\
+                "_z_far", "_z_near", "_fov", "_aspect", "_ortho_size", "_raw_projection"
 
     def __init__(self):
         self._projection_mode = PERSPECTIVE_PROJECTION_MODE
-        self._projection: Matrix4 = Matrix4.identity()
+        self._projection:     Matrix4 = Matrix4.identity()
         self._inv_projection: Matrix4 = Matrix4.identity()
-        self._transform: Transform = Transform()
+        self._transform: Transform3d = Transform3d()
         self._z_far: float = 1000
         self._z_near: float = 0.01
         self._fov: float = 70.0
         self._aspect: float = 10.0
         self._ortho_size: float = 10.0
+        self._raw_projection = False
         self._build_projection()
 
     def __str__(self) -> str:
@@ -53,6 +54,7 @@ class Camera:
         Строит матрицу перспективного искажения.
         :return:
         """
+        self._raw_projection = False
         if self.perspective_mode:
             self._projection = \
                 Matrix4.build_perspective_projection_matrix(self.fov, self.aspect, self._z_near, self._z_far)
@@ -61,7 +63,7 @@ class Camera:
             self._projection = \
                 Matrix4.build_ortho_projection_matrix(-size * self.aspect, size * self.aspect,
                                                       -size, size, self._z_near, self._z_far)
-        self._inv_projection = self._projection.invert()
+        self._inv_projection = self._projection.inverted
 
     def setting_from_json(self, camera):
         if "z_far" in camera:
@@ -107,15 +109,19 @@ class Camera:
         return id(self)
 
     @property
-    def transform(self) -> Transform:
+    def transform(self) -> Transform3d:
         return self._transform
 
     @property
     def projection(self) -> Matrix4:
+        if self._raw_projection:
+            self._build_projection()
         return self._projection
 
     @property
     def inv_projection(self) -> Matrix4:
+        if self._raw_projection:
+            self._build_projection()
         return self._inv_projection
 
     @property
@@ -125,7 +131,7 @@ class Camera:
     @z_far.setter
     def z_far(self, far_plane: float) -> None:
         self._z_far = far_plane
-        self._build_projection()
+        self._raw_projection = True
 
     @property
     def z_near(self) -> float:
@@ -134,7 +140,7 @@ class Camera:
     @z_near.setter
     def z_near(self, near_plane: float) -> None:
         self._z_near = near_plane
-        self._build_projection()
+        self._raw_projection = True
 
     @property
     def ortho_size(self) -> float:
@@ -143,7 +149,7 @@ class Camera:
     @ortho_size.setter
     def ortho_size(self, value: float) -> None:
         self._ortho_size = value
-        self._build_projection()
+        self._raw_projection = True
 
     @property
     def perspective_mode(self) -> bool:
@@ -152,7 +158,7 @@ class Camera:
     @perspective_mode.setter
     def perspective_mode(self, value: bool) -> None:
         self._projection_mode = PERSPECTIVE_PROJECTION_MODE if value else ORTHOGRAPHIC_PROJECTION_MODE
-        self._build_projection()
+        self._raw_projection = True
 
     @property
     def fov(self) -> float:
@@ -161,7 +167,7 @@ class Camera:
     @fov.setter
     def fov(self, fov_: float) -> None:
         self._fov = fov_
-        self._build_projection()
+        self._raw_projection = True
 
     @property
     def aspect(self) -> float:
@@ -170,11 +176,11 @@ class Camera:
     @aspect.setter
     def aspect(self, aspect_: float) -> None:
         self._aspect = aspect_
-        self._build_projection()
+        self._raw_projection = True
 
     @property
     def look_at_matrix(self) -> Matrix4:
-        return self.transform.inv_transform_matrix.transpose()
+        return self.transform.inv_transform_matrix  # .transpose()
 
     def look_at(self, target: Vector3, eye: Vector3, up: Vector3 = Vector3(0, 1, 0)) -> None:
         """
@@ -203,7 +209,6 @@ class Camera:
         """
         v = self.to_camera_space(vect)
         out: Vector4 = self.projection * Vector4(v.x, v.y, v.z, 1.0)
-        # print(out)
         if abs(out.w) > NUMERICAL_ACCURACY:  # normalize if w is different from 1
             # (convert from homogeneous to Cartesian coordinates)
             # танцы с бубном
@@ -212,9 +217,9 @@ class Camera:
         return Vector3(out.x, out.y, out.z)
 
     def screen_coord_to_camera_ray(self, x: float, y: float) -> Vector3:
-        ray_eye = self.projection.invert() * Vector4(x, y, -1.0, 1.0)
-        ray_eye = self.look_at_matrix.invert() * Vector4(ray_eye.x, ray_eye.y, -1.0, 0.0)
-        return Vector3(ray_eye.x, ray_eye.y, ray_eye.z).normalized()
+        ray_eye = self.inv_projection * Vector4(x, y, -1.0, 1.0)
+        ray_eye = self.look_at_matrix.inverted * Vector4(ray_eye.x, ray_eye.y, -1.0, 0.0)
+        return Vector3(ray_eye.x, ray_eye.y, ray_eye.z).normalize()
 
     def emit_ray(self, x: float, y: float) -> Ray:
         # s_size / z_near = tan(a * 0.5)
@@ -231,7 +236,7 @@ class Camera:
             pt1 = Vector3(tan_a_half * x * self.z_near, tan_a_half * y / self.aspect * self.z_near, self.z_near)
             pt2 = Vector3(tan_a_half * x * self.z_far,  tan_a_half * y / self.aspect * self.z_far,  self.z_far)
             # print(f"{pt1} | {pt2}")
-            return Ray(self.transform.transform_vect((pt2 - pt1).normalized(), 0.0),
+            return Ray(self.transform.transform_vect((pt2 - pt1).normalize(), 0.0),
                        self.transform.transform_vect(pt1, 1.0))
 
         return Ray(self.transform.transform_vect(Vector3(0, 0, 1), 0.0),

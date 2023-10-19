@@ -97,7 +97,7 @@ class BufferGL:
         if self.bind_id == 0:
             return
         BufferGL.buffers.unregister_object(self)
-        glDeleteBuffers(1, np.ndarray([self.bind_id]))
+        glDeleteBuffers(1,  (self.bind_id,))  # np.ndarray([self.bind_id]))
         self._id = 0
         self._filling = 0
         self._capacity = 0

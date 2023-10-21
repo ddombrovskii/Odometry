@@ -181,25 +181,45 @@ def read_views_info(path_2_file: str) -> Union[List[ViewInfo], None]:
         return views
 
 
+pairs = ((1, 1), (1, 0), (0, 1), (0, 0))
+
+
 def xor(left: int, right: int) -> int:
     return (left & ~right) | (~left & right)
 
 
-def half_adder(left: int, right: int) -> Tuple[int, int]:
+def and_truth_table():
+    nl = '\n'
+    print(f"X{'AND':^5}Y | Z\n{nl.join(f'{left}{right:>6} | {left & right}' for left, right in pairs)}")
+
+
+def or_truth_table():
+    nl = '\n'
+    print(f"X{'OR':^5}Y | Z\n{nl.join(f'{left}{right:>6} | {left | right}' for left, right in pairs)}")
+
+
+def xor_truth_table():
+    nl = '\n'
+    print(f"X{'XOR':^5}Y | Z\n{nl.join(f'{left}{right:>6} | {left ^ right}' for left, right in pairs)}")
+
+
+def half_summator(left: int, right: int) -> Tuple[int, int]:
     return xor(left, right), left & right
 
 
-def full_adder(left: int, right: int, carray_in: int) -> Tuple[int, int]:
-    summ_1, carry_1 = half_adder(left, right)
-    summ_2, carry_2 = half_adder(summ_1, carray_in)
+def full_summator(left: int, right: int, carray_in: int) -> Tuple[int, int]:
+    summ_1, carry_1 = half_summator(left, right)
+    summ_2, carry_2 = half_summator(summ_1, carray_in)
     return summ_2, carry_1 | carry_2
 
 
 def is_bit_set(bytes_: int, bit_: int) -> bool:
-    return (bytes_ & (1 << bit_)) != 0
+    return bool(bytes_ & (1 << bit_))
 
 
 INT_BITS_COUNT = 32
+
+POWERS_OF_TWO = tuple(2 ** v for v in range(INT_BITS_COUNT))
 
 
 def int_to_bin(value: int) -> Tuple[int, ...]:
@@ -207,25 +227,31 @@ def int_to_bin(value: int) -> Tuple[int, ...]:
 
 
 def bin_to_int(values) -> int:
-    return sum(2 ** index for index, bit in enumerate(values) if bit != 0)
+    return sum(POWERS_OF_TWO[index] for index, bit in enumerate(values) if bit != 0)
 
 
-def adder(left: int, right: int) -> int:
-    carry = 0
+def summator(left: int, right: int) -> int:
+    carry_bit = 0
     summ_res = []
     for lft, rgt in zip(int_to_bin(left), int_to_bin(right)):
-        summ, carry = full_adder(lft, rgt, carry)
+        summ, carry_bit = full_summator(lft, rgt, carry_bit)
         summ_res.append(summ)
-    return bin_to_int(summ_res)  # sum(2 ** index for index, bit in enumerate(summ_res) if bit != 0)
+    return bin_to_int(summ_res)
 
 
-def _adder(left: Tuple[int, ...], right: Tuple[int, ...]) -> Tuple[int, ...]:
-    carry = 0
-    summ_res = []
+def _summator_generator(left: Tuple[int, ...], right: Tuple[int, ...]):
+    carry_bit = 0
     for lft, rgt in zip(left, right):
-        summ, carry = full_adder(lft, rgt, carry)
-        summ_res.append(summ)
-    return tuple(summ_res)
+        summ, carry_bit = full_summator(lft, rgt, carry_bit)
+        yield summ
+
+
+def _summator(left: Tuple[int, ...], right: Tuple[int, ...]) -> Tuple[int, ...]:
+    return tuple(_summator_generator(left, right))
+
+
+def bytes_to_str(bytes_data: Tuple[int, ...]) -> str:
+    return f'0b{"".join(str(v) for v in bytes_data)}'
 
 
 def multiplicator(left: int, right: int) -> int:
@@ -233,17 +259,18 @@ def multiplicator(left: int, right: int) -> int:
     r_bin = int_to_bin(right)
     m_bin = int_to_bin(0)
     for shift in range(INT_BITS_COUNT):
-        _mul  = int_to_bin(bin_to_int(tuple(r_bin[shift] & v for v in l_bin)) << shift)
-        m_bin = _adder(m_bin, _mul)
+        t_mul  = int_to_bin(bin_to_int(tuple(r_bin[shift] & v for v in l_bin)) << shift)
+        m_bin = _summator(m_bin, t_mul)
     return bin_to_int(m_bin)
 
 
 if __name__ == "__main__":
-    print(f"X XOR Y | Z\n"
-          f"1     1 | {xor(1, 1)}\n"
-          f"1     0 | {xor(1, 0)}\n"
-          f"0     1 | {xor(0, 1)}\n"
-          f"0     0 | {xor(0, 0)}")
-    print(f"33 + 19 = {122 + 19:6} => adder(33, 19)         = {adder(122, 19):6}")
+    or_truth_table()
+    print()
+    and_truth_table()
+    print()
+    xor_truth_table()
+    print()
+    print(f"33 + 19 = {122 + 19:6} => adder(33, 19)         = {summator(122, 19):6}")
     print(f"33 * 19 = {122 * 19:6} => multiplicator(33, 19) = {multiplicator(122, 19):6}")
 

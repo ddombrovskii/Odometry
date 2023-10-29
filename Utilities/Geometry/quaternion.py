@@ -17,48 +17,52 @@ class Quaternion:
     """
     immutable Quaternion
     """
-    __slots__ = (_EW, _EX, _EY, _EZ)
+    __slots__ = ('_ew', '_ex', '_ey', '_ez')
 
     @property
     def ex(self) -> float:
-        return self.__getattribute__(_EX)
+        return self._ex
 
     @property
     def ey(self) -> float:
-        return self.__getattribute__(_EY)
+        return self._ey
 
     @property
     def ez(self) -> float:
-        return self.__getattribute__(_EZ)
+        return self._ez
 
     @property
     def ew(self) -> float:
-        return self.__getattribute__(_EW)
+        return self._ew
 
     @ex.setter
     def ex(self, value: float) -> None:
-        self.__setattr__(_EX, float(value))
+        self._ex = float(value)
 
     @ey.setter
     def ey(self, value: float) -> None:
-        self.__setattr__(_EY, float(value))
+        self._ey = float(value)
 
     @ez.setter
     def ez(self, value: float) -> None:
-        self.__setattr__(_EZ, float(value))
+        self._ez = float(value)
 
     @ew.setter
     def ew(self, value: float) -> None:
-        self.__setattr__(_EW, float(value))
+        self._ew = float(value)
 
     def __init__(self, *args):
         assert len(args) == 4
-        for attr, val in zip(Quaternion.__slots__, args):
-            self.__setattr__(attr, float(val))
+        self._ew = float(args[0])
+        self._ex = float(args[1])
+        self._ey = float(args[2])
+        self._ez = float(args[3])
 
     def __iter__(self):
-        for attr in Quaternion.__slots__:
-            yield self.__getattribute__(attr)
+        yield self._ew
+        yield self._ex
+        yield self._ey
+        yield self._ez
 
     def conj(self):
         self.ex *= -1

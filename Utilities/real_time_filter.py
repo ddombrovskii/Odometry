@@ -1,4 +1,4 @@
-from .circ_buffer import CircBuffer
+from Utilities.Common.circ_buffer import CircBuffer
 from typing import Callable
 import math
 

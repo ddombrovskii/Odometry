@@ -13,32 +13,32 @@ class Vector2:
     """
     mutable vector 4d
     """
-    __slots__ = (_X, _Y)
+    __slots__ = ('_x', '_y')
 
     @property
     def x(self) -> float:
-        return self.__getattribute__(_X)
+        return self._x
 
     @property
     def y(self) -> float:
-        return self.__getattribute__(_Y)
+        return self._y
 
     @x.setter
     def x(self, value: float) -> None:
-        self.__setattr__(_X, float(value))
+        self._x = float(value)
 
     @y.setter
     def y(self, value: float) -> None:
-        self.__setattr__(_Y, float(value))
+        self._y = float(value)
 
     def __init__(self, *args):
         assert len(args) == 2
-        for attr, val in zip(Vector2.__slots__, args):
-            self.__setattr__(attr, float(val))
+        self._x = float(args[0])
+        self._y = float(args[1])
 
     def __iter__(self):
-        for attr in Vector2.__slots__:
-            yield self.__getattribute__(attr)
+        yield self._x
+        yield self._y
 
     def __eq__(self, other):
         if not isinstance(other, Vector2):

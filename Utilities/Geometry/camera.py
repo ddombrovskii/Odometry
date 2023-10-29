@@ -180,7 +180,7 @@ class Camera:
 
     @property
     def look_at_matrix(self) -> Matrix4:
-        return self.transform.inv_transform_matrix  # .transpose()
+        return self.transform.inv_transform_matrix
 
     def look_at(self, target: Vector3, eye: Vector3, up: Vector3 = Vector3(0, 1, 0)) -> None:
         """

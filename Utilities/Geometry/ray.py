@@ -24,13 +24,13 @@ class Ray:
         if origin is None:
             isinstance(direction, Vector3)
             self._origin: Vector3 = Vector3(0.0, 0.0, 0.0)
-            self._direction: Vector3 = direction.normalize()
+            self._direction: Vector3 = direction.normalized
             self._length: float = 0.0
             return
 
         isinstance(direction, Vector3)
         isinstance(origin, Vector3)
-        self._direction: Vector3 = direction.normalize()
+        self._direction: Vector3 = direction.normalized
         self._origin: Vector3 = origin
         self._length: float = 0.0
 
@@ -63,7 +63,7 @@ class Ray:
     @direction.setter
     def direction(self, value: Vector3) -> None:
         assert isinstance(value, Vector3)
-        self._direction = value.normalize()
+        self._direction = value.normalized
 
     @origin.setter
     def origin(self, value: Vector3) -> None:

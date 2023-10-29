@@ -1,3 +1,4 @@
+import itertools
 import os
 from collections import namedtuple
 from typing import List, Tuple, Dict, Union
@@ -5,6 +6,8 @@ import random
 
 import numpy as np
 import json
+
+from Utilities import Timer
 
 
 def read_students(file_path: str) -> List[Tuple[str, str, int, int]]:
@@ -188,17 +191,26 @@ def xor(left: int, right: int) -> int:
     return (left & ~right) | (~left & right)
 
 
-def and_truth_table():
+def and_truth_table() -> None:
+    """
+    Таблица истинности для x and y
+    """
     nl = '\n'
     print(f"X{'AND':^5}Y | Z\n{nl.join(f'{left}{right:>6} | {left & right}' for left, right in pairs)}")
 
 
-def or_truth_table():
+def or_truth_table() -> None:
+    """
+    Таблица истинности для x or y
+    """
     nl = '\n'
     print(f"X{'OR':^5}Y | Z\n{nl.join(f'{left}{right:>6} | {left | right}' for left, right in pairs)}")
 
 
-def xor_truth_table():
+def xor_truth_table() -> None:
+    """
+    Таблица истинности для x xor y
+    """
     nl = '\n'
     print(f"X{'XOR':^5}Y | Z\n{nl.join(f'{left}{right:>6} | {left ^ right}' for left, right in pairs)}")
 
@@ -208,13 +220,31 @@ def half_summator(left: int, right: int) -> Tuple[int, int]:
 
 
 def full_summator(left: int, right: int, carray_in: int) -> Tuple[int, int]:
+    """
+    param left: левый суммируемый бит
+    param right: правый суммируемый бит
+    param carray_in: бит переноса
+    return: значение суммы и бит переноса
+    """
     summ_1, carry_1 = half_summator(left, right)
     summ_2, carry_2 = half_summator(summ_1, carray_in)
     return summ_2, carry_1 | carry_2
 
 
-def is_bit_set(bytes_: int, bit_: int) -> bool:
-    return bool(bytes_ & (1 << bit_))
+def _dec_to_bin_generator(value: int):
+    """
+    Генератор для перевода числа в массив байт.
+    """
+    while value != 0:
+        yield 0 if value % 2 == 0 else 1
+        value //= 2
+
+
+def dec_to_bin(value: int):
+    """
+    Перевод числа в массив байт.
+    """
+    return tuple(_dec_to_bin_generator(value))
 
 
 INT_BITS_COUNT = 32
@@ -222,44 +252,51 @@ INT_BITS_COUNT = 32
 POWERS_OF_TWO = tuple(2 ** v for v in range(INT_BITS_COUNT))
 
 
-def int_to_bin(value: int) -> Tuple[int, ...]:
-    return tuple(1 if is_bit_set(value, i) else 0 for i in range(INT_BITS_COUNT))
-
-
-def bin_to_int(values) -> int:
+def bin_to_int(values: Tuple[int, ...]) -> int:
+    """
+    Перевод массива байт в число.
+    """
     return sum(POWERS_OF_TWO[index] for index, bit in enumerate(values) if bit != 0)
 
 
-def summator(left: int, right: int) -> int:
-    carry_bit = 0
-    summ_res = []
-    for lft, rgt in zip(int_to_bin(left), int_to_bin(right)):
-        summ, carry_bit = full_summator(lft, rgt, carry_bit)
-        summ_res.append(summ)
-    return bin_to_int(summ_res)
-
-
 def _summator_generator(left: Tuple[int, ...], right: Tuple[int, ...]):
+    """
+    Генератор каскада суммирования
+    """
     carry_bit = 0
-    for lft, rgt in zip(left, right):
+    for lft, rgt in itertools.zip_longest(left, right, fillvalue=0):
         summ, carry_bit = full_summator(lft, rgt, carry_bit)
         yield summ
+    yield carry_bit
 
 
 def _summator(left: Tuple[int, ...], right: Tuple[int, ...]) -> Tuple[int, ...]:
+    """
+    Суммирование двух бинарных чисел
+    """
     return tuple(_summator_generator(left, right))
 
 
-def bytes_to_str(bytes_data: Tuple[int, ...]) -> str:
+def summator(left: int, right: int) -> int:
+    """
+    Суммирование двух целых чисел
+    """
+    return bin_to_int(_summator(dec_to_bin(left), dec_to_bin(right)))
+
+
+def bin_to_str(bytes_data: Tuple[int, ...]) -> str:
+    """
+    Строковое представление числа, записанного в виде массива байт.
+    """
     return f'0b{"".join(str(v) for v in bytes_data)}'
 
 
 def multiplicator(left: int, right: int) -> int:
-    l_bin = int_to_bin(left)
-    r_bin = int_to_bin(right)
-    m_bin = int_to_bin(0)
-    for shift in range(INT_BITS_COUNT):
-        t_mul  = int_to_bin(bin_to_int(tuple(r_bin[shift] & v for v in l_bin)) << shift)
+    l_bin = dec_to_bin(left)
+    r_bin = dec_to_bin(right)
+    m_bin = dec_to_bin(0)
+    for shift in range(len(r_bin)):
+        t_mul  = dec_to_bin(bin_to_int(tuple(r_bin[shift] & v for v in l_bin)) << shift)
         m_bin = _summator(m_bin, t_mul)
     return bin_to_int(m_bin)
 
@@ -271,6 +308,10 @@ if __name__ == "__main__":
     print()
     xor_truth_table()
     print()
-    print(f"33 + 19 = {122 + 19:6} => adder(33, 19)         = {summator(122, 19):6}")
-    print(f"33 * 19 = {122 * 19:6} => multiplicator(33, 19) = {multiplicator(122, 19):6}")
+    first = 121
+    second = 1213411
+    print(f"{first:^9} + {second:^9} = {first + second:^9} => "
+          f"summator     ({first:^9}, {second:^9}) = {summator(first, second):^9}")
+    # print(f"{first:^9} * {second:^9} = {first * second:^9} => "
+    #       f"multiplicator({first:^9}, {second:^9}) = {multiplicator(first, second):^9}")
 

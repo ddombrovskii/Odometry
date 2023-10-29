@@ -16,11 +16,14 @@ class RunningAverage:
     def window_size(self, value: int) -> None:
         assert isinstance(value, int)
         self._capacity = min(max(value, 2), 128)
+        if len(self._values) > self._capacity:
+            self._values = self._values[:self._capacity]
 
-    def __call__(self, x) -> float:
+    def __call__(self, x: float) -> float:
         return self.update(x)
 
-    def update(self, x) -> float:
+    def update(self, x: float) -> float:
+        assert isinstance(x, float)
         self._values.append(x)
         self._values_sum += x
         if len(self._values) == self._capacity:

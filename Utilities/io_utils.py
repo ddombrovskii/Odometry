@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import List, Tuple, Union
 import numpy as np
 import struct
 import cv2
@@ -9,7 +10,13 @@ import re
 ImageFilesList = ('jpg', 'jpeg', 'png', 'bmp')
 
 
-def clear_folder(folder):
+def get_file_type(f_path: str) -> str:
+    assert isinstance(f_path, str)
+    return f_path[f_path.rfind('.') + 1:].lower()
+
+
+def clear_folder(folder: str) -> None:
+    assert isinstance(folder, str)
     for the_file in os.listdir(folder):
         file_path = os.path.join(folder, the_file)
         try:
@@ -19,33 +26,59 @@ def clear_folder(folder):
             print(f"clear folder error{e.args}")
 
 
-def create_dir(dir_name):
+def clear_folder_files_with_ext(folder: str, ext: str) -> None:
+    assert isinstance(folder, str)
+    for the_file in os.listdir(folder):
+        file_path = os.path.join(folder, the_file)
+        try:
+            if not os.path.isfile(file_path):
+                continue
+            if get_file_type(file_path) != ext:
+                continue
+            os.remove(file_path)
+        except Exception as e:
+            print(f"clear folder error{e.args}")
+
+
+def create_dir(dir_name: str) -> None:
+    assert isinstance(dir_name, str)
     if not os.path.exists(dir_name):
         os.makedirs(dir_name)
 
 
-def get_files_from_dir(src_dir):
+def get_files_paths_from_dir(src_dir: str) -> List[str]:
+    assert isinstance(src_dir, str)
     res_list = []
     for (dir_path, dir_names, file_names) in os.walk(src_dir):
         for file_name in file_names:
             file_type = file_name[file_name.rfind('.') + 1:].lower()
             if file_type in ImageFilesList:
                 res_list.append(os.path.join(dir_path, file_name))
-
     return res_list
 
 
-def read_image(src) -> np.ndarray:
+def get_files_paths_from_dir_with_ext(src_dir: str, ext: str = "png") -> List[str]:
+    assert isinstance(src_dir, str)
+    assert isinstance(ext, str)
+    res_list = []
+    for (dir_path, dir_names, file_names) in os.walk(src_dir):
+        for file_name in file_names:
+            file_type = file_name[file_name.rfind('.') + 1:].lower()
+            if file_type == ext:
+                res_list.append(os.path.join(dir_path, file_name))
+    return res_list
+
+
+def read_image(src: str, cv_read_args=None) -> np.ndarray:
     try:
-        return cv2.imread(src)
+        return cv2.imread(src) if cv_read_args is None else cv2.imread(src, cv_read_args)
     except IOError as e:
-        print(f"image at path {src} read error...\n{e.args}")
+        print(f"image at path \"{src}\" read error...\n{e.args}")
         return np.zeros((3, 3, 3), dtype=np.uint8)
 
 
-def get_images_from_dir(src_dir):
-    file_names = get_files_from_dir(src_dir)
-
+def get_images_from_dir(src_dir: str, ext: str = None) -> List[np.ndarray]:
+    file_names = get_files_paths_from_dir(src_dir) if ext is None else get_files_paths_from_dir_with_ext(src_dir, ext)
     res_list = []
     for temp_f0 in file_names:
         print(f"image loaded: {temp_f0}")
@@ -56,20 +89,26 @@ def get_images_from_dir(src_dir):
     return res_list
 
 
-def get_base_name(src_name):
+def get_base_name(src_name: str) -> str:
+    assert isinstance(src_name, str)
     return os.path.basename(src_name)
 
 
-def print_list_new_row(src_list):
-    print('\n'.join([str(my_element) for my_element in src_list]))
+def str_list_new_row(src_list: list) -> str:
+    return '\n'.join([str(my_element) for my_element in src_list])
 
 
-def is_file(src: str):
+def print_list_new_row(src_list: list):
+    print(str_list_new_row(src_list))
+
+
+def is_file(src: str) -> bool:
     return Path(src).is_file()
 
 
-def is_dir(src: str):
+def is_dir(src: str) -> bool:
     return Path(src).is_dir()
+
 
 _UNIT_KM = -3
 _UNIT_100M = -2
@@ -82,7 +121,6 @@ _UNIT_0_1MM = 4
 _UNIT_0_01MM = 5
 _UNIT_UM = 6
 _UNIT_INCH = 6
-
 _TIFF_TYPE_SIZES = {
   1: 1,
   2: 1,
@@ -147,7 +185,7 @@ def _convert_to_pix(value):
     raise ValueError("unknown unit type: %s" % unit)
 
 
-def get_img_size(filepath):
+def get_img_size(filepath: Union[str,  io.BytesIO]) -> Tuple[int, int]:
     """
     Return (width, height) for a given img file content
     no requirements
@@ -335,7 +373,7 @@ def get_img_size(filepath):
     return width, height
 
 
-def get_img_dpi(filepath):
+def get_img_dpi(filepath: Union[str, bytes]) -> Tuple[int, int]:
     """
     Return (x DPI, y DPI) for a given img file content
     no requirements

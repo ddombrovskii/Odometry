@@ -1,4 +1,4 @@
-from ..timer import Timer
+from Utilities.Common.timer import Timer
 
 
 STANDBY_MODE_MESSAGE = -1
@@ -46,7 +46,6 @@ class Action:
         self.__set_action_state(COMPLETE_MODE_MESSAGE if self._on_end() else self.action_state)
 
     def __update(self):
-        # TODO refactor update logic
         if self.action_state not in self._modes:
             return
         self._modes[self.action_state]()

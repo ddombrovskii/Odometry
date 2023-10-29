@@ -12,6 +12,7 @@ from typing import List, Union
 import serial
 from threading import Thread
 
+
 def gather_com_ports() -> List[ListPortInfo]:
     return [p for p in comports()]
 

@@ -12,21 +12,23 @@ _DEFAULT_FRAMES_DIR_NAME = "camera_records\\saved_frames\\"
 def create_path_with_time_stamp(file_name: str, directory: str, ext: str, microseconds: bool = False):
     now = datetime.datetime.now()
     if microseconds:
-        return f'{directory}{file_name}{now.hour:2}_{now.minute:2}_{now.second:2}_{now.microsecond:4}.{ext}'
-    return f'{directory}{file_name}{now.hour:2}_{now.minute:2}_{now.second:2}.{ext}'
+        return f'{os.path.join(directory, file_name)}{now.hour:2}_{now.minute:2}_{now.second:2}_{now.microsecond:4}.{ext}'
+    return f'{os.path.join(directory, file_name)}{now.hour:2}_{now.minute:2}_{now.second:2}.{ext}'
 
 
 def create_directory(dir_path: str) -> Tuple[bool, str]:
     if not isinstance(dir_path, str):
-        return False, f"Camera CV: create directory error.\nDirectory path type {type(dir_path)} is unsupported\n"
+        print(f"Camera CV: create directory error.\nDirectory path type {type(dir_path)} is unsupported\n")
+        return False, ""
     dir_path = os.path.dirname(dir_path)
     if not os.path.isdir(dir_path):
         try:
             os.mkdir(dir_path)
-            return True, dir_path if dir_path.endswith('\\') else f"{dir_path}\\"
+            return True, dir_path  # if dir_path.endswith('\\') else f"{dir_path}\\"
         except IOError as error:
-            return False,  f"Camera CV: create directory error. Directory \"{error}\" creation error {error}\n"
-    return True, dir_path if dir_path.endswith('\\') else f"{dir_path}\\"
+            print(f"Camera CV: create directory error. Directory \"{error}\" creation error {error}\n")
+            return False, ""
+    return True, dir_path  # if dir_path.endswith('\\') else f"{dir_path}\\"
 
 
 def _get_scr_res_wind_old() -> Tuple[int, int]:

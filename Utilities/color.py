@@ -10,20 +10,22 @@ _mask_b = _mask_r << _b_shift
 _mask_a = _mask_r << _a_shift
 
 
-def create_color_rgba(red: int, green: int, blue: int, alpha: int) -> int:
+def create_color_rgba(*rgba) -> int:
+    assert len(rgba) == 4
     color: int = 0
-    color |= ((red & 255) << 0)
-    color |= ((green & 255) << 8)
-    color |= ((blue & 255) << 16)
-    color |= ((alpha & 255) << 24)
+    color |= ((int(rgba[0]) & 255) << 0)
+    color |= ((int(rgba[1]) & 255) << 8)
+    color |= ((int(rgba[2]) & 255) << 16)
+    color |= ((int(rgba[3]) & 255) << 24)
     return color
 
 
-def create_color_rgb(red: int, green: int, blue: int) -> int:
+def create_color_rgb(*rgb) -> int:
+    assert len(rgb) == 3
     color: int = 0
-    color |= ((red & 255) << 0)
-    color |= ((green & 255) << 8)
-    color |= ((blue & 255) << 16)
+    color |= ((int(rgb[0]) & 255) << 0)
+    color |= ((int(rgb[1]) & 255) << 8)
+    color |= ((int(rgb[2]) & 255) << 16)
     return color
 
 
@@ -67,25 +69,35 @@ def _set_alpha(value: int, value_alpha: int) -> int:
 
 class Color:
     @staticmethod
+    def _build_color_single_arg(arg) -> int:
+        if isinstance(arg, Color):
+            return int(arg)
+        if isinstance(arg, int):
+            return arg  # create_color_rgba(args, args, args, 0)
+        if isinstance(arg, float):
+            c = int(255 * arg)
+            return create_color_rgba(c, c, c, 0)
+
+    @staticmethod
+    def _build_color_three_arg(*args) -> int:
+        return create_color_rgb(*args)
+
+    @staticmethod
+    def _build_color_four_arg(*args) -> int:
+        return create_color_rgba(*args)
+
+    _build_methods = {1: _build_color_single_arg,
+                      3: _build_color_three_arg,
+                      4: _build_color_four_arg}
+
+    @staticmethod
     def _unpack_args(*args) -> int:
         args = args[0]
         n_args = len(args)
-        if n_args == 0:
-            return 0  # create_color_rgba(125, 127, 130, 0)
-        if n_args == 1:  # one argument
-            args = args[0]
-            if isinstance(args, Color):
-                return int(args)
-            if isinstance(args, int):
-                return args  # create_color_rgba(args, args, args, 0)
-            if isinstance(args, float):
-                c = int(255 * args)
-                return create_color_rgba(c, c, c, 0)
-        if n_args == 3:
-            return create_color_rgba(args[0], args[1], args[2], 0)
-        if n_args == 4:
-            return create_color_rgba(args[0], args[1], args[2], args[3])
-        raise TypeError(f'Invalid Input: {args}')
+        if n_args not in Color._build_methods:
+            raise ValueError(f"Unsupported amount of args in Color init method. "
+                             f"Args: [{', '.join(str(v) for v in args)}]")
+        return Color._build_methods[n_args](args)
 
     __slots__ = "_rgba"
 
@@ -114,9 +126,9 @@ class Color:
         self._rgba = _set_channel(self._rgba, max(min(value, 255), 0), 255, 8 * index)
 
     def __eq__(self, other) -> bool:
-        if not (type(other) is Color):
+        if not isinstance(other, Color):
             return False
-        if not (self._rgba == int(other)):
+        if self._rgba != int(other):
             return False
         return True
 

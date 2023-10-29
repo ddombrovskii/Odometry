@@ -1,10 +1,7 @@
-from typing import Tuple, Union
-
-import cv2
-
-from . import Timer
 from .Geometry import Camera, Matrix3, Vector3, Plane, PerspectiveTransform2d, Vector2, Matrix4, Quaternion
 from .image_matcher import ImageMatcher
+from typing import Tuple, Union
+from . import Timer
 import numpy as np
 
 
@@ -92,8 +89,14 @@ class FlightOdometer:
         self._prev_frame = self._curr_frame
         if self._prev_frame is None:
             return
-        self._image_matcher.match_images(self._prev_frame, self._curr_frame, self._prev_proj_mat, self._curr_proj_mat)
-        self._build_transforms()
+        if self._image_matcher.match_images(self._prev_frame,
+                                            self._curr_frame,
+                                            self._prev_proj_mat,
+                                            self._curr_proj_mat):
+            self._build_transforms()
+        else:
+            # extrapolate values
+            ...
 
     def compute(self, image: np.ndarray, rotation: Quaternion, altitude) -> None:
         """

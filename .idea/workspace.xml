@@ -5,8 +5,45 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5ead7134-b374-42a1-8fdd-5ab1a6211af6" name="Changes" comment="path_view">
+      <change afterPath="$PROJECT_DIR$/Mavlink/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Mavlink/connect_to_sysid.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Mavlink/get_autopilot_info.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Utilities/Common/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Utilities/Matplotlib/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/binary_logic.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/obj_mesh_transform.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Accelerometer/accelerometer_core/accelerometer_recording.py" beforeDir="false" afterPath="$PROJECT_DIR$/Accelerometer/accelerometer_core/accelerometer_recording.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/ActionsLoop/action.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/ActionsLoop/action.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/ActionsLoop/actions_loop.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/ActionsLoop/actions_loop.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/CV/Camera/CameraActions/camera_action_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/CV/Camera/CameraActions/camera_action_utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/CV/Camera/camera_calibration.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/CV/Camera/camera_calibration.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/bounding_box.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/bounding_box.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/camera.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/camera.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/matrix3.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/matrix3.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/matrix4.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/matrix4.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/mutils.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/mutils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/plane.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/plane.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/quaternion.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/quaternion.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/ray.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/ray.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/vector2.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/vector2.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/vector3.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/vector3.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/vector4.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/vector4.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/animated_plot.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Matplotlib/animated_plot.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/bitset32.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Common/bitset32.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/circ_buffer.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Common/circ_buffer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/color.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/color.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/flight_odometer.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/flight_odometer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/image_matcher.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/image_matcher.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/io_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/io_utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/loop_timer.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Common/loop_timer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/real_time_filter.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/real_time_filter.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/runnig_average.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/runnig_average.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/timer.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Common/timer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pixhawk_read_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/pixhawk_read_test.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/students.py" beforeDir="false" afterPath="$PROJECT_DIR$/students.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/uart_image.py" beforeDir="false" afterPath="$PROJECT_DIR$/uart_image.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -22,6 +59,12 @@
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/Mavlink/drone_connection.py" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Utilities/serial_utils.py" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/drone_flight.py" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/uart_image.py" root0="FORCE_HIGHLIGHTING" />
   </component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
@@ -47,14 +90,15 @@
       <recent name="E:\GitHub\Odometry\Odometry\Utilities\Geometry" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="E:\GitHub\Odometry\Odometry\Utilities\Common" />
+      <recent name="E:\GitHub\Odometry\Odometry\Utilities\Matplotlib" />
       <recent name="E:\GitHub\Odometry\Odometry\students" />
       <recent name="E:\GitHub\Odometry\Odometry\Utilities" />
       <recent name="E:\GitHub\Odometry\Odometry\UIQt\GLUtilities\Input" />
-      <recent name="E:\GitHub\Odometry\Odometry\UIQt\CommonComponents" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.students">
-    <configuration name="async_test" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+  <component name="RunManager" selected="Python.obj_mesh_transform">
+    <configuration name="binary_logic" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="Odometry" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -66,7 +110,7 @@
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/async_test.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/binary_logic.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -75,7 +119,28 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="non_uniform_transfom" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="drone_connection" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Odometry" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Mavlink" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Mavlink/drone_connection.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="drone_flight" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="Odometry" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -87,7 +152,28 @@
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/non_uniform_transfom.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/drone_flight.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="obj_mesh_transform" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Odometry" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/obj_mesh_transform.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -117,55 +203,13 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="uart_image" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="Odometry" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/uart_image.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration name="view_info_reader" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="Odometry" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/view_info_reader.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.obj_mesh_transform" />
+        <item itemvalue="Python.binary_logic" />
+        <item itemvalue="Python.drone_flight" />
+        <item itemvalue="Python.drone_connection" />
         <item itemvalue="Python.students" />
-        <item itemvalue="Python.uart_image" />
-        <item itemvalue="Python.non_uniform_transfom" />
-        <item itemvalue="Python.async_test" />
-        <item itemvalue="Python.view_info_reader" />
       </list>
     </recent_temporary>
   </component>
@@ -207,14 +251,9 @@
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/Utilities/loop_timer.py</url>
+          <url>file://$PROJECT_DIR$/Utilities/Common/loop_timer.py</url>
           <line>24</line>
           <option name="timeStamp" value="3" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/Utilities/Geometry/matrix3.py</url>
-          <line>115</line>
-          <option name="timeStamp" value="15" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/non_uniform_transfom.py</url>
@@ -223,8 +262,43 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/uart_image.py</url>
-          <line>138</line>
+          <line>139</line>
           <option name="timeStamp" value="27" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/students.py</url>
+          <line>267</line>
+          <option name="timeStamp" value="32" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/pixhawk_read_test.py</url>
+          <line>52</line>
+          <option name="timeStamp" value="40" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/pixhawk_read_test.py</url>
+          <line>46</line>
+          <option name="timeStamp" value="41" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/binary_logic.py</url>
+          <line>145</line>
+          <option name="timeStamp" value="61" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/Mavlink/drone_connection.py</url>
+          <line>280</line>
+          <option name="timeStamp" value="62" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/Mavlink/drone_connection.py</url>
+          <line>135</line>
+          <option name="timeStamp" value="71" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/Mavlink/drone_connection.py</url>
+          <line>232</line>
+          <option name="timeStamp" value="72" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

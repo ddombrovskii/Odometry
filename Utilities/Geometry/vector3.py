@@ -13,45 +13,47 @@ class Vector3:
     """
     mutable vector 4d
     """
-    __slots__ = (_X, _Y, _Z)
+    __slots__ = ('_x', '_y', '_z')
 
     @property
     def x(self) -> float:
-        return self.__getattribute__(_X)
+        return self._x
 
     @property
     def y(self) -> float:
-        return self.__getattribute__(_Y)
+        return self._y
 
     @property
     def z(self) -> float:
-        return self.__getattribute__(_Z)
+        return self._z
 
     @x.setter
     def x(self, value: float) -> None:
-        self.__setattr__(_X, float(value))
+        self._x = float(value)
 
     @y.setter
     def y(self, value: float) -> None:
-        self.__setattr__(_Y, float(value))
+        self._y = float(value)
 
     @z.setter
     def z(self, value: float) -> None:
-        self.__setattr__(_Z, float(value))
+        self._z = float(value)
 
     def __init__(self, *args):
         assert len(args) == 3
-        for attr, val in zip(Vector3.__slots__, args):
-            self.__setattr__(attr, float(val))
+        self._x = float(args[0])
+        self._y = float(args[1])
+        self._z = float(args[2])
+
+    def __iter__(self):
+        yield self._x
+        yield self._y
+        yield self._z
 
     def __eq__(self, other):
         if not isinstance(other, Vector3):
             return False
         return not any(v1 != v2 for v1, v2 in zip(self, other))
-
-    def __iter__(self):
-        for attr in Vector3.__slots__:
-            yield self.__getattribute__(attr)
 
     def __str__(self):
         return f"{{\"x\": {self.x:{_4F}}, \"y\": {self.y:{_4F}}, \"z\": {self.z:{_4F}}}}"

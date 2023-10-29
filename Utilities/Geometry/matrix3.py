@@ -26,96 +26,115 @@ class Matrix3:
     """
     mutable Matrix 3d
     """
-    __slots__ = (_M00, _M01, _M02,
-                 _M10, _M11, _M12,
-                 _M20, _M21, _M22)
+
+    __slots__ = ('_m00', '_m01', '_m02',
+                 '_m10', '_m11', '_m12',
+                 '_m20', '_m21', '_m22')
 
     # row 0 getters
     @property
     def m00(self) -> float:
-        return self.__getattribute__(_M00)
+        return self._m00
 
     @property
     def m01(self) -> float:
-        return self.__getattribute__(_M01)
+        return self._m01
 
     @property
     def m02(self) -> float:
-        return self.__getattribute__(_M02)
+        return self._m02
 
     # row 1 getters
     @property
     def m10(self) -> float:
-        return self.__getattribute__(_M10)
+        return self._m10
 
     @property
     def m11(self) -> float:
-        return self.__getattribute__(_M11)
+        return self._m11
 
     @property
     def m12(self) -> float:
-        return self.__getattribute__(_M12)
+        return self._m12
 
     # row 2 getters
     @property
     def m20(self) -> float:
-        return self.__getattribute__(_M20)
+        return self._m20
 
     @property
     def m21(self) -> float:
-        return self.__getattribute__(_M21)
+        return self._m21
 
     @property
     def m22(self) -> float:
-        return self.__getattribute__(_M22)
+        return self._m22
 
     # row 0 getters
     @m00.setter
     def m00(self, value: float) -> None:
-        self.__setattr__(_M00, float(value))
+        self._m00 = float(value)
 
     @m01.setter
     def m01(self, value: float) -> None:
-        self.__setattr__(_M01, float(value))
+        self._m01 = float(value)
 
     @m02.setter
     def m02(self, value: float) -> None:
-        self.__setattr__(_M02, float(value))
+        self._m02 = float(value)
 
     # row 1 getters
     @m10.setter
     def m10(self, value: float) -> None:
-        self.__setattr__(_M10, float(value))
+        self._m10 = float(value)
 
     @m11.setter
     def m11(self, value: float) -> None:
-        self.__setattr__(_M11, float(value))
+        self._m11 = float(value)
 
     @m12.setter
     def m12(self, value: float) -> None:
-        self.__setattr__(_M12, float(value))
+        self._m12 = float(value)
 
     # row 2 getters
     @m20.setter
     def m20(self, value: float) -> None:
-        self.__setattr__(_M20, float(value))
+        self._m20 = float(value)
 
     @m21.setter
     def m21(self, value: float) -> None:
-        self.__setattr__(_M21, float(value))
+        self._m21 = float(value)
 
     @m22.setter
     def m22(self, value: float) -> None:
-        self.__setattr__(_M22, float(value))
+        self._m22 = float(value)
 
     def __init__(self, *args):
         assert len(args) == 9
-        for attr, val in zip(Matrix3.__slots__, args):
-            self.__setattr__(attr, float(val))
+        self._m00 = args[0]
+        self._m01 = args[1]
+        self._m02 = args[2]
+
+        self._m10 = args[3]
+        self._m11 = args[4]
+        self._m12 = args[5]
+
+        self._m20 = args[6]
+        self._m21 = args[7]
+        self._m22 = args[8]
 
     def __iter__(self):
-        for attr in Matrix3.__slots__:
-            yield self.__getattribute__(attr)
+        yield self._m00
+        yield self._m01
+        yield self._m02
+
+        yield self._m10
+        yield self._m11
+        yield self._m12
+
+        yield self._m20
+        yield self._m21
+        yield self._m22
 
     def __eq__(self, other):
         if not isinstance(other, Matrix3):

@@ -14,6 +14,9 @@ def get_images_in_dir(directory: str) -> List[str]:
 
 class CameraCalibrationInfo(namedtuple('CameraCalibrationInfo', 'camera_matrix, distortion_coefficients,'
                                                                 ' translation_vectors, rotation_vectors')):
+    """
+    Результаты калибровки камеры.
+    """
     __slots__ = ()
 
     def __new__(cls, cm: np.ndarray, dc: np.ndarray,
@@ -109,6 +112,9 @@ def load_camera_calib_info(file_path: str) -> Union[CameraCalibrationInfo, None]
 class CameraCalibrationArgs(namedtuple('CameraCalibrationArgs',
                                        'criteria, obj_points, image_points, '
                                        'ches_board_size, obj_points_array, recalibrate')):
+    """
+    Настройки алгоритма калибровки камеры.
+    """
     __slots__ = ()
 
     def __new__(cls, criteria=(cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001),

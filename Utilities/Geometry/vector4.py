@@ -15,48 +15,52 @@ class Vector4:
     """
     mutable vector 4d
     """
-    __slots__ = (_X, _Y, _Z, _W)
+    __slots__ = ('_x', '_y', '_z', '_w')
 
     @property
     def x(self) -> float:
-        return self.__getattribute__(_X)
+        return self._x
 
     @property
     def y(self) -> float:
-        return self.__getattribute__(_Y)
+        return self._y
 
     @property
     def z(self) -> float:
-        return self.__getattribute__(_Z)
+        return self._z
 
     @property
     def w(self) -> float:
-        return self.__getattribute__(_W)
+        return self._w
 
     @x.setter
     def x(self, value: float) -> None:
-        self.__setattr__(_X, float(value))
+        self._x = float(value)
 
     @y.setter
     def y(self, value: float) -> None:
-        self.__setattr__(_Y, float(value))
+        self._y = float(value)
 
     @z.setter
     def z(self, value: float) -> None:
-        self.__setattr__(_Z, float(value))
+        self._z = float(value)
 
     @w.setter
     def w(self, value: float) -> None:
-        self.__setattr__(_W, float(value))
+        self._w = float(value)
 
     def __init__(self, *args):
         assert len(args) == 4
-        for attr, val in zip(Vector4.__slots__, args):
-            self.__setattr__(attr, float(val))
+        self._x = float(args[0])
+        self._y = float(args[1])
+        self._z = float(args[2])
+        self._w = float(args[3])
 
     def __iter__(self):
-        for attr in Vector4.__slots__:
-            yield self.__getattribute__(attr)
+        yield self._x
+        yield self._y
+        yield self._z
+        yield self._w
 
     def __eq__(self, other):
         if not isinstance(other, Vector4):

@@ -4,47 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="5ead7134-b374-42a1-8fdd-5ab1a6211af6" name="Changes" comment="path_view">
-      <change afterPath="$PROJECT_DIR$/Mavlink/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Mavlink/connect_to_sysid.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Mavlink/get_autopilot_info.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Utilities/Common/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Utilities/Matplotlib/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/binary_logic.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/obj_mesh_transform.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Accelerometer/accelerometer_core/accelerometer_recording.py" beforeDir="false" afterPath="$PROJECT_DIR$/Accelerometer/accelerometer_core/accelerometer_recording.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/ActionsLoop/action.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/ActionsLoop/action.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/ActionsLoop/actions_loop.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/ActionsLoop/actions_loop.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/CV/Camera/CameraActions/camera_action_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/CV/Camera/CameraActions/camera_action_utils.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/CV/Camera/camera_calibration.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/CV/Camera/camera_calibration.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/bounding_box.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/bounding_box.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/camera.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/camera.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/matrix3.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/matrix3.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/matrix4.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/matrix4.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/mutils.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/mutils.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/plane.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/plane.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/quaternion.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/quaternion.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/ray.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/ray.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/vector2.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/vector2.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/vector3.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/vector3.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/vector4.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/vector4.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/animated_plot.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Matplotlib/animated_plot.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/bitset32.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Common/bitset32.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/circ_buffer.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Common/circ_buffer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/color.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/color.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/flight_odometer.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/flight_odometer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/image_matcher.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/image_matcher.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/io_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/io_utils.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/loop_timer.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Common/loop_timer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/real_time_filter.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/real_time_filter.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/runnig_average.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/runnig_average.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/timer.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Common/timer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pixhawk_read_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/pixhawk_read_test.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/students.py" beforeDir="false" afterPath="$PROJECT_DIR$/students.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/uart_image.py" beforeDir="false" afterPath="$PROJECT_DIR$/uart_image.py" afterDir="false" />
-    </list>
+    <list default="true" id="5ead7134-b374-42a1-8fdd-5ab1a6211af6" name="Changes" comment="path_view" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />

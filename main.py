@@ -10,7 +10,7 @@ import cv2 as cv
 # https://github.com/niconielsen32/ComputerVision/blob/master/VisualOdometry/visual_odometry.py
 # https://github.com/niconielsen32/ComputerVision/blob/master/LiveCameraTrajectory/liveCameraPoseEstimation.py
 # KITTI Camera
-from UIQt.GLUtilities.gl_tris_mesh import create_box, write_obj_mesh, TrisMesh
+from UIQt.GLUtilities.gl_tris_mesh import create_box, write_obj_mesh, TrisMeshGL
 from Utilities.Geometry import Matrix4, Vector3
 from Utilities.Geometry.voxel import Voxel
 
@@ -193,7 +193,7 @@ class CameraTrack:
         self._voxels = set()
 
     def compute(self):
-        mesh = TrisMesh()
+        mesh = TrisMeshGL()
         with open('voxels_info.json', 'wt') as output:  # открываем файл для записи триангуляционных данных
             print(f"{{\n\t\"voxel_size\": {self._voxel_size},\n\t\"voxels\": [", file=output)
             for index in range(len(self._images) - 1):

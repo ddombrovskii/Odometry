@@ -1,0 +1,5 @@
+{
+	"criteria":        [3.000 ,30.000 ,0.001],
+	"ches_board_size": [    6,     9],
+	"recalibrate":     "false"
+}

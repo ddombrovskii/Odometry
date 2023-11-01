@@ -234,6 +234,7 @@ class DroneConnection:
         return connection
 
     def __init__(self, port: Union[str, None] = None):
+        self._external_gps_src = False
         self._connection = None
         # start pt GPS
         self._start_gps = GPSLocation(0.0, 0.0, 0.0, 0.0)
@@ -466,10 +467,28 @@ class DroneConnection:
         #     return None
         return self.command_acknowledgment_wait(timeout=timeout)
 
-    def send_gps(self, gps: GPSLocation):  # gps_lat: float = 33.012, gps_lon: float = 13.012, gps_alt: float = 12.44):
+    def send_gps(self, gps: GPSLocation):
+        if not self._external_gps_src:
+            self._external_gps_src = True
+            # TODO
+            # GPS_TYPE need to be MAV !!!!
+            # 2xGPS: GPS_TYPE=1 (AUTO); GPS2_TYPE=14 (MAV)
+            # GPS_AUTO_CONFIG  2
+            # GPS_AUTO_SWITCH  1
+            # GPS_TYPE         1
+            # GPS_TYPE2        14
+            # GPS_PRIMARY      0
+            #
+            # FS_EKF_THRESH    0   (changed to 0 just to Off failsafe actions)
+            # AHRS_GPS_USE     2
+            # AHRS_EKF_TYPE    0
+            # EK2_ENABLE       1
+            # EK3_ENABLE       0
+            # FS_EKF_ACTION    2
+
         """
         # Set some information !
-        master.mav.gps_input_send(
+        self.drone_connection.mav.gps_input_send(
         0,  # Timestamp (micros since boot or Unix epoch)
         0,  # ID of the GPS for multiple GPS inputs
         # Flags indicating which fields to ignore (see GPS_INPUT_IGNORE_FLAGS enum).
@@ -490,6 +509,7 @@ class DroneConnection:
         0,  # GPS horizontal accuracy in m
         0,  # GPS vertical accuracy in m
         7   # Number of satellites visible.
+        )
         """
         time_us = 0
         gps_week_ms = 0
@@ -515,8 +535,7 @@ class DroneConnection:
             0.1, 0.1,
             0.01, 0.01, 0.1,  # vn ve vd
             0.001, 0.001, 0.001,  # spac, hac, vac
-            satellites_visible  # Number of visible satellites
-            #        yaw * 1e2
+            satellites_visible  # Number of visible satellites        yaw * 1e2
         )
         self.drone_connection.mav.send(msg)
         status = self.command_acknowledgment_wait(timeout=5.0)

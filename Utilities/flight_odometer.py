@@ -1,4 +1,4 @@
-from .Geometry import Camera, Matrix3, Vector3, Plane, PerspectiveTransform2d, Vector2, Matrix4, Quaternion
+from .Geometry import Camera, Matrix3, Vector3, Plane, PerspectiveTransform2d, Vector2, Matrix4, Quaternion, Ray
 from .image_matcher import ImageMatcher
 from typing import Tuple, Union
 from . import Timer
@@ -8,13 +8,15 @@ import numpy as np
 class FlightOdometer:
     @staticmethod
     def _camera_frustum_ground_border(camera: Camera, ground_level: float = 0.0) -> Tuple[Vector2, ...]:
-        p = Plane(origin=Vector3(0, ground_level, 0))  # normal=Vector3(0, -1, 0))
+        p = Plane(origin=Vector3(0, -ground_level, 0), normal=Vector3(0, 0, 1))
         # {1.0, 1.0} | {1.0, -1.0} | {-1.0, -1.0} | {-1.0, 1.0}
-        points = (p.intersect_by_ray(camera.emit_ray(1.0, 1.0)).end_point,
-                  p.intersect_by_ray(camera.emit_ray(1.0, -1.0)).end_point,
+        points = (p.intersect_by_ray(camera.emit_ray( 1.0,  1.0)).end_point,
+                  p.intersect_by_ray(camera.emit_ray( 1.0, -1.0)).end_point,
                   p.intersect_by_ray(camera.emit_ray(-1.0, -1.0)).end_point,
-                  p.intersect_by_ray(camera.emit_ray(-1.0, 1.0)).end_point)
-        return tuple(Vector2(p.x, p.z) for p in points)
+                  p.intersect_by_ray(camera.emit_ray(-1.0,  1.0)).end_point)
+        # [print(p) for p in points]
+        # print('=======================================')
+        return tuple(Vector2(p.x, p.y) for p in points)
 
     def __init__(self):
         # SIFT based image features matcher
@@ -22,7 +24,7 @@ class FlightOdometer:
         # Geometric camera
         self._camera: Camera = Camera()
         self._camera.aspect = 1.0
-        self._camera.fov = 30
+        self._camera.fov = 45
         # Projection matrix from image coordinates to earth space coordinates
         self._curr_proj_mat: Matrix3 = Matrix3.identity()
         self._prev_proj_mat: Matrix3 = Matrix3.identity()
@@ -47,34 +49,38 @@ class FlightOdometer:
 
     def _update_camera_transform_transforms(self, rotation: Quaternion, altitude, image_w: int, image_h: int) -> None:
         # Geometric camera position an orientation updating
-        self._camera.transform.origin   = Vector3(0, altitude, 0)
-        self._camera.transform.rotation = Quaternion.from_euler_angles(90, 0, 0, False) * rotation
-        # Vector3(90 + ax, ay, az)
+        # В соответствии с ROS:
+        # 1. Движение вверх  - oZ
+        # 2. Движение вперёд - oX
+        # 3. Движение вправо - oY
+        self._camera.transform.origin   = Vector3(0.0, 0.0, altitude)
+        self._camera.transform.rotation = rotation  # Quaternion.from_euler_angles(90, 0, 0, False) * rotation
         # Ground level camera frustum border updating
         _border = FlightOdometer._camera_frustum_ground_border(self._camera)
         _image_border = (Vector2(image_w, image_h), Vector2(image_w, 0), Vector2(0, 0), Vector2(0, image_h))
         if self._prev_frame is None:
-            # self._curr_border = _border
-            # self._border_prev = _border
-            self._curr_proj_mat = Matrix3.perspective_transform_from_four_points(*_border, *_image_border)
-            self._prev_proj_mat = Matrix3.perspective_transform_from_four_points(*_border, *_image_border)
+            self._curr_proj_mat = Matrix3.perspective_transform_from_eight_points(*_border, *_image_border)
+            self._prev_proj_mat = Matrix3.perspective_transform_from_eight_points(*_border, *_image_border)
         else:
-            # self._border_prev = self._curr_border
-            # self._curr_border = _border
             self._prev_proj_mat  = self._curr_proj_mat
-            self._curr_proj_mat  = Matrix3.perspective_transform_from_four_points(*_border, *_image_border)
+            self._curr_proj_mat  = Matrix3.perspective_transform_from_eight_points(*_border, *_image_border)
 
     def _build_transforms(self) -> None:
-        self._prev_gt_transform = self._curr_gt_transform
+        self._prev_gt_transform  = self._curr_gt_transform
         self._curr_gt_transform *= self._image_matcher.homography_matrix
         # TODO refactor...
-        position = Vector3(self._curr_gt_transform.m02, 0, self._curr_gt_transform.m12) - \
-                   self._camera.transform.origin.y / self._camera.transform.front.y * self._camera.transform.front
+        plane = Plane(origin=Vector3(0, 0, 0), normal=Vector3(0, 0, 1))
+        ray   = Ray(self._camera.transform.front, self._camera.transform.origin)
+        plane.intersect_by_ray(ray)
+        position = Vector3(self._curr_gt_transform.m02, self._curr_gt_transform.m12, 0.0) - ray.length * ray.direction
         # TODO end refactor
         self._prev_transform = self._curr_transform
-        self._curr_transform = Matrix4.build_transform(self._camera.transform.right,
-                                                       self._camera.transform.up,
+        # 1. Движение вверх  - oZ
+        # 2. Движение вперёд - oX
+        # 3. Движение вправо - oY
+        self._curr_transform = Matrix4.build_transform(self._camera.transform.up,
                                                        self._camera.transform.front,
+                                                       self._camera.transform.right,
                                                        position)
         # Имеется ввиду суммарное время между текущим и предыдущим расчётом + само время на расчёт
         delta_time = 1.0 / (self._timer.delta_inner_time + self._timer.delta_outer_time)
@@ -83,10 +89,11 @@ class FlightOdometer:
         self._prev_acceleration = self.acceleration
         self._curr_acceleration = (self.velocity - self.prev_velocity ) * delta_time
 
-    def _compute(self, image: np.ndarray, rotation: Quaternion, altitude) -> None:
+    def _compute(self, image: np.ndarray, rotation: Quaternion, altitude: float) -> None:
         image_w, image_h = image.shape[1], image.shape[0]
         self._update_camera_transform_transforms(rotation, altitude, image_w, image_h)
         self._prev_frame = self._curr_frame
+        self._curr_frame = image
         if self._prev_frame is None:
             return
         if self._image_matcher.match_images(self._prev_frame,
@@ -98,7 +105,7 @@ class FlightOdometer:
             # extrapolate values
             ...
 
-    def compute(self, image: np.ndarray, rotation: Quaternion, altitude) -> None:
+    def compute(self, image: np.ndarray, rotation: Quaternion, altitude: float) -> None:
         """
         Основной метод, который вызывается для расчёта одометрии
         :param image: изображение, полученное с камеры (np.ndarray)

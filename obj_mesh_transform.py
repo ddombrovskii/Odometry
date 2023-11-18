@@ -421,6 +421,7 @@ def test_transform_from_poses(poses_file):
     z = np.array([p[2] for p in inv_transform_poses])
     ax.plot3D(x, y, z, 'gray')
     ax.set_aspect('equal', 'box')
+
     plt.show()
 
 

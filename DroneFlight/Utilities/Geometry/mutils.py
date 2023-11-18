@@ -42,8 +42,8 @@ def linear_regression(x: np.ndarray, y: np.ndarray) -> Tuple[float, float]:
     assert x.size == y.size, "fuck yo, Tony!"
     sum_x = x.sum()
     sum_y = y.sum()
-    sum_xy = np.dot(x, y)
-    sum_xx = np.dot(x, x)
+    sum_xy = (x * y).sum()
+    sum_xx = (x * x).sum()
     inv_n = 1.0 / x.size
     k = (sum_xy - sum_x * sum_y * inv_n) / (sum_xx - sum_x * sum_x * inv_n)
     return k, (sum_y - k * sum_x) * inv_n
@@ -123,7 +123,7 @@ def bi_linear_regression(x: np.ndarray, y: np.ndarray, z: np.ndarray) -> Tuple[f
                       sum_xy + sum_yy - sum_zy,
                       sum_x + sum_y - sum_z])
     try:
-        return tuple(np.array([1.0, 1.0, 0.0]) - np.linalg.inv(hess) @ grad)
+        return np.array([1.0, 1.0, 0.0]) - np.linalg.inv(hess) @ grad
     except LinAlgError as err:
         print(err.args)
         return 0.0, 0.0, 0.0
@@ -161,11 +161,11 @@ def poly_regression(x: np.ndarray, y: np.ndarray, order: int = 5) -> np.ndarray:
     _x_row = np.ones_like(x)
     for row in range(order):
         _x_row = _x_row * x if row != 0 else _x_row
-        c_m[row] = np.dot(_x_row, y)
+        c_m[row] = (_x_row * y).sum()
         _x_col = np.ones_like(x)
         for col in range(row + 1):
             _x_col = _x_col * x if col != 0 else _x_col
-            a_m[col, row] = a_m[row, col] = np.dot(_x_col, _x_row)
+            a_m[col, row] = a_m[row, col] = (_x_col * _x_row).sum()
     try:
         return np.linalg.inv(a_m) @ c_m
     except LinAlgError as err:
@@ -200,10 +200,10 @@ def n_linear_regression(data_rows: np.ndarray) -> np.ndarray:
     assert n_dimension != 1, "fuck you, Tony!!!"
     hess = np.zeros((n_dimension, n_dimension,), dtype=float)
     grad = np.zeros((n_dimension,), dtype=float)
-    pt_0 = np.ones((n_dimension,), dtype=float)
+    pt_0 = np.zeros((n_dimension,), dtype=float)
     hess[-1, -1] = n_points
-    pt_0[-1] = 0.0
     for row in range(n_dimension - 1):
+        pt_0[row] = 1.0
         hess[-1, row] = hess[row, -1] = (data_rows[:, row]).sum()
         for col in range(row + 1):
             hess[col, row] = hess[row, col] = np.dot(data_rows[:, row], data_rows[:, col])
@@ -225,9 +225,9 @@ def quadratic_regression_2d(x: np.ndarray, y: np.ndarray, z: np.ndarray) -> np.n
     a_m = np.zeros((6, 6), dtype=float)
     b_c = np.zeros((6,), dtype=float)
     for row in range(6):
-        b_c[row] = np.dot(b[row] * z)
+        b_c[row] = (b[row] * z).sum()
         for col in range(row + 1):
-            a_m[col, row] = a_m[row, col] = np.dot(b[row], b[col])
+            a_m[col, row] = a_m[row, col] = (b[row] * b[col]).sum()
     a_m[-1, -1] = x.size  # костыль, который я не придумал как убрать
     try:
         return np.linalg.inv(a_m) @ b_c
@@ -242,10 +242,10 @@ def second_order_surface(x: np.ndarray, y: np.ndarray, args: np.ndarray) -> np.n
     return args[0] * x * x + args[1] * x * y + args[2] * y * y + args[3] * x + args[4] * y + args[5]
 
 
-def second_order_surface_fit(y: np.ndarray, x: np.ndarray,
-                             x_points: np.ndarray,
-                             y_points: np.ndarray,
-                             z_points: np.ndarray) -> np.ndarray:
+def quadratic_shape_fit(y: np.ndarray, x: np.ndarray,
+                        x_points: np.ndarray,
+                        y_points: np.ndarray,
+                        z_points: np.ndarray) -> np.ndarray:
     fit_params = quadratic_regression_2d(x_points, y_points, z_points)
     if fit_params.size == 3:
         return fit_params[0] * x + fit_params[1] * y + fit_params[2]

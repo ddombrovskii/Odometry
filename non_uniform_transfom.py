@@ -1,4 +1,5 @@
-from Utilities.Geometry import Matrix3, Vector2, PerspectiveTransform2d, Camera, Vector4
+from Utilities import io_utils
+from Utilities.Geometry import Matrix3, Vector2, PerspectiveTransform2d, Camera, Vector4, Quaternion
 from matplotlib import pyplot as plt
 import numpy as np
 import os.path
@@ -31,6 +32,8 @@ import cv2
 
 # -1.0 | 1.0 | 1.0 |  0  |  0  |  0  |  p_x | -p_x |
 #   0  |  0  |  0  |-1.0 | 1.0 | 1.0 |  p_y | -p_y |
+from Utilities.flight_odometer import FlightOdometer
+from Utilities.image_matcher import ImageMatcher
 
 
 def perspective_transform_test():
@@ -231,13 +234,33 @@ if __name__ == "__main__":
     # exit()
     # directory  = "phantom_flight_1"
     directory = "path_track"
-    images = [f"{directory}\\{src}" for src in os.listdir(directory) if src.endswith('png') or src.endswith('JPG')]
+    images = [f"{os.path.join(directory, src)}" for src in os.listdir(directory) if src.endswith('png') or src.endswith('JPG')]
     images = sorted(images, key=image_index)
     [print(t) for t in images]
+    flight_odometer = FlightOdometer()
+    rot_q = Quaternion.from_euler_angles(0.0, 0.0, 0.0, False)
+    # image_1 = io_utils.read_image(images[0], cv2.IMREAD_GRAYSCALE)
+    # image_2 = io_utils.read_image(images[1], cv2.IMREAD_GRAYSCALE)
+    # flight_odometer.compute(image_1, rot_q, 10)
+    # flight_odometer.compute(image_2, rot_q, 10)
     positions_x = []
     positions_y = []
-
-    transforms = [image_math_and_homography(img_1, img_2) for img_1, img_2 in zip(images[:-1], images[1:])]
+    for image_src in images:
+        image = io_utils.read_image(image_src, cv2.IMREAD_GRAYSCALE)
+        flight_odometer.compute(image, rot_q, 1)
+        positions_x.append(flight_odometer.position.x)
+        positions_y.append(flight_odometer.position.y)
+    fig, axs = plt.subplots(1)
+    axs.plot(positions_x, positions_y, 'r')
+    axs.set_aspect('equal', 'box')
+    plt.show()
+    #
+    # exit()
+    positions_x = []
+    positions_y = []
+    img_matcher = ImageMatcher()
+    transforms = [img_matcher.homography_matrix for img_1, img_2 in zip(images[:-1], images[1:])
+                  if img_matcher.match_images_from_file(img_1, img_2)]
     # [print(t) for t in transforms]
     curr_t = transforms[0]
     for next_t in transforms[1:]:

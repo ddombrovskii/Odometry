@@ -255,6 +255,7 @@ class DroneConnection:
                     self.disarm()
                     if self._connection:
                         self._port = p
+                        print(self.drone_connection.mav)
                         print(f"Mavlink connected to port: {p}")
                         break
                 except TimeoutError as ex:

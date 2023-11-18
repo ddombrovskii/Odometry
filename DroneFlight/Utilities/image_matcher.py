@@ -1,4 +1,6 @@
 from typing import Union
+
+from Utilities import io_utils
 from Utilities.Geometry import Matrix3, Vector2, PerspectiveTransform2d
 from matplotlib import pyplot as plt
 import numpy as np
@@ -27,7 +29,8 @@ def _filter_matches(matches, threshold=0.5):
     for pair in matches:
         if len(pair) != 2:
             continue
-        if pair[0].distance > threshold * pair[1].distance:
+        # if abs(pair[0].distance - pair[1].distance) / (pair[0].distance + pair[1].distance) < 0.55:
+        if pair[0].distance >= threshold * pair[1].distance:
             continue
         good_matches.append(pair[0])
 
@@ -60,7 +63,7 @@ class ImageMatcher:
                  "_kp_2", "_des_1", "_des_2", "_matches", "_good_matches", "_homography")
 
     def __init__(self, sift_or_orb: bool = True):
-        self._threshold = 0.5
+        self._threshold = 0.35
         self._img_1 = None
         self._img_2 = None
         self._des_1 = None
@@ -95,21 +98,25 @@ class ImageMatcher:
         if proj_transform_1 is None:
             pts_1 = np.float32([self._kp_1[m.queryIdx].pt for m in self._good_matches]).reshape(-1, 1, 2)
         else:
-            pts_1 = np.float32([proj_transform_1.perspective_multiply(
-                Vector2(*self._kp_1[m.queryIdx].pt)) for m in self._good_matches]).reshape(-1, 1, 2)
+            # proj_transform_1 = proj_transform_1.invert()
+            points = tuple(tuple(proj_transform_1.perspective_multiply(Vector2(*self._kp_1[m.queryIdx].pt)))
+                           for m in self._good_matches)
+            pts_1 = np.float32(points).reshape(-1, 1, 2)
 
         # maintaining list of index of descriptors
         # in train descriptors
         if proj_transform_2 is None:
             pts_2 = np.float32([self._kp_2[m.trainIdx].pt for m in self._good_matches]).reshape(-1, 1, 2)
         else:
-            pts_2 = np.float32([proj_transform_2.perspective_multiply(
-                Vector2(*self._kp_2[m.trainIdx].pt)) for m in self._good_matches]).reshape(-1, 1, 2)
+            # proj_transform_2 = proj_transform_2.invert()
+            points = tuple(tuple(proj_transform_2.perspective_multiply(Vector2(*self._kp_2[m.trainIdx].pt)))
+                           for m in self._good_matches)
+            pts_2 = np.float32(points).reshape(-1, 1, 2)
 
         # finding  perspective transformation
         # between two planes
         try:
-            matrix, mask = cv2.findHomography(pts_1, pts_2, cv2.RANSAC, 5.0)
+            matrix, mask = cv2.findHomography(pts_1, pts_2, cv2.RANSAC, 10.0)
             # print(matrix)
             self._homography = Matrix3.from_np_array(matrix)
             return True
@@ -125,8 +132,9 @@ class ImageMatcher:
         assert os.path.exists(image_1_src)
         assert os.path.exists(image_2_src)
         try:
-            return self.match_images(cv2.imread(image_1_src, cv2.IMREAD_GRAYSCALE),
-                                     cv2.imread(image_2_src, cv2.IMREAD_GRAYSCALE), proj_transform_1, proj_transform_2)
+            return self.match_images(io_utils.read_image(image_1_src, cv2.IMREAD_GRAYSCALE),
+                                     io_utils.read_image(image_2_src, cv2.IMREAD_GRAYSCALE),
+                                     proj_transform_1, proj_transform_2)
         except Exception as ex:
             print(f"Error occurs while image {image_1_src} and image {image_2_src} matching...\n Error:\n{ex}")
             return False

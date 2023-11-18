@@ -166,11 +166,6 @@ class Camera:
 
     @fov.setter
     def fov(self, fov_: float) -> None:
-        """
-        Field of view in degrees
-        :param fov_:
-        :return:
-        """
         self._fov = fov_
         self._raw_projection = True
 

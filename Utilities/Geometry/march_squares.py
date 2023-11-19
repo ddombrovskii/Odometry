@@ -74,8 +74,6 @@ def march_squares_2d(field: Callable[[float, float], float],
                      march_resolution: Tuple[int, int] = None,
                      threshold: float = 0.5,
                      interpolate: bool = True) -> List[Tuple[Vector2, Vector2]]:
-    """ Функция вспомогательная, вместно нее можно использовать контурный график из numpy"""
-
     march_resolution = (128, 128) if march_resolution is None else march_resolution
     assert len(march_resolution) == 2 and all(isinstance(v, int) for v in march_resolution)
 

@@ -6,3 +6,4 @@ from .bitset32 import set_bit
 from .circ_buffer import CircBuffer
 from .loop_timer import LoopTimer
 from .timer import Timer
+from .color import Color

@@ -39,7 +39,7 @@ def linear_regression(x: np.ndarray, y: np.ndarray) -> Tuple[float, float]:
     :param y: массив значений по y
     :returns: возвращает пару (k, b), которая является решением задачи (Σ(yi -(k * xi + b))^2)->min
     """
-    assert x.size == y.size, "fuck yo, Tony!"
+    assert x.size == y.size, "linear_regression::error::x.size != y.size"
     sum_x = x.sum()
     sum_y = y.sum()
     sum_xy = (x * y).sum()
@@ -104,8 +104,8 @@ def bi_linear_regression(x: np.ndarray, y: np.ndarray, z: np.ndarray) -> Tuple[f
     :param z: массив значений по z
     :returns: возвращает тройку (kx, ky, b), которая является решением задачи (Σ(zi - (yi * ky + xi * kx + b))^2)->min
     """
-    assert x.size == y.size, "fuck yo, Tony!"
-    assert x.size == z.size, "fuck yo, Tony!"
+    assert x.size == y.size, "bi_linear_regression::error::x.size != y.size"
+    assert x.size == z.size, "bi_linear_regression::error::x.size != z.size"
 
     sum_x = x.sum()
     sum_y = y.sum()
@@ -116,14 +116,15 @@ def bi_linear_regression(x: np.ndarray, y: np.ndarray, z: np.ndarray) -> Tuple[f
     sum_zy = (z * y).sum()
     sum_zx = (x * z).sum()
 
-    hess = np.array([[sum_xx, sum_xy, sum_x],
-                     [sum_xy, sum_yy, sum_y],
-                     [sum_x, sum_y, x.size]])
-    grad =  np.array([sum_xx + sum_xy - sum_zx,
+    hess = np.array(((sum_xx, sum_xy, sum_x),
+                     (sum_xy, sum_yy, sum_y),
+                     (sum_x,  sum_y, x.size)))
+    grad =  np.array((sum_xx + sum_xy - sum_zx,
                       sum_xy + sum_yy - sum_zy,
-                      sum_x + sum_y - sum_z])
+                      sum_x  + sum_y - sum_z))
     try:
-        return np.array([1.0, 1.0, 0.0]) - np.linalg.inv(hess) @ grad
+        kx, ky, b = np.array((1.0, 1.0, 0.0)) - np.linalg.inv(hess) @ grad
+        return kx, ky, b
     except LinAlgError as err:
         print(err.args)
         return 0.0, 0.0, 0.0
@@ -155,7 +156,7 @@ def poly_regression(x: np.ndarray, y: np.ndarray, order: int = 5) -> np.ndarray:
     :param order: порядок полинома
     :return: набор коэффициентов bi полинома y = Σx^i*bi
     """
-    assert x.size == y.size, "fuck yo, Tony!"
+    assert x.size == y.size, "poly_regression::error::x.size != y.size"
     a_m = np.zeros((order, order,), dtype=float)
     c_m = np.zeros((order,), dtype=float)
     _x_row = np.ones_like(x)
@@ -196,14 +197,15 @@ def n_linear_regression(data_rows: np.ndarray) -> np.ndarray:
     :param data_rows:  состоит из строк вида: [x_0,x_1,...,x_n, f(x_0,x_1,...,x_n)]
     :return:
     """
+    assert data_rows.ndim == 2, "n_linear_regression::error::data_rows.ndim != 2"
     n_points, n_dimension = data_rows.shape
-    assert n_dimension != 1, "fuck you, Tony!!!"
+    assert n_dimension != 1, "n_linear_regression::error::sample dimension is one"
     hess = np.zeros((n_dimension, n_dimension,), dtype=float)
     grad = np.zeros((n_dimension,), dtype=float)
-    pt_0 = np.zeros((n_dimension,), dtype=float)
+    pt_0 = np.ones((n_dimension,), dtype=float)
     hess[-1, -1] = n_points
+    pt_0[-1] = 0.0
     for row in range(n_dimension - 1):
-        pt_0[row] = 1.0
         hess[-1, row] = hess[row, -1] = (data_rows[:, row]).sum()
         for col in range(row + 1):
             hess[col, row] = hess[row, col] = np.dot(data_rows[:, row], data_rows[:, col])
@@ -219,16 +221,17 @@ def n_linear_regression(data_rows: np.ndarray) -> np.ndarray:
 
 
 def quadratic_regression_2d(x: np.ndarray, y: np.ndarray, z: np.ndarray) -> np.ndarray:
-    assert x.size == y.size, "fuck you, Tony!"
-    assert x.size == z.size, "fuck you, Tony!"
+    assert x.size == y.size, "quadratic_regression_2d::error::x.size != y.size"
+    assert x.size == z.size, "quadratic_regression_2d::error::x.size != z.size"
     b = (x * x, x * y, y * y, x, y, np.array([1.0]))
-    a_m = np.zeros((6, 6), dtype=float)
-    b_c = np.zeros((6,), dtype=float)
-    for row in range(6):
+    n_b = len(b)
+    a_m = np.zeros((n_b, n_b), dtype=float)
+    b_c = np.zeros((n_b,), dtype=float)
+    for row in range(n_b):
         b_c[row] = (b[row] * z).sum()
         for col in range(row + 1):
             a_m[col, row] = a_m[row, col] = (b[row] * b[col]).sum()
-    a_m[-1, -1] = x.size  # костыль, который я не придумал как убрать
+    a_m[-1, -1] = x.size
     try:
         return np.linalg.inv(a_m) @ b_c
     except LinAlgError as err:
@@ -237,9 +240,9 @@ def quadratic_regression_2d(x: np.ndarray, y: np.ndarray, z: np.ndarray) -> np.n
 
 
 def second_order_surface(x: np.ndarray, y: np.ndarray, args: np.ndarray) -> np.ndarray:
-    assert x.shape == y.shape
-    assert args.size == 6
-    return args[0] * x * x + args[1] * x * y + args[2] * y * y + args[3] * x + args[4] * y + args[5]
+    assert x.shape == y.shape, "second_order_surface::error::x.shape != y.shape"
+    assert args.size == 6, "second_order_surface::error::args.size != 6"
+    return sum(ci * argi for ci, argi in zip(args.flat, (x * x, x * y, y * y, x, y, 1.0)))
 
 
 def quadratic_shape_fit(y: np.ndarray, x: np.ndarray,

@@ -70,3 +70,20 @@ class BoundingBox:
     @property
     def center(self) -> Vector3:
         return (self._max + self._min) * 0.5
+
+    def distance(self, point: Vector3):
+        orig = self.center
+        size = self.size
+
+        x_l = point.x - (orig.x - size.x * 0.5)
+        x_r = point.x - (orig.x + size.x * 0.5)
+
+        y_l = point.y - (orig.y - size.y * 0.5)
+        y_r = point.y - (orig.y + size.y * 0.5)
+
+        z_l = point.z - (orig.z - size.z * 0.5)
+        z_r = point.z - (orig.z + size.z * 0.5)
+
+        return max(max(max(abs(y_l), abs(y_r)) - size.y,
+                       max(abs(x_l), abs(x_r)) - size.x),
+                   max(abs(z_l), abs(z_r)) - size.z)

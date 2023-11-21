@@ -5,25 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5ead7134-b374-42a1-8fdd-5ab1a6211af6" name="Changes" comment="path_view">
-      <change afterPath="$PROJECT_DIR$/Utilities/DataAnalysis/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Utilities/DataAnalysis/clustering_utils.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Utilities/DataAnalysis/examples/k_means_five_spots.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Utilities/DataAnalysis/examples/k_means_single_spot.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Utilities/DataAnalysis/examples/mean_shift_five_clusters.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Utilities/DataAnalysis/examples/mean_shift_single_cluster.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Utilities/DataAnalysis/k_means.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Utilities/DataAnalysis/l_regression.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Utilities/DataAnalysis/m_shift.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Utilities/Geometry/bounding_rect.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Utilities/Geometry/fourier.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Utilities/Geometry/interpolators.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/bounding_box.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/bounding_box.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/common.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/common.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/march_squares.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/march_squares.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/mutils.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/mutils.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/DataAnalysis/l_regression.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/DataAnalysis/l_regression.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -79,7 +62,7 @@
       <recent name="E:\GitHub\Odometry\Odometry\Utilities\Matplotlib" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.k_means (1)">
+  <component name="RunManager" selected="Python.l_regression (1)">
     <configuration name="fourier" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="Odometry" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -122,6 +105,27 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="l_regression (1)" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Odometry" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Utilities/DataAnalysis" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Utilities/DataAnalysis/l_regression.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="l_regression" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="Odometry" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -135,27 +139,6 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="SCRIPT_NAME" value="E:\GitHub\Odometry\Odometry\Utilities\DataAnalysis\l_regression.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration name="mean_shift" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="Odometry" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/clustering" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="E:\GitHub\Odometry\Odometry\Utilities\DataAnalysis\for_students\mean_shift.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -187,11 +170,11 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.l_regression (1)" />
         <item itemvalue="Python.k_means (1)" />
         <item itemvalue="Python.l_regression" />
         <item itemvalue="Python.packing" />
         <item itemvalue="Python.fourier" />
-        <item itemvalue="Python.mean_shift" />
       </list>
     </recent_temporary>
   </component>

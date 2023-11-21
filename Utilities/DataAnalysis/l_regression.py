@@ -259,9 +259,9 @@ class LRegression:
             print("wrong predict features data")
             return -1.0
         self._group_features_count = features.shape[1]
-        self._thetas: np.ndarray = np.array([rand_in_range(1000) for _ in range(self.group_features_count + 1)])
+        self._thetas = np.array([rand_in_range(1000) for _ in range(self.group_features_count + 1)])
         x = np.hstack((np.ones((features.shape[0], 1), dtype=float), features[:, 0: self.group_features_count]))
-        thetas: np.ndarray = self.thetas.copy()
+        thetas: np.ndarray = np.array(self.thetas)
         iteration = 0
         while True:
             self._thetas = thetas - self.learning_rate * (x.T @ (sigmoid(x @ thetas) - groups))
@@ -275,7 +275,7 @@ class LRegression:
                     print(f"trainings stopped after satisfy accuracy constraints.\n"
                           f"Eps: {self.learning_accuracy}, Iters: {iteration}")
                 break
-            thetas = self.thetas.copy()
+            thetas = np.array(self.thetas)
         self._losses = loss(self.predict(features), groups)
 
 

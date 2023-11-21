@@ -132,13 +132,25 @@ def loss(groups_probs, groups) -> float:
             (1.0 - groups) * np.log(1.0 + LOSSES_THRESHOLD - groups_probs)).mean()
 
 
-def draw_logistic_data(features: np.ndarray, groups: np.ndarray, theta: np.ndarray = None) -> None:
-    [plt.plot(features[i, 0], features[i, 1], '+b') if groups[i] == 0
-     else plt.plot(features[i, 0], features[i, 1], '*r') for i in
-     range(features.shape[0] // 2)]
+def plot_groups(features: np.ndarray, groups: np.ndarray, title: str = None):
+    group_1_x = tuple(sample[0] for sample_id, sample in enumerate(features) if groups[sample_id] == 0)
+    group_2_x = tuple(sample[0] for sample_id, sample in enumerate(features) if groups[sample_id] != 0)
+    group_1_y = tuple(sample[1] for sample_id, sample in enumerate(features) if groups[sample_id] == 0)
+    group_2_y = tuple(sample[1] for sample_id, sample in enumerate(features) if groups[sample_id] != 0)
+    plt.plot(group_1_x, group_1_y, '+b')
+    plt.plot(group_2_x, group_2_y, '*r')
+    plt.gca().set_title("Линейное разделение" if title is None else title)
+    plt.gca().set_xlabel("x")
+    plt.gca().set_ylabel("y")
+    plt.gca().legend(('Group\"A\"', 'Group\"B\"', 'Separator'), loc=1)
+    plt.gca().axis('equal')
+    plt.gca().grid(True)
+
+
+def draw_logistic_data(features: np.ndarray, groups: np.ndarray, theta: np.ndarray = None, title=None) -> None:
+    plot_groups(features, groups, title)
 
     if theta is None:
-        plt.show()
         return
 
     b = theta[0] / np.abs(theta[2])
@@ -160,7 +172,6 @@ def draw_logistic_data(features: np.ndarray, groups: np.ndarray, theta: np.ndarr
     x = [x_0, x_1]
     y = [b + x_0 * k, b + x_1 * k]
     plt.plot(x, y, 'k')
-    plt.show()
 
 
 class LRegression:
@@ -288,6 +299,7 @@ def lin_reg_test():
     lg(features, group)
     print(lg)
     draw_logistic_data(features, group, lg.thetas)
+    plt.show()
 
 
 def non_lin_reg_test():
@@ -302,16 +314,12 @@ def non_lin_reg_test():
     thetas = lg.thetas[1::] / -lg.thetas[0]
 
     sections = march_squares_2d(lambda x, y: ellipsoid(x, y, thetas), threshold=0.0)
-
-    for p_0, p_1 in sections:
-        plt.plot([p_0.x, p_1.x], [p_0.y, p_1.y], 'k')
-
-    plt.xlabel("x")
-    plt.ylabel("y")
     plt.grid(True)
     print(lg.thetas/np.abs(lg.thetas[0]))
-    draw_logistic_data(features, group)
-
+    draw_logistic_data(features, group, title="Нелинейное разделение")
+    for p_0, p_1 in sections:
+        plt.plot([p_0.x, p_1.x], [p_0.y, p_1.y], 'k')
+    plt.show()
 
 if __name__ == "__main__":
     lin_reg_test()

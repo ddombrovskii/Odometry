@@ -1,7 +1,6 @@
 from .transform_2d import Transform2d
 from .vector2 import Vector2
 from .common import *
-import math
 
 
 class BoundingRect:

@@ -4,10 +4,6 @@ import numpy as np
 import math
 
 
-_X = '_x'
-_Y = '_y'
-
-
 @dataclass
 class Vector2:
     """

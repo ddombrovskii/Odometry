@@ -3,10 +3,6 @@ from dataclasses import dataclass
 import numpy as np
 import math
 
-_X = '_x'
-_Y = '_y'
-_Z = '_z'
-
 
 @dataclass
 class Vector3:

@@ -96,8 +96,8 @@ def _march_squares_2d(field: Callable[[float, float], float],
 
     shape: List[Tuple[Tuple[float, float], Tuple[float, float]]] = []
     if interpolate:
-        for i in parallel_range(cols_ * rows_):
-            row_index, col_index = divmod(i, cols_)
+        for index in parallel_range(cols_ * rows_):
+            row_index, col_index = divmod(index, cols_)
             row = row_index * dy + min_bound_y
             col = col_index * dx + min_bound_x
             a_val, b_val, c_val, d_val = _eval_field_function(field, col, row, dx, dy)
@@ -108,8 +108,8 @@ def _march_squares_2d(field: Callable[[float, float], float],
             _SECTIONS_CONNECTION_ALGORYTHM[state](shape, a, b, c, d)
         return shape
 
-    for i in parallel_range(cols_ * rows_):
-        row_index, col_index = divmod(i, cols_)
+    for index in parallel_range(cols_ * rows_):
+        row_index, col_index = divmod(index, cols_)
         row = row_index * dy + min_bound_y
         col = col_index * dx + min_bound_x
         a_val, b_val, c_val, d_val = _eval_field_function(field, col, row, dx, dy)

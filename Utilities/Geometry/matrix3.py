@@ -6,20 +6,6 @@ from typing import Tuple
 import numpy as np
 import math
 
-__license__ = "GNU Lesser General Public License v3"
-
-_M00 = '_m00'
-_M01 = '_m01'
-_M02 = '_m02'
-
-_M10 = '_m10'
-_M11 = '_m11'
-_M12 = '_m12'
-
-_M20 = '_m20'
-_M21 = '_m21'
-_M22 = '_m22'
-
 
 @dataclass
 class Matrix3:

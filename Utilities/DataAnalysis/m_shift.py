@@ -1,4 +1,4 @@
-from .clustering_utils import gaussian_cluster, draw_clusters, distance, gauss_core
+from clustering_utils import gaussian_cluster, draw_clusters, distance, gauss_core
 from typing import Union, List, Tuple
 import numpy as np
 

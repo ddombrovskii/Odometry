@@ -85,3 +85,7 @@ def gauss_core(value: Union[np.ndarray, float], sigma: float = 0.5) -> Union[np.
 
 def flat_core(value: Union[np.ndarray, float], sigma: float = 0.5) -> np.ndarray:
     return np.exp(-value * 0.5 / (sigma * sigma))
+
+
+if __name__ == "__main__":
+    print(pack_color_code(22, 33, 55))

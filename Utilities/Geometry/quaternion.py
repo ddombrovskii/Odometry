@@ -6,59 +6,57 @@ import numpy as np
 import math
 
 
-_EW = '_ew'
-_EX = '_ex'
-_EY = '_ey'
-_EZ = '_ez'
-
-
 @dataclass
 class Quaternion:
     """
     immutable Quaternion
     """
-    __slots__ = (_EW, _EX, _EY, _EZ)
+    __slots__ = ('_ew', '_ex', '_ey', '_ez')
 
     @property
     def ex(self) -> float:
-        return self.__getattribute__(_EX)
+        return self._ex
 
     @property
     def ey(self) -> float:
-        return self.__getattribute__(_EY)
+        return self._ey
 
     @property
     def ez(self) -> float:
-        return self.__getattribute__(_EZ)
+        return self._ez
 
     @property
     def ew(self) -> float:
-        return self.__getattribute__(_EW)
+        return self._ew
 
     @ex.setter
     def ex(self, value: float) -> None:
-        self.__setattr__(_EX, float(value))
+        self._ex = float(value)
 
     @ey.setter
     def ey(self, value: float) -> None:
-        self.__setattr__(_EY, float(value))
+        self._ey = float(value)
 
     @ez.setter
     def ez(self, value: float) -> None:
-        self.__setattr__(_EZ, float(value))
+        self._ez = float(value)
 
     @ew.setter
     def ew(self, value: float) -> None:
-        self.__setattr__(_EW, float(value))
+        self._ew = float(value)
 
     def __init__(self, *args):
         assert len(args) == 4
-        for attr, val in zip(Quaternion.__slots__, args):
-            self.__setattr__(attr, float(val))
+        self._ew = float(args[0])
+        self._ex = float(args[1])
+        self._ey = float(args[2])
+        self._ez = float(args[3])
 
     def __iter__(self):
-        for attr in Quaternion.__slots__:
-            yield self.__getattribute__(attr)
+        yield self._ew
+        yield self._ex
+        yield self._ey
+        yield self._ez
 
     def conj(self):
         self.ex *= -1
@@ -103,12 +101,16 @@ class Quaternion:
         except ZeroDivisionError as _:
             return Quaternion()
 
-    def reciprocal(self):
+    def recip(self):
         try:
-            n2 = 1.0 / self.magnitude_sqr
-            return Quaternion(n2 * self.ew, -n2 * self.ex, -n2 * self.ey, -n2 * self.ez)
+            self.conj()
+            return self.__imul__(1.0 / self.magnitude_sqr)
         except ZeroDivisionError as _:
-            return Quaternion()
+            return self
+
+    @property
+    def reciprocal(self):
+        return self.__copy__().recip()
 
     def invert(self):
         try:
@@ -134,6 +136,14 @@ class Quaternion:
 
     def __neg__(self):
         return Quaternion(-self.ew, -self.ex, -self.ey, -self.ez)
+
+    def __copy__(self):
+        return Quaternion(self.ew, self.ex, self.ey, self.ez)
+
+    def __eq__(self, other):
+        if not isinstance(other, Quaternion):
+            return False
+        return not any(v1 != v2 for v1, v2 in zip(self, other))
 
     def __add__(self, other):
         if isinstance(other, Quaternion):
@@ -194,6 +204,8 @@ class Quaternion:
                               self.ew * other.ex + self.ex * other.ew - self.ey * other.ez + self.ez * other.ey,
                               self.ew * other.ey + self.ex * other.ez + self.ey * other.ew - self.ez * other.ex,
                               self.ew * other.ez - self.ex * other.ey + self.ey * other.ex + self.ez * other.ew)
+        if isinstance(other, Vector3):
+            return self.rotate(other)
         if isinstance(other, int) or isinstance(other, float):
             return Quaternion(other * self.ex, other * self.ey, other * self.ez, other * self.ew)
         raise RuntimeError(f"Quaternion::Mul::wrong argument type {type(other)}")
@@ -204,6 +216,8 @@ class Quaternion:
                               other.ew * self.ex + other.ex * self.ew - other.ey * self.ez + other.ez * self.ey,
                               other.ew * self.ey + other.ex * self.ez + other.ey * self.ew - other.ez * self.ex,
                               other.ew * self.ez - other.ex * self.ey + other.ey * self.ex + other.ez * self.ew)
+        if isinstance(other, Vector3):
+            return self.inverted.rotate(other)
         if isinstance(other, int) or isinstance(other, float):
             return Quaternion(other * self.ex, other * self.ey, other * self.ez, other * self.ew)
         raise RuntimeError(f"Quaternion::Mul::wrong argument type {type(other)}")
@@ -229,19 +243,19 @@ class Quaternion:
 
     def __truediv__(self, other):
         if isinstance(other, Quaternion):
-            return self.__mul__(other.reciprocal())
+            return self.__mul__(other.reciprocal)
         if isinstance(other, int) or isinstance(other, float):
             return Quaternion(self.ex / other, self.ey / other, self.ez / other, self.ew / other)
 
     def __rtruediv__(self, other):
         if isinstance(other, Quaternion):
-            return other.__mul__(self.reciprocal())
+            return other.__mul__(self.reciprocal)
         if isinstance(other, int) or isinstance(other, float):
             return Quaternion(other / self.ex, other / self.ey, other / self.ez, other / self.ew)
 
     def __idiv__(self, other):
         if isinstance(other, Quaternion):
-            return self.__imul__(other.reciprocal())
+            return self.__imul__(other.reciprocal)
         if isinstance(other, int) or isinstance(other, float):
             return self.__imul__(1.0 / other)
         raise RuntimeError(f"Quaternion::Mul::wrong argument type {type(other)}")
@@ -297,20 +311,15 @@ class Quaternion:
             cy: float = math.cos(DEG_TO_RAD * yaw * 0.5)
             sy: float = math.sin(DEG_TO_RAD * yaw * 0.5)
 
-        return cls(cr * cp * cy + sr * sp * sy,
-                   sr * cp * cy - cr * sp * sy,
-                   cr * sp * cy + sr * cp * sy,
-                   cr * cp * sy - sr * sp * cy)
+        return cls(cr * cp * cy + sr * sp * sy, sr * cp * cy - cr * sp * sy,
+                   cr * sp * cy + sr * cp * sy, cr * cp * sy - sr * sp * cy)
 
     @classmethod
     def from_axis_and_angle(cls, axis: Vector3, angle: float):
         assert isinstance(axis, Vector3)
         assert isinstance(angle, float) or isinstance(angle, int)
         angle *= 0.5
-        return cls(math.cos(angle),
-                   -axis.x * math.sin(angle),
-                   -axis.y * math.sin(angle),
-                   -axis.z * math.sin(angle))
+        return cls(math.cos(angle), -axis.x * math.sin(angle), -axis.y * math.sin(angle), -axis.z * math.sin(angle))
 
     @classmethod
     def from_rotation_matrix(cls, rm: Matrix4):
@@ -324,7 +333,7 @@ class Quaternion:
         qy = math.copysign(qy, rm.m02 - rm.m20)
         qz = math.copysign(qz, rm.m10 - rm.m01)
         try:
-            norm = 1.0 / math.sqrt(sum(v ** 2 for v in (qw, qx, qy, qz)))
+            norm = 1.0 / math.sqrt(qw * qw + qx * qx + qy * qy + qz * qz)
             return cls(qw * norm, qx * norm, qy * norm, qz * norm)
         except ZeroDivisionError as _:
             return cls()

@@ -1,11 +1,7 @@
-from .common import NUMERICAL_FORMAT_4F as _4F
+from .common import NUMERICAL_FORMAT_4F as _4F, NUMERICAL_ACCURACY
 from dataclasses import dataclass
 import numpy as np
 import math
-
-
-_X = '_x'
-_Y = '_y'
 
 
 @dataclass
@@ -13,49 +9,52 @@ class Vector2:
     """
     mutable vector 4d
     """
-    __slots__ = (_X, _Y)
+    __slots__ = ('_x', '_y')
 
     @property
     def x(self) -> float:
-        return self.__getattribute__(_X)
+        return self._x
 
     @property
     def y(self) -> float:
-        return self.__getattribute__(_Y)
+        return self._y
 
     @x.setter
     def x(self, value: float) -> None:
-        self.__setattr__(_X, float(value))
+        self._x = float(value)
 
     @y.setter
     def y(self, value: float) -> None:
-        self.__setattr__(_Y, float(value))
+        self._y = float(value)
 
     def __init__(self, *args):
         assert len(args) == 2
-        for attr, val in zip(Vector2.__slots__, args):
-            self.__setattr__(attr, float(val))
+        self._x = float(args[0])
+        self._y = float(args[1])
 
     def __iter__(self):
-        for attr in Vector2.__slots__:
-            yield self.__getattribute__(attr)
+        yield self._x
+        yield self._y
+
+    def __eq__(self, other):
+        if not isinstance(other, Vector2):
+            return False
+        return not any(v1 != v2 for v1, v2 in zip(self, other))
 
     def __str__(self):
         return f"{{\"x\": {self.x:{_4F}}, \"y\": {self.y:{_4F}}}}"
 
     def __neg__(self):
-        return self.__mul__(-1.0)
+        return Vector2(-self.x, -self.y)
 
     def __abs__(self):
         return Vector2(abs(self.x), abs(self.y))
 
     def __add__(self, other):
         if isinstance(other, Vector2):
-            return Vector2(self.x + other.x,
-                           self.y + other.y)
+            return Vector2(self.x + other.x, self.y + other.y)
         if isinstance(other, int) or isinstance(other, float):
-            return Vector2(self.x + other,
-                           self.y + other)
+            return Vector2(self.x + other, self.y + other)
         raise RuntimeError(f"Vector2::Add::wrong argument type {type(other)}")
 
     def __iadd__(self, other):
@@ -73,21 +72,10 @@ class Vector2:
 
     def __sub__(self, other):
         if isinstance(other, Vector2):
-            return Vector2(self.x - other.x,
-                           self.y - other.y)
+            return Vector2(self.x - other.x, self.y - other.y)
         if isinstance(other, int) or isinstance(other, float):
-            return Vector2(self.x - other,
-                           self.y - other)
+            return Vector2(self.x - other, self.y - other)
         raise RuntimeError(f"Vector2::Sub::wrong argument type {type(other)}")
-
-    def __rsub__(self, other):
-        if isinstance(other, Vector2):
-            return Vector2(other.x - self.x,
-                           other.y - self.y)
-        if isinstance(other, int) or isinstance(other, float):
-            return Vector2(other - self.x,
-                           other - self.y)
-        raise RuntimeError(f"Vector2::RSub::wrong argument type {type(other)}")
 
     def __isub__(self, other):
         if isinstance(other, Vector2):
@@ -100,13 +88,18 @@ class Vector2:
             return self
         raise RuntimeError(f"Vector2::ISub::wrong argument type {type(other)}")
 
+    def __rsub__(self, other):
+        if isinstance(other, Vector2):
+            return Vector2(other.x - self.x, other.y - self.y)
+        if isinstance(other, int) or isinstance(other, float):
+            return Vector2(other - self.x, other - self.y)
+        raise RuntimeError(f"Vector2::RSub::wrong argument type {type(other)}")
+
     def __mul__(self, other):
         if isinstance(other, Vector2):
-            return Vector2(other.x * self.x,
-                           other.y * self.y)
+            return Vector2(other.x * self.x, other.y * self.y)
         if isinstance(other, int) or isinstance(other, float):
-            return Vector2(other * self.x,
-                           other * self.y)
+            return Vector2(other * self.x, other * self.y)
         raise RuntimeError(f"Vector3::Mul::wrong argument type {type(other)}")
 
     def __imul__(self, other):
@@ -124,21 +117,10 @@ class Vector2:
 
     def __truediv__(self, other):
         if isinstance(other, Vector2):
-            return Vector2(self.x / other.x,
-                           self.y / other.y)
+            return Vector2(self.x / other.x, self.y / other.y)
         if isinstance(other, int) or isinstance(other, float):
-            return Vector2(self.x / other,
-                           self.y / other)
+            return Vector2(self.x / other, self.y / other)
         raise RuntimeError(f"Vector2::Div::wrong argument type {type(other)}")
-
-    def __rtruediv__(self, other):
-        if isinstance(other, Vector2):
-            return Vector2(other.x / self.x,
-                           other.y / self.y)
-        if isinstance(other, int) or isinstance(other, float):
-            return Vector2(other / self.x,
-                           other / self.y)
-        raise RuntimeError(f"Vector2::RDiv::wrong argument type {type(other)}")
 
     def __idiv__(self, other):
         if isinstance(other, Vector2):
@@ -151,11 +133,18 @@ class Vector2:
             return self
         raise RuntimeError(f"Vector2::IDiv::wrong argument type {type(other)}")
 
+    def __rtruediv__(self, other):
+        if isinstance(other, Vector2):
+            return Vector2(other.x / self.x, other.y / self.y)
+        if isinstance(other, int) or isinstance(other, float):
+            return Vector2(other / self.x, other / self.y)
+        raise RuntimeError(f"Vector2::RDiv::wrong argument type {type(other)}")
+
     __div__, __rdiv__ = __truediv__, __rtruediv__
 
     @property
     def magnitude_sqr(self) -> float:
-        return sum(x * x for x in self)
+        return self.x * self.x + self.y * self.y
 
     @property
     def magnitude(self) -> float:
@@ -241,7 +230,7 @@ class Vector2:
         da = cls(pt2.x - pt1.x, pt2.y - pt1.y)
         db = cls(pt4.x - pt3.x, pt4.y - pt3.y)
         det = Vector2.cross(da, db)
-        if abs(det) < 1e-5:
+        if abs(det) < NUMERICAL_ACCURACY:
             # if Vector2.overlay(pt1, pt2, pt3, pt4):
             #     return sum((pt1, pt2, pt3, pt4)) * 0.25
             return None

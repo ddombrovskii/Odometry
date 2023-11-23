@@ -1,4 +1,4 @@
-from Utilities.loop_timer import LoopTimer
+from Utilities.Common.loop_timer import LoopTimer
 from typing import Tuple, List, Callable
 from matplotlib import pyplot as plt
 import numpy as np

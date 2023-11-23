@@ -1,6 +1,6 @@
 from Utilities.Geometry.vector3 import Vector3
 # from inertial_measurement_unit import IMU
-from Utilities.loop_timer import LoopTimer
+from Utilities.Common.loop_timer import LoopTimer
 from collections import namedtuple
 from typing import List
 import datetime as dt

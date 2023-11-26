@@ -1,4 +1,4 @@
-from clustering_utils import gaussian_cluster, draw_clusters, distance, gauss_core
+from .clustering_utils import gaussian_cluster, draw_clusters, distance, gauss_core
 from typing import Union, List, Tuple
 import numpy as np
 
@@ -191,20 +191,17 @@ class MShift:
         Выполняется до тех пор, пока все точки не будут помечены, как неподвижные.
         """
         shifted_points = np.array(self._data)
-        frozen_points_count = 0
-        frozen_points = [False for _ in range(self.n_samples)]
-        # or : still_shifting =[True] * self.n_samples
-        while frozen_points_count != self.n_samples:
+        frozen_points_indices = set()
+        while len(frozen_points_indices) != self.n_samples:
             for sample_index, sample in enumerate(shifted_points):
-                if frozen_points[sample_index]:
+                if sample_index in frozen_points_indices:
                     continue
                 shifted_sample = self._shift_cluster_point(sample)
                 dist = distance(shifted_sample, sample)
                 shifted_points[sample_index] = shifted_sample
                 if dist > self.distance_threshold:
                     continue
-                frozen_points[sample_index] = True
-                frozen_points_count += 1
+                frozen_points_indices.add(sample_index)
                 self._update_clusters_centers(sample_index, shifted_sample)
 
     def _get_closest_cluster_center(self, sample: np.ndarray) -> Tuple[int, float]:

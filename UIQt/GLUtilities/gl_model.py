@@ -1,8 +1,8 @@
 from Utilities.Geometry import Transform3d, BoundingBox
 from .gl_objects_pool import ObjectsPoolGL
+from UIQt.GLUtilities import gl_globals
 from .gl_material import MaterialGL
 from .gl_mesh import MeshGL
-from UIQt.GLUtilities import gl_globals
 
 
 class ModelGL:

@@ -15,6 +15,7 @@ def _signum(_a: float) -> float:
     return 1.0 if _a >= 0.0 else -1.0
 
 
+@fast_math
 def _squares_nearest_interp(col, row, dx, dy):
     return (col + dx * 0.5, row),\
            (col + dx, row + dy * 0.5),\
@@ -22,6 +23,7 @@ def _squares_nearest_interp(col, row, dx, dy):
            (col, row + dy * 0.5)
 
 
+@fast_math
 def _squares_linear_interp(col, row, dx, dy, a_val, b_val, c_val, d_val, threshold):
     d_t = b_val - a_val
     a = (_interp(col, col + dx, _signum(threshold - a_val)), row) if abs(d_t) < NUMERICAL_ACCURACY else \

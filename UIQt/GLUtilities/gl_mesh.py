@@ -1,9 +1,10 @@
-from .gl_tris_mesh import TrisMeshGL, create_plane, create_box
 from Utilities.Geometry import Transform3d, BoundingBox, Vector3
+from .gl_tris_mesh import TrisMeshGL, create_plane, create_box
 from .gl_objects_pool import ObjectsPoolGL
 from .gl_decorators import gl_error_catch
+from Utilities.Common import BitSet32
 from .gl_buffer import BufferGL
-from Utilities import BitSet32
+from typing import Union
 from OpenGL.GL import *
 import numpy as np
 
@@ -30,11 +31,11 @@ class MeshGL:
     def __repr__(self):
         return f"{{\n" \
                f"\t\"name\"           :\"{self.name}\",\n" \
-               f"\t\"vao_id\"         :{self._vao},\n" \
-               f"\t\"ibo_id\"         :{self._vbo.bind_id},\n" \
-               f"\t\"vbo_id\"         :{self._ibo.bind_id},\n" \
-               f"\t\"bytes_per_vert\" :{self._vertex_byte_size},\n" \
-               f"\t\"attributes\"     :{self._vertex_attributes.state}\n}}"
+               f"\t\"vao_id\"         :{self.bind_id},\n" \
+               f"\t\"ibo_id\"         :{self.vbo.bind_id},\n" \
+               f"\t\"vbo_id\"         :{self.ibo.bind_id},\n" \
+               f"\t\"bytes_per_vert\" :{self.vertex_byte_size},\n" \
+               f"\t\"attributes\"     :{self.vertex_attributes.state}\n}}"
 
     def __str__(self):
         return f"{{\n" \
@@ -47,9 +48,9 @@ class MeshGL:
         self._source: str = ""
         self._bounds: BoundingBox = BoundingBox()
         self._vao: int = 0
-        self._vbo: BufferGL | None = None
-        self._ibo: BufferGL | None = None
-        self._instance_buffer: BufferGL | None = None
+        self._vbo: Union[BufferGL, None] = None
+        self._ibo: Union[BufferGL, None] = None
+        self._instance_buffer: Union[BufferGL, None] = None
         self._vertex_attributes: BitSet32 = BitSet32()
         self._vertex_byte_size = 0
         if not (mesh is None):
@@ -88,6 +89,14 @@ class MeshGL:
         MeshGL.meshes.unregister_object(self)
         self._name = value
         MeshGL.meshes.register_object(self)
+
+    @property
+    def vertex_byte_size(self) -> int:
+        return self._vertex_byte_size
+
+    @property
+    def vertex_attributes(self) -> BitSet32:
+        return self._vertex_attributes
 
     @property
     def bounds(self) -> BoundingBox:

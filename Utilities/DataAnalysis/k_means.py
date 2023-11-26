@@ -208,11 +208,10 @@ class KMeans:
         self._data = data
         self._create_start_clusters_centers()
         prev_centroids = self._clusters_centers
-        while True:
+        curr_centroids = self._clusterize_step()
+        while not all(distance(left, right) < self.distance_threshold for left, right in
+                      zip(prev_centroids, curr_centroids)):
             curr_centroids = self._clusterize_step()
-            if all(distance(left, right) < self.distance_threshold for left, right in
-                   zip(prev_centroids, curr_centroids)):
-                break
             prev_centroids, self._clusters_centers = self._clusters_centers, curr_centroids
 
     def show(self):

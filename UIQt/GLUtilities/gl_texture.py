@@ -1,7 +1,7 @@
 from .gl_objects_pool import ObjectsPoolGL
 from .gl_decorators import gl_error_catch
+from Utilities.Common import Color
 from typing import Union, List
-from Utilities import Color
 from OpenGL.GL import *
 from PIL import Image
 import numpy as np
@@ -12,7 +12,7 @@ class TextureGL:
 
     textures = ObjectsPoolGL()
 
-    def __init__(self, w: int = 16, h: int = 16, col: Color = Color(np.uint8(255), np.uint8(0), np.uint8(0)),
+    def __init__(self, w: int = 16, h: int = 16, col: Color = None,
                  alpha=False):
 
         self._source_file = "no-name"
@@ -24,7 +24,7 @@ class TextureGL:
         self._filtering_mode = (GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR)
         self._bind_target: GLenum = GL_TEXTURE_2D
         self._warp_mode = GL_REPEAT
-        self._load_data(col)
+        self._load_data(Color(np.uint8(255), np.uint8(0), np.uint8(0)) if col is None else col)
         self.repeat()
         self.bi_linear()
         TextureGL.textures.register_object(self)

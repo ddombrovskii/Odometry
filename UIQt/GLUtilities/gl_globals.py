@@ -1,3 +1,4 @@
+from Utilities.Common import Color
 from Utilities.Geometry import Camera
 from .Materials import GridMaterial
 from .Materials import MapMaterial
@@ -9,7 +10,6 @@ from UIQt.GLUtilities.Input.mouse_controller import MouseController
 from .gl_texture import TextureGL
 from .gl_shader import ShaderGL
 from .gl_mesh import MeshGL
-from Utilities import Color
 import numpy as np
 
 

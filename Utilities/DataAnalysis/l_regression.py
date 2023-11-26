@@ -9,33 +9,6 @@ import random
 warnings.filterwarnings('ignore')
 _debug_mode = False
 
-"""
-Пусть есть два события связаны соотношением:
-P{y=1|X} = f(z) (1)
-P{y=0|X} = 1 - f(z) (2)
-z = b + (X,T)
-f(z)  = 1 / (1 + exp{-z})
-d/dz f(z)  = z' * exp{-z} / (1 + exp{-z})^2 = z' * (1 - 1/f(z))/f(z)^2 = 
-           = z' * ((1 - f(z)) * f(z)) (3)
-
-Тогда соотношения (1) и (2):
-P{y=1|X} = f(b + (X,T)) (4)
-P{y=0|X} = 1 - f(b + (X,T)) (5)
-Вероятность y при условии Х
-P{y|X} = f(b + (X,T))^y*(1 - f(b + (X,T)))^(y-1) (6)
-Условие максимального правдоподобия:
-{b,T} = argmax(П P{y_i|X_i}) = argmax(? ln(P{y_i|X_i}))
-argmax(? ln(P{y_i|X_i})) = ?y_i * ln(f(b + (X,T))) + (1-y_i)*(ln(1 - f(b + (X,T))))
-требуеся найти производные для:
-d/db argmax(? ln(P{y_i|X_i}))
-d/t_j argmax(? ln(P{y_i|X_i})), где t_j элемент вектора T
-Для этого распишем необходимые нам формулы:
-d/dx ln(f(x)) = af'(x)/f(x)
-
-d/db   ln(f(b + (X,T))) =       f'(b + (X,T))/f(b + (X,T)) =        1 - f(b + (X,T) 
-d/dx_j ln(f(b + (X,T))) = d/dx_j f(b + (X,T))/f(b + (X,T)) = x_j * (1 - f(b + (X,T))
-"""
-
 
 def rand_in_range(rand_range: Union[float, Tuple[float, float]] = 1.0) -> float:
     """
@@ -176,11 +149,33 @@ def draw_logistic_data(features: np.ndarray, groups: np.ndarray, theta: np.ndarr
 
 class LRegression:
     """
+    Пусть есть два события связаны соотношением:
+    P{y=1|X} = f(z) (1)
+    P{y=0|X} = 1 - f(z) (2)
+    z = b + (X,T)
+    f(z)  = 1 / (1 + exp{-z})
+    d/dz f(z)  = z' * exp{-z} / (1 + exp{-z})^2 = z' * (1 - 1/f(z))/f(z)^2 =
+               = z' * ((1 - f(z)) * f(z)) (3)
 
+    Тогда соотношения (1) и (2):
+    P{y=1|X} = f(b + (X,T)) (4)
+    P{y=0|X} = 1 - f(b + (X,T)) (5)
+    Вероятность y при условии Х
+    P{y|X} = f(b + (X,T))^y*(1 - f(b + (X,T)))^(y-1) (6)
+    Условие максимального правдоподобия:
+    {b,T} = argmax(П P{y_i|X_i}) = argmax(? ln(P{y_i|X_i}))
+    argmax(? ln(P{y_i|X_i})) = ?y_i * ln(f(b + (X,T))) + (1-y_i)*(ln(1 - f(b + (X,T))))
+    требуеся найти производные для:
+    d/db argmax(? ln(P{y_i|X_i}))
+    d/t_j argmax(? ln(P{y_i|X_i})), где t_j элемент вектора T
+    Для этого распишем необходимые нам формулы:
+    d/dx ln(f(x)) = af'(x)/f(x)
+
+    d/db   ln(f(b + (X,T))) =       f'(b + (X,T))/f(b + (X,T)) =        1 - f(b + (X,T)
+    d/dx_j ln(f(b + (X,T))) = d/dx_j f(b + (X,T))/f(b + (X,T)) = x_j * (1 - f(b + (X,T))
     """
     def __init__(self, learning_rate: float = 1.0, max_iters: int = 1000, accuracy: float = 1e-2):
         """
-
         :param learning_rate:
         :param max_iters:
         :param accuracy:
@@ -191,7 +186,6 @@ class LRegression:
         self._learning_rate: float = 0.0
         self._losses: float = 0.0
         self._thetas: Union[np.ndarray, None] = None
-
         self.max_train_iters   = max_iters
         self.learning_rate     = learning_rate
         self.learning_accuracy = accuracy
@@ -210,7 +204,7 @@ class LRegression:
         if len(args) != 2:
             return
         x, group = args
-        self.train(x, group)
+        self.fit(x, group)
 
     @property
     def group_features_count(self) -> int:
@@ -258,35 +252,30 @@ class LRegression:
         if features.shape[1] != self.thetas.size - 1:
             print("wrong predict features data")
             return -1.0
-        return sigmoid(features @ self.thetas[1::] + self.thetas[0])
+        return sigmoid(features @ self.thetas[1:] + self.thetas[0])
 
-    def train(self, features: np.ndarray, groups: np.ndarray):
+    def fit(self, features: np.ndarray, groups: np.ndarray):
         assert isinstance(features, np.ndarray), f"train features value error, type of features is {type(features)}"
         assert isinstance(groups, np.ndarray), f"train groups value error, type of groups is {type(features)}"
-        if features.ndim != 2:
-            print("wrong predict features data")
-            return -1.0
-        if groups.size != features.shape[0]:
-            print("wrong predict features data")
-            return -1.0
+        assert features.ndim == 2, f"features.ndim != 2"
+        assert groups.size == features.shape[0], f"groups.size != features.shape[0]"
         self._group_features_count = features.shape[1]
-        self._thetas = np.array([rand_in_range(1000) for _ in range(self.group_features_count + 1)])
-        x = np.hstack((np.ones((features.shape[0], 1), dtype=float), features[:, 0: self.group_features_count]))
+        self._thetas = np.random.uniform(-1000, 1000, self.group_features_count + 1)
         thetas: np.ndarray = np.array(self.thetas)
         iteration = 0
-        while True:
-            self._thetas = thetas - self.learning_rate * (x.T @ (sigmoid(x @ thetas) - groups))
-            iteration += 1
-            if iteration >= self.max_train_iters:
-                if _debug_mode:
-                    print(f"trainings stopped after exceed available iterations count : {self.max_train_iters}")
-                break
-            if np.sqrt(np.power(thetas - self.thetas, 2.0).sum()) <= self.learning_accuracy:
-                if _debug_mode:
-                    print(f"trainings stopped after satisfy accuracy constraints.\n"
-                          f"Eps: {self.learning_accuracy}, Iters: {iteration}")
-                break
-            thetas = np.array(self.thetas)
+        for iteration in range(self.max_train_iters + 1):
+            error    = sigmoid(features @ thetas[1:] + thetas[0]) - groups
+            gradient = np.hstack((error.sum(), features.T @ error))
+            self._thetas = thetas - self.learning_rate * gradient
+            if np.linalg.norm(thetas - self.thetas) > self.learning_accuracy:
+                thetas = np.array(self.thetas)
+                continue
+            if _debug_mode:
+                print(f"trainings stopped after satisfy accuracy constraints.\n"
+                      f"Eps: {self.learning_accuracy:.5f}, Iters: {iteration:5}")
+            break
+        if _debug_mode:
+            print(f"iterations count : {iteration:5}")
         self._losses = loss(self.predict(features), groups)
 
 
@@ -320,6 +309,7 @@ def non_lin_reg_test():
     for p_0, p_1 in sections:
         plt.plot([p_0.x, p_1.x], [p_0.y, p_1.y], 'k')
     plt.show()
+
 
 if __name__ == "__main__":
     lin_reg_test()

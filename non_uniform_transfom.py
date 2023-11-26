@@ -1,5 +1,5 @@
 from Utilities import io_utils
-from Utilities.Geometry import Matrix3, Vector2, PerspectiveTransform2d, Camera, Vector4, Quaternion
+from Utilities.Geometry import Matrix3, Vector2, PerspectiveTransform2d, Quaternion
 from matplotlib import pyplot as plt
 import numpy as np
 import os.path
@@ -32,8 +32,8 @@ import cv2
 
 # -1.0 | 1.0 | 1.0 |  0  |  0  |  0  |  p_x | -p_x |
 #   0  |  0  |  0  |-1.0 | 1.0 | 1.0 |  p_y | -p_y |
-from Utilities.flight_odometer import FlightOdometer
-from Utilities.image_matcher import ImageMatcher
+from Utilities.CV.flight_odometer import FlightOdometer
+from Utilities.CV.image_matcher import ImageMatcher
 
 
 def perspective_transform_test():

@@ -1,8 +1,7 @@
-from typing import Union
-
-from Utilities import io_utils
-from Utilities.Geometry import Matrix3, Vector2, PerspectiveTransform2d
+from Utilities.Geometry import Matrix3, Vector2
 from matplotlib import pyplot as plt
+from Utilities import io_utils
+from typing import Union
 import numpy as np
 import os
 import cv2

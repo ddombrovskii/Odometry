@@ -1,4 +1,5 @@
 from Utilities.Geometry import Matrix4, Vector3, Vector2, BoundingBox, Camera
+from Utilities.Common import BitSet32
 from .gl_tris_mesh import read_obj_mesh, poly_strip
 from .gl_frame_buffer import FrameBufferGL
 from .gl_material import MaterialGL
@@ -7,7 +8,6 @@ from .gl_shader import ShaderGL
 from .gl_model import ModelGL
 from .gl_mesh import MeshGL
 from UIQt.GLUtilities import gl_globals
-from Utilities import BitSet32
 from typing import List, Dict
 import OpenGL.GL as GL
 import json
@@ -25,8 +25,8 @@ class SceneGL:
         self._cam_position   = Vector3(0, 0, 0)
         self._bounds         = BoundingBox()
         self._gizmo_bounds   = BoundingBox()
-        self._models_bounds  = BoundingBox()
         self._draw_state: BitSet32 = BitSet32()
+        self._models_bounds  = BoundingBox()
         self.draw_gizmos   = True
         self.draw_entities = True
         self._perspective  = True

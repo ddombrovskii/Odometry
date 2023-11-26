@@ -1,12 +1,15 @@
+from Utilities.Geometry import fast_math
 from typing import Union, List, Tuple
 import matplotlib.pyplot as plt
 import numpy as np
 
 
+@fast_math
 def clamp(value, min_value, max_value):
     return max(min(value, max_value), min_value)
 
 
+@fast_math
 def pack_color_code(red: int, green: int, blue: int) -> str:
     """
     Создаёт цветовую кодировку, совместимую с параметром matplotlib color
@@ -14,10 +17,12 @@ def pack_color_code(red: int, green: int, blue: int) -> str:
     return f"#{''.join('{:02X}'.format(clamp(a, 0, 255)) for a in (red, green, blue))}"
 
 
+@fast_math
 def unpack_color_code(code: str) -> Tuple[int, int, int]:
     return int(code[-6:-4], 16), int(code[-4:-2], 16), int(code[-2:], 16)
 
 
+@fast_math
 def gaussian_cluster(cx: float = 0.0, cy: float = 0.0, sigma_x: float = 0.1, sigma_y: float = 0.1, n_points: int = 1024):
     """
     Двумерный кластер точек, распределённых нормально с центром в
@@ -27,6 +32,7 @@ def gaussian_cluster(cx: float = 0.0, cy: float = 0.0, sigma_x: float = 0.1, sig
                       np.random.normal(cy, sigma_y, n_points).reshape((n_points, 1))))
 
 
+@fast_math
 def color_map_nonlinear(map_amount: int = 3) -> List[str]:
     """
     Генератор цветов для кластеров
@@ -75,13 +81,16 @@ def draw_clusters(clusters: List[np.ndarray],
     plt.show()
 
 
+@fast_math
 def distance(left: np.ndarray, right: np.ndarray) -> float:
     return np.linalg.norm(right - left)
 
 
+@fast_math
 def gauss_core(value: Union[np.ndarray, float], sigma: float = 0.5) -> Union[np.ndarray, float]:
     return np.exp(-value * 0.5 / (sigma * sigma))
 
 
+@fast_math
 def flat_core(value: Union[np.ndarray, float], sigma: float = 0.5) -> np.ndarray:
     return np.exp(-value * 0.5 / (sigma * sigma))

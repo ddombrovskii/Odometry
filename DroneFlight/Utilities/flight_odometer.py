@@ -1,4 +1,4 @@
-from .Geometry import Camera, Matrix3, Vector3, Plane, PerspectiveTransform2d, Vector2, Matrix4, Quaternion, Ray
+from .Geometry import Camera, Matrix3, Vector3, Plane, Vector2, Matrix4, Quaternion, Ray
 from .image_matcher import ImageMatcher
 from typing import Tuple, Union
 from . import Timer

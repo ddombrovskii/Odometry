@@ -17,15 +17,15 @@ class Face(namedtuple('Face', 'p_1, uv1, n_1,'
                 p2: int = None, uv2: int = None, n2: int = None,
                 p3: int = None, uv3: int = None, n3: int = None):
         return super().__new__(cls,
-                               -1 if p1  is None else max(-1, int(p1 )),
-                               -1 if uv1 is None else max(-1, int(uv1)),
-                               -1 if n1  is None else max(-1, int(n1 )),
-                               -1 if p2  is None else max(-1, int(p2 )),
-                               -1 if uv2 is None else max(-1, int(uv2)),
-                               -1 if n2  is None else max(-1, int(n2 )),
-                               -1 if p3  is None else max(-1, int(p3 )),
-                               -1 if uv3 is None else max(-1, int(uv3)),
-                               -1 if n3  is None else max(-1, int(n3 )))
+                                p1 , # -1 if p1  is None else max(-1, int(p1 )),
+                                uv1, # -1 if uv1 is None else max(-1, int(uv1)),
+                                n1 , # -1 if n1  is None else max(-1, int(n1 )),
+                                p2 , # -1 if p2  is None else max(-1, int(p2 )),
+                                uv2, # -1 if uv2 is None else max(-1, int(uv2)),
+                                n2 , # -1 if n2  is None else max(-1, int(n2 )),
+                                p3 , # -1 if p3  is None else max(-1, int(p3 )),
+                                uv3, # -1 if uv3 is None else max(-1, int(uv3)),
+                                n3 ) # -1 if n3  is None else max(-1, int(n3 )))
 
     def __str__(self):
         return f"{{\n" \
@@ -220,7 +220,7 @@ class TrisMeshGL:
             self._faces.append(f)
             return
         if isinstance(f, tuple):
-            self._faces.append(Face(f[0], f[0], f[0], f[1], f[1], f[1], f[2], f[2], f[2]))
+            self._faces.append(Face(*f))
             return
         raise ValueError("append_face")
 

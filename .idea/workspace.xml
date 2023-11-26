@@ -6,6 +6,24 @@
   <component name="ChangeListManager">
     <list default="true" id="5ead7134-b374-42a1-8fdd-5ab1a6211af6" name="Changes" comment="path_view">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DroneFlight/Utilities/flight_odometer.py" beforeDir="false" afterPath="$PROJECT_DIR$/DroneFlight/Utilities/flight_odometer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UIQt/GLUtilities/gl_globals.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/GLUtilities/gl_globals.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UIQt/GLUtilities/gl_mesh.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/GLUtilities/gl_mesh.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UIQt/GLUtilities/gl_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/GLUtilities/gl_model.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UIQt/GLUtilities/gl_scene.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/GLUtilities/gl_scene.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UIQt/GLUtilities/gl_texture.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/GLUtilities/gl_texture.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UIQt/GLUtilities/gl_tris_mesh.py" beforeDir="false" afterPath="$PROJECT_DIR$/UIQt/GLUtilities/gl_tris_mesh.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/CV/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/CV/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/Common/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Common/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/DataAnalysis/clustering_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/DataAnalysis/clustering_utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/DataAnalysis/k_means.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/DataAnalysis/k_means.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/DataAnalysis/l_regression.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/DataAnalysis/l_regression.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/DataAnalysis/m_shift.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/DataAnalysis/m_shift.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/march_squares.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/march_squares.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/flight_odometer.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/CV/flight_odometer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/image_matcher.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/CV/image_matcher.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/io_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/io_utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/non_uniform_transfom.py" beforeDir="false" afterPath="$PROJECT_DIR$/non_uniform_transfom.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -37,14 +55,14 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "last_opened_file_path": "E:/GitHub/Odometry/Odometry/Utilities/Geometry",
-    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;E:/GitHub/Odometry/Odometry/Utilities/Geometry&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="E:\GitHub\Odometry\Odometry\Utilities\Geometry" />
@@ -54,14 +72,14 @@
       <recent name="E:\GitHub\Odometry\Odometry" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="E:\GitHub\Odometry\Odometry\Utilities\CV" />
       <recent name="E:\GitHub\Odometry\Odometry\Utilities\DataAnalysis\examples" />
       <recent name="E:\GitHub\Odometry\Odometry\Utilities\DataAnalysis\for_students" />
       <recent name="E:\GitHub\Odometry\Odometry\Utilities\Common" />
       <recent name="E:\GitHub\Odometry\Odometry\clustering" />
-      <recent name="E:\GitHub\Odometry\Odometry\Utilities\Matplotlib" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.m_shift">
+  <component name="RunManager" selected="Python.l_regression (1)">
     <configuration name="k_means (1)" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="Odometry" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -169,8 +187,8 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.m_shift" />
         <item itemvalue="Python.l_regression (1)" />
+        <item itemvalue="Python.m_shift" />
         <item itemvalue="Python.k_means (1)" />
         <item itemvalue="Python.l_regression" />
         <item itemvalue="Python.packing" />
@@ -290,7 +308,7 @@
           <option name="timeStamp" value="118" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/Utilities/flight_odometer.py</url>
+          <url>file://$PROJECT_DIR$/Utilities/CV/flight_odometer.py</url>
           <line>76</line>
           <option name="timeStamp" value="149" />
         </line-breakpoint>
@@ -315,14 +333,14 @@
           <option name="timeStamp" value="161" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/Utilities/Geometry/march_squares.py</url>
-          <line>77</line>
-          <option name="timeStamp" value="162" />
+          <url>file://$PROJECT_DIR$/Utilities/DataAnalysis/l_regression.py</url>
+          <line>125</line>
+          <option name="timeStamp" value="166" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/Utilities/DataAnalysis/l_regression.py</url>
-          <line>152</line>
-          <option name="timeStamp" value="166" />
+          <line>266</line>
+          <option name="timeStamp" value="169" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

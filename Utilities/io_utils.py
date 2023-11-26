@@ -15,19 +15,23 @@ def get_file_type(f_path: str) -> str:
     return f_path[f_path.rfind('.') + 1:].lower()
 
 
-def clear_folder(folder: str) -> None:
+def clear_folder(folder: str) -> bool:
     assert isinstance(folder, str)
+    status = False
     for the_file in os.listdir(folder):
         file_path = os.path.join(folder, the_file)
         try:
             if os.path.isfile(file_path):
                 os.unlink(file_path)
+                status |= True
         except Exception as e:
             print(f"clear folder error{e.args}")
+    return status
 
 
-def clear_folder_files_with_ext(folder: str, ext: str) -> None:
+def clear_folder_files_with_ext(folder: str, ext: str) -> bool:
     assert isinstance(folder, str)
+    status = False
     for the_file in os.listdir(folder):
         file_path = os.path.join(folder, the_file)
         try:
@@ -36,14 +40,18 @@ def clear_folder_files_with_ext(folder: str, ext: str) -> None:
             if get_file_type(file_path) != ext:
                 continue
             os.remove(file_path)
+            status |= True
         except Exception as e:
             print(f"clear folder error{e.args}")
+    return status
 
 
-def create_dir(dir_name: str) -> None:
+def create_dir(dir_name: str) -> bool:
     assert isinstance(dir_name, str)
     if not os.path.exists(dir_name):
         os.makedirs(dir_name)
+        return True
+    return False
 
 
 def get_files_paths_from_dir(src_dir: str) -> List[str]:

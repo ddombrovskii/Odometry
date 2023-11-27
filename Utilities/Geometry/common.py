@@ -12,6 +12,18 @@ DEG_TO_RAD = PI / 180.0
 RAD_TO_DEG = 180.0 / PI
 
 
+_indent = ''
+
+
+def set_indent_level(level: int):
+    global _indent
+    _indent = '\t' * level
+
+
+def indent():
+    return _indent
+
+
 def _numba_error_decorator(func):
     def wrapped(*args, **kwargs):
         try:

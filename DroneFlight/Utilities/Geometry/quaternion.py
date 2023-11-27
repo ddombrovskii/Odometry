@@ -6,12 +6,6 @@ import numpy as np
 import math
 
 
-_EW = '_ew'
-_EX = '_ex'
-_EY = '_ey'
-_EZ = '_ez'
-
-
 @dataclass
 class Quaternion:
     """

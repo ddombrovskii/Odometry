@@ -5,12 +5,102 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5ead7134-b374-42a1-8fdd-5ab1a6211af6" name="Changes" comment="path_view">
-      <change afterPath="$PROJECT_DIR$/Utilities/Geometry/Drawning/settings.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/Common/color.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/DataAnalysis/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/DataAnalysis/clustering_utils.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/DataAnalysis/clusters.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/DataAnalysis/examples/k_means_five_spots.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/DataAnalysis/examples/k_means_single_spot.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/DataAnalysis/examples/l_regression_linear_separation.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/DataAnalysis/examples/l_regression_nonlinear_separation.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/DataAnalysis/examples/mean_shift_five_clusters.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/DataAnalysis/examples/mean_shift_single_cluster.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/DataAnalysis/for_students/clustering.rar" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/DataAnalysis/for_students/clustering_utils.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/DataAnalysis/for_students/clusters.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/DataAnalysis/for_students/k_means.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/DataAnalysis/for_students/k_means_five_spots.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/DataAnalysis/for_students/k_means_single_spot.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/DataAnalysis/for_students/k_means_task.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/DataAnalysis/for_students/mean_shift.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/DataAnalysis/for_students/mean_shift_five_clusters.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/DataAnalysis/for_students/mean_shift_single_cluster.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/DataAnalysis/for_students/mean_shift_task.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/DataAnalysis/image_sample.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/DataAnalysis/k_means.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/DataAnalysis/l_regression.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/DataAnalysis/m_shift.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/Geometry/Drawning/settings.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/Geometry/bounding_rect.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/Geometry/fourier.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/Geometry/interpolators.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/Geometry/march_squares.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/sim_imgs/image1.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/sim_imgs/image10.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/sim_imgs/image11.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/sim_imgs/image12.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/sim_imgs/image13.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/sim_imgs/image14.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/sim_imgs/image15.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/sim_imgs/image16.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/sim_imgs/image17.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/sim_imgs/image18.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/sim_imgs/image19.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/sim_imgs/image2.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/sim_imgs/image20.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/sim_imgs/image21.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/sim_imgs/image22.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/sim_imgs/image23.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/sim_imgs/image24.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/sim_imgs/image25.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/sim_imgs/image26.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/sim_imgs/image27.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/sim_imgs/image28.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/sim_imgs/image29.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/sim_imgs/image3.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/sim_imgs/image30.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/sim_imgs/image31.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/sim_imgs/image32.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/sim_imgs/image4.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/sim_imgs/image5.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/sim_imgs/image6.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/sim_imgs/image7.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DroneFlight/Utilities/sim_imgs/image8.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Utilities/DataAnalysis/image_sample.jpg" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/Odometry.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Odometry.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/DroneFlight/Utilities/image_matcher.py" beforeDir="false" afterPath="$PROJECT_DIR$/DroneFlight/Utilities/image_matcher.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/DataAnalysis/clustering_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/DataAnalysis/clustering_utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DroneFlight/Utilities/CV/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/DroneFlight/Utilities/CV/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DroneFlight/Utilities/Common/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/DroneFlight/Utilities/Common/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DroneFlight/Utilities/Common/circ_buffer.py" beforeDir="false" afterPath="$PROJECT_DIR$/DroneFlight/Utilities/Common/circ_buffer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DroneFlight/Utilities/Geometry/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/DroneFlight/Utilities/Geometry/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DroneFlight/Utilities/Geometry/bounding_box.py" beforeDir="false" afterPath="$PROJECT_DIR$/DroneFlight/Utilities/Geometry/bounding_box.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DroneFlight/Utilities/Geometry/common.py" beforeDir="false" afterPath="$PROJECT_DIR$/DroneFlight/Utilities/Geometry/common.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DroneFlight/Utilities/Geometry/matrix3.py" beforeDir="false" afterPath="$PROJECT_DIR$/DroneFlight/Utilities/Geometry/matrix3.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DroneFlight/Utilities/Geometry/matrix4.py" beforeDir="false" afterPath="$PROJECT_DIR$/DroneFlight/Utilities/Geometry/matrix4.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DroneFlight/Utilities/Geometry/mutils.py" beforeDir="false" afterPath="$PROJECT_DIR$/DroneFlight/Utilities/Geometry/mutils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DroneFlight/Utilities/Geometry/quaternion.py" beforeDir="false" afterPath="$PROJECT_DIR$/DroneFlight/Utilities/Geometry/quaternion.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DroneFlight/Utilities/Geometry/vector2.py" beforeDir="false" afterPath="$PROJECT_DIR$/DroneFlight/Utilities/Geometry/vector2.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DroneFlight/Utilities/Geometry/vector3.py" beforeDir="false" afterPath="$PROJECT_DIR$/DroneFlight/Utilities/Geometry/vector3.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DroneFlight/Utilities/Geometry/vector4.py" beforeDir="false" afterPath="$PROJECT_DIR$/DroneFlight/Utilities/Geometry/vector4.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DroneFlight/Utilities/Geometry/voxel.py" beforeDir="false" afterPath="$PROJECT_DIR$/DroneFlight/Utilities/Geometry/voxel.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DroneFlight/Utilities/Matplotlib/animated_plot.py" beforeDir="false" afterPath="$PROJECT_DIR$/DroneFlight/Utilities/Matplotlib/animated_plot.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DroneFlight/Utilities/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/DroneFlight/Utilities/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DroneFlight/Utilities/color.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DroneFlight/Utilities/flight_odometer.py" beforeDir="false" afterPath="$PROJECT_DIR$/DroneFlight/Utilities/CV/flight_odometer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DroneFlight/Utilities/image_matcher.py" beforeDir="false" afterPath="$PROJECT_DIR$/DroneFlight/Utilities/CV/image_matcher.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DroneFlight/Utilities/io_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/DroneFlight/Utilities/io_utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DroneFlight/odometry_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/DroneFlight/odometry_test.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/CV/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/CV/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/CV/flight_odometer.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/CV/flight_odometer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/CV/image_matcher.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/CV/image_matcher.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/DataAnalysis/k_means.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/DataAnalysis/k_means.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/common.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/common.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/matrix3.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/matrix3.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/non_uniform_transfom.py" beforeDir="false" afterPath="$PROJECT_DIR$/non_uniform_transfom.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pixhawk_read_test.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/planar_odometry.py" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -28,7 +118,9 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/Mavlink/drone_connection.py" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Utilities/serial_utils.py" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/drone_flight.py" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/uart_image.py" root0="FORCE_HIGHLIGHTING" />
   </component>
   <component name="MarkdownSettingsMigration">
@@ -44,15 +136,15 @@
   &quot;keyToString&quot;: {
     &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;E:/GitHub/Odometry/Odometry/Utilities/Geometry&quot;,
+    &quot;last_opened_file_path&quot;: &quot;E:/GitHub/Odometry/Odometry/DroneFlight&quot;,
     &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;
   }
 }</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
-      <recent name="E:\GitHub\Odometry\Odometry\Utilities\Geometry" />
-      <recent name="E:\GitHub\Odometry\Odometry\Utilities\DataAnalysis" />
       <recent name="E:\GitHub\Odometry\Odometry\DroneFlight" />
+      <recent name="E:\GitHub\Odometry\Odometry\Utilities\DataAnalysis" />
+      <recent name="E:\GitHub\Odometry\Odometry\Utilities\Geometry" />
       <recent name="E:\GitHub\Odometry\Odometry\clustering" />
       <recent name="E:\GitHub\Odometry\Odometry" />
     </key>
@@ -64,7 +156,7 @@
       <recent name="E:\GitHub\Odometry\Odometry\Utilities\Matplotlib" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.clustering_utils">
+  <component name="RunManager" selected="Python.non_uniform_transfom">
     <configuration name="clustering_utils" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="Odometry" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -128,27 +220,6 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="l_regression" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="Odometry" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Utilities/DataAnalysis" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="E:\GitHub\Odometry\Odometry\Utilities\DataAnalysis\l_regression.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
     <configuration name="m_shift" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="Odometry" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -170,13 +241,34 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="non_uniform_transfom" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Odometry" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/non_uniform_transfom.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.clustering_utils" />
+        <item itemvalue="Python.non_uniform_transfom" />
         <item itemvalue="Python.k_means (1)" />
+        <item itemvalue="Python.clustering_utils" />
         <item itemvalue="Python.m_shift" />
         <item itemvalue="Python.l_regression (1)" />
-        <item itemvalue="Python.l_regression" />
       </list>
     </recent_temporary>
   </component>
@@ -231,16 +323,6 @@
           <url>file://$PROJECT_DIR$/uart_image.py</url>
           <line>140</line>
           <option name="timeStamp" value="27" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/pixhawk_read_test.py</url>
-          <line>52</line>
-          <option name="timeStamp" value="40" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/pixhawk_read_test.py</url>
-          <line>46</line>
-          <option name="timeStamp" value="41" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/binary_logic.py</url>
@@ -332,6 +414,7 @@
     <watches-manager>
       <configuration name="PythonConfigurationType">
         <watch expression="self._scene._gizmos" />
+        <watch expression="self.descriptors_2" />
       </configuration>
     </watches-manager>
   </component>

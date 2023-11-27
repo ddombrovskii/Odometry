@@ -6,23 +6,6 @@ from typing import Tuple
 import numpy as np
 import math
 
-_M00 = '_m00'
-_M01 = '_m01'
-_M02 = '_m02'
-_M03 = '_m03'
-_M10 = '_m10'
-_M11 = '_m11'
-_M12 = '_m12'
-_M13 = '_m13'
-_M20 = '_m20'
-_M21 = '_m21'
-_M22 = '_m22'
-_M23 = '_m23'
-_M30 = '_m30'
-_M31 = '_m31'
-_M32 = '_m32'
-_M33 = '_m33'
-
 
 @dataclass
 class Matrix4:

@@ -1,4 +1,5 @@
 from Utilities.Geometry import Matrix3, Vector2
+from Utilities.Geometry import set_indent_level
 from matplotlib import pyplot as plt
 from Utilities import io_utils
 from typing import Union
@@ -61,6 +62,77 @@ class ImageMatcher:
     __slots__ = ("_matcher", "_detector", "_threshold", "_img_1", "_img_2", "_kp_1",
                  "_kp_2", "_des_1", "_des_2", "_matches", "_good_matches", "_homography")
 
+    def __repr__(self):
+        val =  f"\t{{\n" \
+               f"\t\t\"threshold\":          {self.threshold:4f},\n" \
+               f"\t\t\"kp1_count\":          {0 if self._kp_1 is None else len(self._kp_1):5},\n" \
+               f"\t\t\"kp2_count\":          {0 if self._kp_2 is None else len(self._kp_2):5},\n" \
+               f"\t\t\"desc1_count\":        {0 if self._des_1 is None else len(self._des_1):5},\n" \
+               f"\t\t\"desc2_count\":        {0 if self._des_2 is None else len(self._des_2):5},\n" \
+               f"\t\t\"matches_count\":      {0 if self._matches is None else len(self._matches):5},\n" \
+               f"\t\t\"good_matches_count\": {0 if self._good_matches is None else len(self._good_matches):5},\n" \
+               f"\t\t\"homography\":\n{self._homography}\n" \
+               f"\t}}"
+        return val
+
+    def __str__(self):
+        def _kp_parce(kp, indent='\t'):
+            return f"{indent}{{\"angle\": {kp.angle:4.3f}, " \
+                   f"\"class_id\":{kp.class_id:4}, " \
+                   f"\"octave\":  {kp.octave:8}, " \
+                   f"\"response\":{kp.response:4.8f}, " \
+                   f"\"pt\": [{', '.join(f'{v:.3f}'for v in kp.pt)}]}}"
+
+        def _kps_parce(points, indent=''):
+            if points is None:
+                return "[]"
+            sep = ',\n'
+            return f"[\n{sep.join(_kp_parce(kp, indent)for kp in points)}\n{indent}]"
+
+        def _desc_parse(desc, indent='\t'):
+            val =  f",\n".join(f"{indent}[{', '.join(f'{v:.3f}' for v in row)}]"for row in desc)
+            return f"{indent}[\n{val}\n{indent}]"
+
+        def _matches_pair_parce(m, indent='\t'):
+            if len(m) == 0:
+                return f"{indent}[]"
+            if len(m) == 0:
+                return f"{indent}[\n" \
+                       f"{indent}{{\"distance\": {m[0].distance}, \"imgIdx\":{m[0].imgIdx}, \"queryIdx\":{m[0].queryIdx}, \"trainIdx\":{m[0].trainIdx}}}\n" \
+                       f"{indent}\n]"
+
+            return f"{indent}[\n" \
+                   f"{indent}{{\"distance\": {m[0].distance}, \"imgIdx\":{m[0].imgIdx}, \"queryIdx\":{m[0].queryIdx}, \"trainIdx\":{m[0].trainIdx}}},\n" \
+                   f"{indent}{{\"distance\": {m[1].distance}, \"imgIdx\":{m[1].imgIdx}, \"queryIdx\":{m[1].queryIdx}, \"trainIdx\":{m[1].trainIdx}}}\n" \
+                   f"{indent}\n]"
+
+        def _matches_parce(matches, indent='\t'):
+            sep = ',\n'
+            if matches is None:
+                return f"[]"
+            return f"[{indent}\n{sep.join(_matches_pair_parce(m) for m in matches)}\n{indent}]"
+
+        set_indent_level(1)
+        tab = '\t'
+        val =  f"{{" \
+               f"\t\"threshold\":          {self.threshold:4f},\n" \
+               f"\t\"kp1_count\":          {0 if self._kp_1 is None else len(self._kp_1):5},\n" \
+               f"\t\"kp1\":                \n{_kps_parce(self._kp_1, tab)},\n" \
+               f"\t\"kp2_count\":          {0 if self._kp_2 is None else len(self._kp_2):5},\n" \
+               f"\t\"kp2\":                \n{_kps_parce(self._kp_2, tab)},\n" \
+               f"\t\"desc1_count\":        {0 if self._des_1 is None else len(self._des_1):5},\n" \
+               f"\t\"desc1\":              \n{_desc_parse(self._des_1, tab)},\n" \
+               f"\t\"desc2_count\":        {0 if self._des_2 is None else len(self._des_2):5},\n" \
+               f"\t\"desc2\":              \n{_desc_parse(self._des_2, tab)},\n" \
+               f"\t\"matches_count\":      {0 if self._matches is None else len(self._matches):5},\n" \
+               f"\t\"matches\":            \n{_matches_parce(self._matches)},\n" \
+               f"\t\"good_matches_count\": {0 if self._good_matches is None else len(self._good_matches):5},\n" \
+               f"\t\"good_matches\":       \n{_matches_parce(self._good_matches)},\n" \
+               f"\t\"homography\":\n{self._homography}\n" \
+               f"}}"
+        set_indent_level(0)
+        return val
+
     def __init__(self, sift_or_orb: bool = True):
         self._threshold = 0.35
         self._img_1 = None
@@ -70,8 +142,8 @@ class ImageMatcher:
         self._kp_1 = None
         self._kp_2 = None
         self._matches = None
-        self._homography = Matrix3.identity()
         self._good_matches = None
+        self._homography = Matrix3.identity()
         if sift_or_orb:
             self._detector = cv2.SIFT_create()
             self._matcher = _flann_sift()
@@ -97,7 +169,6 @@ class ImageMatcher:
         if proj_transform_1 is None:
             pts_1 = np.float32([self._kp_1[m.queryIdx].pt for m in self._good_matches]).reshape(-1, 1, 2)
         else:
-            # proj_transform_1 = proj_transform_1.invert()
             points = tuple(tuple(proj_transform_1.perspective_multiply(Vector2(*self._kp_1[m.queryIdx].pt)))
                            for m in self._good_matches)
             pts_1 = np.float32(points).reshape(-1, 1, 2)
@@ -107,7 +178,6 @@ class ImageMatcher:
         if proj_transform_2 is None:
             pts_2 = np.float32([self._kp_2[m.trainIdx].pt for m in self._good_matches]).reshape(-1, 1, 2)
         else:
-            # proj_transform_2 = proj_transform_2.invert()
             points = tuple(tuple(proj_transform_2.perspective_multiply(Vector2(*self._kp_2[m.trainIdx].pt)))
                            for m in self._good_matches)
             pts_2 = np.float32(points).reshape(-1, 1, 2)

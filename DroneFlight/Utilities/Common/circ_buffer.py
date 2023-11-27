@@ -54,7 +54,6 @@ class CircBuffer:
         """
         if self.n_items == 0:
             raise IndexError(f"CircBuffer :: pop :: items amount is {self.n_items}")
-        # value = self._values[self._index(self.n_items - 1)]
         return self._values[self._index(self.n_items - 1)]
 
     def pop(self) -> float:

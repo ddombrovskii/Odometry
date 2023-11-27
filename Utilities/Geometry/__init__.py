@@ -5,7 +5,7 @@ __version__ = '0.1.25'
 __license__ = "GNU Lesser General Public License v3"
 from .common import NUMERICAL_MAX_VALUE, NUMERICAL_MIN_VALUE, PI, TWO_PI, HALF_PI
 from .common import NUMERICAL_ACCURACY, NUMERICAL_FORMAT_4F, NUMERICAL_FORMAT_8F
-from .common import DEG_TO_RAD, RAD_TO_DEG, parallel_range, fast_math, parallel
+from .common import DEG_TO_RAD, RAD_TO_DEG, parallel_range, fast_math, parallel, indent, set_indent_level
 from .perspective_transform_2d import PerspectiveTransform2d, perspective_transform_test
 from .transform_3d import Transform3d, deg_to_rad, transform_3d_test
 from .transform_2d import Transform2d, transform_2d_test

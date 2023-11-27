@@ -1,8 +1,9 @@
-from .Geometry import Camera, Matrix3, Vector3, Plane, Vector2, Matrix4, Quaternion, Ray
+from Utilities.Geometry import Camera, Matrix3, Vector3, Plane, Vector2, Matrix4, Quaternion, Ray
 from .image_matcher import ImageMatcher
+from Utilities.Common import Timer
 from typing import Tuple, Union
-from . import Timer
 import numpy as np
+import time
 
 
 class FlightOdometer:
@@ -18,7 +19,26 @@ class FlightOdometer:
         # print('=======================================')
         return tuple(Vector2(p.x, p.y) for p in points)
 
+    def __repr__(self):
+        return f"  {{\n" \
+               f"\t\t\"camera_fov\":      {self._camera.fov},\n" \
+               f"\t\t\"camera_aspect\":   {self._camera.aspect},\n" \
+               f"\t\t\"camera_rotation\": {self._camera.transform.rotation},\n" \
+               f"\t\t\"camera_position\": {self._camera.transform.origin},\n" \
+               f"\t\t\"curr_time\":       {self._timer.total_time},\n" \
+               f"\t\t\"compute_time\":    {self._timer.delta_outer_time + self._timer.delta_inner_time},\n" \
+               f"\t\t\"position\":        {self.position},\n" \
+               f"\t\t\"velocity\":        {self.velocity},\n" \
+               f"\t\t\"acceleration\":    {self.acceleration},\n" \
+               f"\t\t\"projection_mat\":\n{self._curr_proj_mat},\n" \
+               f"\t\t\"gt_transform\":\n{self._curr_gt_transform},\n" \
+               f"\t\"image_matcher_state\":\n{repr(self._image_matcher)}\n" \
+               "  }"
+
     def __init__(self):
+        self._logging = False
+        self._separator = ''
+        self._file_handle = None
         # SIFT based image features matcher
         self._image_matcher: ImageMatcher = ImageMatcher()
         # Geometric camera
@@ -59,11 +79,11 @@ class FlightOdometer:
         _border = FlightOdometer._camera_frustum_ground_border(self._camera)
         _image_border = (Vector2(image_w, image_h), Vector2(image_w, 0), Vector2(0, 0), Vector2(0, image_h))
         if self._prev_frame is None:
-            self._curr_proj_mat = Matrix3.perspective_transform_from_eight_points(*_border, *_image_border)
-            self._prev_proj_mat = Matrix3.perspective_transform_from_eight_points(*_border, *_image_border)
+            self._curr_proj_mat = Matrix3.perspective_transform_from_eight_points(*_image_border, *_border)
+            self._prev_proj_mat = Matrix3.perspective_transform_from_eight_points(*_image_border, *_border)
         else:
             self._prev_proj_mat  = self._curr_proj_mat
-            self._curr_proj_mat  = Matrix3.perspective_transform_from_eight_points(*_border, *_image_border)
+            self._curr_proj_mat  = Matrix3.perspective_transform_from_eight_points(*_image_border, *_border)
 
     def _build_transforms(self) -> None:
         self._prev_gt_transform  = self._curr_gt_transform
@@ -115,6 +135,20 @@ class FlightOdometer:
         """
         with self._timer:
             self._compute(image, rotation, altitude)
+            if self._logging:
+                print(f'{self._separator}{repr(self)}', file=self._file_handle, end='')
+                self._separator = ',\n'
+
+    def enable_logging(self, f_handle=None):
+        self._logging = True
+        self._file_handle = f_handle
+        print(f"{{\n  \"odometry_log_begin_time\": \"{time.strftime('%H:%M:%S')}\",", file=self._file_handle)
+        print(f"  \"odometry_calls_status\": [", file=self._file_handle)
+
+    def disable_logging(self) -> None:
+        self._logging = False
+        self._separator = ''
+        print("\n  ]\n}", file=self._file_handle, end='')
 
     @property
     def velocity(self) -> Vector3:

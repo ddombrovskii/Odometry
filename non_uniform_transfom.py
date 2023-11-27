@@ -202,7 +202,15 @@ def build_test_data_for_image_track(image_src: str, target_dir: str):
 
 
 def image_index(img) -> int:
-    return int((img.split('_')[-1]).split('.')[0])
+    try:
+        return int((img.split('_')[-1]).split('.')[0])
+    except ValueError as err:
+        error_str = f"file name without \"_\" separator, file name: {img}"
+    try:
+        return int(img.split('\\')[-1][5:].split('.')[0])
+    except ValueError as err:
+       error_str = f"file name starts without key word \"image\", file name: {img}"
+    raise ValueError(error_str)
 
 
 if __name__ == "__main__":
@@ -232,27 +240,32 @@ if __name__ == "__main__":
     # exit()
     # build_test_data_for_image_track("salzburg_city_view_by_burtn-d61404o.jpg", "path_track")
     # exit()
-    # directory  = "phantom_flight_1"
-    directory = "path_track"
+    # directory  = "path_track"
+    directory = "Utilities/sim_imgs"
     images = [f"{os.path.join(directory, src)}" for src in os.listdir(directory) if src.endswith('png') or src.endswith('JPG')]
     images = sorted(images, key=image_index)
     [print(t) for t in images]
     flight_odometer = FlightOdometer()
     rot_q = Quaternion.from_euler_angles(0.0, 0.0, 0.0, False)
-    # image_1 = io_utils.read_image(images[0], cv2.IMREAD_GRAYSCALE)
-    # image_2 = io_utils.read_image(images[1], cv2.IMREAD_GRAYSCALE)
-    # flight_odometer.compute(image_1, rot_q, 10)
-    # flight_odometer.compute(image_2, rot_q, 10)
     positions_x = []
     positions_y = []
-    for image_src in images:
-        image = io_utils.read_image(image_src, cv2.IMREAD_GRAYSCALE)
-        flight_odometer.compute(image, rot_q, 1)
-        positions_x.append(flight_odometer.position.x)
-        positions_y.append(flight_odometer.position.y)
+    with open('odometer_log.json', 'wt', encoding='utf-8') as log_file:
+        flight_odometer.enable_logging(log_file)
+        for image_src in images:
+            image = io_utils.read_image(image_src, cv2.IMREAD_GRAYSCALE)
+            flight_odometer.compute(image, rot_q, 30)
+            positions_x.append(flight_odometer.position.x)
+            positions_y.append(flight_odometer.position.y)
+        flight_odometer.disable_logging()
+
     fig, axs = plt.subplots(1)
     axs.plot(positions_x, positions_y, 'r')
     axs.set_aspect('equal', 'box')
+    axs.set_title('odometry')
+    axs.set_xlabel("x")
+    axs.set_ylabel("y")
+    axs.axis('equal')
+    axs.grid(True)
     plt.show()
     #
     # exit()
@@ -272,6 +285,11 @@ if __name__ == "__main__":
 
     fig, axs = plt.subplots(1)
     axs.plot(positions_x, positions_y, 'r')
+    axs.set_title('homography')
+    axs.set_xlabel("x")
+    axs.set_ylabel("y")
+    axs.axis('equal')
+    axs.grid(True)
     axs.set_aspect('equal', 'box')
     plt.show()
 

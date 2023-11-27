@@ -1,16 +1,23 @@
-from Utilities.flight_odometer import FlightOdometer
-from Utilities import io_utils
 from Utilities.Geometry import Quaternion
+from Utilities.CV import FlightOdometer
+from Utilities.CV import ImageMatcher
 from matplotlib import pyplot as plt
+from Utilities import io_utils
 import numpy as np
 import os.path
 import cv2
 
-from Utilities.image_matcher import ImageMatcher
-
 
 def image_index(img) -> int:
-    return int((img.split('_')[-1]).split('.')[0])
+    try:
+        return int((img.split('_')[-1]).split('.')[0])
+    except ValueError as err:
+        error_str = f"file name without \"_\" separator, file name: {img}"
+    try:
+        return int(img.split('\\')[-1][5:].split('.')[0])
+    except ValueError as err:
+       error_str = f"file name starts without key word \"image\", file name: {img}"
+    raise ValueError(error_str)
 
 
 def get_sorted_images_paths(directory: str):
@@ -18,7 +25,7 @@ def get_sorted_images_paths(directory: str):
     return sorted(images, key=image_index)
 
 
-def drone_odometry(directory: str):
+def drone_odometry(directory: str, log_file_path: str = None):
     # Чтение изображений
     images_sources = get_sorted_images_paths(directory)
     # Вывод путей к изображениям
@@ -29,16 +36,33 @@ def drone_odometry(directory: str):
     rot_q = Quaternion.from_euler_angles(0.0, 0.0, 0.0, False)
     positions_x = []
     positions_y = []
-    for image_src in images_sources:
-        # Симуляция одометрии
-        image = io_utils.read_image(image_src, cv2.IMREAD_GRAYSCALE)
-        flight_odometer.compute(image, rot_q, 10)
-        positions_x.append(flight_odometer.position.x)
-        positions_y.append(flight_odometer.position.y)
+    if log_file_path is None:
+        for image_src in images_sources:
+            # Симуляция одометрии
+            image = io_utils.read_image(image_src, cv2.IMREAD_GRAYSCALE)
+            flight_odometer.compute(image, rot_q, 10)
+            positions_x.append(flight_odometer.position.x)
+            positions_y.append(flight_odometer.position.y)
+    else:
+        # как включить логирование
+        with open(log_file_path, 'wt', encoding='utf-8') as log_file:
+            flight_odometer.enable_logging(log_file)
+            for image_src in images_sources:
+                # Симуляция одометрии
+                image = io_utils.read_image(image_src, cv2.IMREAD_GRAYSCALE)
+                flight_odometer.compute(image, rot_q, 10)
+                positions_x.append(flight_odometer.position.x)
+                positions_y.append(flight_odometer.position.y)
+            flight_odometer.disable_logging()
+
     # Вывод результатов одометрии
     fig, axs = plt.subplots(1)
     axs.plot(positions_x, positions_y, 'r')
     axs.set_aspect('equal', 'box')
+    axs.set_title('odometry')
+    axs.set_xlabel("x")
+    axs.set_ylabel("y")
+    axs.grid(True)
     plt.show()
 
 
@@ -66,10 +90,15 @@ def image_matching_odometry(directory: str):
     fig, axs = plt.subplots(1)
     axs.plot(positions_x, positions_y, 'r')
     axs.set_aspect('equal', 'box')
+    axs.set_title('homography')
+    axs.set_xlabel("x")
+    axs.set_ylabel("y")
+    axs.grid(True)
     plt.show()
 
 
 if __name__ == "__main__":
-    images_directory = 'path_track'
-    drone_odometry(images_directory)
+    # images_directory = 'path_track'
+    images_directory = "Utilities/sim_imgs"
+    drone_odometry(images_directory, 'odom_log.json')
     image_matching_odometry(images_directory)

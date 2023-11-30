@@ -252,19 +252,19 @@ class Matrix3:
         """
         assert all(isinstance(v, float) for v in (roll, pitch, yaw))
         if angles_in_rad:
+            cr = math.cos(roll)
+            sr = math.sin(roll)
             cp = math.cos(pitch)
             sp = math.sin(pitch)
-            sr = math.sin(roll)
-            cr = math.cos(roll)
-            sy = math.sin(yaw)
             cy = math.cos(yaw)
+            sy = math.sin(yaw)
         else:
+            cr = math.cos(roll * DEG_TO_RAD)
+            sr = math.sin(roll * DEG_TO_RAD)
             cp = math.cos(pitch * DEG_TO_RAD)
             sp = math.sin(pitch * DEG_TO_RAD)
-            sr = math.sin(roll * DEG_TO_RAD)
-            cr = math.cos(roll * DEG_TO_RAD)
-            sy = math.sin(yaw * DEG_TO_RAD)
             cy = math.cos(yaw * DEG_TO_RAD)
+            sy = math.sin(yaw * DEG_TO_RAD)
 
         return cls(cp * cy, (sr * sp * cy) - (cr * sy), (cr * sp * cy) + (sr * sy),
                    cp * sy, (sr * sp * sy) + (cr * cy), (cr * sp * sy) - (sr * cy),

@@ -53,7 +53,7 @@ class Transform2d:
             self._raw_i_t_m = False
             s = self.scale
             s = 1.0 / s
-            r = Vector2(self._t_m.m00 * s.x, self._t_m.m10 * s.x, )
+            r = Vector2(self._t_m.m00 * s.x, self._t_m.m10 * s.x)
             u = Vector2(self._t_m.m01 * s.y, self._t_m.m11 * s.y)
             o = self.origin
             self._i_t_m = Matrix3(r.x * s.x, r.y * s.x, -Vector2.dot(o, r) * s.x,

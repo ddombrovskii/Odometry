@@ -1,4 +1,4 @@
-from .clustering_utils import gaussian_cluster, draw_clusters, distance, gauss_core
+from clustering_utils import gaussian_cluster, draw_clusters, distance, gauss_core
 from typing import Union, List, Tuple
 import numpy as np
 
@@ -133,15 +133,7 @@ class MShift:
         Создаёт список из np.ndarray. Каждый такой массив - это все точки определённого кластера.
         Индексы точек соответствующих кластеру хранятся в "_clusters_points_indices"
         """
-        if self._data is None:
-            return []
-        clusters = []
-        for cluster_indices in self._clusters_points_indices:
-            cluster_points = np.zeros((len(cluster_indices), self.n_features), dtype=float)
-            for index, cluster_point_index in enumerate(cluster_indices):
-                cluster_points[index, :] = self._data[cluster_point_index, :]
-            clusters.append(cluster_points)
-        return clusters
+        return [] if self._data is None else [self._data[c_idxs] for c_idxs in self._clusters_points_indices]
 
     def _clear_current_clusters(self) -> None:
         """

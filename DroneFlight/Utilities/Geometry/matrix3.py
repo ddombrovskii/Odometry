@@ -140,7 +140,7 @@ class Matrix3:
                    0.0, 0.0, 0.0)
 
     @classmethod
-    def rotate_x(cls, angle: float, angle_in_rad: bool = True):
+    def rotate_x(cls, angle: float, angle_in_rad: bool = True) -> 'Matrix3':
         if not angle_in_rad:
             angle *= DEG_TO_RAD
         cos_a = math.cos(angle)
@@ -150,7 +150,7 @@ class Matrix3:
                    0.0, sin_a, cos_a)
 
     @classmethod
-    def rotate_y(cls, angle: float, angle_in_rad: bool = True):
+    def rotate_y(cls, angle: float, angle_in_rad: bool = True) -> 'Matrix3':
         if not angle_in_rad:
             angle *= DEG_TO_RAD
         cos_a = math.cos(angle)
@@ -160,7 +160,7 @@ class Matrix3:
                    -sin_a, 0.0, cos_a)
 
     @classmethod
-    def rotate_z(cls, angle: float, angle_in_rad: bool = True):
+    def rotate_z(cls, angle: float, angle_in_rad: bool = True) -> 'Matrix3':
         if not angle_in_rad:
             angle *= DEG_TO_RAD
         cos_a = math.cos(angle)
@@ -170,19 +170,19 @@ class Matrix3:
                    0.0, 0.0, 1.0)
 
     @classmethod
-    def rotate_xyz(cls, angle_x: float, angle_y: float, angle_z: float, angle_in_rad: bool = True):
+    def rotate_xyz(cls, angle_x: float, angle_y: float, angle_z: float, angle_in_rad: bool = True) -> 'Matrix3':
         return cls.rotate_x(angle_x, angle_in_rad) * \
                cls.rotate_y(angle_y, angle_in_rad) * \
                cls.rotate_z(angle_z, angle_in_rad)
 
     @classmethod
-    def rotate_zyx(cls, angle_x: float, angle_y: float, angle_z: float, angle_in_rad: bool = True):
+    def rotate_zyx(cls, angle_x: float, angle_y: float, angle_z: float, angle_in_rad: bool = True) -> 'Matrix3':
         return cls.rotate_z(angle_z, angle_in_rad) * \
                cls.rotate_y(angle_y, angle_in_rad) * \
                cls.rotate_x(angle_x, angle_in_rad)
 
     @classmethod
-    def build_basis(cls, ey: Vector3, ez: Vector3 = None):
+    def build_basis(cls, ey: Vector3, ez: Vector3 = None) -> 'Matrix3':
         assert isinstance(ey, Vector2)
         if ez is None:
             ez = Vector3(0.0, 0.0, 1.0)
@@ -197,20 +197,20 @@ class Matrix3:
                    ex.z, ey.z, ez.z)
 
     @classmethod
-    def from_np_array(cls, array: np.ndarray):
+    def from_np_array(cls, array: np.ndarray) -> 'Matrix3':
         assert isinstance(array, np.ndarray)
         assert array.size == 9
         return cls(*array.flat)
 
     @classmethod
-    def translate(cls, position: Vector2):
+    def translate(cls, position: Vector2) -> 'Matrix3':
         assert isinstance(position, Vector2)
         return cls(1.0, 0.0, position.x,
                    0.0, 1.0, position.y,
                    0.0, 0.0, 1.0)
 
     @classmethod
-    def build_transform(cls, right: Vector3, up: Vector3, front: Vector3):
+    def build_transform(cls, right: Vector3, up: Vector3, front: Vector3) -> 'Matrix3':
         """
         -- НЕ ПРОВЕРЯЕТ ОРТОГОНАЛЬНОСТЬ front, up, right !!!
         :param front:
@@ -246,25 +246,26 @@ class Matrix3:
         return Vector3(y2, x2, z2)
 
     @classmethod
-    def from_euler_angles(cls, roll: float = 0.0, pitch: float = 0.0, yaw: float = 0.0, angles_in_rad: bool = True):
+    def from_euler_angles(cls, roll: float = 0.0, pitch: float = 0.0, yaw: float = 0.0,
+                          angles_in_rad: bool = True) -> 'Matrix3':
         """
         fill the matrix from Euler angles in radians
         """
         assert all(isinstance(v, float) for v in (roll, pitch, yaw))
         if angles_in_rad:
+            cr = math.cos(roll)
+            sr = math.sin(roll)
             cp = math.cos(pitch)
             sp = math.sin(pitch)
-            sr = math.sin(roll)
-            cr = math.cos(roll)
-            sy = math.sin(yaw)
             cy = math.cos(yaw)
+            sy = math.sin(yaw)
         else:
+            cr = math.cos(roll * DEG_TO_RAD)
+            sr = math.sin(roll * DEG_TO_RAD)
             cp = math.cos(pitch * DEG_TO_RAD)
             sp = math.sin(pitch * DEG_TO_RAD)
-            sr = math.sin(roll * DEG_TO_RAD)
-            cr = math.cos(roll * DEG_TO_RAD)
-            sy = math.sin(yaw * DEG_TO_RAD)
             cy = math.cos(yaw * DEG_TO_RAD)
+            sy = math.sin(yaw * DEG_TO_RAD)
 
         return cls(cp * cy, (sr * sp * cy) - (cr * sy), (cr * sp * cy) + (sr * sy),
                    cp * sy, (sr * sp * sy) + (cr * cy), (cr * sp * sy) - (sr * cy),

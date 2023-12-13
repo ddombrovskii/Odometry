@@ -6,10 +6,16 @@
   <component name="ChangeListManager">
     <list default="true" id="5ead7134-b374-42a1-8fdd-5ab1a6211af6" name="Changes" comment="path_view">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/DataAnalysis/k_means.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/DataAnalysis/k_means.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DroneFlight/Utilities/Geometry/bounding_box.py" beforeDir="false" afterPath="$PROJECT_DIR$/DroneFlight/Utilities/Geometry/bounding_box.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DroneFlight/Utilities/Geometry/bounding_rect.py" beforeDir="false" afterPath="$PROJECT_DIR$/DroneFlight/Utilities/Geometry/bounding_rect.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DroneFlight/Utilities/Geometry/matrix3.py" beforeDir="false" afterPath="$PROJECT_DIR$/DroneFlight/Utilities/Geometry/matrix3.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DroneFlight/Utilities/Geometry/transform_2d.py" beforeDir="false" afterPath="$PROJECT_DIR$/DroneFlight/Utilities/Geometry/transform_2d.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DroneFlight/Utilities/Geometry/vector3.py" beforeDir="false" afterPath="$PROJECT_DIR$/DroneFlight/Utilities/Geometry/vector3.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Utilities/DataAnalysis/m_shift.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/DataAnalysis/m_shift.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/bounding_box.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/bounding_box.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/bounding_rect.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/bounding_rect.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Utilities/Geometry/matrix3.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/matrix3.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/transform_2d.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/transform_2d.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utilities/Geometry/vector3.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utilities/Geometry/vector3.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -41,14 +47,14 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;E:/GitHub/Odometry/Odometry/DroneFlight&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "last_opened_file_path": "E:/GitHub/Odometry/Odometry/DroneFlight/Utilities/Geometry",
+    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="E:\GitHub\Odometry\Odometry\DroneFlight" />
@@ -65,7 +71,7 @@
       <recent name="E:\GitHub\Odometry\Odometry\Utilities\Matplotlib" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.m_shift">
+  <component name="RunManager" selected="Python.packing">
     <configuration name="clustering_utils" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="Odometry" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -100,27 +106,6 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Utilities/DataAnalysis/k_means.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration name="l_regression (1)" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="Odometry" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Utilities/DataAnalysis" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Utilities/DataAnalysis/l_regression.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -171,13 +156,34 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="packing" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Odometry" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/packing.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.packing" />
         <item itemvalue="Python.m_shift" />
         <item itemvalue="Python.k_means (1)" />
         <item itemvalue="Python.non_uniform_transfom" />
         <item itemvalue="Python.clustering_utils" />
-        <item itemvalue="Python.l_regression (1)" />
       </list>
     </recent_temporary>
   </component>
@@ -289,11 +295,6 @@
           <option name="timeStamp" value="152" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/packing.py</url>
-          <line>33</line>
-          <option name="timeStamp" value="155" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/Utilities/DataAnalysis/for_students/mean_shift.py</url>
           <line>272</line>
           <option name="timeStamp" value="157" />
@@ -317,11 +318,6 @@
           <url>file://$PROJECT_DIR$/DroneFlight/odometry_test.py</url>
           <line>29</line>
           <option name="timeStamp" value="167" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/Utilities/DataAnalysis/m_shift.py</url>
-          <line>248</line>
-          <option name="timeStamp" value="169" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

@@ -233,16 +233,16 @@ def separated_clusters():
                                gaussian_cluster(cx=2.0, n_points=1024),
                                gaussian_cluster(cx=2.5, n_points=1024)))
     m_shift.fit(clusters_data)
-    print(repr(m_shift))
-    with open('clusters.json', 'wt') as output_clusters:
-        print(m_shift, file=output_clusters)
+    # print(repr(m_shift))
+    # with open('clusters.json', 'wt') as output_clusters:
+    #     print(m_shift, file=output_clusters)
     m_shift.show()
 
 
 def merged_clusters():
     m_shift = MShift()
     m_shift.fit(gaussian_cluster(n_points=1024))
-    print(repr(m_shift))
+    # print(repr(m_shift))
     m_shift.show()
 
 

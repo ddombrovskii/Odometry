@@ -14,7 +14,7 @@ def image_index(img) -> int:
     except ValueError as err:
         error_str = f"file name without \"_\" separator, file name: {img}"
     try:
-        return int(img.split('\\')[-1][5:].split('.')[0])
+        return int(img.split('/')[-1][5:].split('.')[0])
     except ValueError as err:
        error_str = f"file name starts without key word \"image\", file name: {img}"
     raise ValueError(error_str)
